@@ -153,7 +153,7 @@ export function App() {
     
     setIsAutoSegmenting(true);
     try {
-      const polygons = await autoSegment(patternImageId);
+      const polygons = await autoSegment(patternImageId, project.patternCrop);
       
       const newPieces = [];
       for (let i = 0; i < polygons.length; i++) {

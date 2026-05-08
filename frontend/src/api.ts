@@ -32,11 +32,14 @@ export async function segment(
   return polygon;
 }
 
-export async function autoSegment(imageId: string): Promise<[number, number][][]> {
+export async function autoSegment(imageId: string, crop?: { top: number, bottom: number, left: number, right: number }): Promise<[number, number][][]> {
   const r = await fetch(`${BASE_URL}/auto_segment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image_id: imageId }),
+    body: JSON.stringify({ 
+      image_id: imageId,
+      crop: crop ? [crop.top, crop.bottom, crop.left, crop.right] : undefined
+    }),
   });
   if (!r.ok) throw new Error(`auto_segment failed: ${r.status}`);
   const { polygons } = await r.json() as { polygons: [number, number][][] };

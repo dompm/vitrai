@@ -23,10 +23,10 @@ class SAMService:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, self._segment_sync, session_id, box, points)
 
-    async def auto_segment(self, session_id: str) -> list[list[list[int]]]:
+    async def auto_segment(self, session_id: str, crop: tuple[int, int, int, int] | None) -> list[list[list[int]]]:
         async with self._lock:
             loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(None, self._auto_segment_sync, session_id)
+            return await loop.run_in_executor(None, self._auto_segment_sync, session_id, crop)
 
     def _get_cls(self):
         if self._cls is None:
@@ -39,9 +39,9 @@ class SAMService:
         cls = self._get_cls()
         return cls().encode.remote(image_bytes)
 
-    def _auto_segment_sync(self, session_id: str) -> list[list[list[int]]]:
+    def _auto_segment_sync(self, session_id: str, crop: tuple[int, int, int, int] | None) -> list[list[list[int]]]:
         cls = self._get_cls()
-        return cls().auto_segment.remote(session_id)
+        return cls().auto_segment.remote(session_id, crop)
 
     def _segment_sync(self, session_id: str, box: tuple[float, float, float, float] | None, points: list[tuple[float, float, int]] | None) -> list[list[int]]:
         cls = self._get_cls()

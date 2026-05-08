@@ -140,12 +140,25 @@ class Sam2BoxSegmenter:
         return self._mask_to_polygon(masks[0])
 
     @modal.method()
-    def auto_segment(self, session_id: str) -> list[list[list[int]]]:
+    def auto_segment(self, session_id: str, crop: tuple[int, int, int, int] | None = None) -> list[list[list[int]]]:
         if session_id not in embeddings:
             raise KeyError(session_id)
             
         cached: CachedEmbeddings = embeddings[session_id]  # type: ignore[assignment]
         img = self._decode_rgb(cached["image_bytes"])
+        
+        offset_x, offset_y = 0, 0
+        if crop is not None:
+            top, bottom, left, right = crop
+            h, w = img.shape[:2]
+            valid_top = max(0, min(top, h - 1))
+            valid_bottom = max(0, min(bottom, h - 1))
+            valid_left = max(0, min(left, w - 1))
+            valid_right = max(0, min(right, w - 1))
+            
+            if valid_top < h - valid_bottom and valid_left < w - valid_right:
+                img = img[valid_top:h-valid_bottom, valid_left:w-valid_right]
+                offset_x, offset_y = valid_left, valid_top
         
         masks = self.generator.generate(img)
         
@@ -153,6 +166,8 @@ class Sam2BoxSegmenter:
         for mask_dict in masks:
             poly = self._mask_to_polygon(mask_dict["segmentation"])
             if poly and len(poly) >= 3:
+                if offset_x > 0 or offset_y > 0:
+                    poly = [[x + offset_x, y + offset_y] for x, y in poly]
                 polygons.append(poly)
                 
         return polygons

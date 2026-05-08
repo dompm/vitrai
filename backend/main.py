@@ -60,11 +60,13 @@ async def segment(req: SegmentRequest):
 
 class AutoSegmentRequest(BaseModel):
     image_id: str
+    crop: list[int] | None = None # [top, bottom, left, right]
 
 @app.post("/auto_segment")
 async def auto_segment(req: AutoSegmentRequest):
     try:
-        polygons = await service.auto_segment(req.image_id)
+        crop_tuple = tuple(req.crop) if req.crop else None
+        polygons = await service.auto_segment(req.image_id, crop_tuple)
         return {"polygons": polygons}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
