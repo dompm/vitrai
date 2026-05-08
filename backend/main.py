@@ -50,11 +50,21 @@ class SegmentRequest(BaseModel):
 
 @app.post("/segment")
 async def segment(req: SegmentRequest):
-    if req.box is not None and len(req.box) != 4:
-        raise HTTPException(400, "box must have 4 values [x1, y1, x2, y2]")
-    
-    box_tuple = (req.box[0], req.box[1], req.box[2], req.box[3]) if req.box else None
-    points_list = [(p.x, p.y, p.label) for p in req.points] if req.points else None
+    try:
+        box_tuple = tuple(req.box) if req.box else None
+        points_list = [(p.x, p.y, p.label) for p in req.points] if req.points else None
+        polygon = await service.segment(req.image_id, box_tuple, points_list)
+        return {"polygon": polygon}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    polygon = await service.segment(req.image_id, box_tuple, points_list)
-    return {"polygon": polygon}
+class AutoSegmentRequest(BaseModel):
+    image_id: str
+
+@app.post("/auto_segment")
+async def auto_segment(req: AutoSegmentRequest):
+    try:
+        polygons = await service.auto_segment(req.image_id)
+        return {"polygons": polygons}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

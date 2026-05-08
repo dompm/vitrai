@@ -96,14 +96,16 @@ interface ResultPanelProps {
   onAddSheetAndAssignPiece: (id: string) => void;
   onDeletePiece: (id: string) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
-  onClearPrompt: (pieceId: string) => void;
+  onAutoSegment?: () => void;
+  isAutoSegmenting?: boolean;
 }
 
 const MIN_BOX_PX = 10;
 
 export function ResultPanel({
   project, selectedPieceId, pendingPieceIds, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt, onClearPrompt,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt,
+  onAutoSegment, isAutoSegmenting,
 }: ResultPanelProps) {
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
@@ -220,7 +222,29 @@ export function ResultPanel({
 
   return (
     <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div style={{ flex: 1 }} />
+
+        {onAutoSegment && (
+          <button
+            className="tool-btn"
+            onClick={onAutoSegment}
+            disabled={isAutoSegmenting}
+            style={{ 
+              opacity: isAutoSegmenting ? 0.5 : 1, 
+              background: '#eef2ff',
+              color: '#4f46e5',
+              borderColor: '#c7d2fe',
+              width: '100%',
+              marginTop: 'auto',
+              marginBottom: 16
+            }}
+            title="Auto-detect all pieces"
+          >
+            {isAutoSegmenting ? 'Detecting...' : 'Detect All'}
+          </button>
+        )}
+      </Toolbar>
       <div
         ref={vp.containerRef}
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative' }}
@@ -342,7 +366,7 @@ export function ResultPanel({
                 onDelete={() => onDeletePiece(piece.id)}
                 refineMode={refineMode}
                 onRefineModeChange={setRefineMode}
-                onClearPrompt={() => onClearPrompt(piece.id)}
+                isPending={pendingPieceIds.has(piece.id)}
               />
             </div>
           );

@@ -35,6 +35,7 @@ app = modal.App(APP_NAME)
 class CachedEmbeddings(TypedDict):
     orig_hw: tuple[int, int]
     features: bytes
+    image_bytes: bytes
 
 
 @app.cls(
@@ -47,7 +48,12 @@ class Sam2BoxSegmenter:
     @modal.enter()
     def setup_predictor(self) -> None:
         from sam2.sam2_image_predictor import SAM2ImagePredictor
-        self.predictor = SAM2ImagePredictor.from_pretrained(MODEL_ID)
+        from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
+        from sam2.build_sam import build_sam2
+        
+        self.model = build_sam2("sam2.1_hiera_s", MODEL_ID)
+        self.predictor = SAM2ImagePredictor(self.model)
+        self.generator = SAM2AutomaticMaskGenerator(self.model)
 
     def _decode_rgb(self, image_bytes: bytes) -> Any:
         from PIL import Image
@@ -105,6 +111,7 @@ class Sam2BoxSegmenter:
         embeddings[session_id] = {
             "orig_hw": (int(orig_hw[0]), int(orig_hw[1])),
             "features": self._serialize_features(),
+            "image_bytes": image_bytes,
         }
         return session_id
 
@@ -131,4 +138,22 @@ class Sam2BoxSegmenter:
 
         masks, _, _ = self.predictor.predict(**kwargs)
         return self._mask_to_polygon(masks[0])
+
+    @modal.method()
+    def auto_segment(self, session_id: str) -> list[list[list[int]]]:
+        if session_id not in embeddings:
+            raise KeyError(session_id)
+            
+        cached: CachedEmbeddings = embeddings[session_id]  # type: ignore[assignment]
+        img = self._decode_rgb(cached["image_bytes"])
+        
+        masks = self.generator.generate(img)
+        
+        polygons = []
+        for mask_dict in masks:
+            poly = self._mask_to_polygon(mask_dict["segmentation"])
+            if poly and len(poly) >= 3:
+                polygons.append(poly)
+                
+        return polygons
 

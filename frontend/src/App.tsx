@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { encodeImage, segment } from './api';
+import { encodeImage, segment, autoSegment } from './api';
 import { subtractPolygons } from './utils/geometry';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
@@ -114,11 +114,13 @@ export function App() {
     markPiecePending(pieceId);
     try {
       const polygon = await segment(patternImageId, box);
+      console.log("Segment returned polygon of length:", polygon.length);
       const existingPieces = project.pieces.map(p => p.polygon);
       const clipped = subtractPolygons(polygon, existingPieces);
+      console.log("Clipped polygon length:", clipped.length);
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
-    } catch {
-      // keep rectangle fallback silently
+    } catch (e) {
+      console.error("SAM segment failed:", e);
     } finally {
       unmarkPiecePending(pieceId);
     }
@@ -133,7 +135,7 @@ export function App() {
     
     markPiecePending(pieceId);
     try {
-      const polygon = await segment(patternImageId, piece.promptBox, newPoints);
+      const polygon = await segment(patternImageId, undefined, newPoints);
       const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
       const clipped = subtractPolygons(polygon, otherPieces);
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
@@ -144,22 +146,49 @@ export function App() {
     }
   }
 
-  async function handleClearPrompt(pieceId: string) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (!piece || !patternImageId) return;
+  const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
 
-    updatePiecePrompt(pieceId, piece.promptBox, []);
+  async function handleAutoSegment() {
+    if (!patternImageId || isAutoSegmenting) return;
     
-    markPiecePending(pieceId);
+    setIsAutoSegmenting(true);
     try {
-      const polygon = await segment(patternImageId, piece.promptBox, []);
-      const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
-      const clipped = subtractPolygons(polygon, otherPieces);
-      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+      const polygons = await autoSegment(patternImageId);
+      
+      const newPieces = [];
+      for (let i = 0; i < polygons.length; i++) {
+        const poly = polygons[i];
+        const pieceId = crypto.randomUUID();
+        
+        // Compute bounding box for the piece
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const [x, y] of poly) {
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+        const box: BoundingBox = { x1: minX, y1: minY, x2: maxX, y2: maxY };
+        
+        newPieces.push({
+          id: pieceId,
+          label: `Piece ${project.pieces.length + i + 1}`,
+          polygon: poly,
+          glassSheetId: activeSheetId,
+          transform: { x: 400, y: 300, rotation: 0, scale: 1 },
+          promptBox: box,
+          promptPoints: [],
+        });
+      }
+
+      setProject(prev => persist({
+        ...prev,
+        pieces: [...prev.pieces, ...newPieces]
+      }));
     } catch (e) {
-      console.error(e);
+      console.error("Auto segment failed:", e);
     } finally {
-      unmarkPiecePending(pieceId);
+      setIsAutoSegmenting(false);
     }
   }
 
@@ -268,7 +297,8 @@ export function App() {
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
           onDeletePiece={deletePiece}
           onUpdatePrompt={handleUpdatePrompt}
-          onClearPrompt={handleClearPrompt}
+          onAutoSegment={handleAutoSegment}
+          isAutoSegmenting={isAutoSegmenting}
         />
       </div>
 

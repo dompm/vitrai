@@ -15,7 +15,7 @@ async def main():
         
         print("Calling segment...")
         box = (10, 10, 50, 50)
-        polygon = await service.segment(session_id, box)
+        polygon = await service.segment(session_id, box, None)
         print("Segment success. Polygon length:", len(polygon))
     except Exception as e:
         import traceback

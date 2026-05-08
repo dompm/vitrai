@@ -31,3 +31,14 @@ export async function segment(
   const { polygon } = await r.json() as { polygon: [number, number][] };
   return polygon;
 }
+
+export async function autoSegment(imageId: string): Promise<[number, number][][]> {
+  const r = await fetch(`${BASE_URL}/auto_segment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_id: imageId }),
+  });
+  if (!r.ok) throw new Error(`auto_segment failed: ${r.status}`);
+  const { polygons } = await r.json() as { polygons: [number, number][][] };
+  return polygons;
+}

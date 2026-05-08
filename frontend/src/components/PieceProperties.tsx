@@ -10,10 +10,10 @@ interface Props {
   onDelete: () => void;
   refineMode?: 'add' | 'remove' | null;
   onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
-  onClearPrompt?: () => void;
+  isPending?: boolean;
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, refineMode, onRefineModeChange, onClearPrompt }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, refineMode, onRefineModeChange, isPending }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -166,21 +166,14 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           >
             -
           </button>
-          {onClearPrompt && (
-            <button
-              onClick={onClearPrompt}
-              title="Clear/Delete active mask"
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#6b7280',
-                cursor: 'pointer',
-                fontSize: 11,
-                padding: '0 4px',
-              }}
-            >
-              Clear
-            </button>
+          {isPending && (
+            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
+                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+                </path>
+              </svg>
+            </div>
           )}
         </>
       )}
