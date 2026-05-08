@@ -7,21 +7,27 @@ from typing import Any, TypedDict
 
 import modal
 
-APP_NAME = "vitraux-sam2"
+APP_NAME = "vitraux-sam2-v2"
 MODEL_ID = "facebook/sam2.1-hiera-small"
 
 embeddings = modal.Dict.from_name("vitraux-sam2-embeddings", create_if_missing=True)
+
+def download_model():
+    from huggingface_hub import snapshot_download
+    snapshot_download("facebook/sam2.1-hiera-small")
 
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
         # SAM2 + runtime deps
         "sam2==1.1.0",
-        "torch==2.3.1",
+        "torch>=2.5.1",
         "opencv-python-headless==4.10.0.84",
         "pillow==10.4.0",
         "numpy==2.0.2",
+        "huggingface_hub",
     )
+    .run_function(download_model)
 )
 
 app = modal.App(APP_NAME)
@@ -38,33 +44,31 @@ class CachedEmbeddings(TypedDict):
     scaledown_window=60 * 5,
 )
 class Sam2BoxSegmenter:
-    def __enter__(self) -> None:
-        import torch
-        import numpy as np
+    @modal.enter()
+    def setup_predictor(self) -> None:
         from sam2.sam2_image_predictor import SAM2ImagePredictor
-
-        # These libs exist in the Modal image, not in the local venv.
-        self.torch = torch
-        self.np = np
         self.predictor = SAM2ImagePredictor.from_pretrained(MODEL_ID)
 
     def _decode_rgb(self, image_bytes: bytes) -> Any:
         from PIL import Image
+        import numpy as np
 
         img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-        return self.np.array(img)
+        return np.array(img)
 
     def _serialize_features(self) -> bytes:
+        import torch
         buf = io.BytesIO()
-        self.torch.save(self.predictor._features, buf)  # type: ignore[attr-defined]
+        torch.save(self.predictor._features, buf)  # type: ignore[attr-defined]
         return buf.getvalue()
 
     def _load_features(self, payload: bytes) -> Any:
+        import torch
         buf = io.BytesIO(payload)
-        feats = self.torch.load(buf, map_location="cpu")
+        feats = torch.load(buf, map_location="cpu", weights_only=False)
 
         def to_device(x: Any) -> Any:
-            if self.torch.is_tensor(x):
+            if torch.is_tensor(x):
                 return x.to(self.predictor.device)
             if isinstance(x, list):
                 return [to_device(v) for v in x]
@@ -106,6 +110,7 @@ class Sam2BoxSegmenter:
 
     @modal.method()
     def segment_box(self, session_id: str, box: tuple[float, float, float, float]) -> list[list[int]]:
+        import numpy as np
         if session_id not in embeddings:
             raise KeyError(session_id)
 
@@ -118,7 +123,7 @@ class Sam2BoxSegmenter:
         self.predictor._is_batch = False  # type: ignore[attr-defined]
 
         masks, _, _ = self.predictor.predict(
-            box=self.np.array([[box[0], box[1], box[2], box[3]]], dtype=self.np.float32),
+            box=np.array([[box[0], box[1], box[2], box[3]]], dtype=np.float32),
             multimask_output=False,
         )
         return self._mask_to_polygon(masks[0])

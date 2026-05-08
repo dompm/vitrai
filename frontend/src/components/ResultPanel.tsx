@@ -90,12 +90,17 @@ interface ResultPanelProps {
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
+  onUpdatePieceLabel: (id: string, label: string) => void;
+  onUpdatePieceSheet: (id: string, sheetId: string) => void;
+  onAddSheetAndAssignPiece: (id: string) => void;
+  onDeletePiece: (id: string) => void;
 }
 
 const MIN_BOX_PX = 10;
 
 export function ResultPanel({
   project, selectedPieceId, pendingPieceIds, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece,
 }: ResultPanelProps) {
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const { patternWidth: pw, patternHeight: ph } = project;
@@ -264,6 +269,31 @@ export function ResultPanel({
               onConfirm={handleMeasureConfirm}
               onCancel={() => handleToolChange('select')}
             />
+          );
+        })()}
+        {selectedPieceId && (() => {
+          const piece = project.pieces.find(p => p.id === selectedPieceId);
+          if (!piece) return null;
+          const centroid = computeCentroid(piece.polygon);
+          const sc = toScreenCoords(centroid.x, centroid.y, vp.pan, vp.effectiveScale);
+          return (
+            <div style={{
+              position: 'absolute',
+              left: sc.x,
+              top: sc.y,
+              transform: 'translate(-50%, -100%)',
+              marginTop: -10,
+              zIndex: 10
+            }}>
+              <PieceProperties
+                piece={piece}
+                sheets={project.sheets}
+                onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
+                onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
+                onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
+                onDelete={() => onDeletePiece(piece.id)}
+              />
+            </div>
           );
         })()}
       </div>

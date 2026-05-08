@@ -93,6 +93,9 @@ export function App() {
     markPiecePending,
     unmarkPiecePending,
     resetProject,
+    loadProjectData,
+    updatePatternImage,
+    addSheetFromImage,
   } = useProject();
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
@@ -133,15 +136,83 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPieceId, deletePiece]);
 
+  const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        loadProjectData(data);
+      } catch (err) {
+        console.error(err);
+        alert('Invalid project file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleSaveProject = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = "vitraux_project.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.width, img.height);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const handleAddSheetFromImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      addSheetFromImage(dataUrl, file.name);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
   return (
     <div className="app">
       {/* ── Left: result view ── */}
       <div className="panel panel-left">
         <div className="panel-header">
           <span>Result</span>
-          <button className="btn-ghost" onClick={resetProject} title="Reset to defaults">
-            Reset
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <label className="btn-ghost" style={{ cursor: 'pointer' }}>
+              Pattern
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
+            </label>
+            <label className="btn-ghost" style={{ cursor: 'pointer' }}>
+              Load
+              <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
+            </label>
+            <button className="btn-ghost" onClick={handleSaveProject} title="Save project">
+              Save
+            </button>
+            <button className="btn-ghost" onClick={resetProject} title="Reset to defaults">
+              Reset
+            </button>
+          </div>
         </div>
         <ResultPanel
           project={project}
@@ -179,7 +250,10 @@ export function App() {
                 onDelete={() => deleteSheet(sheet.id)}
               />
             ))}
-            <button className="sheet-tab" onClick={addSheet} title="Add sheet">+</button>
+            <label className="sheet-tab" title="Upload sheet" style={{ cursor: 'pointer' }}>
+              +
+              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAddSheetFromImage} />
+            </label>
           </div>
         </div>
 

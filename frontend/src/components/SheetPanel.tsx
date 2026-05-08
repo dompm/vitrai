@@ -182,7 +182,26 @@ export function SheetPanel({
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = sheet.scale?.line;
-      measure.loadLine(saved ?? { x1: sheetW * 0.25, y1: sheetH * 0.5, x2: sheetW * 0.75, y2: sheetH * 0.5 });
+      const cropL = sheet.crop.left;
+      const cropT = sheet.crop.top;
+      const cropR = sheetW - sheet.crop.right;
+      const cropB = sheetH - sheet.crop.bottom;
+      
+      const defaultX1 = cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = cropL + (cropR - cropL) * 0.75;
+      const defaultY = cropT + (cropB - cropT) * 0.5;
+
+      let x1 = saved?.x1 ?? defaultX1;
+      let y1 = saved?.y1 ?? defaultY;
+      let x2 = saved?.x2 ?? defaultX2;
+      let y2 = saved?.y2 ?? defaultY;
+
+      x1 = Math.max(cropL, Math.min(cropR, x1));
+      y1 = Math.max(cropT, Math.min(cropB, y1));
+      x2 = Math.max(cropL, Math.min(cropR, x2));
+      y2 = Math.max(cropT, Math.min(cropB, y2));
+      
+      measure.loadLine({ x1, y1, x2, y2 });
     }
     setActiveTool(id);
   }
@@ -247,6 +266,7 @@ export function SheetPanel({
                   line={measure.line}
                   effectiveScale={es}
                   imageWidth={sheetW} imageHeight={sheetH}
+                  crop={sheet.crop}
                   onUpdateP1={measure.updateP1}
                   onUpdateP2={measure.updateP2}
                   onCursorChange={setCursor}

@@ -228,6 +228,30 @@ export function useProject() {
     setActiveSheetId(DEFAULT_PROJECT.sheets[0]?.id ?? '');
   }, []);
 
+  const loadProjectData = useCallback((newProject: Project) => {
+    setProject(persist(newProject));
+    setSelectedPieceId(null);
+    setActiveSheetId(newProject.sheets[0]?.id ?? '');
+  }, []);
+
+  const updatePatternImage = useCallback((url: string, width: number, height: number) => {
+    setProject(prev => persist({ ...prev, patternImageUrl: url, patternWidth: width, patternHeight: height }));
+  }, []);
+
+  const addSheetFromImage = useCallback((url: string, label: string) => {
+    setProject(prev => {
+      const newSheet: GlassSheet = {
+        id: `sheet-${Date.now()}`,
+        label,
+        imageUrl: url,
+        crop: { top: 0, left: 0, bottom: 0, right: 0 },
+        scale: null,
+      };
+      setActiveSheetId(newSheet.id);
+      return persist({ ...prev, sheets: [...prev.sheets, newSheet] });
+    });
+  }, []);
+
   return {
     project,
     selectedPieceId,
@@ -252,5 +276,8 @@ export function useProject() {
     markPiecePending,
     unmarkPiecePending,
     resetProject,
+    loadProjectData,
+    updatePatternImage,
+    addSheetFromImage,
   };
 }
