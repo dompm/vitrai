@@ -1,11 +1,11 @@
-# Vitraux — Web App Plan
+# Vitraux - Web App Plan
 
 ## Goal
 Build a web app where you import a stained-glass **pattern image** and **glass sheet photos**, then:
 
 - Define/auto-detect **piece regions** on the pattern
 - Assign each piece to a glass sheet
-- **Drag/rotate/scale** the glass texture per piece and see the result clipped into the pattern (2D “UV mapping”)
+- **Drag/rotate/scale** the glass texture per piece and see the result clipped into the pattern (2D "UV mapping")
 
 ## Core product decisions (v1)
 - **Piece creation UX**: **box prompts first** (draw a rectangle around a piece ? preview mask ? accept).
@@ -16,6 +16,7 @@ Build a web app where you import a stained-glass **pattern image** and **glass s
 - **Project**
   - `patternImage` (original + cropped version)
   - `patternTransform` (crop/scale/rotate so coordinates are stable)
+  - `patternPhysicalSize` (e.g. width/height in mm or inches)
 - **Pieces** (array)
   - `id`
   - `maskRLE` or `polygon` (plus holes if needed)
@@ -23,12 +24,31 @@ Build a web app where you import a stained-glass **pattern image** and **glass s
   - `promptHistory` (box coords; optional points later)
 - **GlassSheets** (array)
   - `id`, `image`, optional `usableMask`
+  - `sheetPhysicalSize` (width/height + units)
+  - `photoCalibration` (optional: mapping from photo pixels -> real-world units)
 - **Assignments**
   - `pieceId -> glassSheetId`
   - `textureTransform` (2D affine: translate/rotate/scale)
   - optional `opacity/color` tweaks
 
-## Phase 1 — App skeleton + rendering (prove the “UV” UX)
+## Scale & calibration (real-world sizing)
+We want users to be able to:
+
+- Set the **final stained-glass size** (so the pattern can be printed to scale and piece areas can be estimated).
+- Define the **real-world size of each glass sheet** (so "how much glass do I need?" and scale-aware placement can work).
+
+**Pattern sizing options**
+- **Direct input (v1)**: user enters target width/height + units; we scale the pattern workspace accordingly.
+- **Reference measure (later)**: user draws a line on the pattern and enters its real length to calibrate.
+
+**Glass sheet photo sizing options**
+- **Direct input (v1)**: user enters the sheet's real width/height; we treat the photo as a rectangle with that size.
+- **Better calibration (later)**:
+  - Ask user to place the sheet on a surface and capture the four corners (or do auto corner detection).
+  - Compute a homography so we can "rectify" the photo into a true-to-scale top-down view.
+  - Optional: include a known-size reference object (ruler/coin) to improve absolute scale when sheet size is unknown.
+
+## Phase 1 - App skeleton + rendering (prove the "UV" UX)
 - **Pattern workspace**
   - Display pattern image
   - Load a few hardcoded polygons (for now) and render them as selectable overlays
@@ -39,40 +59,40 @@ Build a web app where you import a stained-glass **pattern image** and **glass s
 - **Persistence**
   - Save/load project JSON locally (later: cloud)
 
-**Done when** you can convincingly “wrap” a glass photo into pieces and manipulate it.
+**Done when** you can convincingly "wrap" a glass photo into pieces and manipulate it.
 
-## Phase 2 — Piece extraction with SAM box prompts (human-in-the-loop)
+## Phase 2 - Piece extraction with SAM box prompts (human-in-the-loop)
 - **Pattern import + crop tool**
   - User crops to stained-glass area; store transform
 - **Box prompt tool**
-  - User drags a box on pattern ? backend returns SAM mask + preview overlay
-  - Accept ? create a new piece
+  - User drags a box on pattern -> backend returns SAM mask + preview overlay
+  - Accept -> create a new piece
 - **Polygon generation**
-  - Mask ? contour(s) ? polygon + simplify (tunable tolerance)
+  - Mask -> contour(s) -> polygon + simplify (tunable tolerance)
   - Keep ability to re-run simplification without losing mask
 
 **Done when** you can create a full set of pieces from a pattern with reasonable effort.
 
-## Phase 3 — Glass sheet management + assignment workflow
+## Phase 3 - Glass sheet management + assignment workflow
 - Import multiple glass sheet images
-- Glass sheet “workspace view” (pan/zoom)
+- Glass sheet "workspace view" (pan/zoom)
 - Piece inspector:
   - Assign glass sheet
   - Duplicate assignment settings to other pieces
 - Quality-of-life:
-  - Snap rotation (e.g. 15°)
+  - Snap rotation (e.g. 15 degrees)
   - Show scale in real units later (optional)
 
 **Done when** you can fully populate a pattern with real glass textures.
 
-## Phase 4 — Automation upgrades (reduce manual work)
+## Phase 4 - Automation upgrades (reduce manual work)
 - **Line-first auto piece proposals** (connected components / watershed on solder lines)
   - Generate candidate pieces automatically
   - User reviews: accept/merge/split
 - **SAM refinement**
   - Optional negative/positive clicks to fix tricky edges
 - **Adjacency graph**
-  - Enables “match veins across neighbors” helpers later
+  - Enables "match veins across neighbors" helpers later
 
 **Done when** most patterns need only a little cleanup.
 
@@ -83,8 +103,8 @@ Build a web app where you import a stained-glass **pattern image** and **glass s
 - **Geometry**: OpenCV contours + Shapely simplify (with guardrails for holes/multiple contours)
 
 ## Milestones (fast path)
-- **M1 (1–2 days)**: pattern view + polygon clipping + transforms + save/load JSON
-- **M2 (2–4 days)**: crop tool + box prompt ? SAM mask preview ? accepted pieces
-- **M3 (1–2 days)**: glass sheet library + assignment UI
+- **M1 (1-2 days)**: pattern view + polygon clipping + transforms + save/load JSON
+- **M2 (2-4 days)**: crop tool + box prompt -> SAM mask preview -> accepted pieces
+- **M3 (1-2 days)**: glass sheet library + assignment UI
 - **M4 (later)**: auto-detection + refinement tools
 
