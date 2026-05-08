@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
-import { PieceProperties } from './components/PieceProperties';
 import { useProject } from './hooks/useProject';
 import { encodeImage, segmentBox } from './api';
 import type { BoundingBox, GlassSheet } from './types';
@@ -222,17 +221,11 @@ export function App() {
           onPatternCropChange={updatePatternCrop}
           onPatternScaleChange={updatePatternScale}
           onAddPiece={handleAddPiece}
+          onUpdatePieceLabel={updatePieceLabel}
+          onUpdatePieceSheet={updatePieceSheet}
+          onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+          onDeletePiece={deletePiece}
         />
-        {selectedPiece && (
-          <PieceProperties
-            piece={selectedPiece}
-            sheets={project.sheets}
-            onLabelChange={label => updatePieceLabel(selectedPiece.id, label)}
-            onSheetChange={sheetId => updatePieceSheet(selectedPiece.id, sheetId)}
-            onAddSheet={() => addSheetAndAssignPiece(selectedPiece.id)}
-            onDelete={() => deletePiece(selectedPiece.id)}
-          />
-        )}
       </div>
 
       {/* ── Right: glass sheet workspace ── */}

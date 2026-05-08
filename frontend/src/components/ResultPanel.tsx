@@ -12,6 +12,7 @@ import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
+import { PieceProperties } from './PieceProperties';
 
 const TOOLS = [
   { id: 'select' as ToolId, label: 'Select', icon: <SelectIcon /> },

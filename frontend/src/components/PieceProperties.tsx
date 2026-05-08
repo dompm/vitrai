@@ -43,16 +43,24 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '6px 10px',
-      background: '#f9fafb',
-      borderTop: '1px solid #e5e7eb',
-      flexShrink: 0,
-      minHeight: 40,
-    }}>
+    <div
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
+      onWheel={e => e.stopPropagation()}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '6px 10px',
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: '8px',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        flexShrink: 0,
+        minHeight: 40,
+        pointerEvents: 'auto',
+      }}
+    >
       {editing ? (
         <input
           ref={inputRef}
