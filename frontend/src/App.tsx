@@ -3,7 +3,8 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { PieceProperties } from './components/PieceProperties';
 import { useProject } from './hooks/useProject';
-import type { GlassSheet } from './types';
+import { encodeImage, segmentBox } from './api';
+import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
 
 interface SheetTabProps {
@@ -72,6 +73,7 @@ export function App() {
     project,
     selectedPieceId,
     activeSheetId,
+    pendingPieceIds,
     setActiveSheetId,
     selectPiece,
     updatePieceTransform,
@@ -87,8 +89,35 @@ export function App() {
     addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
+    updatePiecePolygon,
+    markPiecePending,
+    unmarkPiecePending,
     resetProject,
   } = useProject();
+
+  const [patternImageId, setPatternImageId] = useState<string | null>(null);
+
+  // Encode the pattern image when it changes so SAM can warm up.
+  useEffect(() => {
+    setPatternImageId(null);
+    encodeImage(project.patternImageUrl)
+      .then(setPatternImageId)
+      .catch(() => { /* backend not running — SAM unavailable */ });
+  }, [project.patternImageUrl]);
+
+  async function handleAddPiece(box: BoundingBox) {
+    const pieceId = addPieceFromBox(box, activeSheetId);
+    if (!patternImageId) return;
+    markPiecePending(pieceId);
+    try {
+      const polygon = await segmentBox(patternImageId, box);
+      if (polygon.length >= 3) updatePiecePolygon(pieceId, polygon);
+    } catch {
+      // keep rectangle fallback silently
+    } finally {
+      unmarkPiecePending(pieceId);
+    }
+  }
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
   const selectedPiece = project.pieces.find(p => p.id === selectedPieceId) ?? null;
@@ -117,10 +146,11 @@ export function App() {
         <ResultPanel
           project={project}
           selectedPieceId={selectedPieceId}
+          pendingPieceIds={pendingPieceIds}
           onSelectPiece={selectPiece}
           onPatternCropChange={updatePatternCrop}
           onPatternScaleChange={updatePatternScale}
-          onAddPiece={box => addPieceFromBox(box, activeSheetId)}
+          onAddPiece={handleAddPiece}
         />
         {selectedPiece && (
           <PieceProperties

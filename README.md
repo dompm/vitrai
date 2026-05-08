@@ -38,3 +38,20 @@ uv run uvicorn main:app --reload --port 8000
 
 Then open `http://localhost:8000/health`.
 
+## SAM2 inference on Modal
+
+Deploy the SAM2 box-segmentation service:
+
+```bash
+cd modal
+modal deploy sam2_app.py
+```
+
+Run the backend (it will call the deployed Modal function):
+
+```bash
+cd backend
+export VITRAUX_MODAL_APP="vitraux-sam2"
+uv run uvicorn main:app --reload --port 8000
+```
+

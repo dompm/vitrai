@@ -24,11 +24,12 @@ interface PieceOverlayProps {
   piece: Piece;
   glassImageUrl: string;
   isSelected: boolean;
+  isPending: boolean;
   effectiveScale: number;
   onSelect: () => void;
 }
 
-function PieceOverlay({ piece, glassImageUrl, isSelected, effectiveScale, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveScale, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const { x: tx, y: ty, rotation, scale } = piece.transform;
   const centroid = computeCentroid(piece.polygon);
@@ -47,6 +48,9 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, effectiveScale, onSele
     onSelect();
   }
 
+  const xs = piece.polygon.map(p => p[0]);
+  const ys = piece.polygon.map(p => p[1]);
+
   return (
     <Group onClick={handleClick} onTap={handleClick}>
       <Group clipFunc={clipPolygon}>
@@ -57,11 +61,21 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, effectiveScale, onSele
         >
           {glassImg && <KonvaImage image={glassImg} x={-tx} y={-ty} />}
         </Group>
+        {isPending && (
+          <Rect
+            x={Math.min(...xs)} y={Math.min(...ys)}
+            width={Math.max(...xs) - Math.min(...xs)}
+            height={Math.max(...ys) - Math.min(...ys)}
+            fill="rgba(245,158,11,0.18)"
+            listening={false}
+          />
+        )}
       </Group>
       <Line
         points={flatPts}
-        stroke={isSelected ? '#4f46e5' : 'rgba(79,70,229,0.7)'}
+        stroke={isPending ? '#f59e0b' : isSelected ? '#4f46e5' : 'rgba(79,70,229,0.7)'}
         strokeWidth={isSelected ? 3 / effectiveScale : 2 / effectiveScale}
+        dash={isPending ? [6 / effectiveScale, 4 / effectiveScale] : undefined}
         closed listening={false}
       />
     </Group>
@@ -71,6 +85,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, effectiveScale, onSele
 interface ResultPanelProps {
   project: Project;
   selectedPieceId: string | null;
+  pendingPieceIds: ReadonlySet<string>;
   onSelectPiece: (id: string | null) => void;
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
@@ -80,7 +95,7 @@ interface ResultPanelProps {
 const MIN_BOX_PX = 10;
 
 export function ResultPanel({
-  project, selectedPieceId, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  project, selectedPieceId, pendingPieceIds, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
 }: ResultPanelProps) {
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const { patternWidth: pw, patternHeight: ph } = project;
@@ -197,6 +212,7 @@ export function ResultPanel({
                     piece={piece}
                     glassImageUrl={sheet?.imageUrl ?? ''}
                     isSelected={piece.id === selectedPieceId}
+                    isPending={pendingPieceIds.has(piece.id)}
                     effectiveScale={es}
                     onSelect={() => onSelectPiece(piece.id)}
                   />

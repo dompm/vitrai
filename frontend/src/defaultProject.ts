@@ -1,4 +1,5 @@
 import type { Project } from './types';
+import { GLASS_ASSETS } from './assets';
 
 const NO_CROP = { top: 0, left: 0, bottom: 0, right: 0 };
 
@@ -9,13 +10,11 @@ export const DEFAULT_PROJECT: Project = {
   patternCrop: NO_CROP,
   patternScale: null,
   pieces: [],
-  sheets: [
-    {
-      id: 'sheet-1',
-      label: 'Sheet 1',
-      imageUrl: '/assets/glass1.jpg',
-      crop: NO_CROP,
-      scale: null,
-    },
-  ],
+  sheets: GLASS_ASSETS.map((g, i) => ({
+    id: `sheet-${i + 1}`,
+    label: g.label,
+    imageUrl: g.url,
+    crop: NO_CROP,
+    scale: null,
+  })),
 };

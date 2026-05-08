@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
 import { DEFAULT_PROJECT } from '../defaultProject';
+import { GLASS_ASSETS } from '../assets';
 
 const STORAGE_KEY = 'vitraux-project';
 
@@ -37,10 +38,11 @@ function applyScales(project: Project, sheetId?: string): Project {
 }
 
 function makeNewSheet(prev: Project): GlassSheet {
+  const glass = GLASS_ASSETS[prev.sheets.length % GLASS_ASSETS.length];
   return {
     id: `sheet-${Date.now()}`,
     label: `Sheet ${prev.sheets.length + 1}`,
-    imageUrl: prev.sheets[0]?.imageUrl ?? '/assets/glass1.jpg',
+    imageUrl: glass.url,
     crop: { top: 0, left: 0, bottom: 0, right: 0 },
     scale: null,
   };
@@ -52,6 +54,7 @@ export function useProject() {
   const [activeSheetId, setActiveSheetId] = useState<string>(
     () => loadProject().sheets[0]?.id ?? ''
   );
+  const [pendingPieceIds, setPendingPieceIds] = useState<ReadonlySet<string>>(new Set());
 
   // Keep activeSheetId valid if the active sheet is ever deleted
   useEffect(() => {
@@ -181,17 +184,18 @@ export function useProject() {
     });
   }, []);
 
-  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string) => {
+  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string): string => {
     const { x1, y1, x2, y2 } = box;
     const polygon: Piece['polygon'] = [
       [x1, y1], [x2, y1], [x2, y2], [x1, y2],
     ];
+    const id = `piece-${Date.now()}`;
     setProject(prev => {
       const label = `Piece ${prev.pieces.length + 1}`;
       const sheet = prev.sheets.find(s => s.id === sheetId);
       const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? 1;
       const newPiece: Piece = {
-        id: `piece-${Date.now()}`,
+        id,
         label,
         polygon,
         glassSheetId: sheetId,
@@ -200,6 +204,21 @@ export function useProject() {
       setSelectedPieceId(newPiece.id);
       return persist({ ...prev, pieces: [...prev.pieces, newPiece] });
     });
+    return id;
+  }, []);
+
+  const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][]) => {
+    setProject(prev =>
+      persist({ ...prev, pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p) })
+    );
+  }, []);
+
+  const markPiecePending = useCallback((pieceId: string) => {
+    setPendingPieceIds(s => new Set(s).add(pieceId));
+  }, []);
+
+  const unmarkPiecePending = useCallback((pieceId: string) => {
+    setPendingPieceIds(s => { const n = new Set(s); n.delete(pieceId); return n; });
   }, []);
 
   const resetProject = useCallback(() => {
@@ -213,6 +232,7 @@ export function useProject() {
     project,
     selectedPieceId,
     activeSheetId,
+    pendingPieceIds,
     setActiveSheetId,
     selectPiece,
     updatePieceTransform,
@@ -228,6 +248,9 @@ export function useProject() {
     updatePatternScale,
     updateSheetScale,
     addPieceFromBox,
+    updatePiecePolygon,
+    markPiecePending,
+    unmarkPiecePending,
     resetProject,
   };
 }
