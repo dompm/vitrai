@@ -16,3 +16,6 @@ frontend/.vite/
 
 # Cursor/agent temp artifacts
 ~ai-*.tmp
+
+# Local data assets
+data/
