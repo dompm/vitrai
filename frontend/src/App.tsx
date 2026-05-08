@@ -2,7 +2,8 @@ import { useEffect, useState, useRef } from 'react';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { encodeImage, segmentBox } from './api';
+import { encodeImage, segment } from './api';
+import { subtractPolygons } from './utils/geometry';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
 
@@ -112,10 +113,51 @@ export function App() {
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const polygon = await segmentBox(patternImageId, box);
-      if (polygon.length >= 3) updatePiecePolygon(pieceId, polygon);
+      const polygon = await segment(patternImageId, box);
+      const existingPieces = project.pieces.map(p => p.polygon);
+      const clipped = subtractPolygons(polygon, existingPieces);
+      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
     } catch {
       // keep rectangle fallback silently
+    } finally {
+      unmarkPiecePending(pieceId);
+    }
+  }
+
+  async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece || !patternImageId) return;
+    
+    const newPoints = [...(piece.promptPoints || []), point];
+    updatePiecePrompt(pieceId, piece.promptBox, newPoints);
+    
+    markPiecePending(pieceId);
+    try {
+      const polygon = await segment(patternImageId, piece.promptBox, newPoints);
+      const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
+      const clipped = subtractPolygons(polygon, otherPieces);
+      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      unmarkPiecePending(pieceId);
+    }
+  }
+
+  async function handleClearPrompt(pieceId: string) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece || !patternImageId) return;
+
+    updatePiecePrompt(pieceId, piece.promptBox, []);
+    
+    markPiecePending(pieceId);
+    try {
+      const polygon = await segment(patternImageId, piece.promptBox, []);
+      const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
+      const clipped = subtractPolygons(polygon, otherPieces);
+      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+    } catch (e) {
+      console.error(e);
     } finally {
       unmarkPiecePending(pieceId);
     }
@@ -225,6 +267,8 @@ export function App() {
           onUpdatePieceSheet={updatePieceSheet}
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
           onDeletePiece={deletePiece}
+          onUpdatePrompt={handleUpdatePrompt}
+          onClearPrompt={handleClearPrompt}
         />
       </div>
 

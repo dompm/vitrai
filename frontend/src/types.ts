@@ -24,12 +24,20 @@ export interface BoundingBox {
   x2: number; y2: number;
 }
 
+export interface PromptPoint {
+  x: number;
+  y: number;
+  label: 1 | 0; // 1 for positive, 0 for negative
+}
+
 export interface Piece {
   id: string;
   label: string;
   polygon: [number, number][]; // points in pattern image pixel coordinates
   glassSheetId: string;
   transform: TextureTransform;
+  promptBox?: BoundingBox;
+  promptPoints?: PromptPoint[];
 }
 
 export interface GlassSheet {

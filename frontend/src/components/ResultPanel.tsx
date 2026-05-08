@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect } from 'react-konva';
+import { useState, useEffect } from 'react';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
@@ -95,15 +95,22 @@ interface ResultPanelProps {
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
   onAddSheetAndAssignPiece: (id: string) => void;
   onDeletePiece: (id: string) => void;
+  onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
+  onClearPrompt: (pieceId: string) => void;
 }
 
 const MIN_BOX_PX = 10;
 
 export function ResultPanel({
   project, selectedPieceId, pendingPieceIds, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt, onClearPrompt,
 }: ResultPanelProps) {
   const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
+  
+  // Clear refine mode when piece changes
+  useEffect(() => { setRefineMode(null); }, [selectedPieceId]);
+
   const { patternWidth: pw, patternHeight: ph } = project;
   const vp = useViewport(pw, ph);
   const [patternImg] = useImage(project.patternImageUrl);
@@ -118,6 +125,13 @@ export function ResultPanel({
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
+    
+    if (refineMode && selectedPieceId) {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      onUpdatePrompt(selectedPieceId, { x, y, label: refineMode === 'add' ? 1 : 0 });
+      return;
+    }
+
     if (activeTool === 'box') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
@@ -156,7 +170,7 @@ export function ResultPanel({
   }
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
-    if (activeTool === 'select' && isBackground(e)) onSelectPiece(null);
+    if (!refineMode && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
   }
 
   function handleMeasureConfirm(realLength: number, unit: Scale['unit']) {
@@ -166,15 +180,35 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    setRefineMode(null);
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = project.patternScale?.line;
-      measure.loadLine(saved ?? { x1: pw * 0.25, y1: ph * 0.5, x2: pw * 0.75, y2: ph * 0.5 });
+      const cropL = project.patternCrop.left;
+      const cropT = project.patternCrop.top;
+      const cropR = pw - project.patternCrop.right;
+      const cropB = ph - project.patternCrop.bottom;
+      
+      const defaultX1 = cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = cropL + (cropR - cropL) * 0.75;
+      const defaultY = cropT + (cropB - cropT) * 0.5;
+
+      let x1 = saved?.x1 ?? defaultX1;
+      let y1 = saved?.y1 ?? defaultY;
+      let x2 = saved?.x2 ?? defaultX2;
+      let y2 = saved?.y2 ?? defaultY;
+
+      x1 = Math.max(cropL, Math.min(cropR, x1));
+      y1 = Math.max(cropT, Math.min(cropB, y1));
+      x2 = Math.max(cropL, Math.min(cropR, x2));
+      y2 = Math.max(cropT, Math.min(cropB, y2));
+      
+      measure.loadLine({ x1, y1, x2, y2 });
     }
     setActiveTool(id);
   }
 
-  const containerCursor = activeTool === 'box' ? 'crosshair' : 'default';
+  const containerCursor = refineMode === 'add' ? 'crosshair' : refineMode === 'remove' ? 'no-drop' : activeTool === 'box' ? 'crosshair' : 'default';
   const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
@@ -245,11 +279,24 @@ export function ResultPanel({
                   listening={false}
                 />
               )}
+              {project.pieces.map(piece => {
+                if (piece.id !== selectedPieceId || !piece.promptPoints) return null;
+                return piece.promptPoints.map((pt, i) => (
+                  <Circle
+                    key={i}
+                    x={pt.x} y={pt.y}
+                    radius={5 / es}
+                    fill={pt.label === 1 ? '#4338ca' : '#ef4444'}
+                    listening={false}
+                  />
+                ));
+              })}
               {activeTool === 'measure' && measure.line && (
                 <MeasureLineOverlay
                   line={measure.line}
                   effectiveScale={es}
                   imageWidth={pw} imageHeight={ph}
+                  crop={project.patternCrop}
                   onUpdateP1={measure.updateP1}
                   onUpdateP2={measure.updateP2}
                   onCursorChange={setCursor}
@@ -293,6 +340,9 @@ export function ResultPanel({
                 onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
                 onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
                 onDelete={() => onDeletePiece(piece.id)}
+                refineMode={refineMode}
+                onRefineModeChange={setRefineMode}
+                onClearPrompt={() => onClearPrompt(piece.id)}
               />
             </div>
           );

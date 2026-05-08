@@ -109,7 +109,7 @@ class Sam2BoxSegmenter:
         return session_id
 
     @modal.method()
-    def segment_box(self, session_id: str, box: tuple[float, float, float, float]) -> list[list[int]]:
+    def segment(self, session_id: str, box: tuple[float, float, float, float] | None, points: list[tuple[float, float, int]] | None) -> list[list[int]]:
         import numpy as np
         if session_id not in embeddings:
             raise KeyError(session_id)
@@ -122,9 +122,13 @@ class Sam2BoxSegmenter:
         self.predictor._is_image_set = True  # type: ignore[attr-defined]
         self.predictor._is_batch = False  # type: ignore[attr-defined]
 
-        masks, _, _ = self.predictor.predict(
-            box=np.array([[box[0], box[1], box[2], box[3]]], dtype=np.float32),
-            multimask_output=False,
-        )
+        kwargs = {"multimask_output": False}
+        if box is not None:
+            kwargs["box"] = np.array([[box[0], box[1], box[2], box[3]]], dtype=np.float32)
+        if points is not None and len(points) > 0:
+            kwargs["point_coords"] = np.array([[p[0], p[1]] for p in points], dtype=np.float32)
+            kwargs["point_labels"] = np.array([p[2] for p in points], dtype=np.int32)
+
+        masks, _, _ = self.predictor.predict(**kwargs)
         return self._mask_to_polygon(masks[0])
 

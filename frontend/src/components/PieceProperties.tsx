@@ -8,9 +8,12 @@ interface Props {
   onSheetChange: (sheetId: string) => void;
   onAddSheet: () => void;
   onDelete: () => void;
+  refineMode?: 'add' | 'remove' | null;
+  onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
+  onClearPrompt?: () => void;
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, refineMode, onRefineModeChange, onClearPrompt }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -127,6 +130,62 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       </select>
 
       <div style={{ flex: 1 }} />
+
+      {onRefineModeChange && (
+        <>
+          <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+          <button
+            onClick={() => onRefineModeChange(refineMode === 'add' ? null : 'add')}
+            title="Add positive point (+)"
+            style={{
+              background: refineMode === 'add' ? '#e0e7ff' : 'none',
+              border: 'none',
+              borderRadius: 4,
+              color: refineMode === 'add' ? '#4338ca' : '#6b7280',
+              cursor: 'pointer',
+              fontSize: 16,
+              padding: '0 6px',
+              fontWeight: 'bold',
+            }}
+          >
+            +
+          </button>
+          <button
+            onClick={() => onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
+            title="Add negative point (-)"
+            style={{
+              background: refineMode === 'remove' ? '#fee2e2' : 'none',
+              border: 'none',
+              borderRadius: 4,
+              color: refineMode === 'remove' ? '#b91c1c' : '#6b7280',
+              cursor: 'pointer',
+              fontSize: 16,
+              padding: '0 6px',
+              fontWeight: 'bold',
+            }}
+          >
+            -
+          </button>
+          {onClearPrompt && (
+            <button
+              onClick={onClearPrompt}
+              title="Clear/Delete active mask"
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#6b7280',
+                cursor: 'pointer',
+                fontSize: 11,
+                padding: '0 4px',
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </>
+      )}
+
+      <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
 
       <button
         onClick={onDelete}

@@ -86,6 +86,20 @@ export function useProject() {
     []
   );
 
+  const updatePiecePrompt = useCallback(
+    (pieceId: string, promptBox: BoundingBox | undefined, promptPoints: Piece['promptPoints']) => {
+      setProject(prev =>
+        persist({
+          ...prev,
+          pieces: prev.pieces.map(p =>
+            p.id === pieceId ? { ...p, promptBox, promptPoints } : p
+          ),
+        })
+      );
+    },
+    []
+  );
+
   const updatePatternCrop = useCallback((crop: Partial<Crop>) => {
     setProject(prev =>
       persist({ ...prev, patternCrop: { ...prev.patternCrop, ...crop } })
@@ -200,6 +214,8 @@ export function useProject() {
         polygon,
         glassSheetId: sheetId,
         transform: { x: 400, y: 300, rotation: 0, scale: s },
+        promptBox: box,
+        promptPoints: [],
       };
       setSelectedPieceId(newPiece.id);
       return persist({ ...prev, pieces: [...prev.pieces, newPiece] });
@@ -273,6 +289,7 @@ export function useProject() {
     updateSheetScale,
     addPieceFromBox,
     updatePiecePolygon,
+    updatePiecePrompt,
     markPiecePending,
     unmarkPiecePending,
     resetProject,

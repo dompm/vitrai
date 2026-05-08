@@ -13,11 +13,19 @@ export async function encodeImage(imageUrl: string): Promise<string> {
   return image_id;
 }
 
-export async function segmentBox(imageId: string, box: BoundingBox): Promise<[number, number][]> {
+export async function segment(
+  imageId: string,
+  box?: BoundingBox,
+  points?: { x: number; y: number; label: number }[]
+): Promise<[number, number][]> {
   const r = await fetch(`${BASE_URL}/segment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image_id: imageId, box: [box.x1, box.y1, box.x2, box.y2] }),
+    body: JSON.stringify({
+      image_id: imageId,
+      box: box ? [box.x1, box.y1, box.x2, box.y2] : undefined,
+      points: points
+    }),
   });
   if (!r.ok) throw new Error(`segment failed: ${r.status}`);
   const { polygon } = await r.json() as { polygon: [number, number][] };
