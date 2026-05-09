@@ -1,10 +1,8 @@
-<p align="center">
-  <img src="frontend/public/vitrai_logo.svg" alt="Vitrai" width="180" />
+<p>
+  <img src="frontend/public/vitrai_logo.svg" alt="Vitrai" width="140" align="left" style="margin-right: 20px" />
+  A stained-glass planning web app — segment pattern pieces from a photo using SAM2, then map real glass sheet textures onto each piece.
 </p>
-
-# Vitrai
-
-A stained-glass planning web app — segment pattern pieces from a photo using SAM2, then map real glass sheet textures onto each piece.
+<br clear="left" />
 
 Runs entirely in the browser (no backend). SAM2 inference runs on-device via WebGPU (ONNX Runtime Web).
 
