@@ -6,9 +6,9 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, CropAnimation, MeasureAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, CropAnimation, MeasureAnimation, PanAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -137,9 +137,36 @@ export function SheetPanel({
 }: SheetPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        setIsSpaceDown(true);
+        return;
+      }
+      if (e.key === 'v') handleToolChange('select');
+      else if (e.key === 'h') handleToolChange('pan');
+      else if (e.key === 'c') handleToolChange('crop');
+      else if (e.key === 'm') handleToolChange('measure');
+      else if (e.key === 'Escape') handleToolChange('select');
+    }
+    function handleKeyUp(e: KeyboardEvent) {
+      if (e.code === 'Space') setIsSpaceDown(false);
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTool]);
 
   useEffect(() => {
     if (sheetImg && onImageLoad) onImageLoad(sheetImg.width, sheetImg.height);
@@ -162,7 +189,7 @@ export function SheetPanel({
     if (!ptr) return;
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
-    if (isMiddleClick) {
+    if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
       vp.startPan(ptr);
       return;
     }
@@ -243,10 +270,11 @@ export function SheetPanel({
   }
 
   const es = vp.effectiveScale;
-  const containerCursor = rotatingPieceId ? 'grabbing' : 'default';
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
+  const isPanActive = activeTool === 'pan' || isSpaceDown;
+  const containerCursor = rotatingPieceId ? 'grabbing' : isPanActive ? (vp.isPanning ? 'grabbing' : 'grab') : 'default';
 
   const TOOLS = useMemo(() => [
     {
@@ -258,6 +286,17 @@ export function SheetPanel({
         shortcut: 'V',
         description: t('tooltipSelectDescSheet'),
         animation: <SelectAnimation />,
+      },
+    },
+    {
+      id: 'pan' as ToolId,
+      label: t('toolPan'),
+      icon: <HandIcon />,
+      tooltip: {
+        name: t('tooltipPanName'),
+        shortcut: 'H, Space',
+        description: t('tooltipPanDesc'),
+        animation: <PanAnimation />,
       },
     },
     {

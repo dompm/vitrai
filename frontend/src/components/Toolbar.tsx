@@ -1,4 +1,4 @@
-export type ToolId = 'select' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect';
+export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
@@ -29,6 +29,14 @@ interface ToolbarProps {
 export const SelectIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
     <path d="M3 1.5l9.5 6-3.8 1.4 2.3 4.2-1.5.8-2.3-4.2L4 11.5V1.5z" />
+  </svg>
+);
+
+export const HandIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 8.5V4.5a1.5 1.5 0 0 1 3 0V8" />
+    <path d="M9 8V2.5a1.5 1.5 0 0 1 3 0V8" />
+    <path d="M12 8V5.5a1.5 1.5 0 0 1 3 0v5a5.5 5.5 0 0 1-11 0V8.5a1.5 1.5 0 0 1 3 0v1.5" />
   </svg>
 );
 

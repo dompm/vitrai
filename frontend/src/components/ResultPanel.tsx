@@ -5,9 +5,9 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -157,6 +157,7 @@ export function ResultPanel({
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
@@ -171,15 +172,28 @@ export function ResultPanel({
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        setIsSpaceDown(true);
+        return;
+      }
       if (e.key === 'v') handleToolChange('select');
+      else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b') handleToolChange('box');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
       else if (e.key === 'Escape') handleToolChange('select');
     }
+    function handleKeyUp(e: KeyboardEvent) {
+      if (e.code === 'Space') setIsSpaceDown(false);
+    }
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTool]);
 
@@ -200,7 +214,7 @@ export function ResultPanel({
     if (!ptr) return;
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
-    if (isMiddleClick) {
+    if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
       vp.startPan(ptr);
       return;
     }
@@ -324,7 +338,16 @@ export function ResultPanel({
     setActiveTool(id);
   }
 
-  const containerCursor = refineMode === 'add' ? 'crosshair' : refineMode === 'remove' ? 'no-drop' : activeTool === 'box' ? 'crosshair' : 'default';
+  const isPanActive = activeTool === 'pan' || isSpaceDown;
+  const containerCursor = isPanActive 
+    ? (vp.isPanning ? 'grabbing' : 'grab') 
+    : refineMode === 'add' 
+      ? 'crosshair' 
+      : refineMode === 'remove' 
+        ? 'no-drop' 
+        : activeTool === 'box' 
+          ? 'crosshair' 
+          : 'default';
   const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
@@ -344,6 +367,17 @@ export function ResultPanel({
         shortcut: 'V',
         description: t('tooltipSelectDescPattern'),
         animation: <SelectAnimation />,
+      },
+    },
+    {
+      id: 'pan' as ToolId,
+      label: t('toolPan'),
+      icon: <HandIcon />,
+      tooltip: {
+        name: t('tooltipPanName'),
+        shortcut: 'H, Space',
+        description: t('tooltipPanDesc'),
+        animation: <PanAnimation />,
       },
     },
     {

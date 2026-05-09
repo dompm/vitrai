@@ -441,3 +441,47 @@ export function InspectAnimation() {
     </svg>
   );
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Pan Animation — Hand grabbing and dragging the canvas
+   ═══════════════════════════════════════════════════════════════════════════ */
+export function PanAnimation() {
+  const dur = '3s';
+  const KT = '0; 0.2; 0.5; 0.7; 1';
+  
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="#eef2ff" />
+      
+      {/* Pattern Image that gets moved */}
+      <g>
+        <animateTransform
+          attributeName="transform" type="translate"
+          values="0,0; 0,0; -30,-10; -30,-10; 0,0"
+          keyTimes={KT} dur={dur} repeatCount="indefinite" />
+        <IdleFlower />
+      </g>
+      
+      {/* Hand icon moving */}
+      <g>
+        <animateTransform
+          attributeName="transform" type="translate"
+          values="110,60; 110,60; 80,50; 80,50; 110,60"
+          keyTimes={KT} dur={dur} repeatCount="indefinite" />
+        
+        {/* Open hand -> Closed hand -> Open hand */}
+        <g stroke="#1e293b" strokeWidth="1.5" fill="white" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M8 6.5V1.5C8 1 7 1 7 1.5V6.5 M7 6V2.5C7 2 6 2 6 2.5V8.5 M6 7.5V3.5C6 3 5 3 5 3.5V10.5 M8 8V4.5C8 4 9 4 9 4.5V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5">
+            <animate attributeName="d"
+              values="M8 6.5V1.5C8 1 7 1 7 1.5V6.5 M7 6V2.5C7 2 6 2 6 2.5V8.5 M6 7.5V3.5C6 3 5 3 5 3.5V10.5 M8 8V4.5C8 4 9 4 9 4.5V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5;
+                      M8 6.5V3C8 2.5 7 2.5 7 3V6.5 M7 6V4C7 3.5 6 3.5 6 4V8.5 M6 7.5V5C6 4.5 5 4.5 5 5V10.5 M8 8V6C8 5.5 9 5.5 9 6V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5;
+                      M8 6.5V3C8 2.5 7 2.5 7 3V6.5 M7 6V4C7 3.5 6 3.5 6 4V8.5 M6 7.5V5C6 4.5 5 4.5 5 5V10.5 M8 8V6C8 5.5 9 5.5 9 6V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5;
+                      M8 6.5V1.5C8 1 7 1 7 1.5V6.5 M7 6V2.5C7 2 6 2 6 2.5V8.5 M6 7.5V3.5C6 3 5 3 5 3.5V10.5 M8 8V4.5C8 4 9 4 9 4.5V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5;
+                      M8 6.5V1.5C8 1 7 1 7 1.5V6.5 M7 6V2.5C7 2 6 2 6 2.5V8.5 M6 7.5V3.5C6 3 5 3 5 3.5V10.5 M8 8V4.5C8 4 9 4 9 4.5V10 M9 10C10 10 11 9.5 11 8.5V5.5C11 5 10 5 10 5.5 M5 10.5C5 12 6 14 8 14C10 14 11 12 11 10 M3.5 11.5L5 10.5"
+              keyTimes={KT} dur={dur} repeatCount="indefinite" />
+          </path>
+        </g>
+      </g>
+    </svg>
+  );
+}
