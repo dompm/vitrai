@@ -228,7 +228,7 @@ html, body, #root {
   transform: translateY(-50%) scale(1);
 }
 
-/* ── Rich tool tooltips ─────────────────────────────── */
+/* ── Rich tool tooltips ──────────────────────────────────── */
 .tool-tooltip-card {
   position: absolute;
   left: calc(100% + 10px);
@@ -410,7 +410,7 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 
-/* ── Mobile-only elements (hidden on desktop) ───────── */
+/* ── Mobile-only elements (hidden on desktop) ─────────── */
 .mobile-menu-btn {
   display: none;
   align-items: center;
@@ -530,6 +530,13 @@ html, body, #root {
     padding: 8px 12px;
     overflow: hidden;
   }
+  .app-name {
+    display: none;
+  }
+  .logo-img {
+    width: 28px;
+    height: 28px;
+  }
   .header-actions {
     min-width: 0;
     flex-shrink: 1;
@@ -543,6 +550,21 @@ html, body, #root {
   }
   .project-name-input {
     max-width: 100px;
+  }
+  /* Project dropdown: full-width, larger tap targets */
+  .project-dropdown {
+    position: fixed;
+    top: auto;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    min-width: unset;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  }
+  .project-dropdown-item {
+    padding: 12px 14px;
+    font-size: 0.95rem;
   }
 
   /* Stack panels vertically */
