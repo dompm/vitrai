@@ -12,7 +12,64 @@ interface Props {
 
 const DIM = 'rgba(0,0,0,0.42)';
 const STROKE = '#2563eb';
-const HIT = 18; // visual hit width in display px
+const EDGE_HIT = 28;   // edge hit zone in display px
+const ARM = 22;        // corner L-handle arm length in display px
+const ARM_W = 4;       // corner arm thickness in display px
+const CORNER_HIT = 44; // corner invisible hit zone in display px
+
+interface CornerHandleProps {
+  x: number;
+  y: number;
+  es: number;
+  flipX: boolean;
+  flipY: boolean;
+  cursor: string;
+  onDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  onCursorChange: (e: KonvaEventObject<MouseEvent>, cursor: string) => void;
+}
+
+function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChange }: CornerHandleProps) {
+  const arm = ARM / es;
+  const w = ARM_W / es;
+  const hit = CORNER_HIT / es;
+  const sx = flipX ? -1 : 1;
+  const sy = flipY ? -1 : 1;
+
+  return (
+    <Group
+      x={x} y={y}
+      draggable
+      onDragMove={onDragMove}
+      onMouseEnter={e => onCursorChange(e, cursor)}
+      onMouseLeave={e => onCursorChange(e, 'default')}
+    >
+      {/* Invisible hit area extending into the crop region */}
+      <Rect
+        x={flipX ? -hit : 0}
+        y={flipY ? -hit : 0}
+        width={hit}
+        height={hit}
+        fill="transparent"
+      />
+      {/* L-shape: horizontal arm */}
+      <Line
+        points={[0, 0, sx * arm, 0]}
+        stroke={STROKE}
+        strokeWidth={w}
+        lineCap="square"
+        listening={false}
+      />
+      {/* L-shape: vertical arm */}
+      <Line
+        points={[0, 0, 0, sy * arm]}
+        stroke={STROKE}
+        strokeWidth={w}
+        lineCap="square"
+        listening={false}
+      />
+    </Group>
+  );
+}
 
 export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScale: es, onCropChange }: Props) {
   const ix = crop.left;
@@ -33,64 +90,100 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
       <Rect x={0} y={iy} width={ix} height={ih} fill={DIM} listening={false} />
       <Rect x={ix + iw} y={iy} width={W - ix - iw} height={ih} fill={DIM} listening={false} />
 
-      {/* Top handle */}
+      {/* Edge handles */}
       <Line
         x={0} y={crop.top}
         points={[0, 0, W, 0]}
-        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={HIT / es}
+        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
-        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        onDragMove={e => {
           const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
           e.target.y(y);
           onCropChange({ top: Math.round(y) });
         }}
-        onMouseEnter={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'ns-resize')}
-        onMouseLeave={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'default')}
+        onMouseEnter={e => setCursor(e, 'ns-resize')}
+        onMouseLeave={e => setCursor(e, 'default')}
       />
-
-      {/* Bottom handle */}
       <Line
         x={0} y={H - crop.bottom}
         points={[0, 0, W, 0]}
-        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={HIT / es}
+        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
-        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        onDragMove={e => {
           const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
           e.target.y(y);
           onCropChange({ bottom: Math.round(H - y) });
         }}
-        onMouseEnter={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'ns-resize')}
-        onMouseLeave={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'default')}
+        onMouseEnter={e => setCursor(e, 'ns-resize')}
+        onMouseLeave={e => setCursor(e, 'default')}
       />
-
-      {/* Left handle */}
       <Line
         x={crop.left} y={0}
         points={[0, 0, 0, H]}
-        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={HIT / es}
+        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
-        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        onDragMove={e => {
           const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
           e.target.x(x);
           onCropChange({ left: Math.round(x) });
         }}
-        onMouseEnter={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'ew-resize')}
-        onMouseLeave={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'default')}
+        onMouseEnter={e => setCursor(e, 'ew-resize')}
+        onMouseLeave={e => setCursor(e, 'default')}
       />
-
-      {/* Right handle */}
       <Line
         x={W - crop.right} y={0}
         points={[0, 0, 0, H]}
-        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={HIT / es}
+        stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
-        onDragMove={(e: KonvaEventObject<DragEvent>) => {
+        onDragMove={e => {
           const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
           e.target.x(x);
           onCropChange({ right: Math.round(W - x) });
         }}
-        onMouseEnter={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'ew-resize')}
-        onMouseLeave={(e: KonvaEventObject<MouseEvent>) => setCursor(e, 'default')}
+        onMouseEnter={e => setCursor(e, 'ew-resize')}
+        onMouseLeave={e => setCursor(e, 'default')}
+      />
+
+      {/* Corner handles — drag both axes simultaneously */}
+      <CornerHandle
+        x={ix} y={iy} es={es} flipX={false} flipY={false} cursor="nwse-resize"
+        onCursorChange={setCursor}
+        onDragMove={e => {
+          const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
+          const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
+          e.target.x(x); e.target.y(y);
+          onCropChange({ left: Math.round(x), top: Math.round(y) });
+        }}
+      />
+      <CornerHandle
+        x={ix + iw} y={iy} es={es} flipX={true} flipY={false} cursor="nesw-resize"
+        onCursorChange={setCursor}
+        onDragMove={e => {
+          const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
+          const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
+          e.target.x(x); e.target.y(y);
+          onCropChange({ right: Math.round(W - x), top: Math.round(y) });
+        }}
+      />
+      <CornerHandle
+        x={ix} y={iy + ih} es={es} flipX={false} flipY={true} cursor="nesw-resize"
+        onCursorChange={setCursor}
+        onDragMove={e => {
+          const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
+          const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
+          e.target.x(x); e.target.y(y);
+          onCropChange({ left: Math.round(x), bottom: Math.round(H - y) });
+        }}
+      />
+      <CornerHandle
+        x={ix + iw} y={iy + ih} es={es} flipX={true} flipY={true} cursor="nwse-resize"
+        onCursorChange={setCursor}
+        onDragMove={e => {
+          const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
+          const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
+          e.target.x(x); e.target.y(y);
+          onCropChange({ right: Math.round(W - x), bottom: Math.round(H - y) });
+        }}
       />
     </Group>
   );
