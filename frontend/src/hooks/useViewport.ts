@@ -8,6 +8,10 @@ interface Dims { w: number; h: number; }
  * Wheel behavior (Figma/Illustrator style):
  *   - ctrlKey (pinch on trackpad): zoom centered on cursor
  *   - plain scroll: pan
+ *
+ * Touch behavior:
+ *   - 1 finger: pan (delegated to Stage pointer handlers via startPan/movePan)
+ *   - 2 fingers: pinch-to-zoom centered on midpoint, with simultaneous pan
  */
 export function useViewport(imageW: number, imageH: number) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -16,12 +20,17 @@ export function useViewport(imageW: number, imageH: number) {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const initializedRef = useRef(false);
 
-  // Mutable refs so the native wheel handler (added once) always sees current values
+  // Mutable refs so native handlers (added once) always see current values
   const zoomRef = useRef(zoom);
   const panRef = useRef(pan);
   const dimsRef = useRef(dims);
   const imageWRef = useRef(imageW);
   const imageHRef = useRef(imageH);
+
+  // Pan state — defined here so the pinch handler can reset them
+  const isPanning = useRef(false);
+  const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
+  const isPinchingRef = useRef(false);
 
   zoomRef.current = zoom;
   panRef.current = pan;
@@ -77,17 +86,11 @@ export function useViewport(imageW: number, imageH: number) {
       const ds = iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
 
       if (e.ctrlKey) {
-        // Pinch / Ctrl+scroll → zoom centred on cursor
         const rect = el.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
-
-        // Normalise deltaY to pixel-equivalent units so speed is consistent
-        // across deltaMode=0 (pixels), 1 (lines), 2 (pages) and device settings.
         const raw = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 400 : 1);
-        // ~40 % zoom change per 100 normalised units — matches Figma / Miro feel.
         const factor = Math.pow(0.996, raw);
-
         const prev = zoomRef.current;
         const prevPan = panRef.current;
         const newZoom = Math.max(0.1, Math.min(20, prev * factor));
@@ -99,7 +102,6 @@ export function useViewport(imageW: number, imageH: number) {
           y: my - (my - prevPan.y) * newEff / oldEff,
         });
       } else {
-        // Two-finger scroll → pan
         setPan(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
       }
     };
@@ -107,17 +109,98 @@ export function useViewport(imageW: number, imageH: number) {
     return () => el.removeEventListener('wheel', handler);
   }, []); // runs once; state accessed via refs
 
-  // Pan via pointer drag — call these from Stage event handlers
-  const isPanning = useRef(false);
-  const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
+  // Pinch-to-zoom — native touch handler so we can preventDefault
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    let lastDist = 0;
+    let lastMidX = 0;
+    let lastMidY = 0;
+
+    function pinchDist(t: TouchList) {
+      return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+    }
+
+    function pinchMid(t: TouchList, rect: DOMRect) {
+      return {
+        x: (t[0].clientX + t[1].clientX) / 2 - rect.left,
+        y: (t[0].clientY + t[1].clientY) / 2 - rect.top,
+      };
+    }
+
+    function onTouchStart(e: TouchEvent) {
+      if (e.touches.length !== 2) return;
+      e.preventDefault();
+      isPinchingRef.current = true;
+      // Cancel any active single-finger pan
+      isPanning.current = false;
+      lastPanPtr.current = null;
+      const rect = el.getBoundingClientRect();
+      lastDist = pinchDist(e.touches);
+      const m = pinchMid(e.touches, rect);
+      lastMidX = m.x;
+      lastMidY = m.y;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (e.touches.length !== 2 || !isPinchingRef.current) return;
+      e.preventDefault();
+      const iw = imageWRef.current;
+      const ih = imageHRef.current;
+      const d = dimsRef.current;
+      const ds = iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
+
+      const newDist = pinchDist(e.touches);
+      const rect = el.getBoundingClientRect();
+      const m = pinchMid(e.touches, rect);
+
+      if (lastDist > 0) {
+        const factor = newDist / lastDist;
+        const prev = zoomRef.current;
+        const prevPan = panRef.current;
+        const newZoom = Math.max(0.1, Math.min(20, prev * factor));
+        const oldEff = ds * prev;
+        const newEff = ds * newZoom;
+        // Keep the image point that was under lastMid pinned to the new mid.
+        // Simultaneously handles zoom and the translation of the midpoint.
+        setZoom(newZoom);
+        setPan({
+          x: m.x - (lastMidX - prevPan.x) * newEff / oldEff,
+          y: m.y - (lastMidY - prevPan.y) * newEff / oldEff,
+        });
+      }
+
+      lastDist = newDist;
+      lastMidX = m.x;
+      lastMidY = m.y;
+    }
+
+    function onTouchEnd(e: TouchEvent) {
+      if (e.touches.length < 2) {
+        isPinchingRef.current = false;
+        lastDist = 0;
+      }
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
+  }, []); // runs once; state accessed via refs
 
   function startPan(pos: { x: number; y: number }) {
+    if (isPinchingRef.current) return;
     isPanning.current = true;
     lastPanPtr.current = pos;
   }
 
   function movePan(pos: { x: number; y: number }) {
-    if (!isPanning.current || !lastPanPtr.current) return;
+    if (!isPanning.current || !lastPanPtr.current || isPinchingRef.current) return;
     const dx = pos.x - lastPanPtr.current.x;
     const dy = pos.y - lastPanPtr.current.y;
     lastPanPtr.current = pos;
@@ -139,6 +222,7 @@ export function useViewport(imageW: number, imageH: number) {
     zoomRef,
     panRef,
     displayScaleRef,
+    isPanning: isPanning.current,
     startPan,
     movePan,
     endPan,
