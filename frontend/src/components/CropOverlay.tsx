@@ -15,7 +15,7 @@ const STROKE = '#2563eb';
 const EDGE_HIT = 28;   // edge hit zone in display px
 const ARM = 22;        // corner L-handle arm length in display px
 const ARM_W = 4;       // corner arm thickness in display px
-const CORNER_HIT = 44; // corner invisible hit zone in display px
+const CORNER_HIT = 20; // hit padding around each arm of the L in display px
 
 interface CornerHandleProps {
   x: number;
@@ -31,7 +31,7 @@ interface CornerHandleProps {
 function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChange }: CornerHandleProps) {
   const arm = ARM / es;
   const w = ARM_W / es;
-  const hit = CORNER_HIT / es;
+  const pad = CORNER_HIT / es;
   const sx = flipX ? -1 : 1;
   const sy = flipY ? -1 : 1;
 
@@ -43,12 +43,20 @@ function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChan
       onMouseEnter={e => onCursorChange(e, cursor)}
       onMouseLeave={e => onCursorChange(e, 'default')}
     >
-      {/* Invisible hit area extending into the crop region */}
+      {/* Horizontal arm hit area — follows the arm, doesn't bleed along the edge */}
       <Rect
-        x={flipX ? -hit : 0}
-        y={flipY ? -hit : 0}
-        width={hit}
-        height={hit}
+        x={flipX ? -arm : 0}
+        y={-pad / 2}
+        width={arm}
+        height={pad}
+        fill="transparent"
+      />
+      {/* Vertical arm hit area — follows the arm, doesn't bleed along the edge */}
+      <Rect
+        x={-pad / 2}
+        y={flipY ? -arm : 0}
+        width={pad}
+        height={arm}
         fill="transparent"
       />
       {/* L-shape: horizontal arm */}
