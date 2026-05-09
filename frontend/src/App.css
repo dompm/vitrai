@@ -1,0 +1,410 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  background: #f0f2f5;
+  color: #111827;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #f3f4f6;
+}
+
+.global-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  z-index: 100;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.app-name {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: #111827;
+  text-transform: uppercase;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  padding: 8px;
+  min-height: 0;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  min-height: 36px;
+}
+
+.panel-header > span {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #6b7280;
+}
+
+.btn-ghost {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 2px 8px;
+}
+
+.btn-ghost:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+/* Sheet tabs */
+.sheet-tabs {
+  display: flex;
+  gap: 2px;
+}
+
+.sheet-tab {
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 3px 10px;
+}
+
+.sheet-tab:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.sheet-tab.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 500;
+}
+
+.sheet-tab-close {
+  font-size: 13px;
+  line-height: 1;
+  color: currentColor;
+  opacity: 0;
+  border-radius: 3px;
+  padding: 0 2px;
+  transition: opacity 0.1s;
+}
+
+.sheet-tab:hover .sheet-tab-close {
+  opacity: 0.5;
+}
+
+.sheet-tab-close:hover {
+  opacity: 1 !important;
+  background: rgba(0,0,0,0.08);
+}
+
+/* Vertical toolbar */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 4px;
+  background: #f9fafb;
+  border-right: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  width: 38px;
+}
+
+.tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+}
+
+.tool-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.tool-btn.active {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.tool-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+}
+
+/* Fallback plain tooltip (used when no rich tooltip is provided) */
+.tooltip-tip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.92);
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 100;
+}
+.tooltip-wrapper:hover .tooltip-tip {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* ── Rich tool tooltips ─────────────────────────────── */
+.tool-tooltip-card {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.94);
+  opacity: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 220px;
+  pointer-events: none;
+  z-index: 200;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.tooltip-wrapper:hover .tool-tooltip-card {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+.tool-tooltip-preview {
+  background: #eff6ff;
+  height: 110px;
+  overflow: hidden;
+  line-height: 0;
+}
+.tool-tooltip-preview svg {
+  width: 220px;
+  height: 110px;
+  display: block;
+}
+.tool-tooltip-body {
+  padding: 10px 12px 11px;
+  background: #ffffff;
+}
+.tool-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+.tool-tooltip-name {
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
+}
+.tool-tooltip-kbd {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 1.6;
+}
+.tool-tooltip-desc {
+  color: #6b7280;
+  font-size: 11px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* First tool's tooltip: pin to top so it doesn't bleed above the panel */
+.toolbar > .tooltip-wrapper:first-child .tool-tooltip-card {
+  top: -4px;
+  transform: translateY(0) scale(0.94);
+}
+.toolbar > .tooltip-wrapper:first-child:hover .tool-tooltip-card {
+  transform: translateY(0) scale(1);
+}
+
+/* Project switcher */
+.project-name-input {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  outline: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  padding: 2px 6px;
+  min-width: 60px;
+  max-width: 160px;
+  font-family: inherit;
+}
+.project-name-input:hover {
+  border-color: #d1d5db;
+}
+.project-name-input:focus {
+  border-color: #1d4ed8;
+  background: white;
+}
+.project-chevron-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  padding: 2px 3px;
+  font-size: 10px;
+  line-height: 1;
+  border-radius: 3px;
+}
+.project-chevron-btn:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+.project-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  min-width: 180px;
+  z-index: 500;
+  overflow: hidden;
+}
+.project-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: #374151;
+}
+.project-dropdown-item:hover {
+  background: #f9fafb;
+}
+.project-dropdown-item.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+.project-dropdown-check {
+  width: 14px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.project-dropdown-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.project-delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 15px;
+  line-height: 1;
+  padding: 1px 4px;
+  opacity: 0;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.project-dropdown-item:hover .project-delete-btn {
+  opacity: 1;
+}
+.project-delete-btn:hover {
+  color: #ef4444 !important;
+  background: #fee2e2;
+}
+
+.spinner-tiny {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

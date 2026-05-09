@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" width="220" height="220">
+  <g transform="translate(110,110) rotate(45)">
+    <!-- Black diamond background -->
+    <rect x="-73" y="-73" width="146" height="146" rx="8" fill="#1a1a1a"/>
+
+    <!-- Blue pane: Top -->
+    <polygon points="-65,-65 -4,-65 -4,-4 -65,-4" fill="#2563c9"/>
+
+    <!-- Yellow pane: Left -->
+    <polygon points="-65,4 -65,65 59.4,65 -1.6,4" fill="#f0ba00"/>
+
+    <!-- Red pane: Right -->
+    <polygon points="4,-65 65,-65 65,59.4 4,-1.6" fill="#dd3930"/>
+  </g>
+</svg>

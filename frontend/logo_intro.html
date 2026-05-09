@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vitrai – Logo Intro</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;800;900&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    width: 100vw; height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: #f8f9fb;
+    overflow: hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  /* ─── Ambient glow behind logo ─── */
+  .ambient {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ambient-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: 0;
+    animation: orbFade 4s ease forwards;
+  }
+  .orb-blue   { width: 400px; height: 400px; background: rgba(50, 100, 220, 0.08); top: 20%; left: 30%; animation-delay: 0.3s; }
+  .orb-gold   { width: 380px; height: 380px; background: rgba(230, 180, 30, 0.07);  top: 50%; left: 20%; animation-delay: 0.5s; }
+  .orb-red    { width: 360px; height: 360px; background: rgba(220, 60, 50, 0.07);   top: 45%; left: 55%; animation-delay: 0.7s; }
+
+  @keyframes orbFade {
+    0%   { opacity: 0; transform: scale(0.5); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  /* ─── Center container ─── */
+  .intro-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+  }
+
+  /* ─── Logo Image ─── */
+  .logo-wrapper {
+    position: relative;
+    width: 200px; height: 200px;
+  }
+
+  .logo-img {
+    width: 100%; height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transform: scale(0.6) rotate(-8deg);
+    filter: drop-shadow(0 4px 24px rgba(0, 0, 0, 0.10));
+    animation: logoReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+  }
+
+  @keyframes logoReveal {
+    0%   { opacity: 0; transform: scale(0.6) rotate(-8deg); filter: brightness(1.8) drop-shadow(0 4px 24px rgba(0,0,0,0.10)); }
+    60%  { opacity: 1; transform: scale(1.06) rotate(1deg); }
+    80%  { transform: scale(0.97) rotate(-0.5deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); filter: brightness(1) drop-shadow(0 4px 24px rgba(0,0,0,0.10)); }
+  }
+
+  /* ─── Text ─── */
+  .brand-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: textReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
+  }
+
+  @keyframes textReveal {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .brand-name {
+    font-size: 56px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    color: #111827;
+    line-height: 1;
+  }
+
+  /* Gradient letter fill */
+  .brand-name span {
+    display: inline-block;
+    background: linear-gradient(135deg, #111827 0%, #374151 50%, #111827 100%);
+    background-size: 200% 200%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: gradientShift 4s ease-in-out 2s infinite;
+  }
+
+  @keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  .brand-tagline {
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: rgba(107, 114, 128, 0.7);
+    opacity: 0;
+    animation: taglineReveal 1s ease 2s forwards;
+  }
+
+  @keyframes taglineReveal {
+    to { opacity: 1; }
+  }
+
+  /* Subtle border line */
+  .divider-line {
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.12), transparent);
+    animation: lineExpand 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+  }
+  @keyframes lineExpand {
+    to { width: 200px; }
+  }
+
+  /* ─── Particle sparkles ─── */
+  .particles {
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .particle {
+    position: absolute;
+    width: 3px; height: 3px;
+    border-radius: 50%;
+    background: rgba(100, 120, 200, 0.35);
+    opacity: 0;
+    animation: sparkle 3s ease-in-out infinite;
+  }
+
+  @keyframes sparkle {
+    0%, 100% { opacity: 0; transform: scale(0) translateY(0); }
+    50%      { opacity: 1; transform: scale(1) translateY(-30px); }
+  }
+
+  /* ── Light ray across the logo ── */
+  .light-sweep {
+    position: absolute;
+    top: -20%; left: -60%;
+    width: 40px; height: 300px;
+    background: linear-gradient(180deg, transparent, rgba(255,255,255,0.5), transparent);
+    transform: rotate(-30deg);
+    opacity: 0;
+    animation: sweep 2s ease 2.2s forwards;
+    pointer-events: none;
+    z-index: 3;
+  }
+  @keyframes sweep {
+    0%   { left: -60%; opacity: 0; }
+    20%  { opacity: 1; }
+    100% { left: 160%; opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Ambient glow -->
+<div class="ambient">
+  <div class="ambient-orb orb-blue"></div>
+  <div class="ambient-orb orb-gold"></div>
+  <div class="ambient-orb orb-red"></div>
+</div>
+
+<!-- Particles -->
+<div class="particles" id="particles"></div>
+
+<!-- Main intro -->
+<div class="intro-container">
+  <div class="logo-wrapper">
+    <img class="logo-img" src="public/vitrai_logo.svg" alt="Vitrai Logo" />
+    <div class="light-sweep"></div>
+  </div>
+
+  <div class="divider-line"></div>
+
+  <div class="brand-text">
+    <div class="brand-name"><span>Vitrai</span></div>
+    <div class="brand-tagline">stained glass · design tool</div>
+  </div>
+</div>
+
+<script>
+  // Generate random sparkle particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 30; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = Math.random() * 100 + '%';
+    p.style.animationDelay = (Math.random() * 4 + 1) + 's';
+    p.style.animationDuration = (Math.random() * 2 + 2) + 's';
+    const hue = [220, 45, 0][Math.floor(Math.random() * 3)];
+    p.style.background = `hsla(${hue}, 80%, 75%, 0.6)`;
+    p.style.width = p.style.height = (Math.random() * 3 + 2) + 'px';
+    container.appendChild(p);
+  }
+</script>
+</body>
+</html>
