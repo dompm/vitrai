@@ -109,6 +109,7 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
             style={tool.loading ? { position: 'relative' } : undefined}
           >
             {tool.icon}
+            <span className="tool-label">{tool.label}</span>
             {tool.loading && (
               <div style={{
                 position: 'absolute', inset: 0, display: 'flex',

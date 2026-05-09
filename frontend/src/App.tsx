@@ -132,6 +132,7 @@ export function App() {
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
 
@@ -508,29 +509,39 @@ export function App() {
             <RedoIcon />
           </button>
 
+          <div className="header-secondary" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button
+              className="btn-ghost"
+              onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
+              title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+              style={{ fontSize: '0.8rem', fontWeight: 600, padding: '4px 8px' }}
+            >
+              {i18n.language === 'fr' ? 'EN' : 'FR'}
+            </button>
+
+            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+
+            <label className="btn-ghost" style={{ cursor: 'pointer' }}>
+              {t('load')}
+              <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
+            </label>
+            <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
+              {t('save')}
+            </button>
+
+            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+
+            <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
+              {t('print')}
+            </button>
+          </div>
+
           <button
-            className="btn-ghost"
-            onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
-            title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
-            style={{ fontSize: '0.8rem', fontWeight: 600, padding: '4px 8px' }}
+            className="mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(true)}
+            title="Menu"
           >
-            {i18n.language === 'fr' ? 'EN' : 'FR'}
-          </button>
-
-          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
-
-          <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-            {t('load')}
-            <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
-          </label>
-          <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
-            {t('save')}
-          </button>
-
-          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
-
-          <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
-            {t('print')}
+            ···
           </button>
 
         </div>
@@ -606,6 +617,41 @@ export function App() {
         )}
       </div>
     </div>
+
+      {/* Mobile drawer */}
+      <div className={`mobile-drawer${isMobileMenuOpen ? ' open' : ''}`}>
+        <div className="mobile-drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
+        <div className="mobile-drawer-panel">
+          <div className="mobile-drawer-header">
+            <span className="mobile-drawer-title">Menu</span>
+            <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
+          </div>
+
+          <button
+            className="mobile-drawer-item"
+            onClick={() => { i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr'); setIsMobileMenuOpen(false); }}
+          >
+            🌐 {i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+          </button>
+
+          <div className="mobile-drawer-divider" />
+
+          <label className="mobile-drawer-item" style={{ cursor: 'pointer' }}>
+            📂 {t('load')}
+            <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => { handleLoadProject(e); setIsMobileMenuOpen(false); }} />
+          </label>
+
+          <button className="mobile-drawer-item" onClick={() => { handleSaveProject(); setIsMobileMenuOpen(false); }}>
+            💾 {t('save')}
+          </button>
+
+          <div className="mobile-drawer-divider" />
+
+          <button className="mobile-drawer-item" onClick={() => { handlePrint(); setIsMobileMenuOpen(false); }}>
+            🖨️ {t('print')}
+          </button>
+        </div>
+      </div>
   </div>
   );
 }
