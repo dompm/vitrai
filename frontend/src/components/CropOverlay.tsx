@@ -106,7 +106,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         draggable
         onDragMove={e => {
           const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
-          e.target.y(y);
+          e.target.x(0); e.target.y(y);
           onCropChange({ top: Math.round(y) });
         }}
         onMouseEnter={e => setCursor(e, 'ns-resize')}
@@ -119,7 +119,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         draggable
         onDragMove={e => {
           const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
-          e.target.y(y);
+          e.target.x(0); e.target.y(y);
           onCropChange({ bottom: Math.round(H - y) });
         }}
         onMouseEnter={e => setCursor(e, 'ns-resize')}
@@ -132,7 +132,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         draggable
         onDragMove={e => {
           const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
-          e.target.x(x);
+          e.target.x(x); e.target.y(0);
           onCropChange({ left: Math.round(x) });
         }}
         onMouseEnter={e => setCursor(e, 'ew-resize')}
@@ -145,7 +145,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         draggable
         onDragMove={e => {
           const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
-          e.target.x(x);
+          e.target.x(x); e.target.y(0);
           onCropChange({ right: Math.round(W - x) });
         }}
         onMouseEnter={e => setCursor(e, 'ew-resize')}
