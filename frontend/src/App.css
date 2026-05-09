@@ -10,6 +10,7 @@ html, body, #root {
   color: #111827;
   font-family: system-ui, -apple-system, sans-serif;
   font-size: 13px;
+  overflow-x: hidden;
 }
 
 .app {
@@ -527,12 +528,21 @@ html, body, #root {
   /* Header: compact, hide secondary actions */
   .global-header {
     padding: 8px 12px;
+    overflow: hidden;
+  }
+  .header-actions {
+    min-width: 0;
+    flex-shrink: 1;
   }
   .header-secondary {
     display: none;
   }
   .mobile-menu-btn {
     display: flex;
+    flex-shrink: 0;
+  }
+  .project-name-input {
+    max-width: 100px;
   }
 
   /* Stack panels vertically */
