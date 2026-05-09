@@ -67,9 +67,9 @@ export class SamWorkerBackend {
   }
 }
 
-let _backend: SamWorkerBackend | null = null;
+declare global { interface Window { __samBackend?: SamWorkerBackend } }
 
 export function getSamBackend(onStatusChange: (s: string) => void = () => {}): SamWorkerBackend {
-  if (!_backend) _backend = new SamWorkerBackend(onStatusChange);
-  return _backend;
+  if (!window.__samBackend) window.__samBackend = new SamWorkerBackend(onStatusChange);
+  return window.__samBackend;
 }
