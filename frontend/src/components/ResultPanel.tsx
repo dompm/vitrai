@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
 import useImage from 'use-image';
@@ -70,6 +72,8 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
   const { x: tx, y: ty, rotation, scale } = piece.transform;
   const centroid = computeCentroid(piece.polygon);
   const flatPts = piece.polygon.flat();
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
 
   function clipPolygon(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
@@ -81,14 +85,32 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
+    if (longPressFired.current) { longPressFired.current = false; return; }
     onSelect(e.evt.shiftKey);
+  }
+
+  function handlePointerDown() {
+    if (!IS_TOUCH) return;
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      longPressTimer.current = null;
+      onSelect(true); // add to selection
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
 
   const xs = piece.polygon.map(p => p[0]);
   const ys = piece.polygon.map(p => p[1]);
 
   return (
-    <Group onClick={handleClick} onTap={handleClick} opacity={opacity}>
+    <Group
+      onClick={handleClick} onTap={handleClick} opacity={opacity}
+      onPointerDown={handlePointerDown} onPointerMove={cancelLongPress} onPointerUp={cancelLongPress}
+    >
       <Group clipFunc={clipPolygon}>
         <Group
           x={centroid.x} y={centroid.y}
@@ -266,8 +288,12 @@ export function ResultPanel({
     }
 
     if (activeTool === 'select' && isBackground(e)) {
-      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
+      if (IS_TOUCH) {
+        vp.startPan(ptr);
+      } else {
+        const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+        setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
+      }
       return;
     }
   }

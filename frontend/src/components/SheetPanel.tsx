@@ -1,4 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
+
+const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Circle, Rect } from 'react-konva';
 import useImage from 'use-image';
@@ -56,10 +58,27 @@ function PieceOutline({
 
   // Prevent drag from starting when the pointer went down on the rotation handle
   const dragStartedFromHandle = useRef(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
+    if (longPressFired.current) { longPressFired.current = false; return; }
     onSelect?.(e.evt.shiftKey);
+  }
+
+  function handlePointerDown() {
+    if (!IS_TOUCH) return;
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      longPressTimer.current = null;
+      onSelect?.(true);
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
 
   function handleDragStart(e: KonvaEventObject<DragEvent>) {
@@ -91,6 +110,9 @@ function PieceOutline({
       draggable={isSelected && strokeOnly && !handleOnly}
       onClick={handleOnly ? undefined : handleClick}
       onTap={handleOnly ? undefined : handleClick}
+      onPointerDown={handleOnly ? undefined : handlePointerDown}
+      onPointerMove={handleOnly ? undefined : cancelLongPress}
+      onPointerUp={handleOnly ? undefined : cancelLongPress}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
@@ -225,7 +247,11 @@ export function SheetPanel({
     }
 
     if (activeTool === 'select' && isBackground(e)) {
-      setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
+      if (!IS_TOUCH) {
+        setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
+      } else {
+        vp.startPan(ptr);
+      }
       return;
     }
 
