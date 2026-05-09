@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
-import { DEFAULT_PROJECT } from '../defaultProject';
+import { DEFAULT_PROJECT, EMPTY_PROJECT } from '../defaultProject';
 import { GLASS_ASSETS } from '../assets';
 
 const STORAGE_KEY = 'vitraux-project';
@@ -13,7 +13,7 @@ function loadProject(): Project {
   } catch {
     // ignore
   }
-  return DEFAULT_PROJECT;
+  return EMPTY_PROJECT;
 }
 
 function toPxPerMm(s: Scale): number {
@@ -357,9 +357,9 @@ export function useProject() {
 
   const resetProject = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
-    setProject(DEFAULT_PROJECT);
+    setProject(EMPTY_PROJECT);
     setSelectedPieceIds([]);
-    setActiveSheetId(DEFAULT_PROJECT.sheets[0]?.id ?? '');
+    setActiveSheetId('');
   }, []);
 
   const loadProjectData = useCallback((newProject: Project) => {

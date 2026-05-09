@@ -130,6 +130,7 @@ interface ResultPanelProps {
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
+  onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const MIN_BOX_PX = 10;
@@ -152,7 +153,7 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting,
+  onAutoSegment, isAutoSegmenting, onUploadPattern,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
@@ -413,183 +414,204 @@ export function ResultPanel({
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
-        style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative' }}
+        style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column' }}
       >
-        <Stage
-          width={vp.dims.w} height={vp.dims.h}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-        >
-          <Layer>
-            <Group
-              x={vp.pan.x} y={vp.pan.y}
-              scaleX={es} scaleY={es}
-              clipX={activeTool === 'crop' ? 0 : project.patternCrop.left}
-              clipY={activeTool === 'crop' ? 0 : project.patternCrop.top}
-              clipWidth={activeTool === 'crop' ? pw : Math.max(1, pw - project.patternCrop.left - project.patternCrop.right)}
-              clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
+        {!project.patternImageUrl ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+            <div>
+              <p style={{ fontSize: '1.2rem', fontWeight: 600, color: '#111827', marginBottom: 12 }}>{t('noPatternTitle')}</p>
+              <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
+                {t('noPatternDesc')}
+              </p>
+              <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                {t('uploadPatternButton')}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
+              </label>
+              <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
+                {t('noPatternSecondary')}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Stage
+              width={vp.dims.w} height={vp.dims.h}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={handlePointerUp}
             >
-              {patternImg && (
-                <KonvaImage 
-                  id="bg" 
-                  image={patternImg} 
-                  width={pw} height={ph} 
-                  opacity={activeTool === 'box' ? 0.5 : 1} 
-                />
-              )}
-              {activeTool !== 'inspect' && project.pieces.map(piece => {
-                const sheet = sheetMap[piece.glassSheetId];
-                const isSelected = selectedPieceIds.includes(piece.id);
-                return (
-                  <PieceOverlay
-                    key={piece.id}
-                    piece={piece}
-                    glassImageUrl={sheet?.imageUrl ?? ''}
-                    isSelected={isSelected}
-                    isPending={pendingPieceIds.has(piece.id)}
-                    effectiveScale={es}
-                    solderWidth={solderWidth}
-                    onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  />
-                );
-              })}
-              {marqueeBox && (
-                <Rect
-                  x={Math.min(marqueeBox.x1, marqueeBox.x2)}
-                  y={Math.min(marqueeBox.y1, marqueeBox.y2)}
-                  width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
-                  height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
-                  fill="rgba(67, 56, 202, 0.08)"
-                  stroke="#4338ca"
-                  strokeWidth={1.5 / es}
-                  dash={[4 / es, 2 / es]}
-                  listening={false}
-                />
-              )}
-              {activeTool === 'crop' && (
-                <CropOverlay
-                  imageWidth={pw} imageHeight={ph}
-                  crop={project.patternCrop}
-                  effectiveScale={es}
-                  onCropChange={onPatternCropChange}
-                />
-              )}
-              {activeTool === 'box' && drawingBox && (
-                <Rect
-                  x={Math.min(drawingBox.x1, drawingBox.x2)}
-                  y={Math.min(drawingBox.y1, drawingBox.y2)}
-                  width={Math.abs(drawingBox.x2 - drawingBox.x1)}
-                  height={Math.abs(drawingBox.y2 - drawingBox.y1)}
-                  stroke="#f59e0b"
-                  strokeWidth={2 / es}
-                  fill="rgba(245,158,11,0.08)"
-                  dash={[6 / es, 4 / es]}
-                  listening={false}
-                />
-              )}
-              {(() => {
-                const lastId = selectedPieceIds[selectedPieceIds.length - 1];
-                const piece = project.pieces.find(p => p.id === lastId);
-                if (piece?.promptBox) {
-                  return (
+              <Layer>
+                <Group
+                  x={vp.pan.x} y={vp.pan.y}
+                  scaleX={es} scaleY={es}
+                  clipX={activeTool === 'crop' ? 0 : project.patternCrop.left}
+                  clipY={activeTool === 'crop' ? 0 : project.patternCrop.top}
+                  clipWidth={activeTool === 'crop' ? pw : Math.max(1, pw - project.patternCrop.left - project.patternCrop.right)}
+                  clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
+                >
+                  {patternImg && (
+                    <KonvaImage 
+                      id="bg" 
+                      image={patternImg} 
+                      width={pw} height={ph} 
+                      opacity={activeTool === 'box' ? 0.5 : 1} 
+                    />
+                  )}
+                  {activeTool !== 'inspect' && project.pieces.map(piece => {
+                    const sheet = sheetMap[piece.glassSheetId];
+                    const isSelected = selectedPieceIds.includes(piece.id);
+                    return (
+                      <PieceOverlay
+                        key={piece.id}
+                        piece={piece}
+                        glassImageUrl={sheet?.imageUrl ?? ''}
+                        isSelected={isSelected}
+                        isPending={pendingPieceIds.has(piece.id)}
+                        effectiveScale={es}
+                        solderWidth={solderWidth}
+                        onSelect={(multi) => onSelectPiece(piece.id, multi)}
+                      />
+                    );
+                  })}
+                  {marqueeBox && (
                     <Rect
-                      x={piece.promptBox.x1}
-                      y={piece.promptBox.y1}
-                      width={piece.promptBox.x2 - piece.promptBox.x1}
-                      height={piece.promptBox.y2 - piece.promptBox.y1}
-                      stroke="rgba(245,158,11,0.3)"
-                      strokeWidth={1 / es}
-                      dash={[4 / es, 6 / es]}
+                      x={Math.min(marqueeBox.x1, marqueeBox.x2)}
+                      y={Math.min(marqueeBox.y1, marqueeBox.y2)}
+                      width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
+                      height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
+                      fill="rgba(67, 56, 202, 0.08)"
+                      stroke="#4338ca"
+                      strokeWidth={1.5 / es}
+                      dash={[4 / es, 2 / es]}
                       listening={false}
                     />
-                  );
-                }
-                return null;
-              })()}
-              {project.pieces.map(piece => {
-                if (!selectedPieceIds.includes(piece.id) || !piece.promptPoints) return null;
-                return piece.promptPoints.map((pt, i) => (
-                  <Circle
-                    key={i}
-                    x={pt.x} y={pt.y}
-                    radius={5 / es}
-                    fill={pt.label === 1 ? '#4338ca' : '#ef4444'}
-                    listening={false}
-                  />
-                ));
-              })}
-              {activeTool === 'measure' && measure.line && (
-                <MeasureLineOverlay
-                  line={measure.line}
-                  effectiveScale={es}
-                  imageWidth={pw} imageHeight={ph}
-                  crop={project.patternCrop}
-                  onUpdateP1={measure.updateP1}
-                  onUpdateP2={measure.updateP2}
-                  onCursorChange={setCursor}
+                  )}
+                  {activeTool === 'crop' && (
+                    <CropOverlay
+                      imageWidth={pw} imageHeight={ph}
+                      crop={project.patternCrop}
+                      effectiveScale={es}
+                      onCropChange={onPatternCropChange}
+                    />
+                  )}
+                  {activeTool === 'box' && drawingBox && (
+                    <Rect
+                      x={Math.min(drawingBox.x1, drawingBox.x2)}
+                      y={Math.min(drawingBox.y1, drawingBox.y2)}
+                      width={Math.abs(drawingBox.x2 - drawingBox.x1)}
+                      height={Math.abs(drawingBox.y2 - drawingBox.y1)}
+                      stroke="#f59e0b"
+                      strokeWidth={2 / es}
+                      fill="rgba(245,158,11,0.08)"
+                      dash={[6 / es, 4 / es]}
+                      listening={false}
+                    />
+                  )}
+                  {(() => {
+                    const lastId = selectedPieceIds[selectedPieceIds.length - 1];
+                    const piece = project.pieces.find(p => p.id === lastId);
+                    if (piece?.promptBox) {
+                      return (
+                        <Rect
+                          x={piece.promptBox.x1}
+                          y={piece.promptBox.y1}
+                          width={piece.promptBox.x2 - piece.promptBox.x1}
+                          height={piece.promptBox.y2 - piece.promptBox.y1}
+                          stroke="rgba(245,158,11,0.3)"
+                          strokeWidth={1 / es}
+                          dash={[4 / es, 6 / es]}
+                          listening={false}
+                        />
+                      );
+                    }
+                    return null;
+                  })()}
+                  {project.pieces.map(piece => {
+                    if (!selectedPieceIds.includes(piece.id) || !piece.promptPoints) return null;
+                    return piece.promptPoints.map((pt, i) => (
+                      <Circle
+                        key={i}
+                        x={pt.x} y={pt.y}
+                        radius={5 / es}
+                        fill={pt.label === 1 ? '#4338ca' : '#ef4444'}
+                        listening={false}
+                      />
+                    ));
+                  })}
+                  {activeTool === 'measure' && measure.line && (
+                    <MeasureLineOverlay
+                      line={measure.line}
+                      effectiveScale={es}
+                      imageWidth={pw} imageHeight={ph}
+                      crop={project.patternCrop}
+                      onUpdateP1={measure.updateP1}
+                      onUpdateP2={measure.updateP2}
+                      onCursorChange={setCursor}
+                    />
+                  )}
+                </Group>
+              </Layer>
+            </Stage>
+            {activeTool === 'measure' && measure.line && (() => {
+              const midX = (measure.line.x1 + measure.line.x2) / 2;
+              const midY = (measure.line.y1 + measure.line.y2) / 2;
+              const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+              const saved = project.patternScale;
+              return (
+                <MeasureInput
+                  screenX={sc.x} screenY={sc.y}
+                  pixelLength={measurePxLength}
+                  initialValue={saved ? measurePxLength / saved.pxPerUnit : undefined}
+                  initialUnit={saved?.unit}
+                  onConfirm={handleMeasureConfirm}
+                  onCancel={() => handleToolChange('select')}
                 />
-              )}
-            </Group>
-          </Layer>
-        </Stage>
-        {activeTool === 'measure' && measure.line && (() => {
-          const midX = (measure.line.x1 + measure.line.x2) / 2;
-          const midY = (measure.line.y1 + measure.line.y2) / 2;
-          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
-          const saved = project.patternScale;
-          return (
-            <MeasureInput
-              screenX={sc.x} screenY={sc.y}
-              pixelLength={measurePxLength}
-              initialValue={saved ? measurePxLength / saved.pxPerUnit : undefined}
-              initialUnit={saved?.unit}
-              onConfirm={handleMeasureConfirm}
-              onCancel={() => handleToolChange('select')}
-            />
-          );
-        })()}
-        {activeTool !== 'inspect' && (() => {
-          const lastId = selectedPieceIds[selectedPieceIds.length - 1];
-          const piece = project.pieces.find(p => p.id === lastId);
-          if (!piece) return null;
-          
-          const ys = piece.polygon.map(p => p[1]);
-          const minY = Math.min(...ys);
-          const xs = piece.polygon.map(p => p[0]);
-          const minX = Math.min(...xs);
-          const maxX = Math.max(...xs);
-          const centerX = (minX + maxX) / 2;
+              );
+            })()}
+            {activeTool !== 'inspect' && (() => {
+              const lastId = selectedPieceIds[selectedPieceIds.length - 1];
+              const piece = project.pieces.find(p => p.id === lastId);
+              if (!piece) return null;
+              
+              const ys = piece.polygon.map(p => p[1]);
+              const minY = Math.min(...ys);
+              const xs = piece.polygon.map(p => p[0]);
+              const minX = Math.min(...xs);
+              const maxX = Math.max(...xs);
+              const centerX = (minX + maxX) / 2;
 
-          const sc = toScreenCoords(centerX, minY, vp.pan, vp.effectiveScale);
+              const sc = toScreenCoords(centerX, minY, vp.pan, vp.effectiveScale);
 
-          return (
-            <div style={{
-              position: 'absolute',
-              left: sc.x + tooltipDrag.x,
-              top: sc.y + tooltipDrag.y,
-              transform: 'translate(-50%, -100%)',
-              marginTop: -12,
-              zIndex: 10,
-              pointerEvents: 'none',
-            }}>
-              <div style={{ pointerEvents: 'auto' }}>
-                <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
-                <PieceProperties
-                  piece={piece}
-                  sheets={project.sheets}
-                  onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
-                  onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
-                  onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
-                  onDelete={() => onDeletePiece(piece.id)}
-                  refineMode={refineMode}
-                  onRefineModeChange={setRefineMode}
-                  isPending={pendingPieceIds.has(piece.id)}
-                />
-              </div>
-            </div>
-          );
-        })()}
+              return (
+                <div style={{
+                  position: 'absolute',
+                  left: sc.x + tooltipDrag.x,
+                  top: sc.y + tooltipDrag.y,
+                  transform: 'translate(-50%, -100%)',
+                  marginTop: -12,
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                }}>
+                  <div style={{ pointerEvents: 'auto' }}>
+                    <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
+                    <PieceProperties
+                      piece={piece}
+                      sheets={project.sheets}
+                      onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
+                      onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
+                      onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
+                      onDelete={() => onDeletePiece(piece.id)}
+                      refineMode={refineMode}
+                      onRefineModeChange={setRefineMode}
+                      isPending={pendingPieceIds.has(piece.id)}
+                    />
+                  </div>
+                </div>
+              );
+            })()}
+          </>
+        )}
       </div>
     </div>
   );

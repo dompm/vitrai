@@ -51,7 +51,13 @@ const resources = {
       glass: "Glass",
       unit_mm: "mm",
       unit_cm: "cm",
-      unit_in: "in"
+      unit_in: "in",
+      noSheetsTitle: "No glass sheets yet",
+      noSheetsDesc: "Click the + button above to upload your glass inventory.",
+      noPatternTitle: "Ready to create?",
+      noPatternDesc: "Upload a pattern image to start segmenting your stained glass pieces.",
+      uploadPatternButton: "Upload Pattern",
+      noPatternSecondary: "Or drag and drop an image anywhere."
     }
   },
   fr: {
@@ -102,7 +108,13 @@ const resources = {
       glass: "Verre",
       unit_mm: "mm",
       unit_cm: "cm",
-      unit_in: "po"
+      unit_in: "po",
+      noSheetsTitle: "Aucune plaque de verre",
+      noSheetsDesc: "Cliquez sur le bouton + ci-dessus pour ajouter votre inventaire.",
+      noPatternTitle: "Prêt à créer ?",
+      noPatternDesc: "Téléversez une image de patron pour commencer à segmenter vos pièces.",
+      uploadPatternButton: "Téléverser un Patron",
+      noPatternSecondary: "Ou glissez-déposez une image n'importe où."
     }
   }
 };

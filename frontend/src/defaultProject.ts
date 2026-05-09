@@ -18,3 +18,12 @@ export const DEFAULT_PROJECT: Project = {
     scale: null,
   })),
 };
+export const EMPTY_PROJECT: Project = {
+  patternImageUrl: '',
+  patternWidth: 800,
+  patternHeight: 600,
+  patternCrop: NO_CROP,
+  patternScale: null,
+  pieces: [],
+  sheets: [],
+};

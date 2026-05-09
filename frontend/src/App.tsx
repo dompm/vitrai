@@ -336,6 +336,7 @@ export function App() {
           onUpdatePrompt={handleUpdatePrompt}
           onAutoSegment={handleAutoSegment}
           isAutoSegmenting={isAutoSegmenting}
+          onUploadPattern={handleUploadPattern}
         />
       </div>
 
@@ -361,7 +362,7 @@ export function App() {
           </div>
         </div>
 
-        {activeSheet && (
+        {activeSheet ? (
           <SheetPanel
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
@@ -372,6 +373,13 @@ export function App() {
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
           />
+        ) : (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+            <div>
+              <p style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: 8 }}>{t('noSheetsTitle')}</p>
+              <p style={{ fontSize: '0.9rem' }}>{t('noSheetsDesc')}</p>
+            </div>
+          </div>
         )}
       </div>
     </div>
