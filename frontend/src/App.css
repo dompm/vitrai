@@ -45,13 +45,11 @@ html, body, #root {
 }
 
 .app-name {
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
   color: #111827;
-  background: linear-gradient(135deg, #111827 0%, #4338ca 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
 }
 
 .header-actions {
@@ -135,8 +133,8 @@ html, body, #root {
 }
 
 .sheet-tab.active {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dbeafe;
+  color: #1d4ed8;
   font-weight: 500;
 }
 
@@ -192,8 +190,8 @@ html, body, #root {
 }
 
 .tool-btn.active {
-  background: #e0e7ff;
-  color: #4338ca;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .tool-btn:disabled {
@@ -251,7 +249,7 @@ html, body, #root {
   transform: translateY(-50%) scale(1);
 }
 .tool-tooltip-preview {
-  background: #eef2ff;
+  background: #eff6ff;
   height: 110px;
   overflow: hidden;
   line-height: 0;

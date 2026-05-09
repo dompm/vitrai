@@ -96,9 +96,9 @@ function PieceOutline({
     >
       <Line
         points={relPts}
-        stroke={fillOnly ? 'transparent' : (isSelected ? '#4f46e5' : 'rgba(79,70,229,0.65)')}
+        stroke={fillOnly ? 'transparent' : (isSelected ? '#2563eb' : 'rgba(37,99,235,0.65)')}
         strokeWidth={isSelected ? STROKE_SELECTED / es : STROKE_IDLE / es}
-        fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(79,70,229,0.10)' : 'rgba(79,70,229,0.04)')}
+        fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(37,99,235,0.10)' : 'rgba(37,99,235,0.04)')}
         closed
         hitStrokeWidth={strokeOnly ? 10 / es : 0}
       />
@@ -106,13 +106,13 @@ function PieceOutline({
         <>
           <Line
             points={[0, 0, 0, -handleOffset]}
-            stroke="rgba(79,70,229,0.55)" strokeWidth={HANDLE_STEM / es}
+            stroke="rgba(37,99,235,0.55)" strokeWidth={HANDLE_STEM / es}
             listening={false}
           />
           <Circle
             x={0} y={-handleOffset}
             radius={HANDLE_RADIUS / es}
-            fill="#4f46e5" stroke="white" strokeWidth={HANDLE_BORDER / es}
+            fill="#2563eb" stroke="white" strokeWidth={HANDLE_BORDER / es}
             onPointerDown={handleRotateDown}
           />
         </>

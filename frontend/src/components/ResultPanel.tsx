@@ -103,7 +103,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? '#f59e0b' : isSelected ? '#4338ca' : '#2d2d2d'}
+        stroke={isPending ? '#f59e0b' : isSelected ? '#1d4ed8' : '#2d2d2d'}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         dash={isPending ? [solderWidth * 2, solderWidth] : undefined}
         lineJoin="round"
@@ -515,7 +515,7 @@ export function ResultPanel({
                       width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
                       height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
                       fill="rgba(67, 56, 202, 0.08)"
-                      stroke="#4338ca"
+                      stroke="#1d4ed8"
                       strokeWidth={1.5 / es}
                       dash={[4 / es, 2 / es]}
                       listening={false}
@@ -568,7 +568,7 @@ export function ResultPanel({
                         key={i}
                         x={pt.x} y={pt.y}
                         radius={5 / es}
-                        fill={pt.label === 1 ? '#4338ca' : '#ef4444'}
+                        fill={pt.label === 1 ? '#1d4ed8' : '#ef4444'}
                         listening={false}
                       />
                     ));

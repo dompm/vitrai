@@ -13,10 +13,10 @@ const ANGLES = [0, 60, 120, 180, 240, 300];
 const CT = 22, CB = 88, CL = 81, CR = 139;
 
 // Idle / selected palette
-const IF  = 'rgba(99,102,241,0.12)';  // petal idle fill
-const CF  = 'rgba(99,102,241,0.52)';  // center fill  (solid)
+const IF  = 'rgba(59,130,246,0.12)';  // petal idle fill
+const CF  = 'rgba(59,130,246,0.52)';  // center fill  (solid)
 const IS  = '#818cf8';                 // idle stroke
-const SS  = '#4f46e5';                 // selected stroke
+const SS  = '#2563eb';                 // selected stroke
 
 /* ── Tiny render helpers ─────────────────────────────────────────────────── */
 
@@ -58,7 +58,7 @@ export function SelectAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
 
       {/* 5 idle petals (all except angle 120°) */}
       {[0, 60, 180, 240, 300].map(a => <Petal key={a} a={a} />)}
@@ -117,7 +117,7 @@ export function BoxAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
 
       {/* 5 idle petals (all except top petal at 0°) */}
       {[60, 120, 180, 240, 300].map(a => <Petal key={a} a={a} />)}
@@ -201,7 +201,7 @@ export function DetectAllAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
 
       {/* All 6 petals — animate together */}
       {ANGLES.map(a => <AnimPetal key={a} a={a} />)}
@@ -327,7 +327,7 @@ export function MeasureAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
 
       <IdleFlower />
 
@@ -407,7 +407,7 @@ export function InspectAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
       
       {/* Pattern Image (always visible) */}
       <IdleFlower />
@@ -424,16 +424,16 @@ export function InspectAnimation() {
             key={a}
             cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
             transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
-            fill="rgba(99,102,241,0.3)" stroke="#4338ca" strokeWidth="1.8"
+            fill="rgba(59,130,246,0.3)" stroke="#1d4ed8" strokeWidth="1.8"
           />
         ))}
-        <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(99,102,241,0.5)" stroke="#4338ca" strokeWidth="1.8" />
+        <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(59,130,246,0.5)" stroke="#1d4ed8" strokeWidth="1.8" />
       </g>
       
       {/* Eye icon overlay - flashes when active */}
       <g transform="translate(195, 12) scale(0.8)">
-        <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" fill="none" stroke="#4338ca" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="8" cy="8" r="2.5" fill="#4338ca" />
+        <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="8" cy="8" r="2.5" fill="#1d4ed8" />
         <animate attributeName="opacity"
           values="0.3;0.3;1;1;0.3;0.3"
           keyTimes={KT} dur={dur} repeatCount="indefinite" />
@@ -451,7 +451,7 @@ export function PanAnimation() {
   
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eef2ff" />
+      <rect width="220" height="110" fill="#eff6ff" />
       
       {/* Pattern Image that gets moved */}
       <g>

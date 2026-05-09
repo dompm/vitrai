@@ -11,7 +11,7 @@ interface Props {
 }
 
 const DIM = 'rgba(0,0,0,0.42)';
-const STROKE = '#4f46e5';
+const STROKE = '#2563eb';
 const HIT = 18; // visual hit width in display px
 
 export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScale: es, onCropChange }: Props) {

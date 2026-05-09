@@ -140,10 +140,10 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             onClick={() => onRefineModeChange(refineMode === 'add' ? null : 'add')}
             title={t('addPositivePoint')}
             style={{
-              background: refineMode === 'add' ? '#e0e7ff' : 'none',
+              background: refineMode === 'add' ? '#dbeafe' : 'none',
               border: 'none',
               borderRadius: 4,
-              color: refineMode === 'add' ? '#4338ca' : '#6b7280',
+              color: refineMode === 'add' ? '#1d4ed8' : '#6b7280',
               cursor: 'pointer',
               fontSize: 16,
               padding: '0 6px',
