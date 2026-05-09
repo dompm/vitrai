@@ -412,7 +412,7 @@ export function SheetPanel({
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
-        style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative' }}
+        style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', touchAction: 'none' }}
       >
         <Stage
           width={vp.dims.w} height={vp.dims.h}
