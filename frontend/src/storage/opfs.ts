@@ -2,7 +2,6 @@ import type { Project } from '../types';
 import { EMPTY_PROJECT } from '../defaultProject';
 
 const FILENAME = 'vitraux-project.json';
-const LS_MIGRATION_KEY = 'vitraux-project';
 
 export async function loadProjectFromOPFS(): Promise<Project> {
   try {
@@ -10,19 +9,6 @@ export async function loadProjectFromOPFS(): Promise<Project> {
     const handle = await root.getFileHandle(FILENAME);
     const file = await handle.getFile();
     return JSON.parse(await file.text()) as Project;
-  } catch {
-    return migrateFromLocalStorage();
-  }
-}
-
-async function migrateFromLocalStorage(): Promise<Project> {
-  try {
-    const raw = localStorage.getItem(LS_MIGRATION_KEY);
-    if (!raw) return EMPTY_PROJECT;
-    const project = JSON.parse(raw) as Project;
-    await saveToOPFS(project);
-    localStorage.removeItem(LS_MIGRATION_KEY);
-    return project;
   } catch {
     return EMPTY_PROJECT;
   }
