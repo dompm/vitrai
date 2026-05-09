@@ -1,20 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
 import { DEFAULT_PROJECT, EMPTY_PROJECT } from '../defaultProject';
 import { GLASS_ASSETS } from '../assets';
-
-const STORAGE_KEY = 'vitraux-project';
-
-function loadProject(): Project {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved) as Project;
-  } catch {
-    // ignore
-  }
-  return EMPTY_PROJECT;
-}
+import { loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 
 function toPxPerMm(s: Scale): number {
   if (s.unit === 'mm') return s.pxPerUnit;
@@ -51,14 +40,22 @@ function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
 
 export function useProject() {
   const { t } = useTranslation();
-  const [project, setProject] = useState<Project>(loadProject);
+  const [project, setProject] = useState<Project>(EMPTY_PROJECT);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [selectedPieceIds, setSelectedPieceIds] = useState<string[]>([]);
-  const [activeSheetId, setActiveSheetId] = useState<string>(
-    () => loadProject().sheets[0]?.id ?? ''
-  );
+  const [activeSheetId, setActiveSheetId] = useState<string>('');
   const [pendingPieceIds, setPendingPieceIds] = useState<ReadonlySet<string>>(new Set());
   const [undoStack, setUndoStack] = useState<Project[]>([]);
   const [redoStack, setRedoStack] = useState<Project[]>([]);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    loadProjectFromOPFS().then(p => {
+      setProject(p);
+      setActiveSheetId(p.sheets[0]?.id ?? '');
+      setIsLoaded(true);
+    });
+  }, []);
 
   // Keep activeSheetId valid if the active sheet is ever deleted
   useEffect(() => {
@@ -79,7 +76,8 @@ export function useProject() {
         setUndoStack(u => [...u.slice(-49), prev]);
         setRedoStack([]);
       }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = setTimeout(() => { saveToOPFS(next); }, 500);
       return next;
     });
   }, []);
@@ -91,7 +89,8 @@ export function useProject() {
       const newStack = u.slice(0, -1);
       setProject(current => {
         setRedoStack(r => [...r, current]);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(() => { saveToOPFS(prev); }, 500);
         return prev;
       });
       return newStack;
@@ -105,7 +104,8 @@ export function useProject() {
       const newStack = r.slice(0, -1);
       setProject(current => {
         setUndoStack(u => [...u, current]);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(() => { saveToOPFS(next); }, 500);
         return next;
       });
       return newStack;
@@ -139,7 +139,7 @@ export function useProject() {
   const addPiecePromptPoint = useCallback((pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => {
     updateProject(prev => ({
       ...prev,
-      pieces: prev.pieces.map(p => 
+      pieces: prev.pieces.map(p =>
         p.id === pieceId ? { ...p, promptPoints: [...(p.promptPoints || []), point] } : p
       )
     }));
@@ -251,9 +251,9 @@ export function useProject() {
     updateProject(prev => {
       const newSheet = makeNewSheet(prev, t);
       setActiveSheetId(newSheet.id);
-      
+
       // Default center for a new sheet
-      const cx = 400; 
+      const cx = 400;
       const cy = 300;
 
       const next = {
@@ -356,14 +356,15 @@ export function useProject() {
   }, []);
 
   const resetProject = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    void deleteFromOPFS();
     setProject(EMPTY_PROJECT);
     setSelectedPieceIds([]);
     setActiveSheetId('');
   }, []);
 
   const loadProjectData = useCallback((newProject: Project) => {
-    setProject(persist(newProject));
+    setProject(newProject);
+    void saveToOPFS(newProject);
     setSelectedPieceIds([]);
     setActiveSheetId(newProject.sheets[0]?.id ?? '');
   }, []);
@@ -394,6 +395,7 @@ export function useProject() {
 
   return {
     project,
+    isLoaded,
     selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
