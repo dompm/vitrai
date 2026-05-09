@@ -304,6 +304,54 @@ export function useProject() {
     return id;
   }, [updateProject, t]);
 
+  const updateSheetCorners = useCallback((
+    sheetId: string,
+    corners: [[number, number], [number, number], [number, number], [number, number]] | undefined
+  ) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, corners } : s),
+    }));
+  }, [updateProject]);
+
+  const applySheetWarp = useCallback((
+    sheetId: string,
+    warpedImageUrl: string,
+    warpedWidth: number,
+    warpedHeight: number,
+  ) => {
+    updateProject(prev => {
+      const sheets = prev.sheets.map(s => {
+        if (s.id !== sheetId) return s;
+        return {
+          ...s,
+          warpedImageUrl,
+          naturalWidth: warpedWidth,
+          naturalHeight: warpedHeight,
+          crop: { top: 0, left: 0, bottom: 0, right: 0 },
+        };
+      });
+      const cx = warpedWidth / 2;
+      const cy = warpedHeight / 2;
+      const pieces = prev.pieces.map(p => {
+        if (p.glassSheetId !== sheetId) return p;
+        return { ...p, transform: { ...p.transform, x: cx, y: cy } };
+      });
+      return { ...prev, sheets, pieces };
+    });
+  }, [updateProject]);
+
+  const clearSheetWarp = useCallback((sheetId: string) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => {
+        if (s.id !== sheetId) return s;
+        const { warpedImageUrl: _, corners: __, ...rest } = s;
+        return rest;
+      }),
+    }));
+  }, [updateProject]);
+
   const updateSheetDimensions = useCallback((sheetId: string, w: number, h: number) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -412,6 +460,9 @@ export function useProject() {
     addSheetAndAssignPiece,
     updatePatternScale,
     updateSheetScale,
+    updateSheetCorners,
+    applySheetWarp,
+    clearSheetWarp,
     addPieceFromBox,
     updateSheetDimensions,
     batchAddPieces,

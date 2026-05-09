@@ -1,12 +1,12 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Circle } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Circle, Text } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon, CornersIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
 import { SelectAnimation, CropAnimation, MeasureAnimation, PanAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
@@ -130,17 +130,24 @@ interface SheetPanelProps {
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
+  onCornersChange: (corners: [[number, number], [number, number], [number, number], [number, number]] | undefined) => void;
+  onWarpRequest: () => void;
+  isWarping?: boolean;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
+  onCornersChange, onWarpRequest, isWarping,
 }: SheetPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [isSpaceDown, setIsSpaceDown] = useState(false);
-  const [sheetImg] = useImage(sheet.imageUrl);
+  const [sheetImg] = useImage(sheet.warpedImageUrl ?? sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
+
+  // Local corner state: synced from sheet.corners when entering corners tool
+  const [localCorners, setLocalCorners] = useState<[[number, number], [number, number], [number, number], [number, number]] | null>(null);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -154,6 +161,7 @@ export function SheetPanel({
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
+      else if (e.key === 'k') handleToolChange('corners');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -198,6 +206,23 @@ export function SheetPanel({
     vp.startPan(ptr);
   }
 
+  function handleCornerDragMove(idx: number, e: KonvaEventObject<DragEvent>) {
+    if (!localCorners) return;
+    const next = localCorners.map((c, i) =>
+      i === idx ? [e.target.x(), e.target.y()] as [number, number] : c
+    ) as [[number, number], [number, number], [number, number], [number, number]];
+    setLocalCorners(next);
+  }
+
+  function handleCornerDragEnd(idx: number, e: KonvaEventObject<DragEvent>) {
+    if (!localCorners) return;
+    const next = localCorners.map((c, i) =>
+      i === idx ? [e.target.x(), e.target.y()] as [number, number] : c
+    ) as [[number, number], [number, number], [number, number], [number, number]];
+    setLocalCorners(next);
+    onCornersChange(next);
+  }
+
   function handlePointerMove(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
@@ -235,17 +260,20 @@ export function SheetPanel({
     if (id === activeTool && id !== 'select') {
       setActiveTool('select');
       if (id === 'measure') measure.reset();
+      if (id === 'corners') setLocalCorners(null);
       return;
     }
 
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
+    if (activeTool === 'corners' && id !== 'corners') setLocalCorners(null);
+
     if (id === 'measure') {
       const saved = sheet.scale?.line;
       const cropL = sheet.crop.left;
       const cropT = sheet.crop.top;
       const cropR = sheetW - sheet.crop.right;
       const cropB = sheetH - sheet.crop.bottom;
-      
+
       const defaultX1 = cropL + (cropR - cropL) * 0.25;
       const defaultX2 = cropL + (cropR - cropL) * 0.75;
       const defaultY = cropT + (cropB - cropT) * 0.5;
@@ -259,9 +287,22 @@ export function SheetPanel({
       y1 = Math.max(0, Math.min(sheetH, y1));
       x2 = Math.max(0, Math.min(sheetW, x2));
       y2 = Math.max(0, Math.min(sheetH, y2));
-      
+
       measure.loadLine({ x1, y1, x2, y2 });
     }
+
+    if (id === 'corners') {
+      // Load saved corners or default to near-image-boundary quad
+      const saved = sheet.corners;
+      const pad = Math.min(sheetW, sheetH) * 0.1;
+      setLocalCorners(saved ?? [
+        [pad, pad],
+        [sheetW - pad, pad],
+        [sheetW - pad, sheetH - pad],
+        [pad, sheetH - pad],
+      ]);
+    }
+
     setActiveTool(id);
   }
 
@@ -274,7 +315,10 @@ export function SheetPanel({
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
   const isPanActive = activeTool === 'pan' || isSpaceDown;
-  const containerCursor = rotatingPieceId ? 'grabbing' : isPanActive ? (vp.isPanning ? 'grabbing' : 'grab') : 'default';
+  const containerCursor = rotatingPieceId ? 'grabbing' : isPanActive ? (vp.isPanning ? 'grabbing' : 'grab') : activeTool === 'corners' ? 'default' : 'default';
+
+  const CORNER_RADIUS = 8;
+  const CORNER_LABELS = ['1', '2', '3', '4'];
 
   const TOOLS = useMemo(() => [
     {
@@ -315,10 +359,21 @@ export function SheetPanel({
       label: t('toolScaleSheet'),
       icon: <MeasureIcon />,
       tooltip: {
-        name: t('tooltipScaleName'), // Using the same "Set Scale" or "Measure" key
+        name: t('tooltipScaleName'),
         shortcut: 'M',
         description: t('tooltipScaleDescSheet'),
         animation: <MeasureAnimation />,
+      },
+    },
+    {
+      id: 'corners' as ToolId,
+      label: t('toolCorners'),
+      icon: <CornersIcon />,
+      tooltip: {
+        name: t('tooltipCornersName'),
+        shortcut: 'K',
+        description: t('tooltipCornersDesc'),
+        animation: <CornersIcon />,
       },
     },
   ], [t]);
@@ -393,6 +448,47 @@ export function SheetPanel({
                   onCursorChange={setCursor}
                 />
               )}
+              {activeTool === 'corners' && localCorners && (() => {
+                const pts = localCorners;
+                const flatPts = pts.flatMap(([x, y]) => [x, y]);
+                const r = CORNER_RADIUS / es;
+                return (
+                  <Group>
+                    <Line
+                      points={flatPts}
+                      stroke="#f59e0b"
+                      strokeWidth={2 / es}
+                      closed
+                      dash={[6 / es, 4 / es]}
+                      listening={false}
+                    />
+                    {pts.map(([cx, cy], idx) => (
+                      <Group key={idx}
+                        x={cx} y={cy}
+                        draggable
+                        onDragMove={e => handleCornerDragMove(idx, e)}
+                        onDragEnd={e => handleCornerDragEnd(idx, e)}
+                      >
+                        <Circle
+                          radius={r}
+                          fill="#f59e0b"
+                          stroke="white"
+                          strokeWidth={1.5 / es}
+                        />
+                        <Text
+                          text={CORNER_LABELS[idx]}
+                          fontSize={10 / es}
+                          fill="white"
+                          fontStyle="bold"
+                          offsetX={3 / es}
+                          offsetY={5 / es}
+                          listening={false}
+                        />
+                      </Group>
+                    ))}
+                  </Group>
+                );
+              })()}
             </Group>
           </Layer>
         </Stage>
@@ -412,6 +508,30 @@ export function SheetPanel({
             />
           );
         })()}
+        {activeTool === 'corners' && (
+          <div style={{
+            position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 8, zIndex: 10,
+          }}>
+            {sheet.warpedImageUrl && (
+              <button
+                className="btn-ghost"
+                style={{ fontSize: '0.8rem', padding: '5px 12px', color: '#dc2626', borderColor: '#fca5a5' }}
+                onClick={() => { onCornersChange(undefined); handleToolChange('select'); }}
+              >
+                {t('clearWarp')}
+              </button>
+            )}
+            <button
+              className="btn-ghost"
+              style={{ fontSize: '0.8rem', padding: '5px 12px', opacity: isWarping ? 0.6 : 1 }}
+              disabled={!localCorners || !!isWarping}
+              onClick={() => { if (localCorners) onCornersChange(localCorners); onWarpRequest(); }}
+            >
+              {isWarping ? t('applyingWarp') : t('applyWarp')}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

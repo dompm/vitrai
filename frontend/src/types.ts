@@ -48,6 +48,8 @@ export interface GlassSheet {
   scale: Scale | null;
   naturalWidth?: number;
   naturalHeight?: number;
+  corners?: [[number, number], [number, number], [number, number], [number, number]];
+  warpedImageUrl?: string;
 }
 
 export interface Project {

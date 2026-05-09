@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { encodeImage, segment, autoSegment } from './api';
+import { encodeImage, segment, autoSegment, warpImage } from './api';
 import { subtractPolygons, computeCentroid } from './utils/geometry';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
@@ -98,6 +98,9 @@ export function App() {
     updatePatternScale,
     updateSheetCrop,
     updateSheetScale,
+    updateSheetCorners,
+    applySheetWarp,
+    clearSheetWarp,
     deletePiece,
     updatePieceLabel,
     updatePieceSheet,
@@ -173,6 +176,21 @@ export function App() {
   }
 
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
+  const [isWarping, setIsWarping] = useState(false);
+
+  async function handleWarpRequest() {
+    if (!activeSheet || !activeSheet.corners || isWarping) return;
+    setIsWarping(true);
+    try {
+      const imageUrl = activeSheet.warpedImageUrl ?? activeSheet.imageUrl;
+      const { warpedImage, width, height } = await warpImage(imageUrl, activeSheet.corners);
+      applySheetWarp(activeSheetId, warpedImage, width, height);
+    } catch (e) {
+      console.error('Warp failed:', e);
+    } finally {
+      setIsWarping(false);
+    }
+  }
 
   async function handleAutoSegment() {
     if (!patternImageId || isAutoSegmenting) return;
@@ -452,6 +470,9 @@ export function App() {
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            onCornersChange={corners => corners ? updateSheetCorners(activeSheetId, corners) : clearSheetWarp(activeSheetId)}
+            onWarpRequest={handleWarpRequest}
+            isWarping={isWarping}
           />
         ) : (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>

@@ -36,7 +36,7 @@ export async function autoSegment(imageId: string, crop?: { top: number, bottom:
   const r = await fetch(`${BASE_URL}/auto_segment`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
+    body: JSON.stringify({
       image_id: imageId,
       crop: crop ? [crop.top, crop.bottom, crop.left, crop.right] : undefined
     }),
@@ -44,4 +44,19 @@ export async function autoSegment(imageId: string, crop?: { top: number, bottom:
   if (!r.ok) throw new Error(`auto_segment failed: ${r.status}`);
   const { polygons } = await r.json() as { polygons: [number, number][][] };
   return polygons;
+}
+
+export async function warpImage(
+  imageUrl: string,
+  corners: [[number, number], [number, number], [number, number], [number, number]]
+): Promise<{ warpedImage: string; width: number; height: number }> {
+  const res = await fetch(imageUrl);
+  const blob = await res.blob();
+  const form = new FormData();
+  form.append('file', blob, 'image');
+  form.append('corners', JSON.stringify(corners));
+  const r = await fetch(`${BASE_URL}/warp`, { method: 'POST', body: form });
+  if (!r.ok) throw new Error(`warp failed: ${r.status}`);
+  const { warped_image, width, height } = await r.json() as { warped_image: string; width: number; height: number };
+  return { warpedImage: warped_image, width, height };
 }

@@ -499,7 +499,7 @@ export function ResultPanel({
                       <PieceOverlay
                         key={piece.id}
                         piece={piece}
-                        glassImageUrl={sheet?.imageUrl ?? ''}
+                        glassImageUrl={sheet?.warpedImageUrl ?? sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
                         effectiveScale={es}

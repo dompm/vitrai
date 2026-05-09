@@ -63,7 +63,13 @@ const resources = {
       noPatternTitle: "Ready to create?",
       noPatternDesc: "Upload a pattern image to start segmenting your stained glass pieces.",
       uploadPatternButton: "Upload Pattern",
-      noPatternSecondary: "Or drag and drop an image anywhere."
+      noPatternSecondary: "Or drag and drop an image anywhere.",
+      toolCorners: "Correct perspective",
+      tooltipCornersName: "Correct Perspective",
+      tooltipCornersDesc: "Drag the 4 corner handles to the corners of the glass sheet, then apply warp to perspective-correct the photo",
+      applyWarp: "Apply warp",
+      applyingWarp: "Applying…",
+      clearWarp: "Clear warp"
     }
   },
   fr: {
@@ -126,7 +132,13 @@ const resources = {
       noPatternTitle: "Prêt à créer ?",
       noPatternDesc: "Téléversez une image de patron pour commencer à segmenter vos pièces.",
       uploadPatternButton: "Téléverser un Patron",
-      noPatternSecondary: "Ou glissez-déposez une image n'importe où."
+      noPatternSecondary: "Ou glissez-déposez une image n'importe où.",
+      toolCorners: "Corriger perspective",
+      tooltipCornersName: "Corriger Perspective",
+      tooltipCornersDesc: "Faites glisser les 4 poignées vers les coins de la plaque, puis appliquez la déformation pour corriger la perspective",
+      applyWarp: "Appliquer",
+      applyingWarp: "En cours…",
+      clearWarp: "Effacer"
     }
   }
 };
