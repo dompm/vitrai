@@ -86,7 +86,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       <Group clipFunc={clipPolygon}>
         <Group
           x={centroid.x} y={centroid.y}
-          rotation={(rotation * 180) / Math.PI}
+          rotation={(-rotation * 180) / Math.PI}
           scaleX={1 / scale} scaleY={1 / scale}
         >
           {glassImg && <KonvaImage image={glassImg} x={-tx} y={-ty} />}
