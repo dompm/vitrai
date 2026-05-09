@@ -408,3 +408,192 @@ html, body, #root {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── Mobile-only elements (hidden on desktop) ───────── */
+.mobile-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tool-label {
+  display: none;
+  font-size: 9px;
+  font-weight: 500;
+  white-space: nowrap;
+  color: inherit;
+  line-height: 1;
+}
+
+.mobile-drawer {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.mobile-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.mobile-drawer-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 220px;
+  background: white;
+  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 2px;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 4px;
+}
+
+.mobile-drawer-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: #111827;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.mobile-drawer-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 20px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.mobile-drawer-close:hover {
+  background: #f3f4f6;
+}
+
+.mobile-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.mobile-drawer-item:hover {
+  background: #f3f4f6;
+}
+
+.mobile-drawer-divider {
+  height: 1px;
+  background: #e5e7eb;
+  margin: 6px 0;
+}
+
+.header-secondary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* ── Mobile (≤ 768px) ───────────────────────────────── */
+@media (max-width: 768px) {
+  /* Header: compact, hide secondary actions */
+  .global-header {
+    padding: 8px 12px;
+  }
+  .header-secondary {
+    display: none;
+  }
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Stack panels vertically */
+  .main-container {
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px;
+  }
+
+  /* Each panel takes equal height */
+  .panel {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Toolbar: horizontal scroll strip */
+  .toolbar {
+    flex-direction: row;
+    width: 100%;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+    height: auto;
+    padding: 4px 6px;
+    scrollbar-width: none;
+    gap: 2px;
+  }
+  .toolbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Tool buttons: icon stacked above label */
+  .tool-btn {
+    flex-direction: column;
+    width: auto;
+    min-width: 44px;
+    height: auto;
+    padding: 5px 6px;
+    gap: 3px;
+    border-radius: 8px;
+    flex-shrink: 0;
+  }
+
+  /* Show labels on mobile */
+  .tool-label {
+    display: block;
+  }
+
+  /* Result panel inner: toolbar on top, canvas below */
+  .result-panel-inner {
+    flex-direction: column;
+  }
+
+  /* Suppress hover tooltips */
+  .tool-tooltip-card,
+  .tooltip-tip {
+    display: none !important;
+  }
+
+  /* Mobile drawer visible when open */
+  .mobile-drawer.open {
+    display: flex;
+  }
+}
