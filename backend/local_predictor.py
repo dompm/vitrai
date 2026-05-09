@@ -3,9 +3,12 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import io
+import os
 from typing import Any
 
-LOCAL_MODEL_ID = "facebook/sam2.1-hiera-tiny"
+# Override with LOCAL_SAM_MODEL env var for experiments:
+#   LOCAL_SAM_MODEL=facebook/sam2.1-hiera-small python -m uvicorn main:app
+LOCAL_MODEL_ID = os.environ.get("LOCAL_SAM_MODEL", "facebook/sam2.1-hiera-tiny")
 
 
 class LocalSAMService:

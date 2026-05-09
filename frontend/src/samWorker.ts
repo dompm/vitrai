@@ -1,5 +1,8 @@
-// Web Worker: runs SAM (sam-vit-base) via Transformers.js with WebGPU / WASM fallback.
+// Web Worker: runs SAM via Transformers.js with WebGPU / WASM fallback.
 // Caches image embeddings so box queries are fast after the first encode.
+//
+// Override model at dev-server startup:
+//   VITE_SAM_MODEL=Xenova/sam-vit-large npm run dev
 
 import {
   SamModel,
@@ -8,8 +11,7 @@ import {
   env,
 } from "@huggingface/transformers";
 
-// Use the quantized model (~94 MB) for a reasonable browser download
-const MODEL_ID = "Xenova/sam-vit-base";
+const MODEL_ID: string = import.meta.env.VITE_SAM_MODEL ?? "Xenova/sam-vit-base";
 
 env.allowLocalModels = false;
 
