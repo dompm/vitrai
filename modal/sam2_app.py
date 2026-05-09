@@ -49,10 +49,9 @@ class Sam2BoxSegmenter:
     def setup_predictor(self) -> None:
         from sam2.sam2_image_predictor import SAM2ImagePredictor
         from sam2.automatic_mask_generator import SAM2AutomaticMaskGenerator
-        from sam2.build_sam import build_sam2
         
-        self.model = build_sam2("sam2.1_hiera_s", MODEL_ID)
-        self.predictor = SAM2ImagePredictor(self.model)
+        self.predictor = SAM2ImagePredictor.from_pretrained(MODEL_ID)
+        self.model = self.predictor.model
         self.generator = SAM2AutomaticMaskGenerator(self.model)
 
     def _decode_rgb(self, image_bytes: bytes) -> Any:
@@ -102,7 +101,9 @@ class Sam2BoxSegmenter:
 
         session_id = hashlib.sha256(image_bytes).hexdigest()[:16]
         if session_id in embeddings:
-            return session_id
+            cached = embeddings[session_id]
+            if "image_bytes" in cached:
+                return session_id
 
         img = self._decode_rgb(image_bytes)
         self.predictor.set_image(img)

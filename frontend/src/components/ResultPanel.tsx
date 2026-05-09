@@ -195,10 +195,17 @@ export function ResultPanel({
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
+
+    const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
+    if (isMiddleClick) {
+      vp.startPan(ptr);
+      return;
+    }
     
-    if (refineMode && selectedPieceId) {
+    const lastSelectedId = selectedPieceIds[selectedPieceIds.length - 1];
+    if (refineMode && lastSelectedId) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      onUpdatePrompt(selectedPieceId, { x, y, label: refineMode === 'add' ? 1 : 0 });
+      onUpdatePrompt(lastSelectedId, { x, y, label: refineMode === 'add' ? 1 : 0 });
       return;
     }
 

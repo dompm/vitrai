@@ -240,36 +240,44 @@ export function App() {
 
   return (
     <div className="app">
-      {/* ── Left: result view ── */}
-      <div className="panel panel-left">
-        <div className="panel-header">
-          <span>{t('result')}</span>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button 
-              className="btn-ghost" 
-              onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
-              title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
-              style={{ fontSize: '0.8rem', fontWeight: 600, padding: '2px 6px' }}
-            >
-              {i18n.language === 'fr' ? 'EN' : 'FR'}
-            </button>
-            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
-            <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              {t('pattern')}
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
-            </label>
-            <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              {t('load')}
-              <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
-            </label>
-            <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
-              {t('save')}
-            </button>
-            <button className="btn-ghost" onClick={resetProject} title={t('resetTooltip')}>
-              {t('reset')}
-            </button>
-          </div>
+      <header className="global-header">
+        <div className="logo-container">
+          <img src="/vitrai_logo.png" alt="Vitrai Logo" className="logo-img" />
+          <h1 className="app-name">Vitrai</h1>
         </div>
+        <div className="header-actions">
+          <button 
+            className="btn-ghost" 
+            onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
+            title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+            style={{ fontSize: '0.8rem', fontWeight: 600, padding: '4px 8px' }}
+          >
+            {i18n.language === 'fr' ? 'EN' : 'FR'}
+          </button>
+          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 8px' }} />
+          <label className="btn-ghost" style={{ cursor: 'pointer' }}>
+            {t('pattern')}
+            <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
+          </label>
+          <label className="btn-ghost" style={{ cursor: 'pointer' }}>
+            {t('load')}
+            <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
+          </label>
+          <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
+            {t('save')}
+          </button>
+          <button className="btn-ghost" onClick={resetProject} title={t('resetTooltip')}>
+            {t('reset')}
+          </button>
+        </div>
+      </header>
+
+      <div className="main-container">
+        {/* ── Left: result view ── */}
+        <div className="panel panel-left">
+          <div className="panel-header">
+            <span>{t('result')}</span>
+          </div>
         <ResultPanel
           project={project}
           selectedPieceIds={selectedPieceIds}
@@ -325,5 +333,6 @@ export function App() {
         )}
       </div>
     </div>
+  </div>
   );
 }

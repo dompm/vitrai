@@ -242,7 +242,7 @@ export function useProject() {
         promptBox: box,
         promptPoints: [],
       };
-      setSelectedPieceId(newPiece.id);
+      setSelectedPieceIds([newPiece.id]);
       return persist({ ...prev, pieces: [...prev.pieces, newPiece] });
     });
     return id;
@@ -303,13 +303,13 @@ export function useProject() {
   const resetProject = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY);
     setProject(DEFAULT_PROJECT);
-    setSelectedPieceId(null);
+    setSelectedPieceIds([]);
     setActiveSheetId(DEFAULT_PROJECT.sheets[0]?.id ?? '');
   }, []);
 
   const loadProjectData = useCallback((newProject: Project) => {
     setProject(persist(newProject));
-    setSelectedPieceId(null);
+    setSelectedPieceIds([]);
     setActiveSheetId(newProject.sheets[0]?.id ?? '');
   }, []);
 

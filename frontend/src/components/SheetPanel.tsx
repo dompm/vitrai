@@ -147,6 +147,13 @@ export function SheetPanel({
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
+
+    const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
+    if (isMiddleClick) {
+      vp.startPan(ptr);
+      return;
+    }
+
     if (!isBackground(e)) return;
     vp.startPan(ptr);
   }
