@@ -4,7 +4,7 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
 import { encodeImage, segment, autoSegment } from './api';
-import { subtractPolygons } from './utils/geometry';
+import { subtractPolygons, computeCentroid } from './utils/geometry';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
 
@@ -260,6 +260,82 @@ export function App() {
     e.target.value = '';
   };
 
+  const handlePrint = () => {
+    const { patternScale, pieces } = project;
+    if (!patternScale || patternScale.pxPerUnit === 0) {
+      alert(t('printNoScale'));
+      return;
+    }
+    if (pieces.length === 0) return;
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    pieces.forEach(piece => {
+      piece.polygon.forEach(pt => {
+        if (pt[0] < minX) minX = pt[0];
+        if (pt[1] < minY) minY = pt[1];
+        if (pt[0] > maxX) maxX = pt[0];
+        if (pt[1] > maxY) maxY = pt[1];
+      });
+    });
+
+    const margin = patternScale.pxPerUnit * 0.5; // 0.5 physical units margin
+    minX -= margin;
+    minY -= margin;
+    maxX += margin;
+    maxY += margin;
+
+    const printWidth = maxX - minX;
+    const printHeight = maxY - minY;
+    
+    // Scale physical size based on user definition
+    const pwPhysical = printWidth / patternScale.pxPerUnit;
+    const phPhysical = printHeight / patternScale.pxPerUnit;
+    const unit = patternScale.unit;
+
+    let svgContent = `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg">`;
+    svgContent += `<style>
+      .piece-outline { fill: none; stroke: black; stroke-width: ${patternScale.pxPerUnit * 0.05}px; }
+      .piece-label { font-family: sans-serif; font-size: ${patternScale.pxPerUnit * 0.5}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
+    </style>`;
+
+    pieces.forEach((piece, index) => {
+      const pointsStr = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
+      svgContent += `<polygon points="${pointsStr}" class="piece-outline" />`;
+      
+      const centroid = computeCentroid(piece.polygon);
+      const label = index + 1;
+      svgContent += `<text x="${centroid.x}" y="${centroid.y}" class="piece-label">${label}</text>`;
+    });
+
+    svgContent += `</svg>`;
+
+    const printWin = window.open('', '_blank');
+    if (!printWin) return;
+    printWin.document.write(`
+      <html>
+        <head>
+          <title>Print Pattern - Vitrai</title>
+          <style>
+            body { margin: 0; padding: 0; display: flex; justify-content: center; background: white; }
+            @media print {
+              @page { margin: 0; }
+              body { margin: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          ${svgContent}
+          <script>
+            window.onload = () => {
+              window.print();
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
   const handleAddSheetFromImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -307,6 +383,10 @@ export function App() {
           </label>
           <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
             {t('save')}
+          </button>
+          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 8px' }} />
+          <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
+            {t('print')}
           </button>
           <button className="btn-ghost" onClick={resetProject} title={t('resetTooltip')}>
             {t('reset')}
