@@ -13,7 +13,7 @@ const INPUT_SIZE = 1024;
 const MEAN = [0.485, 0.456, 0.406];
 const STD  = [0.229, 0.224, 0.225];
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────────────────
 
 export type WorkerInMsg =
   | { type: 'encode';  id: string; imageUrl: string }
@@ -24,12 +24,13 @@ export type WorkerInMsg =
 export type WorkerOutMsg =
   | { type: 'ready';        device: string }
   | { type: 'status';       text: string }
+  | { type: 'init:error';   error: string }
   | { type: 'encode:done';  id: string; sessionId: string }
   | { type: 'encode:error'; id: string; error: string }
   | { type: 'segment:done'; id: string; polygon: [number, number][] }
   | { type: 'segment:error';id: string; error: string };
 
-// ─── State ────────────────────────────────────────────────────────────────────
+// ─── State ───────────────────────────────────────────────────────────────────────────────
 
 interface CachedEmbed {
   origW: number; origH: number;
@@ -41,7 +42,7 @@ let encoderSession: ort.InferenceSession | null = null;
 let decoderSession: ort.InferenceSession | null = null;
 const cache = new Map<string, CachedEmbed>();
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ─── Init ────────────────────────────────────────────────────────────────────────────────
 
 async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> {
   try {
@@ -72,11 +73,19 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
   }
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
 async function init() {
   try {
     post({ type: 'status', text: 'Initializing SAM2 models…' });
 
-    // Load models (concurrently if possible, but OPFS might be serial)
     const [encModel, encData, decModel, decData] = await Promise.all([
       fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
       fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
@@ -84,32 +93,35 @@ async function init() {
       fetchCached(DECODER_DATA_URL, 'sam2_base_decoder.onnx_data'),
     ]);
 
+    post({ type: 'status', text: 'Loading encoder…' });
     const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
 
-    encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
-      executionProviders: ep,
-      externalData: [{
-        data: new Uint8Array(encData),
-        path: 'vision_encoder.onnx_data'
-      }]
-    });
+    encoderSession = await withTimeout(
+      ort.InferenceSession.create(new Uint8Array(encModel), {
+        executionProviders: ep,
+        externalData: [{ data: new Uint8Array(encData), path: 'vision_encoder.onnx_data' }],
+      }),
+      60_000, 'Encoder init'
+    );
 
-    decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
-      executionProviders: ep,
-      externalData: [{
-        data: new Uint8Array(decData),
-        path: 'prompt_encoder_mask_decoder.onnx_data'
-      }]
-    });
+    post({ type: 'status', text: 'Loading decoder…' });
+    decoderSession = await withTimeout(
+      ort.InferenceSession.create(new Uint8Array(decModel), {
+        executionProviders: ep,
+        externalData: [{ data: new Uint8Array(decData), path: 'prompt_encoder_mask_decoder.onnx_data' }],
+      }),
+      60_000, 'Decoder init'
+    );
 
     post({ type: 'ready', device: 'webgpu' });
   } catch (err) {
-    console.error("[SAM Worker] Initialization failed:", err);
-    post({ type: 'status', text: `Init failed: ${err}` });
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[SAM Worker] Initialization failed:", msg);
+    post({ type: 'init:error', error: msg });
   }
 }
 
-// ─── Preprocessing ────────────────────────────────────────────────────────────
+// ─── Preprocessing ────────────────────────────────────────────────────────────────────
 
 async function loadAndPreprocess(imageUrl: string): Promise<{
   tensor: ort.Tensor; origW: number; origH: number;
@@ -150,7 +162,7 @@ async function loadAndPreprocess(imageUrl: string): Promise<{
   };
 }
 
-// ─── Encode ───────────────────────────────────────────────────────────────────
+// ─── Encode ───────────────────────────────────────────────────────────────────────────────
 
 async function encode(id: string, imageUrl: string) {
   if (cache.has(imageUrl)) {
@@ -165,7 +177,7 @@ async function encode(id: string, imageUrl: string) {
   post({ type: 'encode:done', id, sessionId: imageUrl });
 }
 
-// ─── Segment ──────────────────────────────────────────────────────────────────
+// ─── Segment ────────────────────────────────────────────────────────────────────────────
 
 async function segment(
   id: string,
@@ -251,7 +263,7 @@ async function segment(
   }
 }
 
-// ─── Mask → polygon ───────────────────────────────────────────────────────────
+// ─── Mask → polygon ────────────────────────────────────────────────────────────────────
 
 function maskToPolygon(
   data: Float32Array, W: number, H: number,
@@ -367,7 +379,7 @@ function chaikin(pts: [number, number][], iterations: number): [number, number][
   return result;
 }
 
-// ─── Messaging ────────────────────────────────────────────────────────────────
+// ─── Messaging ────────────────────────────────────────────────────────────────────────────
 
 function post(msg: WorkerOutMsg) { self.postMessage(msg); }
 
@@ -383,4 +395,4 @@ self.onmessage = async (e: MessageEvent<WorkerInMsg>) => {
   }
 };
 
-init().catch(err => post({ type: 'status', text: `Init failed: ${err}` }));
+init().catch(err => post({ type: 'init:error', error: String(err) }));

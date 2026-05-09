@@ -21,6 +21,9 @@ export class SamWorkerBackend {
       if (msg.type === "ready") {
         onStatusChange(`WebGPU ready (${msg.device})`);
         resolveReady(msg.device);
+      } else if (msg.type === "init:error") {
+        onStatusChange(`SAM unavailable: ${msg.error}`);
+        rejectReady(new Error(msg.error));
       } else if (msg.type === "status") {
         onStatusChange(msg.text);
       } else {
