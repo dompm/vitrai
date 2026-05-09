@@ -5,9 +5,9 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -174,6 +174,7 @@ export function ResultPanel({
       else if (e.key === 'b') handleToolChange('box');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
+      else if (e.key === 'i') handleToolChange('inspect');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -283,6 +284,13 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    if (id === activeTool && id !== 'select') {
+      setActiveTool('select');
+      setRefineMode(null);
+      if (id === 'measure') measure.reset();
+      return;
+    }
+
     if (id === 'detect-all') {
       onAutoSegment?.();
       return;
@@ -381,6 +389,17 @@ export function ResultPanel({
         animation: <MeasureAnimation />,
       },
     },
+    {
+      id: 'inspect' as ToolId,
+      label: t('toolInspect'),
+      icon: <ViewIcon />,
+      tooltip: {
+        name: t('tooltipInspectName'),
+        shortcut: 'I',
+        description: t('tooltipInspectDesc'),
+        animation: <InspectAnimation />,
+      },
+    },
   ], [t]);
 
   const TOOLS = BASE_TOOLS.map(tool =>
@@ -419,7 +438,7 @@ export function ResultPanel({
                   opacity={activeTool === 'box' ? 0.5 : 1} 
                 />
               )}
-              {project.pieces.map(piece => {
+              {activeTool !== 'inspect' && project.pieces.map(piece => {
                 const sheet = sheetMap[piece.glassSheetId];
                 const isSelected = selectedPieceIds.includes(piece.id);
                 return (
@@ -530,7 +549,7 @@ export function ResultPanel({
             />
           );
         })()}
-        {(() => {
+        {activeTool !== 'inspect' && (() => {
           const lastId = selectedPieceIds[selectedPieceIds.length - 1];
           const piece = project.pieces.find(p => p.id === lastId);
           if (!piece) return null;

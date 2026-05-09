@@ -397,3 +397,47 @@ export function MeasureAnimation() {
   );
 }
 
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Inspect Animation — pieces fade out to reveal the pattern, then return
+   ═══════════════════════════════════════════════════════════════════════════ */
+export function InspectAnimation() {
+  const dur = '3.5s';
+  const KT = '0; 0.35; 0.45; 0.85; 0.95; 1';
+
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="#eef2ff" />
+      
+      {/* Pattern Image (always visible) */}
+      <IdleFlower />
+      
+      {/* Pieces layer - fades out and in */}
+      <g>
+        <animate attributeName="opacity"
+          values="1;1;0;0;1;1"
+          keyTimes={KT} dur={dur} repeatCount="indefinite" />
+        
+        {/* Slightly offset "glass" petals over the original ones */}
+        {ANGLES.map(a => (
+          <ellipse
+            key={a}
+            cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
+            transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
+            fill="rgba(99,102,241,0.3)" stroke="#4338ca" strokeWidth="1.8"
+          />
+        ))}
+        <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(99,102,241,0.5)" stroke="#4338ca" strokeWidth="1.8" />
+      </g>
+      
+      {/* Eye icon overlay - flashes when active */}
+      <g transform="translate(195, 12) scale(0.8)">
+        <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" fill="none" stroke="#4338ca" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="8" cy="8" r="2.5" fill="#4338ca" />
+        <animate attributeName="opacity"
+          values="0.3;0.3;1;1;0.3;0.3"
+          keyTimes={KT} dur={dur} repeatCount="indefinite" />
+      </g>
+    </svg>
+  );
+}

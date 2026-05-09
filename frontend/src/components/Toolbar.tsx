@@ -1,4 +1,4 @@
-export type ToolId = 'select' | 'crop' | 'measure' | 'box' | 'detect-all';
+export type ToolId = 'select' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
@@ -52,6 +52,13 @@ export const MeasureIcon = () => (
     <line x1="4.5" y1="5.5" x2="4.5" y2="7.5" />
     <line x1="7.5" y1="5.5" x2="7.5" y2="8" />
     <line x1="10.5" y1="5.5" x2="10.5" y2="7.5" />
+  </svg>
+);
+
+export const ViewIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" />
+    <circle cx="8" cy="8" r="2.5" />
   </svg>
 );
 

@@ -205,6 +205,12 @@ export function SheetPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    if (id === activeTool && id !== 'select') {
+      setActiveTool('select');
+      if (id === 'measure') measure.reset();
+      return;
+    }
+
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = sheet.scale?.line;
