@@ -14,9 +14,10 @@ interface Props {
   initialUnit?: ScaleUnit;
   onConfirm: (realLength: number, unit: ScaleUnit) => void;
   onCancel: () => void;
+  onDrag: (delta: { x: number; y: number }) => void;
 }
 
-export function MeasureInput({ screenX, screenY, pixelLength, initialValue, initialUnit, onConfirm, onCancel }: Props) {
+export function MeasureInput({ screenX, screenY, pixelLength, initialValue, initialUnit, onConfirm, onCancel, onDrag }: Props) {
   const { t } = useTranslation();
   
   const units: { id: ScaleUnit; label: string }[] = [
@@ -60,24 +61,37 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
     <div
       style={{
         position: 'absolute',
-        left: Math.round(screenX) + 14,
-        top: Math.round(screenY) - 36,
-        background: '#fff',
-        border: '1px solid #e5e7eb',
-        borderRadius: 8,
-        padding: '8px 10px',
-        boxShadow: '0 4px 16px rgba(0,0,0,0.14)',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 6,
+        left: Math.round(screenX),
+        top: Math.round(screenY) - 16,
+        transform: 'translate(-50%, -100%)',
         zIndex: 20,
-        minWidth: 160,
-        pointerEvents: 'all',
+        pointerEvents: 'none',
       }}
     >
-      <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600 }}>
-        {Math.round(pixelLength)} px =
-      </span>
+      <div style={{ pointerEvents: 'auto', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '4px 10px 8px 10px', boxShadow: '0 4px 16px rgba(0,0,0,0.14)', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
+        <div 
+          onMouseDown={(e) => {
+            let lastX = e.clientX;
+            let lastY = e.clientY;
+            const handleMouseMove = (em: MouseEvent) => {
+              const dx = em.clientX - lastX;
+              const dy = em.clientY - lastY;
+              lastX = em.clientX;
+              lastY = em.clientY;
+              onDrag({ x: dx, y: dy });
+            };
+            const handleMouseUp = () => {
+              document.removeEventListener('mousemove', handleMouseMove);
+              document.removeEventListener('mouseup', handleMouseUp);
+            };
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+          }}
+          style={{ height: 6, width: '40%', background: '#e5e7eb', borderRadius: 3, margin: '4px auto 8px auto', cursor: 'grab' }} 
+        />
+        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textAlign: 'center' }}>
+          {Math.round(pixelLength)} px =
+        </span>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
         <input
           ref={inputRef}
@@ -114,5 +128,6 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
         </select>
       </div>
     </div>
+  </div>
   );
 }

@@ -157,13 +157,16 @@ export function ResultPanel({
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
+
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
+  const [rulerDrag, setRulerDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
 
   useEffect(() => {
     setRefineMode(null);
     setTooltipDrag({x: 0, y: 0});
+    setRulerDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
 
   useEffect(() => {
@@ -220,11 +223,6 @@ export function ResultPanel({
       setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
       return;
     }
-
-    if (!isBackground(e)) return;
-    // Panning is only allowed via mouse drag if NOT in select mode or box mode
-    // (User requested to rely on scroll wheels for move)
-    // vp.startPan(ptr); // Commented out to rely on scroll wheel as requested
   }
 
   function handlePointerMove(e: KonvaEventObject<PointerEvent>) {
@@ -264,7 +262,6 @@ export function ResultPanel({
         x2: Math.max(marqueeBox.x1, marqueeBox.x2),
         y2: Math.max(marqueeBox.y1, marqueeBox.y2),
       };
-      // Find pieces whose centroid is inside the marquee box
       const hitIds = project.pieces.filter(p => {
         const centroid = computeCentroid(p.polygon);
         return centroid.x >= box.x1 && centroid.x <= box.x2 && centroid.y >= box.y1 && centroid.y <= box.y2;
@@ -273,21 +270,12 @@ export function ResultPanel({
       if (hitIds.length > 0) {
         onSelectPieces(hitIds);
       } else if (Math.abs(marqueeBox.x2 - marqueeBox.x1) < 2 && Math.abs(marqueeBox.y2 - marqueeBox.y1) < 2) {
-        // If it was a tiny click on background, deselect all
         onSelectPiece(null);
       }
       setMarqueeBox(null);
       return;
     }
     vp.endPan();
-  }
-
-  function handleStageClick(e: KonvaEventObject<MouseEvent>) {
-    // Stage click handling is now partially covered by marquee logic for deselecting.
-    // We can keep this for explicit single clicks if needed.
-    if (!refineMode && activeTool === 'select' && isBackground(e)) {
-      // If no marquee was really drawn, deselect
-    }
   }
 
   function handleMeasureConfirm(realLength: number, unit: Scale['unit']) {
@@ -302,9 +290,9 @@ export function ResultPanel({
       return;
     }
     setRefineMode(null);
-    setTooltipDrag({ x: 0, y: 0 });
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
+      setRulerDrag({ x: 0, y: 0 });
       const saved = project.patternScale?.line;
       const cropL = project.patternCrop.left;
       const cropT = project.patternCrop.top;
@@ -353,28 +341,6 @@ export function ResultPanel({
       },
     },
     {
-      id: 'crop' as ToolId,
-      label: t('toolCropPattern'),
-      icon: <CropIcon />,
-      tooltip: {
-        name: t('tooltipCropPatternName'),
-        shortcut: 'C',
-        description: t('tooltipCropPatternDesc'),
-        animation: <CropAnimation />,
-      },
-    },
-    {
-      id: 'measure' as ToolId,
-      label: t('toolScalePattern'),
-      icon: <MeasureIcon />,
-      tooltip: {
-        name: t('tooltipScaleName'),
-        shortcut: 'M',
-        description: t('tooltipScaleDescPattern'),
-        animation: <MeasureAnimation />,
-      },
-    },
-    {
       id: 'box' as ToolId,
       label: t('toolDrawBox'),
       icon: <BoxIcon />,
@@ -394,6 +360,28 @@ export function ResultPanel({
         shortcut: '',
         description: t('tooltipDetectAllDesc'),
         animation: <DetectAllAnimation />,
+      },
+    },
+    {
+      id: 'crop' as ToolId,
+      label: t('toolCropPattern'),
+      icon: <CropIcon />,
+      tooltip: {
+        name: t('tooltipCropPatternName'),
+        shortcut: 'C',
+        description: t('tooltipCropPatternDesc'),
+        animation: <CropAnimation />,
+      },
+    },
+    {
+      id: 'measure' as ToolId,
+      label: t('toolScalePattern'),
+      icon: <MeasureIcon />,
+      tooltip: {
+        name: t('tooltipScaleName'),
+        shortcut: 'M',
+        description: t('tooltipScaleDescPattern'),
+        animation: <MeasureAnimation />,
       },
     },
   ], [t]);
@@ -416,7 +404,6 @@ export function ResultPanel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onClick={handleStageClick}
         >
           <Layer>
             <Group
@@ -531,16 +518,19 @@ export function ResultPanel({
           </Layer>
         </Stage>
         {activeTool === 'measure' && measure.line && (() => {
-          const sc = toScreenCoords(measure.line.x2, measure.line.y2, vp.pan, vp.effectiveScale);
+          const midX = (measure.line.x1 + measure.line.x2) / 2;
+          const midY = (measure.line.y1 + measure.line.y2) / 2;
+          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
           const saved = project.patternScale;
           return (
             <MeasureInput
-              screenX={sc.x} screenY={sc.y}
+              screenX={sc.x + rulerDrag.x} screenY={sc.y + rulerDrag.y}
               pixelLength={measurePxLength}
               initialValue={saved ? measurePxLength / saved.pxPerUnit : undefined}
               initialUnit={saved?.unit}
               onConfirm={handleMeasureConfirm}
               onCancel={() => handleToolChange('select')}
+              onDrag={delta => setRulerDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))}
             />
           );
         })()}
@@ -548,29 +538,40 @@ export function ResultPanel({
           const lastId = selectedPieceIds[selectedPieceIds.length - 1];
           const piece = project.pieces.find(p => p.id === lastId);
           if (!piece) return null;
-          const centroid = computeCentroid(piece.polygon);
-          const sc = toScreenCoords(centroid.x, centroid.y, vp.pan, vp.effectiveScale);
+          
+          const ys = piece.polygon.map(p => p[1]);
+          const minY = Math.min(...ys);
+          const xs = piece.polygon.map(p => p[0]);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+          const centerX = (minX + maxX) / 2;
+
+          const sc = toScreenCoords(centerX, minY, vp.pan, vp.effectiveScale);
+
           return (
             <div style={{
               position: 'absolute',
               left: sc.x + tooltipDrag.x,
               top: sc.y + tooltipDrag.y,
               transform: 'translate(-50%, -100%)',
-              marginTop: -10,
+              marginTop: -12,
               zIndex: 10,
+              pointerEvents: 'none',
             }}>
-              <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
-              <PieceProperties
-                piece={piece}
-                sheets={project.sheets}
-                onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
-                onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
-                onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
-                onDelete={() => onDeletePiece(piece.id)}
-                refineMode={refineMode}
-                onRefineModeChange={setRefineMode}
-                isPending={pendingPieceIds.has(piece.id)}
-              />
+              <div style={{ pointerEvents: 'auto' }}>
+                <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
+                <PieceProperties
+                  piece={piece}
+                  sheets={project.sheets}
+                  onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
+                  onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
+                  onAddSheet={() => onAddSheetAndAssignPiece(piece.id)}
+                  onDelete={() => onDeletePiece(piece.id)}
+                  refineMode={refineMode}
+                  onRefineModeChange={setRefineMode}
+                  isPending={pendingPieceIds.has(piece.id)}
+                />
+              </div>
             </div>
           );
         })()}

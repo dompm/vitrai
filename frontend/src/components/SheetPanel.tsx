@@ -29,7 +29,7 @@ interface PieceOutlineProps {
   isSelected: boolean;
   effectiveScale: number;
   onSelect: (multi?: boolean) => void;
-  onTransformChange: (t: Partial<TextureTransform>) => void;
+  onTransformChange: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
   onRotateStart: () => void;
 }
 
@@ -63,7 +63,11 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
   }
 
   function handleDragMove(e: KonvaEventObject<DragEvent>) {
-    onTransformChange({ x: e.target.x(), y: e.target.y() });
+    onTransformChange({ x: e.target.x(), y: e.target.y() }, true);
+  }
+
+  function handleDragEnd(e: KonvaEventObject<DragEvent>) {
+    onTransformChange({ x: e.target.x(), y: e.target.y() }, false);
   }
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
@@ -81,6 +85,7 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
       onClick={handleClick} onTap={handleClick}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
+      onDragEnd={handleDragEnd}
     >
       <Line
         points={relPts}
@@ -113,7 +118,7 @@ interface SheetPanelProps {
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
-  onTransformChange: (pieceId: string, t: Partial<TextureTransform>) => void;
+  onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -166,7 +171,7 @@ export function SheetPanel({
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       const newRotation =
         Math.atan2(y - rotatingPiece.transform.y, x - rotatingPiece.transform.x) + Math.PI / 2;
-      onTransformChange(rotatingPieceId!, { rotation: newRotation });
+      onTransformChange(rotatingPieceId!, { rotation: newRotation }, true);
       return;
     }
 
@@ -174,6 +179,9 @@ export function SheetPanel({
   }
 
   function handlePointerUp() {
+    if (rotatingPiece) {
+      onTransformChange(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+    }
     setRotatingPieceId(null);
     vp.endPan();
   }
@@ -295,7 +303,7 @@ export function SheetPanel({
                   isSelected={selectedPieceIds.includes(piece.id)}
                   effectiveScale={es}
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  onTransformChange={t => onTransformChange(piece.id, t)}
+                  onTransformChange={(t, skip) => onTransformChange(piece.id, t, skip)}
                   onRotateStart={() => setRotatingPieceId(piece.id)}
                 />
               ))}

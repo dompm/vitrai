@@ -33,8 +33,25 @@ export function MeasureLineOverlay({
     onUpdate(x, y);
   }
 
+  function handleGroupDrag(e: KonvaEventObject<DragEvent>) {
+    if (e.target.name() !== 'measure-group') return;
+    const dx = e.target.x();
+    const dy = e.target.y();
+    onUpdateP1(x1 + dx, y1 + dy);
+    onUpdateP2(x2 + dx, y2 + dy);
+    e.target.position({ x: 0, y: 0 });
+  }
+
   return (
-    <Group>
+    <Group name="measure-group" draggable onDragMove={handleGroupDrag}>
+      {/* Thick invisible hit area for the line */}
+      <Line
+        points={[x1, y1, x2, y2]}
+        stroke="transparent"
+        strokeWidth={20 / es}
+        onMouseEnter={() => onCursorChange('move')}
+        onMouseLeave={() => onCursorChange('default')}
+      />
       <Line
         points={[x1, y1, x2, y2]}
         stroke="#f59e0b" strokeWidth={2 / es}
@@ -46,7 +63,10 @@ export function MeasureLineOverlay({
         draggable
         onMouseEnter={() => onCursorChange('move')}
         onMouseLeave={() => onCursorChange('default')}
-        onDragMove={e => clampedDrag(e, onUpdateP1)}
+        onDragMove={e => {
+          e.cancelBubble = true;
+          clampedDrag(e, onUpdateP1);
+        }}
       />
       <Circle
         x={x2} y={y2} radius={7 / es}
@@ -54,7 +74,10 @@ export function MeasureLineOverlay({
         draggable
         onMouseEnter={() => onCursorChange('move')}
         onMouseLeave={() => onCursorChange('default')}
-        onDragMove={e => clampedDrag(e, onUpdateP2)}
+        onDragMove={e => {
+          e.cancelBubble = true;
+          clampedDrag(e, onUpdateP2);
+        }}
       />
     </Group>
   );

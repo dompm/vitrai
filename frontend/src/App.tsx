@@ -17,6 +17,20 @@ interface SheetTabProps {
   onDelete: () => void;
 }
 
+const UndoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 7v6h6" />
+    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
+  </svg>
+);
+
+const RedoIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 7v6h-6" />
+    <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7" />
+  </svg>
+);
+
 function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: SheetTabProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
@@ -96,8 +110,13 @@ export function App() {
     batchAddPieces,
     updatePiecePolygon,
     updatePiecePrompt,
+    addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     resetProject,
     loadProjectData,
     updatePatternImage,
@@ -133,11 +152,12 @@ export function App() {
   }
 
   async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
+    addPiecePromptPoint(pieceId, point);
+    
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece || !patternImageId) return;
     
     const newPoints = [...(piece.promptPoints || []), point];
-    updatePiecePrompt(pieceId, piece.promptBox, newPoints);
     
     markPiecePending(pieceId);
     try {
@@ -173,15 +193,29 @@ export function App() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (selectedPieceIds.length === 0) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      const isMod = e.ctrlKey || e.metaKey;
+      if (isMod && e.key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) redo();
+        else undo();
+        return;
+      }
+      if (isMod && e.key === 'y') {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if (selectedPieceIds.length === 0) return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
         selectedPieceIds.forEach(id => deletePiece(id));
       }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPieceIds, deletePiece]);
+  }, [selectedPieceIds, deletePiece, undo, redo]);
 
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -246,6 +280,14 @@ export function App() {
           <h1 className="app-name">Vitrai</h1>
         </div>
         <div className="header-actions">
+          <div style={{ display: 'flex', gap: 4, marginRight: 8 }}>
+            <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
+              <UndoIcon />
+            </button>
+            <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
+              <RedoIcon />
+            </button>
+          </div>
           <button 
             className="btn-ghost" 
             onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}

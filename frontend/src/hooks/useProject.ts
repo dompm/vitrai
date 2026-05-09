@@ -57,6 +57,8 @@ export function useProject() {
     () => loadProject().sheets[0]?.id ?? ''
   );
   const [pendingPieceIds, setPendingPieceIds] = useState<ReadonlySet<string>>(new Set());
+  const [undoStack, setUndoStack] = useState<Project[]>([]);
+  const [redoStack, setRedoStack] = useState<Project[]>([]);
 
   // Keep activeSheetId valid if the active sheet is ever deleted
   useEffect(() => {
@@ -65,59 +67,96 @@ export function useProject() {
     }
   }, [project.sheets, activeSheetId]);
 
-  function persist(next: Project) {
-    try {
+  const pushHistory = useCallback((prev: Project) => {
+    setUndoStack(u => [...u.slice(-49), prev]);
+    setRedoStack([]);
+  }, []);
+
+  const updateProject = useCallback((updater: (p: Project) => Project, skipHistory = false) => {
+    setProject(prev => {
+      const next = updater(prev);
+      if (!skipHistory) {
+        setUndoStack(u => [...u.slice(-49), prev]);
+        setRedoStack([]);
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      // ignore quota errors
-    }
-    return next;
-  }
+      return next;
+    });
+  }, []);
+
+  const undo = useCallback(() => {
+    setUndoStack(u => {
+      if (u.length === 0) return u;
+      const prev = u[u.length - 1];
+      const newStack = u.slice(0, -1);
+      setProject(current => {
+        setRedoStack(r => [...r, current]);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(prev));
+        return prev;
+      });
+      return newStack;
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setRedoStack(r => {
+      if (r.length === 0) return r;
+      const next = r[r.length - 1];
+      const newStack = r.slice(0, -1);
+      setProject(current => {
+        setUndoStack(u => [...u, current]);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        return next;
+      });
+      return newStack;
+    });
+  }, []);
 
   const updatePieceTransform = useCallback(
-    (pieceId: string, transform: Partial<TextureTransform>) => {
-      setProject(prev =>
-        persist({
-          ...prev,
-          pieces: prev.pieces.map(p =>
-            p.id === pieceId ? { ...p, transform: { ...p.transform, ...transform } } : p
-          ),
-        })
-      );
+    (pieceId: string, transform: Partial<TextureTransform>, skipHistory = false) => {
+      updateProject(prev => ({
+        ...prev,
+        pieces: prev.pieces.map(p =>
+          p.id === pieceId ? { ...p, transform: { ...p.transform, ...transform } } : p
+        ),
+      }), skipHistory);
     },
-    []
+    [updateProject]
   );
 
   const updatePiecePrompt = useCallback(
     (pieceId: string, promptBox: BoundingBox | undefined, promptPoints: Piece['promptPoints']) => {
-      setProject(prev =>
-        persist({
-          ...prev,
-          pieces: prev.pieces.map(p =>
-            p.id === pieceId ? { ...p, promptBox, promptPoints } : p
-          ),
-        })
-      );
+      updateProject(prev => ({
+        ...prev,
+        pieces: prev.pieces.map(p =>
+          p.id === pieceId ? { ...p, promptBox, promptPoints } : p
+        ),
+      }));
     },
-    []
+    [updateProject]
   );
 
+  const addPiecePromptPoint = useCallback((pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => 
+        p.id === pieceId ? { ...p, promptPoints: [...(p.promptPoints || []), point] } : p
+      )
+    }));
+  }, [updateProject]);
+
   const updatePatternCrop = useCallback((crop: Partial<Crop>) => {
-    setProject(prev =>
-      persist({ ...prev, patternCrop: { ...prev.patternCrop, ...crop } })
-    );
-  }, []);
+    updateProject(prev => ({ ...prev, patternCrop: { ...prev.patternCrop, ...crop } }));
+  }, [updateProject]);
 
   const updateSheetCrop = useCallback((sheetId: string, crop: Partial<Crop>) => {
-    setProject(prev =>
-      persist({
-        ...prev,
-        sheets: prev.sheets.map(s =>
-          s.id === sheetId ? { ...s, crop: { ...s.crop, ...crop } } : s
-        ),
-      })
-    );
-  }, []);
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s =>
+        s.id === sheetId ? { ...s, crop: { ...s.crop, ...crop } } : s
+      ),
+    }));
+  }, [updateProject]);
 
   const selectPiece = useCallback((id: string | null, multi = false) => {
     setSelectedPieceIds(prev => {
@@ -149,82 +188,103 @@ export function useProject() {
   }, []);
 
   const deletePiece = useCallback((pieceId: string) => {
-    setProject(prev => persist({ ...prev, pieces: prev.pieces.filter(p => p.id !== pieceId) }));
+    updateProject(prev => ({ ...prev, pieces: prev.pieces.filter(p => p.id !== pieceId) }));
     setSelectedPieceIds(ids => ids.filter(id => id !== pieceId));
-  }, []);
+  }, [updateProject]);
 
   const updatePieceLabel = useCallback((pieceId: string, label: string) => {
-    setProject(prev =>
-      persist({ ...prev, pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, label } : p) })
-    );
-  }, []);
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, label } : p)
+    }));
+  }, [updateProject]);
 
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
-    setProject(prev => {
-      const next = { ...prev, pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, glassSheetId: sheetId } : p) };
-      return persist(applyScales(next, sheetId));
+    updateProject(prev => {
+      const sheet = prev.sheets.find(s => s.id === sheetId);
+      const sw = sheet?.naturalWidth ?? 800;
+      const sh = sheet?.naturalHeight ?? 600;
+      const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+      const cx = (crop.left + sw - crop.right) / 2;
+      const cy = (crop.top + sh - crop.bottom) / 2;
+
+      const next = {
+        ...prev,
+        pieces: prev.pieces.map(p =>
+          p.id === pieceId ? { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } } : p
+        )
+      };
+      return applyScales(next, sheetId);
     });
     setActiveSheetId(sheetId);
-  }, []);
+  }, [updateProject]);
 
   const deleteSheet = useCallback((sheetId: string) => {
-    setProject(prev => {
+    updateProject(prev => {
       if (prev.sheets.length <= 1) return prev;
       const remaining = prev.sheets.filter(s => s.id !== sheetId);
       const fallbackId = remaining[0].id;
-      return persist({
+      return {
         ...prev,
         sheets: remaining,
         pieces: prev.pieces.map(p => p.glassSheetId === sheetId ? { ...p, glassSheetId: fallbackId } : p),
-      });
+      };
     });
-    // activeSheetId correction handled by the useEffect above
-  }, []);
+  }, [updateProject]);
 
   const renameSheet = useCallback((sheetId: string, label: string) => {
-    setProject(prev =>
-      persist({ ...prev, sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, label } : s) })
-    );
-  }, []);
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, label } : s)
+    }));
+  }, [updateProject]);
 
   const addSheet = useCallback(() => {
-    setProject(prev => {
+    updateProject(prev => {
       const newSheet = makeNewSheet(prev, t);
       setActiveSheetId(newSheet.id);
-      return persist({ ...prev, sheets: [...prev.sheets, newSheet] });
+      return { ...prev, sheets: [...prev.sheets, newSheet] };
     });
-  }, []);
+  }, [updateProject, t]);
 
   const addSheetAndAssignPiece = useCallback((pieceId: string) => {
-    setProject(prev => {
+    updateProject(prev => {
       const newSheet = makeNewSheet(prev, t);
       setActiveSheetId(newSheet.id);
-      return persist({
+      
+      // Default center for a new sheet
+      const cx = 400; 
+      const cy = 300;
+
+      const next = {
         ...prev,
         sheets: [...prev.sheets, newSheet],
-        pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, glassSheetId: newSheet.id } : p),
-      });
+        pieces: prev.pieces.map(p =>
+          p.id === pieceId ? { ...p, glassSheetId: newSheet.id, transform: { ...p.transform, x: cx, y: cy } } : p
+        ),
+      };
+      return applyScales(next, newSheet.id);
     });
-  }, []);
+  }, [updateProject, t]);
 
   const updatePatternScale = useCallback((scale: Scale | null) => {
-    setProject(prev => persist(applyScales({ ...prev, patternScale: scale })));
-  }, []);
+    updateProject(prev => applyScales({ ...prev, patternScale: scale }));
+  }, [updateProject]);
 
   const updateSheetScale = useCallback((sheetId: string, scale: Scale | null) => {
-    setProject(prev => {
+    updateProject(prev => {
       const sheets = prev.sheets.map(s => s.id === sheetId ? { ...s, scale } : s);
-      return persist(applyScales({ ...prev, sheets }, sheetId));
+      return applyScales({ ...prev, sheets }, sheetId);
     });
-  }, []);
+  }, [updateProject]);
 
   const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string): string => {
     const { x1, y1, x2, y2 } = box;
     const polygon: Piece['polygon'] = [
       [x1, y1], [x2, y1], [x2, y2], [x1, y2],
     ];
-    const id = `piece-${Date.now()}`;
-    setProject(prev => {
+    const id = crypto.randomUUID();
+    updateProject(prev => {
       const label = `${t('piece')} ${prev.pieces.length + 1}`;
       const sheet = prev.sheets.find(s => s.id === sheetId);
       const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? 1;
@@ -234,30 +294,26 @@ export function useProject() {
       const cx = (crop.left + sw - crop.right) / 2;
       const cy = (crop.top + sh - crop.bottom) / 2;
       const newPiece: Piece = {
-        id,
-        label,
-        polygon,
-        glassSheetId: sheetId,
+        id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
-        promptBox: box,
-        promptPoints: [],
+        promptBox: box, promptPoints: [],
       };
       setSelectedPieceIds([newPiece.id]);
-      return persist({ ...prev, pieces: [...prev.pieces, newPiece] });
+      return { ...prev, pieces: [...prev.pieces, newPiece] };
     });
     return id;
-  }, []);
+  }, [updateProject, t]);
 
   const updateSheetDimensions = useCallback((sheetId: string, w: number, h: number) => {
-    setProject(prev => {
+    updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
       if (!sheet || (sheet.naturalWidth === w && sheet.naturalHeight === h)) return prev;
-      return persist({ ...prev, sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, naturalWidth: w, naturalHeight: h } : s) });
-    });
-  }, []);
+      return { ...prev, sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, naturalWidth: w, naturalHeight: h } : s) };
+    }, true); // skip history for metadata updates like dimensions
+  }, [updateProject]);
 
   const batchAddPieces = useCallback((polygons: [number, number][][], sheetId: string) => {
-    setProject(prev => {
+    updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
       const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? 1;
       const sw = sheet?.naturalWidth ?? 800;
@@ -275,22 +331,21 @@ export function useProject() {
         return {
           id: crypto.randomUUID(),
           label: `${t('piece')} ${prev.pieces.length + i + 1}`,
-          polygon,
-          glassSheetId: sheetId,
+          polygon, glassSheetId: sheetId,
           transform: { x: cx, y: cy, rotation: 0, scale: s },
-          promptBox: box,
-          promptPoints: [],
+          promptBox: box, promptPoints: [],
         };
       });
-      return persist({ ...prev, pieces: [...prev.pieces, ...newPieces] });
+      return { ...prev, pieces: [...prev.pieces, ...newPieces] };
     });
-  }, []);
+  }, [updateProject, t]);
 
   const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][]) => {
-    setProject(prev =>
-      persist({ ...prev, pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p) })
-    );
-  }, []);
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p)
+    }));
+  }, [updateProject]);
 
   const markPiecePending = useCallback((pieceId: string) => {
     setPendingPieceIds(s => new Set(s).add(pieceId));
@@ -314,7 +369,7 @@ export function useProject() {
   }, []);
 
   const updatePatternImage = useCallback((url: string, width: number, height: number) => {
-    setProject(prev => persist({
+    updateProject(prev => ({
       ...prev,
       patternImageUrl: url,
       patternWidth: width,
@@ -322,21 +377,20 @@ export function useProject() {
       patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
       patternScale: null,
     }));
-  }, []);
+  }, [updateProject]);
 
   const addSheetFromImage = useCallback((url: string, label: string) => {
-    setProject(prev => {
+    const id = `sheet-${Date.now()}`;
+    updateProject(prev => {
       const newSheet: GlassSheet = {
-        id: `sheet-${Date.now()}`,
-        label,
-        imageUrl: url,
+        id, label, imageUrl: url,
         crop: { top: 0, left: 0, bottom: 0, right: 0 },
         scale: null,
       };
-      setActiveSheetId(newSheet.id);
-      return persist({ ...prev, sheets: [...prev.sheets, newSheet] });
+      setActiveSheetId(id);
+      return { ...prev, sheets: [...prev.sheets, newSheet] };
     });
-  }, []);
+  }, [updateProject]);
 
   return {
     project,
@@ -363,8 +417,13 @@ export function useProject() {
     batchAddPieces,
     updatePiecePolygon,
     updatePiecePrompt,
+    addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
+    undo,
+    redo,
+    canUndo: undoStack.length > 0,
+    canRedo: redoStack.length > 0,
     resetProject,
     loadProjectData,
     updatePatternImage,
