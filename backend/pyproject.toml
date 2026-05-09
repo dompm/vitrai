@@ -8,3 +8,13 @@ dependencies = [
     "modal>=0.73",
     "python-multipart>=0.0.27",
 ]
+
+[project.optional-dependencies]
+local-sam = [
+    "sam2==1.1.0",
+    "torch>=2.5.1",
+    "opencv-python-headless==4.10.0.84",
+    "pillow==10.4.0",
+    "numpy==2.0.2",
+    "huggingface_hub",
+]
