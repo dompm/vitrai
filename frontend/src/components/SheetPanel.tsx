@@ -408,7 +408,7 @@ export function SheetPanel({
   ], [t]);
 
   return (
-    <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
