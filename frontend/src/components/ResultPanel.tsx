@@ -519,7 +519,9 @@ export function ResultPanel({
     },
   ], [t]);
 
-  const TOOLS = BASE_TOOLS.map(tool => {
+  const TOOLS = BASE_TOOLS
+    .filter(tool => !IS_TOUCH || tool.id !== 'pan')
+    .map(tool => {
     if (tool.id === 'box') return { ...tool, loading: !!isEncoding };
     if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment, loading: !!isAutoSegmenting || !!isEncoding };
     return tool;
