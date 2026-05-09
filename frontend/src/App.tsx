@@ -4,7 +4,7 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid } from './utils/geometry';
-import { getBackend, type BackendType } from './samBackend';
+import { getBackend, defaultBackendType, BACKEND_LABELS, BACKEND_TITLES, type BackendType } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
 
@@ -123,9 +123,7 @@ export function App() {
     addSheetFromImage,
   } = useProject();
 
-  const [backendType, setBackendType] = useState<BackendType>(
-    () => (localStorage.getItem('sam-backend') as BackendType | null) ?? 'server'
-  );
+  const [backendType, setBackendType] = useState<BackendType>(defaultBackendType);
   const [backendStatus, setBackendStatus] = useState('');
 
   const updateBackendType = useCallback((type: BackendType) => {
@@ -390,15 +388,15 @@ export function App() {
           </button>
           <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 8px' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            {(['server', 'webgpu'] as BackendType[]).map(type => (
+            {(['modal', 'local', 'webgpu'] as BackendType[]).map(type => (
               <button
                 key={type}
                 className={`btn-ghost${backendType === type ? ' active' : ''}`}
                 onClick={() => updateBackendType(type)}
                 style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: backendType === type ? 700 : 400 }}
-                title={type === 'server' ? 'HTTP backend (Modal cloud or LOCAL_SAM=true)' : 'In-browser WebGPU (sam-vit-base, no server needed)'}
+                title={BACKEND_TITLES[type]}
               >
-                {type === 'server' ? 'Server' : 'WebGPU'}
+                {BACKEND_LABELS[type]}
               </button>
             ))}
             {backendStatus && (

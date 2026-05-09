@@ -1,6 +1,12 @@
 // Abstraction over three SAM inference backends:
-//   "server"  – existing HTTP API (Modal cloud GPU or local CPU via LOCAL_SAM=true)
-//   "webgpu"  – Transformers.js running sam-vit-base in-browser (WebGPU / WASM fallback)
+//   "modal"  – HTTP API hitting Modal cloud GPU (default server mode)
+//   "local"  – HTTP API hitting local CPU server (LOCAL_SAM=true on the server)
+//   "webgpu" – Transformers.js sam-vit-base in-browser (WebGPU / WASM fallback)
+//
+// Switch at runtime via the header toggle, or set VITE_SAM_BACKEND at dev-server
+// startup:
+//   VITE_SAM_BACKEND=local   npm run dev   # default to local CPU
+//   VITE_SAM_BACKEND=webgpu  npm run dev   # default to WebGPU
 
 import { encodeImage, segment as httpSegment, autoSegment as httpAutoSegment } from "./api";
 import type { BoundingBox, Crop } from "./types";
@@ -8,7 +14,19 @@ import type { WorkerInMsg, WorkerOutMsg } from "./samWorker";
 
 // ─── Interface ────────────────────────────────────────────────────────────────
 
-export type BackendType = "server" | "webgpu";
+export type BackendType = "modal" | "local" | "webgpu";
+
+export const BACKEND_LABELS: Record<BackendType, string> = {
+  modal:  "Modal",
+  local:  "Local",
+  webgpu: "WebGPU",
+};
+
+export const BACKEND_TITLES: Record<BackendType, string> = {
+  modal:  "Modal cloud GPU — requires backend running without LOCAL_SAM",
+  local:  "Local CPU — requires backend running with LOCAL_SAM=true",
+  webgpu: "In-browser WebGPU/WASM — no server needed (sam-vit-base, ~94 MB download)",
+};
 
 export interface SamBackend {
   readonly type: BackendType;
@@ -22,11 +40,15 @@ export interface SamBackend {
   autoSegment(imageId: string, crop?: Crop): Promise<[number, number][][]>;
 }
 
-// ─── Server backend (HTTP) ────────────────────────────────────────────────────
+// ─── HTTP backend (Modal or Local CPU) ───────────────────────────────────────
 
 class ServerSamBackend implements SamBackend {
-  readonly type = "server" as const;
+  readonly type: BackendType;
   readonly supportsAutoSegment = true;
+
+  constructor(type: "modal" | "local") {
+    this.type = type;
+  }
 
   encode(imageUrl: string) {
     return encodeImage(imageUrl);
@@ -131,11 +153,20 @@ export function getBackend(
   onStatusChange: (s: string) => void = () => {},
 ): SamBackend {
   if (!cache[type]) {
-    if (type === "server") {
-      cache[type] = new ServerSamBackend();
+    if (type === "modal" || type === "local") {
+      cache[type] = new ServerSamBackend(type);
     } else {
       cache[type] = new WebGPUSamBackend(onStatusChange);
     }
   }
   return cache[type]!;
+}
+
+// Default backend: VITE_SAM_BACKEND env var → localStorage → "modal"
+export function defaultBackendType(): BackendType {
+  const env = import.meta.env.VITE_SAM_BACKEND as string | undefined;
+  if (env === "modal" || env === "local" || env === "webgpu") return env;
+  const stored = localStorage.getItem("sam-backend") as BackendType | null;
+  if (stored === "modal" || stored === "local" || stored === "webgpu") return stored;
+  return "modal";
 }
