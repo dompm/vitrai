@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@huggingface/transformers": "^3.0.0",
     "i18next": "^26.0.10",
     "i18next-browser-languagedetector": "^8.2.1",
     "konva": "^9.3.0",

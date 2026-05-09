@@ -1,10 +1,10 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { encodeImage, segment, autoSegment } from './api';
 import { subtractPolygons, computeCentroid } from './utils/geometry';
+import { getBackend, type BackendType } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
 
@@ -123,22 +123,36 @@ export function App() {
     addSheetFromImage,
   } = useProject();
 
+  const [backendType, setBackendType] = useState<BackendType>(
+    () => (localStorage.getItem('sam-backend') as BackendType | null) ?? 'server'
+  );
+  const [backendStatus, setBackendStatus] = useState('');
+
+  const updateBackendType = useCallback((type: BackendType) => {
+    localStorage.setItem('sam-backend', type);
+    setBackendType(type);
+  }, []);
+
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
 
-  // Encode the pattern image when it changes so SAM can warm up.
+  // Re-encode whenever the image or active backend changes.
   useEffect(() => {
     setPatternImageId(null);
-    encodeImage(project.patternImageUrl)
-      .then(setPatternImageId)
-      .catch(() => { /* backend not running — SAM unavailable */ });
-  }, [project.patternImageUrl]);
+    const backend = getBackend(backendType, setBackendStatus);
+    let cancelled = false;
+    backend.encode(project.patternImageUrl)
+      .then(id => { if (!cancelled) setPatternImageId(id); })
+      .catch(() => { /* backend not running / model loading — SAM unavailable */ });
+    return () => { cancelled = true; };
+  }, [project.patternImageUrl, backendType]);
 
   async function handleAddPiece(box: BoundingBox) {
     const pieceId = addPieceFromBox(box, activeSheetId);
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const polygon = await segment(patternImageId, box);
+      const backend = getBackend(backendType, setBackendStatus);
+      const polygon = await backend.segment(patternImageId, box);
       console.log("Segment returned polygon of length:", polygon.length);
       const existingPieces = project.pieces.map(p => p.polygon);
       const clipped = subtractPolygons(polygon, existingPieces);
@@ -153,15 +167,16 @@ export function App() {
 
   async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
     addPiecePromptPoint(pieceId, point);
-    
+
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece || !patternImageId) return;
-    
+
     const newPoints = [...(piece.promptPoints || []), point];
-    
+
     markPiecePending(pieceId);
     try {
-      const polygon = await segment(patternImageId, piece.promptBox, newPoints);
+      const backend = getBackend(backendType, setBackendStatus);
+      const polygon = await backend.segment(patternImageId, piece.promptBox, newPoints);
       const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
       const clipped = subtractPolygons(polygon, otherPieces);
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
@@ -175,10 +190,11 @@ export function App() {
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
 
   async function handleAutoSegment() {
-    if (!patternImageId || isAutoSegmenting) return;
+    const backend = getBackend(backendType, setBackendStatus);
+    if (!patternImageId || isAutoSegmenting || !backend.supportsAutoSegment) return;
     setIsAutoSegmenting(true);
     try {
-      const polygons = await autoSegment(patternImageId, project.patternCrop);
+      const polygons = await backend.autoSegment(patternImageId, project.patternCrop);
       batchAddPieces(polygons, activeSheetId);
     } catch (e) {
       console.error("Auto segment failed:", e);
@@ -372,6 +388,25 @@ export function App() {
           >
             {i18n.language === 'fr' ? 'EN' : 'FR'}
           </button>
+          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 8px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            {(['server', 'webgpu'] as BackendType[]).map(type => (
+              <button
+                key={type}
+                className={`btn-ghost${backendType === type ? ' active' : ''}`}
+                onClick={() => updateBackendType(type)}
+                style={{ fontSize: '0.72rem', padding: '2px 8px', fontWeight: backendType === type ? 700 : 400 }}
+                title={type === 'server' ? 'HTTP backend (Modal cloud or LOCAL_SAM=true)' : 'In-browser WebGPU (sam-vit-base, no server needed)'}
+              >
+                {type === 'server' ? 'Server' : 'WebGPU'}
+              </button>
+            ))}
+            {backendStatus && (
+              <span style={{ fontSize: '0.68rem', color: '#6b7280', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {backendStatus}
+              </span>
+            )}
+          </div>
           <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 8px' }} />
           <label className="btn-ghost" style={{ cursor: 'pointer' }}>
             {t('pattern')}
