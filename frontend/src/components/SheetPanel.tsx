@@ -431,7 +431,7 @@ export function SheetPanel({
         animation: <MeasureAnimation />,
       },
     },
-  ], [t]);
+  ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
   return (
     <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
