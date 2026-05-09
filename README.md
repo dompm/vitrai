@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/public/vitrai_logo.svg" alt="Vitrai" width="180" />
+</p>
+
 # Vitrai
 
 A stained-glass planning web app — segment pattern pieces from a photo using SAM2, then map real glass sheet textures onto each piece.
