@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Piece, GlassSheet } from '../types';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, refineMode, onRefineModeChange, isPending }: Props) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -84,7 +86,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       ) : (
         <span
           onClick={() => setEditing(true)}
-          title="Click to rename"
+          title={t('clickToRename')}
           style={{
             fontSize: 12,
             fontWeight: 500,
@@ -108,7 +110,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
 
       <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
 
-      <label style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>Sheet</label>
+      <label style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>{t('sheet')}</label>
       <select
         value={piece.glassSheetId}
         onChange={handleSheetSelect}
@@ -126,7 +128,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           <option key={s.id} value={s.id}>{s.label}</option>
         ))}
         <option disabled>──────</option>
-        <option value="__new__">Add sheet…</option>
+        <option value="__new__">{t('addSheetOption')}</option>
       </select>
 
       <div style={{ flex: 1 }} />
@@ -136,7 +138,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
           <button
             onClick={() => onRefineModeChange(refineMode === 'add' ? null : 'add')}
-            title="Add positive point (+)"
+            title={t('addPositivePoint')}
             style={{
               background: refineMode === 'add' ? '#e0e7ff' : 'none',
               border: 'none',
@@ -152,7 +154,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           </button>
           <button
             onClick={() => onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
-            title="Add negative point (-)"
+            title={t('addNegativePoint')}
             style={{
               background: refineMode === 'remove' ? '#fee2e2' : 'none',
               border: 'none',
@@ -166,15 +168,19 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           >
             -
           </button>
-          {isPending && (
-            <div style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
-                  <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
-                </path>
-              </svg>
-            </div>
-          )}
+        </>
+      )}
+
+      {isPending && (
+        <>
+          <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+          <div style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
+                <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite" />
+              </path>
+            </svg>
+          </div>
         </>
       )}
 
@@ -182,7 +188,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
 
       <button
         onClick={onDelete}
-        title="Delete piece (Del)"
+        title={t('deletePieceTooltip')}
         style={{
           background: 'none',
           border: '1px solid #fca5a5',
@@ -196,7 +202,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; }}
         onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
       >
-        Delete
+        {t('delete')}
       </button>
     </div>
   );

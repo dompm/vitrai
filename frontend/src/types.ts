@@ -46,6 +46,8 @@ export interface GlassSheet {
   imageUrl: string;
   crop: Crop;
   scale: Scale | null;
+  naturalWidth?: number;
+  naturalHeight?: number;
 }
 
 export interface Project {

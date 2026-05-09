@@ -1,11 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ScaleUnit } from '../types';
-
-const UNITS: { id: ScaleUnit; label: string }[] = [
-  { id: 'mm', label: 'mm' },
-  { id: 'cm', label: 'cm' },
-  { id: 'in', label: 'in' },
-];
 
 function formatInitial(v: number): string {
   return parseFloat(v.toPrecision(4)).toString();
@@ -22,6 +17,14 @@ interface Props {
 }
 
 export function MeasureInput({ screenX, screenY, pixelLength, initialValue, initialUnit, onConfirm, onCancel }: Props) {
+  const { t } = useTranslation();
+  
+  const units: { id: ScaleUnit; label: string }[] = [
+    { id: 'mm', label: t('unit_mm') },
+    { id: 'cm', label: t('unit_cm') },
+    { id: 'in', label: t('unit_in') },
+  ];
+
   const [value, setValue] = useState(() => initialValue != null ? formatInitial(initialValue) : '');
   const [unit, setUnit] = useState<ScaleUnit>(initialUnit ?? 'mm');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +84,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
           type="number"
           min="0.01"
           step="any"
-          placeholder="length"
+          placeholder={t('lengthPlaceholder')}
           value={value}
           onChange={handleValueChange}
           onKeyDown={handleKeyDown}
@@ -107,7 +110,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
             cursor: 'pointer',
           }}
         >
-          {UNITS.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
+          {units.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}
         </select>
       </div>
     </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
@@ -69,13 +70,15 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
 }
 
 export function App() {
+  const { t, i18n } = useTranslation();
   const {
     project,
-    selectedPieceId,
+    selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
     setActiveSheetId,
     selectPiece,
+    selectPieces,
     updatePieceTransform,
     updatePatternCrop,
     updatePatternScale,
@@ -89,7 +92,10 @@ export function App() {
     addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
+    updateSheetDimensions,
+    batchAddPieces,
     updatePiecePolygon,
+    updatePiecePrompt,
     markPiecePending,
     unmarkPiecePending,
     resetProject,
@@ -135,7 +141,7 @@ export function App() {
     
     markPiecePending(pieceId);
     try {
-      const polygon = await segment(patternImageId, undefined, newPoints);
+      const polygon = await segment(patternImageId, piece.promptBox, newPoints);
       const otherPieces = project.pieces.filter(p => p.id !== pieceId).map(p => p.polygon);
       const clipped = subtractPolygons(polygon, otherPieces);
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
@@ -150,41 +156,10 @@ export function App() {
 
   async function handleAutoSegment() {
     if (!patternImageId || isAutoSegmenting) return;
-    
     setIsAutoSegmenting(true);
     try {
       const polygons = await autoSegment(patternImageId, project.patternCrop);
-      
-      const newPieces = [];
-      for (let i = 0; i < polygons.length; i++) {
-        const poly = polygons[i];
-        const pieceId = crypto.randomUUID();
-        
-        // Compute bounding box for the piece
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        for (const [x, y] of poly) {
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
-        }
-        const box: BoundingBox = { x1: minX, y1: minY, x2: maxX, y2: maxY };
-        
-        newPieces.push({
-          id: pieceId,
-          label: `Piece ${project.pieces.length + i + 1}`,
-          polygon: poly,
-          glassSheetId: activeSheetId,
-          transform: { x: 400, y: 300, rotation: 0, scale: 1 },
-          promptBox: box,
-          promptPoints: [],
-        });
-      }
-
-      setProject(prev => persist({
-        ...prev,
-        pieces: [...prev.pieces, ...newPieces]
-      }));
+      batchAddPieces(polygons, activeSheetId);
     } catch (e) {
       console.error("Auto segment failed:", e);
     } finally {
@@ -193,18 +168,20 @@ export function App() {
   }
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const selectedPiece = project.pieces.find(p => p.id === selectedPieceId) ?? null;
+  const selectedPiece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]) ?? null;
   const piecesOnActiveSheet = project.pieces.filter(p => p.glassSheetId === activeSheetId);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (!selectedPieceId) return;
+      if (selectedPieceIds.length === 0) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === 'Delete' || e.key === 'Backspace') deletePiece(selectedPieceId);
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        selectedPieceIds.forEach(id => deletePiece(id));
+      }
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPieceId, deletePiece]);
+  }, [selectedPieceIds, deletePiece]);
 
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -216,7 +193,7 @@ export function App() {
         loadProjectData(data);
       } catch (err) {
         console.error(err);
-        alert('Invalid project file');
+        alert(t('invalidProject'));
       }
     };
     reader.readAsText(file);
@@ -266,29 +243,39 @@ export function App() {
       {/* ── Left: result view ── */}
       <div className="panel panel-left">
         <div className="panel-header">
-          <span>Result</span>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <span>{t('result')}</span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <button 
+              className="btn-ghost" 
+              onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
+              title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+              style={{ fontSize: '0.8rem', fontWeight: 600, padding: '2px 6px' }}
+            >
+              {i18n.language === 'fr' ? 'EN' : 'FR'}
+            </button>
+            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
             <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              Pattern
+              {t('pattern')}
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
             </label>
             <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              Load
+              {t('load')}
               <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
             </label>
-            <button className="btn-ghost" onClick={handleSaveProject} title="Save project">
-              Save
+            <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
+              {t('save')}
             </button>
-            <button className="btn-ghost" onClick={resetProject} title="Reset to defaults">
-              Reset
+            <button className="btn-ghost" onClick={resetProject} title={t('resetTooltip')}>
+              {t('reset')}
             </button>
           </div>
         </div>
         <ResultPanel
           project={project}
-          selectedPieceId={selectedPieceId}
+          selectedPieceIds={selectedPieceIds}
           pendingPieceIds={pendingPieceIds}
           onSelectPiece={selectPiece}
+          onSelectPieces={selectPieces}
           onPatternCropChange={updatePatternCrop}
           onPatternScaleChange={updatePatternScale}
           onAddPiece={handleAddPiece}
@@ -317,7 +304,7 @@ export function App() {
                 onDelete={() => deleteSheet(sheet.id)}
               />
             ))}
-            <label className="sheet-tab" title="Upload sheet" style={{ cursor: 'pointer' }}>
+            <label className="sheet-tab" title={t('uploadSheetTooltip')} style={{ cursor: 'pointer' }}>
               +
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAddSheetFromImage} />
             </label>
@@ -328,11 +315,12 @@ export function App() {
           <SheetPanel
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
-            selectedPieceId={selectedPieceId}
+            selectedPieceIds={selectedPieceIds}
             onSelectPiece={selectPiece}
             onTransformChange={updatePieceTransform}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
+            onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
           />
         )}
       </div>

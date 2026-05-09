@@ -152,3 +152,117 @@ html, body, #root {
   opacity: 0.35;
   cursor: default;
 }
+
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+}
+
+/* Fallback plain tooltip (used when no rich tooltip is provided) */
+.tooltip-tip {
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.92);
+  background: #1f2937;
+  color: #f9fafb;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 100;
+}
+.tooltip-wrapper:hover .tooltip-tip {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+
+/* ── Rich tool tooltips ─────────────────────────────── */
+.tool-tooltip-card {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) scale(0.94);
+  opacity: 0;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  width: 220px;
+  pointer-events: none;
+  z-index: 200;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.tooltip-wrapper:hover .tool-tooltip-card {
+  opacity: 1;
+  transform: translateY(-50%) scale(1);
+}
+.tool-tooltip-preview {
+  background: #eef2ff;
+  height: 110px;
+  overflow: hidden;
+  line-height: 0;
+}
+.tool-tooltip-preview svg {
+  width: 220px;
+  height: 110px;
+  display: block;
+}
+.tool-tooltip-body {
+  padding: 10px 12px 11px;
+  background: #ffffff;
+}
+.tool-tooltip-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 4px;
+}
+.tool-tooltip-name {
+  color: #111827;
+  font-weight: 600;
+  font-size: 13px;
+}
+.tool-tooltip-kbd {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: monospace;
+  line-height: 1.6;
+}
+.tool-tooltip-desc {
+  color: #6b7280;
+  font-size: 11px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* First tool's tooltip: pin to top so it doesn't bleed above the panel */
+.toolbar > .tooltip-wrapper:first-child .tool-tooltip-card {
+  top: -4px;
+  transform: translateY(0) scale(0.94);
+}
+.toolbar > .tooltip-wrapper:first-child:hover .tool-tooltip-card {
+  transform: translateY(0) scale(1);
+}
+
+.spinner-tiny {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(124, 58, 237, 0.2);
+  border-top-color: #7c3aed;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

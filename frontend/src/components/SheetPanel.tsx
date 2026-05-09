@@ -1,4 +1,5 @@
-import { useState, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Circle } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
@@ -7,17 +8,13 @@ import { computeCentroid } from '../utils/geometry';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
+import { SelectAnimation, CropAnimation, MeasureAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 
-const TOOLS = [
-  { id: 'select' as ToolId, label: 'Select', icon: <SelectIcon /> },
-  { id: 'crop' as ToolId, label: 'Crop sheet', icon: <CropIcon /> },
-  { id: 'measure' as ToolId, label: 'Set sheet scale', icon: <MeasureIcon /> },
-];
 
 // Display-pixel constants — independent of zoom or image resolution
 const STROKE_IDLE = 2.5;
@@ -31,7 +28,7 @@ interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
   effectiveScale: number;
-  onSelect: () => void;
+  onSelect: (multi?: boolean) => void;
   onTransformChange: (t: Partial<TextureTransform>) => void;
   onRotateStart: () => void;
 }
@@ -55,7 +52,7 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
-    onSelect();
+    onSelect(e.evt.shiftKey);
   }
 
   function handleDragStart(e: KonvaEventObject<DragEvent>) {
@@ -114,20 +111,26 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
 interface SheetPanelProps {
   sheet: GlassSheet;
   pieces: Piece[];
-  selectedPieceId: string | null;
-  onSelectPiece: (id: string | null) => void;
+  selectedPieceIds: string[];
+  onSelectPiece: (id: string | null, multi?: boolean) => void;
   onTransformChange: (pieceId: string, t: Partial<TextureTransform>) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
+  onImageLoad?: (w: number, h: number) => void;
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceId, onSelectPiece, onTransformChange, onCropChange, onScaleChange,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
 }: SheetPanelProps) {
+  const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
+
+  useEffect(() => {
+    if (sheetImg && onImageLoad) onImageLoad(sheetImg.width, sheetImg.height);
+  }, [sheetImg]); // eslint-disable-line react-hooks/exhaustive-deps
   const vp = useViewport(sheetW, sheetH);
   const measure = useMeasure();
 
@@ -216,6 +219,42 @@ export function SheetPanel({
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
 
+  const TOOLS = useMemo(() => [
+    {
+      id: 'select' as ToolId,
+      label: t('toolSelect'),
+      icon: <SelectIcon />,
+      tooltip: {
+        name: t('tooltipSelectName'),
+        shortcut: 'V',
+        description: t('tooltipSelectDescSheet'),
+        animation: <SelectAnimation />,
+      },
+    },
+    {
+      id: 'crop' as ToolId,
+      label: t('toolCropSheet'),
+      icon: <CropIcon />,
+      tooltip: {
+        name: t('tooltipCropSheetName'),
+        shortcut: 'C',
+        description: t('tooltipCropSheetDesc'),
+        animation: <CropAnimation />,
+      },
+    },
+    {
+      id: 'measure' as ToolId,
+      label: t('toolScaleSheet'),
+      icon: <MeasureIcon />,
+      tooltip: {
+        name: t('tooltipScaleName'), // Using the same "Set Scale" or "Measure" key
+        shortcut: 'M',
+        description: t('tooltipScaleDescSheet'),
+        animation: <MeasureAnimation />,
+      },
+    },
+  ], [t]);
+
   return (
     <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
@@ -246,9 +285,9 @@ export function SheetPanel({
                 <PieceOutline
                   key={piece.id}
                   piece={piece}
-                  isSelected={piece.id === selectedPieceId}
+                  isSelected={selectedPieceIds.includes(piece.id)}
                   effectiveScale={es}
-                  onSelect={() => onSelectPiece(piece.id)}
+                  onSelect={(multi) => onSelectPiece(piece.id, multi)}
                   onTransformChange={t => onTransformChange(piece.id, t)}
                   onRotateStart={() => setRotatingPieceId(piece.id)}
                 />

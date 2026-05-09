@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -14,12 +16,37 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 
-const TOOLS = [
-  { id: 'select' as ToolId, label: 'Select', icon: <SelectIcon /> },
-  { id: 'box' as ToolId, label: 'Add piece (draw box)', icon: <BoxIcon /> },
-  { id: 'crop' as ToolId, label: 'Crop pattern', icon: <CropIcon /> },
-  { id: 'measure' as ToolId, label: 'Set pattern scale', icon: <MeasureIcon /> },
-];
+function DragHandle({ onDrag }: { onDrag: (delta: { x: number; y: number }) => void }) {
+  const last = useRef<{ x: number; y: number } | null>(null);
+  return (
+    <div
+      onPointerDown={e => {
+        e.stopPropagation();
+        last.current = { x: e.clientX, y: e.clientY };
+        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      }}
+      onPointerMove={e => {
+        if (!last.current) return;
+        onDrag({ x: e.clientX - last.current.x, y: e.clientY - last.current.y });
+        last.current = { x: e.clientX, y: e.clientY };
+      }}
+      onPointerUp={() => { last.current = null; }}
+      style={{
+        height: 10,
+        cursor: 'grab',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '8px 8px 0 0',
+        background: '#f3f4f6',
+        borderBottom: '1px solid #e5e7eb',
+      }}
+    >
+      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="#9ca3af"/><circle cx="10" cy="2" r="1.5" fill="#9ca3af"/><circle cx="16" cy="2" r="1.5" fill="#9ca3af"/></svg>
+    </div>
+  );
+}
+
 
 interface PieceOverlayProps {
   piece: Piece;
@@ -27,10 +54,12 @@ interface PieceOverlayProps {
   isSelected: boolean;
   isPending: boolean;
   effectiveScale: number;
-  onSelect: () => void;
+  opacity?: number;
+  solderWidth: number;
+  onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveScale, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveScale, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const { x: tx, y: ty, rotation, scale } = piece.transform;
   const centroid = computeCentroid(piece.polygon);
@@ -46,14 +75,14 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
-    onSelect();
+    onSelect(e.evt.shiftKey);
   }
 
   const xs = piece.polygon.map(p => p[0]);
   const ys = piece.polygon.map(p => p[1]);
 
   return (
-    <Group onClick={handleClick} onTap={handleClick}>
+    <Group onClick={handleClick} onTap={handleClick} opacity={opacity}>
       <Group clipFunc={clipPolygon}>
         <Group
           x={centroid.x} y={centroid.y}
@@ -74,9 +103,11 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? '#f59e0b' : isSelected ? '#4f46e5' : 'rgba(79,70,229,0.7)'}
-        strokeWidth={isSelected ? 3 / effectiveScale : 2 / effectiveScale}
-        dash={isPending ? [6 / effectiveScale, 4 / effectiveScale] : undefined}
+        stroke={isPending ? '#f59e0b' : isSelected ? '#4338ca' : '#2d2d2d'}
+        strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
+        dash={isPending ? [solderWidth * 2, solderWidth] : undefined}
+        lineJoin="round"
+        lineCap="round"
         closed listening={false}
       />
     </Group>
@@ -85,9 +116,10 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
 
 interface ResultPanelProps {
   project: Project;
-  selectedPieceId: string | null;
+  selectedPieceIds: string[];
   pendingPieceIds: ReadonlySet<string>;
-  onSelectPiece: (id: string | null) => void;
+  onSelectPiece: (id: string | null, multi?: boolean) => void;
+  onSelectPieces: (ids: string[]) => void;
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
@@ -101,23 +133,59 @@ interface ResultPanelProps {
 }
 
 const MIN_BOX_PX = 10;
+const DEFAULT_SOLDER_WIDTH_MM = 4.5;
+
+function getSolderWidth(scale: Scale | null, imgWidth: number) {
+  if (!scale) {
+    // If no scale is set, default to a width that is 0.6% of the image width.
+    // For a 1000px image, this is 6px. For 4000px, it's 24px.
+    return Math.max(2, imgWidth * 0.006);
+  }
+  const { pxPerUnit, unit } = scale;
+  const target = DEFAULT_SOLDER_WIDTH_MM;
+  if (unit === 'mm') return target * pxPerUnit;
+  if (unit === 'cm') return (target / 10) * pxPerUnit;
+  if (unit === 'in') return (target / 25.4) * pxPerUnit;
+  return target;
+}
 
 export function ResultPanel({
-  project, selectedPieceId, pendingPieceIds, onSelectPiece, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting,
 }: ResultPanelProps) {
+  const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
-  
-  // Clear refine mode when piece changes
-  useEffect(() => { setRefineMode(null); }, [selectedPieceId]);
+  const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
+
+  const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
+
+  useEffect(() => {
+    setRefineMode(null);
+    setTooltipDrag({x: 0, y: 0});
+  }, [selectedPieceIds]);
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      if (e.key === 'v') handleToolChange('select');
+      else if (e.key === 'b') handleToolChange('box');
+      else if (e.key === 'c') handleToolChange('crop');
+      else if (e.key === 'm') handleToolChange('measure');
+      else if (e.key === 'Escape') handleToolChange('select');
+    }
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTool]);
 
   const { patternWidth: pw, patternHeight: ph } = project;
   const vp = useViewport(pw, ph);
   const [patternImg] = useImage(project.patternImageUrl);
   const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const measure = useMeasure();
 
   function isBackground(e: KonvaEventObject<PointerEvent | MouseEvent>) {
@@ -139,8 +207,17 @@ export function ResultPanel({
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
       return;
     }
+
+    if (activeTool === 'select' && isBackground(e)) {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
+      return;
+    }
+
     if (!isBackground(e)) return;
-    vp.startPan(ptr);
+    // Panning is only allowed via mouse drag if NOT in select mode or box mode
+    // (User requested to rely on scroll wheels for move)
+    // vp.startPan(ptr); // Commented out to rely on scroll wheel as requested
   }
 
   function handlePointerMove(e: KonvaEventObject<PointerEvent>) {
@@ -149,6 +226,11 @@ export function ResultPanel({
     if (drawingBox) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox(b => b ? { ...b, x2: x, y2: y } : null);
+      return;
+    }
+    if (marqueeBox) {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      setMarqueeBox(b => b ? { ...b, x2: x, y2: y } : null);
       return;
     }
     vp.movePan(ptr);
@@ -168,11 +250,37 @@ export function ResultPanel({
       setDrawingBox(null);
       return;
     }
+    if (marqueeBox) {
+      const box = {
+        x1: Math.min(marqueeBox.x1, marqueeBox.x2),
+        y1: Math.min(marqueeBox.y1, marqueeBox.y2),
+        x2: Math.max(marqueeBox.x1, marqueeBox.x2),
+        y2: Math.max(marqueeBox.y1, marqueeBox.y2),
+      };
+      // Find pieces whose centroid is inside the marquee box
+      const hitIds = project.pieces.filter(p => {
+        const centroid = computeCentroid(p.polygon);
+        return centroid.x >= box.x1 && centroid.x <= box.x2 && centroid.y >= box.y1 && centroid.y <= box.y2;
+      }).map(p => p.id);
+
+      if (hitIds.length > 0) {
+        onSelectPieces(hitIds);
+      } else if (Math.abs(marqueeBox.x2 - marqueeBox.x1) < 2 && Math.abs(marqueeBox.y2 - marqueeBox.y1) < 2) {
+        // If it was a tiny click on background, deselect all
+        onSelectPiece(null);
+      }
+      setMarqueeBox(null);
+      return;
+    }
     vp.endPan();
   }
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
-    if (!refineMode && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
+    // Stage click handling is now partially covered by marquee logic for deselecting.
+    // We can keep this for explicit single clicks if needed.
+    if (!refineMode && activeTool === 'select' && isBackground(e)) {
+      // If no marquee was really drawn, deselect
+    }
   }
 
   function handleMeasureConfirm(realLength: number, unit: Scale['unit']) {
@@ -182,7 +290,12 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    if (id === 'detect-all') {
+      onAutoSegment?.();
+      return;
+    }
     setRefineMode(null);
+    setTooltipDrag({ x: 0, y: 0 });
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = project.patternScale?.line;
@@ -220,31 +333,73 @@ export function ResultPanel({
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
   }
 
+  const BASE_TOOLS = useMemo(() => [
+    {
+      id: 'select' as ToolId,
+      label: t('toolSelect'),
+      icon: <SelectIcon />,
+      tooltip: {
+        name: t('tooltipSelectName'),
+        shortcut: 'V',
+        description: t('tooltipSelectDescPattern'),
+        animation: <SelectAnimation />,
+      },
+    },
+    {
+      id: 'crop' as ToolId,
+      label: t('toolCropPattern'),
+      icon: <CropIcon />,
+      tooltip: {
+        name: t('tooltipCropPatternName'),
+        shortcut: 'C',
+        description: t('tooltipCropPatternDesc'),
+        animation: <CropAnimation />,
+      },
+    },
+    {
+      id: 'measure' as ToolId,
+      label: t('toolScalePattern'),
+      icon: <MeasureIcon />,
+      tooltip: {
+        name: t('tooltipScaleName'),
+        shortcut: 'M',
+        description: t('tooltipScaleDescPattern'),
+        animation: <MeasureAnimation />,
+      },
+    },
+    {
+      id: 'box' as ToolId,
+      label: t('toolDrawBox'),
+      icon: <BoxIcon />,
+      tooltip: {
+        name: t('tooltipBoxName'),
+        shortcut: 'B',
+        description: t('tooltipBoxDesc'),
+        animation: <BoxAnimation />,
+      },
+    },
+    {
+      id: 'detect-all' as ToolId,
+      label: t('toolDetectAll'),
+      icon: <DetectAllIcon />,
+      tooltip: {
+        name: t('tooltipDetectAllName'),
+        shortcut: '',
+        description: t('tooltipDetectAllDesc'),
+        animation: <DetectAllAnimation />,
+      },
+    },
+  ], [t]);
+
+  const TOOLS = BASE_TOOLS.map(tool =>
+    tool.id === 'detect-all'
+      ? { ...tool, disabled: isAutoSegmenting || !onAutoSegment, loading: !!isAutoSegmenting }
+      : tool
+  );
+
   return (
     <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
-        <div style={{ flex: 1 }} />
-
-        {onAutoSegment && (
-          <button
-            className="tool-btn"
-            onClick={onAutoSegment}
-            disabled={isAutoSegmenting}
-            style={{ 
-              opacity: isAutoSegmenting ? 0.5 : 1, 
-              background: '#eef2ff',
-              color: '#4f46e5',
-              borderColor: '#c7d2fe',
-              width: '100%',
-              marginTop: 'auto',
-              marginBottom: 16
-            }}
-            title="Auto-detect all pieces"
-          >
-            {isAutoSegmenting ? 'Detecting...' : 'Detect All'}
-          </button>
-        )}
-      </Toolbar>
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative' }}
@@ -266,22 +421,42 @@ export function ResultPanel({
               clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
             >
               {patternImg && (
-                <KonvaImage id="bg" image={patternImg} width={pw} height={ph} />
+                <KonvaImage 
+                  id="bg" 
+                  image={patternImg} 
+                  width={pw} height={ph} 
+                  opacity={activeTool === 'box' ? 0.5 : 1} 
+                />
               )}
               {project.pieces.map(piece => {
                 const sheet = sheetMap[piece.glassSheetId];
+                const isSelected = selectedPieceIds.includes(piece.id);
                 return (
                   <PieceOverlay
                     key={piece.id}
                     piece={piece}
                     glassImageUrl={sheet?.imageUrl ?? ''}
-                    isSelected={piece.id === selectedPieceId}
+                    isSelected={isSelected}
                     isPending={pendingPieceIds.has(piece.id)}
                     effectiveScale={es}
-                    onSelect={() => onSelectPiece(piece.id)}
+                    solderWidth={solderWidth}
+                    onSelect={(multi) => onSelectPiece(piece.id, multi)}
                   />
                 );
               })}
+              {marqueeBox && (
+                <Rect
+                  x={Math.min(marqueeBox.x1, marqueeBox.x2)}
+                  y={Math.min(marqueeBox.y1, marqueeBox.y2)}
+                  width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
+                  height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
+                  fill="rgba(67, 56, 202, 0.08)"
+                  stroke="#4338ca"
+                  strokeWidth={1.5 / es}
+                  dash={[4 / es, 2 / es]}
+                  listening={false}
+                />
+              )}
               {activeTool === 'crop' && (
                 <CropOverlay
                   imageWidth={pw} imageHeight={ph}
@@ -303,8 +478,27 @@ export function ResultPanel({
                   listening={false}
                 />
               )}
+              {(() => {
+                const lastId = selectedPieceIds[selectedPieceIds.length - 1];
+                const piece = project.pieces.find(p => p.id === lastId);
+                if (piece?.promptBox) {
+                  return (
+                    <Rect
+                      x={piece.promptBox.x1}
+                      y={piece.promptBox.y1}
+                      width={piece.promptBox.x2 - piece.promptBox.x1}
+                      height={piece.promptBox.y2 - piece.promptBox.y1}
+                      stroke="rgba(245,158,11,0.3)"
+                      strokeWidth={1 / es}
+                      dash={[4 / es, 6 / es]}
+                      listening={false}
+                    />
+                  );
+                }
+                return null;
+              })()}
               {project.pieces.map(piece => {
-                if (piece.id !== selectedPieceId || !piece.promptPoints) return null;
+                if (!selectedPieceIds.includes(piece.id) || !piece.promptPoints) return null;
                 return piece.promptPoints.map((pt, i) => (
                   <Circle
                     key={i}
@@ -343,20 +537,22 @@ export function ResultPanel({
             />
           );
         })()}
-        {selectedPieceId && (() => {
-          const piece = project.pieces.find(p => p.id === selectedPieceId);
+        {(() => {
+          const lastId = selectedPieceIds[selectedPieceIds.length - 1];
+          const piece = project.pieces.find(p => p.id === lastId);
           if (!piece) return null;
           const centroid = computeCentroid(piece.polygon);
           const sc = toScreenCoords(centroid.x, centroid.y, vp.pan, vp.effectiveScale);
           return (
             <div style={{
               position: 'absolute',
-              left: sc.x,
-              top: sc.y,
+              left: sc.x + tooltipDrag.x,
+              top: sc.y + tooltipDrag.y,
               transform: 'translate(-50%, -100%)',
               marginTop: -10,
-              zIndex: 10
+              zIndex: 10,
             }}>
+              <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
               <PieceProperties
                 piece={piece}
                 sheets={project.sheets}
