@@ -28,12 +28,18 @@ interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
   effectiveScale: number;
-  onSelect: (multi?: boolean) => void;
-  onTransformChange: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onRotateStart: () => void;
+  onSelect?: (multi?: boolean) => void;
+  onTransformChange?: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onRotateStart?: () => void;
+  fillOnly?: boolean;
+  strokeOnly?: boolean;
+  listening?: boolean;
 }
 
-function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart }: PieceOutlineProps) {
+function PieceOutline({
+  piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart,
+  fillOnly, strokeOnly, listening = true
+}: PieceOutlineProps) {
   const { x, y, rotation, scale } = piece.transform;
   const centroid = computeCentroid(piece.polygon);
   const relPts = piece.polygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
@@ -52,7 +58,7 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
-    onSelect(e.evt.shiftKey);
+    onSelect?.(e.evt.shiftKey);
   }
 
   function handleDragStart(e: KonvaEventObject<DragEvent>) {
@@ -63,17 +69,17 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
   }
 
   function handleDragMove(e: KonvaEventObject<DragEvent>) {
-    onTransformChange({ x: e.target.x(), y: e.target.y() }, true);
+    onTransformChange?.({ x: e.target.x(), y: e.target.y() }, true);
   }
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
-    onTransformChange({ x: e.target.x(), y: e.target.y() }, false);
+    onTransformChange?.({ x: e.target.x(), y: e.target.y() }, false);
   }
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
     e.cancelBubble = true;
     dragStartedFromHandle.current = true;
-    onRotateStart();
+    onRotateStart?.();
   }
 
   return (
@@ -81,20 +87,22 @@ function PieceOutline({ piece, isSelected, effectiveScale, onSelect, onTransform
       x={x} y={y}
       rotation={(rotation * 180) / Math.PI}
       scaleX={scale} scaleY={scale}
-      draggable={isSelected}
+      draggable={isSelected && strokeOnly}
       onClick={handleClick} onTap={handleClick}
       onDragStart={handleDragStart}
       onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
+      listening={listening}
     >
       <Line
         points={relPts}
-        stroke={isSelected ? '#4f46e5' : 'rgba(79,70,229,0.65)'}
+        stroke={fillOnly ? 'transparent' : (isSelected ? '#4f46e5' : 'rgba(79,70,229,0.65)')}
         strokeWidth={isSelected ? STROKE_SELECTED / es : STROKE_IDLE / es}
-        fill={isSelected ? 'rgba(79,70,229,0.10)' : 'rgba(79,70,229,0.04)'}
+        fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(79,70,229,0.10)' : 'rgba(79,70,229,0.04)')}
         closed
+        hitStrokeWidth={strokeOnly ? 10 / es : 0}
       />
-      {isSelected && (
+      {isSelected && strokeOnly && (
         <>
           <Line
             points={[0, 0, 0, -handleOffset]}
@@ -214,10 +222,10 @@ export function SheetPanel({
       let x2 = saved?.x2 ?? defaultX2;
       let y2 = saved?.y2 ?? defaultY;
 
-      x1 = Math.max(cropL, Math.min(cropR, x1));
-      y1 = Math.max(cropT, Math.min(cropB, y1));
-      x2 = Math.max(cropL, Math.min(cropR, x2));
-      y2 = Math.max(cropT, Math.min(cropB, y2));
+      x1 = Math.max(0, Math.min(sheetW, x1));
+      y1 = Math.max(0, Math.min(sheetH, y1));
+      x2 = Math.max(0, Math.min(sheetW, x2));
+      y2 = Math.max(0, Math.min(sheetH, y2));
       
       measure.loadLine({ x1, y1, x2, y2 });
     }
@@ -285,23 +293,37 @@ export function SheetPanel({
           onClick={handleStageClick}
         >
           <Layer>
-            <Group
-              x={vp.pan.x} y={vp.pan.y}
-              scaleX={es} scaleY={es}
-              clipX={activeTool === 'crop' ? 0 : sheet.crop.left}
-              clipY={activeTool === 'crop' ? 0 : sheet.crop.top}
-              clipWidth={activeTool === 'crop' ? sheetW : Math.max(1, sheetW - sheet.crop.left - sheet.crop.right)}
-              clipHeight={activeTool === 'crop' ? sheetH : Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom)}
-            >
-              {sheetImg && (
-                <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} />
-              )}
+            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+              {/* Only the image and piece fills are clipped by the crop zone (unless we're actively cropping) */}
+              <Group
+                clipX={activeTool === 'crop' ? 0 : sheet.crop.left}
+                clipY={activeTool === 'crop' ? 0 : sheet.crop.top}
+                clipWidth={activeTool === 'crop' ? sheetW : Math.max(1, sheetW - sheet.crop.left - sheet.crop.right)}
+                clipHeight={activeTool === 'crop' ? sheetH : Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom)}
+              >
+                {sheetImg && (
+                  <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} />
+                )}
+                {pieces.map(piece => (
+                  <PieceOutline
+                    key={piece.id + '-fill'}
+                    piece={piece}
+                    isSelected={selectedPieceIds.includes(piece.id)}
+                    effectiveScale={es}
+                    fillOnly
+                    listening={false}
+                  />
+                ))}
+              </Group>
+
+              {/* Outlines and tools are visible everywhere */}
               {pieces.map(piece => (
                 <PieceOutline
                   key={piece.id}
                   piece={piece}
                   isSelected={selectedPieceIds.includes(piece.id)}
                   effectiveScale={es}
+                  strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
                   onTransformChange={(t, skip) => onTransformChange(piece.id, t, skip)}
                   onRotateStart={() => setRotatingPieceId(piece.id)}
@@ -330,7 +352,9 @@ export function SheetPanel({
           </Layer>
         </Stage>
         {activeTool === 'measure' && measure.line && (() => {
-          const sc = toScreenCoords(measure.line.x2, measure.line.y2, vp.pan, vp.effectiveScale);
+          const midX = (measure.line.x1 + measure.line.x2) / 2;
+          const midY = (measure.line.y1 + measure.line.y2) / 2;
+          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
           const saved = sheet.scale;
           return (
             <MeasureInput

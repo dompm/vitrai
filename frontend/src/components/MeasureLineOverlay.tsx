@@ -26,8 +26,8 @@ export function MeasureLineOverlay({
   const maxY = H - crop.bottom;
 
   function clampedDrag(e: KonvaEventObject<DragEvent>, onUpdate: (x: number, y: number) => void) {
-    const x = Math.max(minX, Math.min(maxX, e.target.x()));
-    const y = Math.max(minY, Math.min(maxY, e.target.y()));
+    const x = Math.max(0, Math.min(W, e.target.x()));
+    const y = Math.max(0, Math.min(H, e.target.y()));
     e.target.x(x);
     e.target.y(y);
     onUpdate(x, y);

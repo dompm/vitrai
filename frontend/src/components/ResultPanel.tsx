@@ -159,14 +159,12 @@ export function ResultPanel({
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
-  const [rulerDrag, setRulerDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
 
   useEffect(() => {
     setRefineMode(null);
     setTooltipDrag({x: 0, y: 0});
-    setRulerDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
 
   useEffect(() => {
@@ -292,7 +290,6 @@ export function ResultPanel({
     setRefineMode(null);
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
-      setRulerDrag({ x: 0, y: 0 });
       const saved = project.patternScale?.line;
       const cropL = project.patternCrop.left;
       const cropT = project.patternCrop.top;
@@ -524,13 +521,12 @@ export function ResultPanel({
           const saved = project.patternScale;
           return (
             <MeasureInput
-              screenX={sc.x + rulerDrag.x} screenY={sc.y + rulerDrag.y}
+              screenX={sc.x} screenY={sc.y}
               pixelLength={measurePxLength}
               initialValue={saved ? measurePxLength / saved.pxPerUnit : undefined}
               initialUnit={saved?.unit}
               onConfirm={handleMeasureConfirm}
               onCancel={() => handleToolChange('select')}
-              onDrag={delta => setRulerDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))}
             />
           );
         })()}
