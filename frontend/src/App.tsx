@@ -329,7 +329,7 @@ export function App() {
       });
     });
 
-    const margin = patternScale.pxPerUnit * 0.5; // 0.5 physical units margin
+    const margin = patternScale.pxPerUnit * 0.5;
     minX -= margin;
     minY -= margin;
     maxX += margin;
@@ -337,52 +337,133 @@ export function App() {
 
     const printWidth = maxX - minX;
     const printHeight = maxY - minY;
-    
-    // Scale physical size based on user definition
-    const pwPhysical = printWidth / patternScale.pxPerUnit;
-    const phPhysical = printHeight / patternScale.pxPerUnit;
+
+    const pxPerUnit = patternScale.pxPerUnit;
     const unit = patternScale.unit;
 
-    let svgContent = `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
-    svgContent += `<style>
-      .piece-outline { fill: none; stroke: black; stroke-width: ${patternScale.pxPerUnit * 0.05}px; }
-      .piece-label { font-family: sans-serif; font-size: ${patternScale.pxPerUnit * 0.5}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
-    </style>`;
+    // Convert scale to px/mm for page-size calculations
+    let pxPerMm: number;
+    if (unit === 'mm') pxPerMm = pxPerUnit;
+    else if (unit === 'cm') pxPerMm = pxPerUnit / 10;
+    else pxPerMm = pxPerUnit / 25.4;
 
-    // Background pattern image at half opacity
-    svgContent += `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
+    // A4 portrait (mm) — used as the tile size when tiling is needed
+    const PAGE_W_MM = 210;
+    const PAGE_H_MM = 297;
+    const pageWPx = PAGE_W_MM * pxPerMm;
+    const pageHPx = PAGE_H_MM * pxPerMm;
 
-    pieces.forEach((piece, index) => {
-      const pointsStr = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
-      svgContent += `<polygon points="${pointsStr}" class="piece-outline" />`;
-      
-      const centroid = computeCentroid(piece.polygon);
-      const label = index + 1;
-      svgContent += `<text x="${centroid.x}" y="${centroid.y}" class="piece-label">${label}</text>`;
-    });
+    // 15 mm overlap between adjacent tiles for alignment
+    const OVERLAP_MM = 15;
+    const overlapPx = OVERLAP_MM * pxPerMm;
+    const stepXPx = pageWPx - overlapPx;
+    const stepYPx = pageHPx - overlapPx;
 
-    svgContent += `</svg>`;
+    const cols = Math.max(1, Math.ceil(printWidth / stepXPx));
+    const rows = Math.max(1, Math.ceil(printHeight / stepYPx));
+    const totalPages = rows * cols;
+    const needsTiling = totalPages > 1;
+
+    const strokeWidth = pxPerUnit * 0.05;
+    const fontSize = pxPerUnit * 0.5;
+    const cutLineW = Math.max(strokeWidth * 0.4, pxPerMm * 0.25);
+    const dash = overlapPx * 0.12;
+    const crossSize = overlapPx * 0.22;
+
+    const commonStyles = `
+      .po { fill: none; stroke: #000; stroke-width: ${strokeWidth}px; }
+      .pl { font-family: sans-serif; font-size: ${fontSize}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
+      .cl { fill: none; stroke: #aaa; stroke-width: ${cutLineW}px; stroke-dasharray: ${dash},${dash * 0.5}; }
+      .am { stroke: #555; stroke-width: ${cutLineW}px; }
+      .pg { font-family: sans-serif; font-size: ${fontSize * 0.45}px; fill: #aaa; }
+    `;
+
+    const imageTag = `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
+
+    const polygonsContent = pieces.map((piece, index) => {
+      const pts = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
+      const c = computeCentroid(piece.polygon);
+      return `<polygon points="${pts}" class="po" /><text x="${c.x}" y="${c.y}" class="pl">${index + 1}</text>`;
+    }).join('');
+
+    const pages: string[] = [];
+
+    if (!needsTiling) {
+      const pwPhysical = printWidth / pxPerUnit;
+      const phPhysical = printHeight / pxPerUnit;
+      pages.push(
+        `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+        `<style>${commonStyles}</style>${imageTag}${polygonsContent}</svg>`
+      );
+    } else {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const tileMinX = minX + col * stepXPx;
+          const tileMinY = minY + row * stepYPx;
+          const pageNum = row * cols + col + 1;
+
+          let annotations = '';
+
+          // Dashed cut line at right overlap boundary
+          if (col < cols - 1) {
+            const cx = tileMinX + stepXPx;
+            annotations += `<line x1="${cx}" y1="${tileMinY}" x2="${cx}" y2="${tileMinY + pageHPx}" class="cl" />`;
+          }
+
+          // Dashed cut line at bottom overlap boundary
+          if (row < rows - 1) {
+            const cy = tileMinY + stepYPx;
+            annotations += `<line x1="${tileMinX}" y1="${cy}" x2="${tileMinX + pageWPx}" y2="${cy}" class="cl" />`;
+          }
+
+          // Crosshair at interior tile corners (where both cut lines meet)
+          if (col < cols - 1 && row < rows - 1) {
+            const cx = tileMinX + stepXPx;
+            const cy = tileMinY + stepYPx;
+            annotations +=
+              `<line x1="${cx - crossSize}" y1="${cy}" x2="${cx + crossSize}" y2="${cy}" class="am" />` +
+              `<line x1="${cx}" y1="${cy - crossSize}" x2="${cx}" y2="${cy + crossSize}" class="am" />`;
+          }
+
+          // Page number in bottom-right corner
+          const lx = tileMinX + pageWPx - fontSize * 0.3;
+          const ly = tileMinY + pageHPx - fontSize * 0.3;
+          annotations += `<text x="${lx}" y="${ly}" class="pg" text-anchor="end">${pageNum}/${totalPages} (${col + 1},${row + 1})</text>`;
+
+          pages.push(
+            `<svg width="${PAGE_W_MM}mm" height="${PAGE_H_MM}mm" viewBox="${tileMinX} ${tileMinY} ${pageWPx} ${pageHPx}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+            `<style>${commonStyles}</style>${imageTag}${polygonsContent}${annotations}</svg>`
+          );
+        }
+      }
+    }
 
     const printWin = window.open('', '_blank');
     if (!printWin) return;
+
+    const pagesHtml = pages.map(svg => `<div class="page">${svg}</div>`).join('\n');
+    const pageRule = needsTiling
+      ? `@page { margin: 0; size: ${PAGE_W_MM}mm ${PAGE_H_MM}mm; }`
+      : `@page { margin: 0; }`;
+
     printWin.document.write(`
       <html>
         <head>
           <title>Print Pattern - Vitrai</title>
           <style>
-            body { margin: 0; padding: 0; display: flex; justify-content: center; background: white; }
+            body { margin: 0; padding: 0; background: white; }
+            .page { display: flex; justify-content: center; }
+            .page + .page { page-break-before: always; break-before: page; }
             @media print {
-              @page { margin: 0; }
+              ${pageRule}
               body { margin: 0; }
             }
           </style>
         </head>
         <body>
-          ${svgContent}
+          ${pagesHtml}
           <script>
-            window.onload = () => {
-              window.print();
-            };
+            window.onload = () => { window.print(); };
           </script>
         </body>
       </html>
