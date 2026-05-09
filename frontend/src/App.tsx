@@ -509,7 +509,7 @@ export function App() {
             <RedoIcon />
           </button>
 
-          <div className="header-secondary" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div className="header-secondary">
             <button
               className="btn-ghost"
               onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}

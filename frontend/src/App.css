@@ -516,6 +516,12 @@ html, body, #root {
   margin: 6px 0;
 }
 
+.header-secondary {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 /* ── Mobile (≤ 768px) ───────────────────────────────── */
 @media (max-width: 768px) {
   /* Header: compact, hide secondary actions */
