@@ -2,7 +2,7 @@
 
 A stained-glass planning web app — segment pattern pieces from a photo using SAM2, then map real glass sheet textures onto each piece.
 
-**Live Demo: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
+**App: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
 
 Runs entirely in the browser (no backend). SAM2 inference runs on-device via WebGPU (ONNX Runtime Web).
 
