@@ -18,7 +18,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 
-function DragHandle({ onDrag }: { onDrag: (delta: { x: number; y: number }) => void }) {
+function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
   return (
     <div
@@ -35,7 +35,8 @@ function DragHandle({ onDrag }: { onDrag: (delta: { x: number; y: number }) => v
       onPointerUp={() => { last.current = null; }}
       style={{
         height: 10,
-        cursor: 'grab',
+        cursor: pointerEvents === 'none' ? 'inherit' : 'grab',
+        pointerEvents,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -163,6 +164,50 @@ interface ResultPanelProps {
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
 }
 
+function getTooltipAnchor(piece: Piece, allPieces: Piece[], pw: number, ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
+  const xs = piece.polygon.map(p => p[0]);
+  const ys = piece.polygon.map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
+
+  const otherPieces = allPieces.filter(p => p.id !== piece.id);
+  
+  const score = { top: 1.1, bottom: 1.0, left: 1.0, right: 1.0 };
+  
+  // Penalize edges (in screen space)
+  const toScreen = (ix: number, iy: number) => ({
+    x: ix * vp.effectiveScale + vp.pan.x,
+    y: iy * vp.effectiveScale + vp.pan.y
+  });
+
+  const sTop = toScreen(midX, minY);
+  const sBottom = toScreen(midX, maxY);
+  const sLeft = toScreen(minX, midY);
+  const sRight = toScreen(maxX, midY);
+
+  if (sTop.y < 100) score.top -= 10;
+  if (sBottom.y > vp.dims.h - 100) score.bottom -= 10;
+  if (sLeft.x < 200) score.left -= 10;
+  if (sRight.x > vp.dims.w - 200) score.right -= 10;
+
+  // Prefer sides with more neighbors
+  otherPieces.forEach(p => {
+    const c = computeCentroid(p.polygon);
+    if (c.y < minY) score.top += 1;
+    else if (c.y > maxY) score.bottom += 1;
+    if (c.x < minX) score.left += 1;
+    else if (c.x > maxX) score.right += 1;
+  });
+
+  const bestSide = (Object.keys(score) as Array<keyof typeof score>).reduce((a, b) => score[a] > score[b] ? a : b);
+
+  if (bestSide === 'top') return { x: midX, y: minY, transform: 'translate(-50%, -100%)', margin: '0 0 24px 0' };
+  if (bestSide === 'bottom') return { x: midX, y: maxY, transform: 'translate(-50%, 0)', margin: '24px 0 0 0' };
+  if (bestSide === 'left') return { x: minX, y: midY, transform: 'translate(-100%, -50%)', margin: '0 24px 0 0' };
+  return { x: maxX, y: midY, transform: 'translate(0, -50%)', margin: '0 0 0 24px' };
+}
+
 const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
 const DEFAULT_SOLDER_WIDTH_MM = 4.5;
 
@@ -255,11 +300,12 @@ export function ResultPanel({
   }, [activeTool]);
 
   const { patternWidth: pw, patternHeight: ph } = project;
+  const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  
   const vp = useViewport(pw, ph);
   const [patternImg] = useImage(project.patternImageUrl);
   const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
-  const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
-  const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const measure = useMeasure();
 
   function isBackground(e: KonvaEventObject<PointerEvent | MouseEvent>) {
@@ -705,27 +751,28 @@ export function ResultPanel({
               const piece = project.pieces.find(p => p.id === lastId);
               if (!piece) return null;
               
-              const ys = piece.polygon.map(p => p[1]);
-              const minY = Math.min(...ys);
-              const xs = piece.polygon.map(p => p[0]);
-              const minX = Math.min(...xs);
-              const maxX = Math.max(...xs);
-              const centerX = (minX + maxX) / 2;
-
-              const sc = toScreenCoords(centerX, minY, vp.pan, vp.effectiveScale);
+              const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
+              const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
+              const isDrawing = drawingBox !== null;
+              const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
 
               return (
                 <div style={{
                   position: 'absolute',
                   left: sc.x + tooltipDrag.x,
                   top: sc.y + tooltipDrag.y,
-                  transform: 'translate(-50%, -100%)',
-                  marginTop: -12,
+                  transform: anchor.transform,
+                  padding: anchor.margin,
                   zIndex: 10,
-                  pointerEvents: 'none',
+                  pointerEvents: isInteracting ? 'none' : 'auto',
+                  opacity: isDrawing ? 0 : 0.95,
+                  transition: 'opacity 0.2s ease, transform 0.3s ease-out',
                 }}>
-                  <div style={{ pointerEvents: 'auto' }}>
-                    <DragHandle onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} />
+                  <div style={{ pointerEvents: isInteracting ? 'none' : 'auto' }}>
+                    <DragHandle 
+                      onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} 
+                      pointerEvents={isInteracting ? 'none' : 'auto'}
+                    />
                     <PieceProperties
                       piece={piece}
                       sheets={project.sheets}
@@ -738,6 +785,7 @@ export function ResultPanel({
                       onRefineModeChange={setRefineMode}
                       isPending={pendingPieceIds.has(piece.id)}
                       isEncoding={isEncoding}
+                      pointerEvents={isInteracting ? 'none' : 'auto'}
                     />
                   </div>
                 </div>

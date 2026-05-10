@@ -27,7 +27,6 @@ export function useViewport(imageW: number, imageH: number) {
   const imageWRef = useRef(imageW);
   const imageHRef = useRef(imageH);
 
-  // Pan state — defined here so the pinch handler can reset them
   const isPanning = useRef(false);
   const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
   const isPinchingRef = useRef(false);

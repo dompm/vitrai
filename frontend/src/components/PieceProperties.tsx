@@ -14,9 +14,10 @@ interface Props {
   onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
   isPending?: boolean;
   isEncoding?: boolean;
+  pointerEvents?: 'auto' | 'none';
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending, isEncoding }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending, isEncoding, pointerEvents = 'auto' }: Props) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
@@ -65,7 +66,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
         flexShrink: 0,
         minHeight: 40,
-        pointerEvents: 'auto',
+        pointerEvents,
       }}
     >
       {editing ? (
