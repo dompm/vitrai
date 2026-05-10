@@ -12,6 +12,7 @@ const DECODER_DATA_URL = `${HF}/prompt_encoder_mask_decoder.onnx_data`;
 const INPUT_SIZE = 1024;
 const MEAN = [0.485, 0.456, 0.406];
 const STD  = [0.229, 0.224, 0.225];
+const MASK_THRESHOLD = 0;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,7 +27,8 @@ export type WorkerOutMsg =
   | { type: 'status';       text: string }
   | { type: 'encode:done';  id: string; sessionId: string }
   | { type: 'encode:error'; id: string; error: string }
-  | { type: 'segment:done'; id: string; polygon: [number, number][] }
+  | { type: 'segment:done'; id: string; polygon: [number, number][];
+      debugMask?: { bitmap: ImageBitmap; width: number; height: number } }
   | { type: 'segment:error';id: string; error: string };
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -128,11 +130,11 @@ async function loadAndPreprocess(imageUrl: string): Promise<{
 
   const canvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
   const ctx = canvas.getContext('2d')!;
-  
+
   // Fill background with zeros (black)
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
-  
+
   // Draw resized image
   ctx.drawImage(bitmap, padX, padY, newW, newH);
   const { data } = ctx.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE);
@@ -228,7 +230,7 @@ async function segment(
       throw new Error(`No mask output. Keys: ${Object.keys(decoderOut).join(', ')}`);
     }
 
-    const dims = masksTensor.dims; // [1, 1, 3, 256, 256] or [1, 3, 256, 256]
+    const dims = masksTensor.dims;
     const H = dims[dims.length - 2];
     const W = dims[dims.length - 1];
     const numMasks = dims[dims.length - 3] ?? 1;
@@ -243,12 +245,66 @@ async function segment(
     const maskData = (masksTensor.data as Float32Array)
       .slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
 
-    const polygon = maskToPolygon(maskData, W, H, scale, padX, padY);
-    post({ type: 'segment:done', id, polygon });
+    const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+
+    const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+
+    // Debug overlay: paint upsampled mask as a semi-transparent bitmap.
+    const debugCanvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
+    const dctx = debugCanvas.getContext('2d')!;
+    const imgData = dctx.createImageData(INPUT_SIZE, INPUT_SIZE);
+    for (let i = 0; i < INPUT_SIZE * INPUT_SIZE; i++) {
+      if (upsampled[i] > MASK_THRESHOLD) {
+        imgData.data[i * 4 + 0] = 59;
+        imgData.data[i * 4 + 1] = 130;
+        imgData.data[i * 4 + 2] = 246;
+        imgData.data[i * 4 + 3] = 60;
+      }
+    }
+    dctx.putImageData(imgData, 0, 0);
+    const debugBitmap = debugCanvas.transferToImageBitmap();
+    const displayW = INPUT_SIZE / scale;
+    const displayH = INPUT_SIZE / scale;
+
+    self.postMessage(
+      { type: 'segment:done', id, polygon,
+        debugMask: { bitmap: debugBitmap, width: displayW, height: displayH } },
+      { transfer: [debugBitmap] },
+    );
   } catch (err) {
     console.error("[SAM Worker] Decoder run failed:", err);
     throw err;
   }
+}
+
+// ─── Bilinear upsample of mask logits ────────────────────────────────────────
+
+function bilinearUpsample(
+  src: Float32Array, srcW: number, srcH: number, dstW: number, dstH: number,
+): Float32Array {
+  const dst = new Float32Array(dstW * dstH);
+  const sx = (srcW - 1) / (dstW - 1);
+  const sy = (srcH - 1) / (dstH - 1);
+  for (let y = 0; y < dstH; y++) {
+    const fy = y * sy;
+    const y0 = Math.floor(fy);
+    const y1 = Math.min(srcH - 1, y0 + 1);
+    const wy = fy - y0;
+    for (let x = 0; x < dstW; x++) {
+      const fx = x * sx;
+      const x0 = Math.floor(fx);
+      const x1 = Math.min(srcW - 1, x0 + 1);
+      const wx = fx - x0;
+      const v00 = src[y0 * srcW + x0];
+      const v10 = src[y0 * srcW + x1];
+      const v01 = src[y1 * srcW + x0];
+      const v11 = src[y1 * srcW + x1];
+      const v0 = v00 * (1 - wx) + v10 * wx;
+      const v1 = v01 * (1 - wx) + v11 * wx;
+      dst[y * dstW + x] = v0 * (1 - wy) + v1 * wy;
+    }
+  }
+  return dst;
 }
 
 // ─── Mask → polygon ───────────────────────────────────────────────────────────
@@ -258,7 +314,7 @@ function maskToPolygon(
   scale: number, padX: number, padY: number,
 ): [number, number][] {
   const get = (x: number, y: number): boolean =>
-    x >= 0 && x < W && y >= 0 && y < H && data[y * W + x] > 0;
+    x >= 0 && x < W && y >= 0 && y < H && data[y * W + x] > MASK_THRESHOLD;
 
   // Mask is 256x256, representing the 1024x1024 preprocessed space.
   // To map back to original: ((maskCoord * (1024/256)) - pad) / scale
@@ -275,7 +331,7 @@ function maskToPolygon(
   for (let y = 0; y < H; y++) {
     for (let x = 0; x < W; x++) {
       const idx = y * W + x;
-      if (data[idx] > 0 && !visited[idx]) {
+      if (data[idx] > MASK_THRESHOLD && !visited[idx]) {
         // Found a potential new island! Trace it.
         const currentPts: [number, number][] = [];
         let cx = x, cy = y;
@@ -328,8 +384,7 @@ function maskToPolygon(
   }
 
   const dynamicEps = Math.max(2.0, perimeter * 0.005);
-  const simplified = douglasPeucker(bestPts, dynamicEps);
-  return chaikin(simplified, 3);
+  return douglasPeucker(bestPts, dynamicEps);
 }
 
 function douglasPeucker(pts: [number, number][], eps: number): [number, number][] {
@@ -349,22 +404,6 @@ function douglasPeucker(pts: [number, number][], eps: number): [number, number][
             ...douglasPeucker(pts.slice(idx), eps)];
   }
   return [pts[0], pts[pts.length - 1]];
-}
-
-function chaikin(pts: [number, number][], iterations: number): [number, number][] {
-  let result = pts;
-  for (let iter = 0; iter < iterations; iter++) {
-    const next: [number, number][] = [];
-    const n = result.length;
-    for (let i = 0; i < n; i++) {
-      const [x0, y0] = result[i];
-      const [x1, y1] = result[(i + 1) % n];
-      next.push([x0 * 0.75 + x1 * 0.25, y0 * 0.75 + y1 * 0.25]);
-      next.push([x0 * 0.25 + x1 * 0.75, y0 * 0.25 + y1 * 0.75]);
-    }
-    result = next;
-  }
-  return result;
 }
 
 // ─── Messaging ────────────────────────────────────────────────────────────────

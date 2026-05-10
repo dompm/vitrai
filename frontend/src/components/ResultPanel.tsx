@@ -159,6 +159,7 @@ interface ResultPanelProps {
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
 }
 
 const MIN_BOX_PX = 10;
@@ -181,7 +182,7 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
@@ -570,11 +571,11 @@ export function ResultPanel({
                   clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
                 >
                   {patternImg && (
-                    <KonvaImage 
-                      id="bg" 
-                      image={patternImg} 
-                      width={pw} height={ph} 
-                      opacity={activeTool === 'box' ? 0.5 : 1} 
+                    <KonvaImage
+                      id="bg"
+                      image={patternImg}
+                      width={pw} height={ph}
+                      opacity={activeTool === 'box' ? 0.5 : 1}
                     />
                   )}
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
@@ -593,6 +594,15 @@ export function ResultPanel({
                       />
                     );
                   })}
+                  {debugMask && activeTool === 'box' && (
+                    <KonvaImage
+                      image={debugMask.bitmap as unknown as HTMLImageElement}
+                      x={0} y={0}
+                      width={debugMask.width} height={debugMask.height}
+                      listening={false}
+                      globalCompositeOperation="difference"
+                    />
+                  )}
                   {marqueeBox && (
                     <Rect
                       x={Math.min(marqueeBox.x1, marqueeBox.x2)}

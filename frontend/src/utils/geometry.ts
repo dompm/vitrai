@@ -6,6 +6,38 @@ export function computeCentroid(polygon: [number, number][]): { x: number; y: nu
   return { x, y };
 }
 
+export function snapPolygonToNeighbors(
+  polygon: [number, number][],
+  neighbors: [number, number][][],
+  radius: number,
+): [number, number][] {
+  if (neighbors.length === 0 || polygon.length < 3) return polygon;
+  const r2 = radius * radius;
+
+  return polygon.map(([px, py]) => {
+    let bestD2 = r2;
+    let bestX = px, bestY = py;
+    for (const nb of neighbors) {
+      for (let i = 0; i < nb.length; i++) {
+        const [ax, ay] = nb[i];
+        const [bx, by] = nb[(i + 1) % nb.length];
+        const dx = bx - ax, dy = by - ay;
+        const len2 = dx * dx + dy * dy;
+        let t = 0;
+        if (len2 > 0) {
+          t = ((px - ax) * dx + (py - ay) * dy) / len2;
+          if (t < 0) t = 0; else if (t > 1) t = 1;
+        }
+        const cx = ax + t * dx, cy = ay + t * dy;
+        const ex = px - cx, ey = py - cy;
+        const d2 = ex * ex + ey * ey;
+        if (d2 < bestD2) { bestD2 = d2; bestX = cx; bestY = cy; }
+      }
+    }
+    return [bestX, bestY] as [number, number];
+  });
+}
+
 export function subtractPolygons(subject: [number, number][], clipPolygons: [number, number][][]): [number, number][] {
   if (clipPolygons.length === 0) return subject;
   

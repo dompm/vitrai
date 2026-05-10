@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { subtractPolygons, computeCentroid } from './utils/geometry';
+import { subtractPolygons, computeCentroid, snapPolygonToNeighbors } from './utils/geometry';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
@@ -16,6 +16,8 @@ interface SheetTabProps {
   onRename: (label: string) => void;
   onDelete: () => void;
 }
+
+const SNAP_RADIUS_PX = 12;
 
 const UndoIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -130,6 +132,8 @@ export function App() {
   const [backendStatus, setBackendStatus] = useState('');
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
+  const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
+  const [debugMaskPieceId, setDebugMaskPieceId] = useState<string | null>(null);
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -148,6 +152,13 @@ export function App() {
     document.addEventListener('mousedown', handleOutsideClick);
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, [isProjectDropdownOpen]);
+
+  useEffect(() => {
+    if (debugMaskPieceId && !project.pieces.some(p => p.id === debugMaskPieceId)) {
+      setDebugMask(null);
+      setDebugMaskPieceId(null);
+    }
+  }, [project.pieces, debugMaskPieceId]);
 
   // Re-encode whenever the pattern image changes.
   useEffect(() => {
@@ -179,9 +190,10 @@ export function App() {
     markPiecePending(pieceId);
     try {
       const others = project.pieces.filter(p => p.id !== pieceId);
-      const negativePoints = others.map(p => ({ ...computeCentroid(p.polygon), label: 0 as const }));
-      const polygon = await getSamBackend().segment(patternImageId, box, negativePoints);
-      const clipped = subtractPolygons(polygon, others.map(p => p.polygon));
+      const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
+      if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), SNAP_RADIUS_PX);
+      const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
     } catch (e) {
       console.error("SAM segment failed:", e);
@@ -198,12 +210,13 @@ export function App() {
 
     const newPoints = [...(piece.promptPoints || []), point];
     const others = project.pieces.filter(p => p.id !== pieceId);
-    const negativePoints = others.map(p => ({ ...computeCentroid(p.polygon), label: 0 as const }));
 
     markPiecePending(pieceId);
     try {
-      const polygon = await getSamBackend().segment(patternImageId, piece.promptBox, [...negativePoints, ...newPoints]);
-      const clipped = subtractPolygons(polygon, others.map(p => p.polygon));
+      const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
+      if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), SNAP_RADIUS_PX);
+      const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
     } catch (e) {
       console.error(e);
@@ -571,6 +584,7 @@ export function App() {
           onAutoSegment={handleAutoSegment}
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
+          debugMask={debugMask}
         />
       </div>
 
