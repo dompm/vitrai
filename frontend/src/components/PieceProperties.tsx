@@ -13,9 +13,10 @@ interface Props {
   refineMode?: 'add' | 'remove' | null;
   onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
   isPending?: boolean;
+  isEncoding?: boolean;
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending, isEncoding }: Props) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
@@ -138,33 +139,37 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         <>
           <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
           <button
-            onClick={() => onRefineModeChange(refineMode === 'add' ? null : 'add')}
+            onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'add' ? null : 'add')}
+            disabled={isPending || isEncoding}
             title={`${t('addPositivePoint')} [A]`}
             style={{
               background: refineMode === 'add' ? '#dbeafe' : 'none',
               border: 'none',
               borderRadius: 4,
               color: refineMode === 'add' ? '#1d4ed8' : '#6b7280',
-              cursor: 'pointer',
+              cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
               fontWeight: 'bold',
+              opacity: (isPending || isEncoding) ? 0.5 : 1,
             }}
           >
             +
           </button>
           <button
-            onClick={() => onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
+            onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
+            disabled={isPending || isEncoding}
             title={`${t('addNegativePoint')} [S]`}
             style={{
               background: refineMode === 'remove' ? '#fee2e2' : 'none',
               border: 'none',
               borderRadius: 4,
               color: refineMode === 'remove' ? '#b91c1c' : '#6b7280',
-              cursor: 'pointer',
+              cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
               fontWeight: 'bold',
+              opacity: (isPending || isEncoding) ? 0.5 : 1,
             }}
           >
             -
@@ -196,12 +201,14 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             border: '1px solid #d1d5db',
             borderRadius: 4,
             color: '#374151',
-            cursor: 'pointer',
+            cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
             fontSize: 11,
             padding: '2px 8px',
             flexShrink: 0,
             marginRight: 4,
+            opacity: (isPending || isEncoding) ? 0.5 : 1,
           }}
+          disabled={isPending || isEncoding}
           onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >

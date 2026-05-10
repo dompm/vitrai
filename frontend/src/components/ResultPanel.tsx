@@ -231,7 +231,7 @@ export function ResultPanel({
       }
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'b') handleToolChange('box');
+      else if (e.key === 'b' && !isEncoding) handleToolChange('box');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
@@ -277,13 +277,13 @@ export function ResultPanel({
     }
     
     const lastSelectedId = selectedPieceIds[selectedPieceIds.length - 1];
-    if (refineMode && lastSelectedId) {
+    if (refineMode && lastSelectedId && !isEncoding) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       onUpdatePrompt(lastSelectedId, { x, y, label: refineMode === 'add' ? 1 : 0 });
       return;
     }
 
-    if (activeTool === 'box') {
+    if (activeTool === 'box' && !isEncoding) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
       return;
@@ -369,7 +369,7 @@ export function ResultPanel({
     }
 
     if (id === 'detect-all') {
-      onAutoSegment?.();
+      if (!isEncoding) onAutoSegment?.();
       return;
     }
     setRefineMode(null);
@@ -525,8 +525,8 @@ export function ResultPanel({
   const TOOLS = BASE_TOOLS
     .filter(tool => !IS_TOUCH || tool.id !== 'pan')
     .map(tool => {
-    if (tool.id === 'box') return { ...tool, loading: !!isEncoding };
-    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment, loading: !!isAutoSegmenting || !!isEncoding };
+    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: !!isEncoding };
+    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: !!isAutoSegmenting || !!isEncoding };
     return tool;
   });
 
@@ -737,6 +737,7 @@ export function ResultPanel({
                       refineMode={refineMode}
                       onRefineModeChange={setRefineMode}
                       isPending={pendingPieceIds.has(piece.id)}
+                      isEncoding={isEncoding}
                     />
                   </div>
                 </div>
