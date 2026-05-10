@@ -163,7 +163,7 @@ interface ResultPanelProps {
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
 }
 
-const MIN_BOX_PX = 10;
+const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
 const DEFAULT_SOLDER_WIDTH_MM = 4.5;
 
 function getSolderWidth(scale: Scale | null, imgWidth: number) {
@@ -324,7 +324,8 @@ export function ResultPanel({
         x2: Math.max(drawingBox.x1, drawingBox.x2),
         y2: Math.max(drawingBox.y1, drawingBox.y2),
       };
-      if (box.x2 - box.x1 >= MIN_BOX_PX && box.y2 - box.y1 >= MIN_BOX_PX) {
+      const minBox = getMinBoxSize(pw);
+      if (box.x2 - box.x1 >= minBox && box.y2 - box.y1 >= minBox) {
         onAddPiece(box);
       }
       setDrawingBox(null);

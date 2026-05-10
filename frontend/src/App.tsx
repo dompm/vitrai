@@ -17,7 +17,7 @@ interface SheetTabProps {
   onDelete: () => void;
 }
 
-const SNAP_RADIUS_PX = 12;
+const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
 
 const UndoIcon = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -192,7 +192,7 @@ export function App() {
       const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), SNAP_RADIUS_PX);
+      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
       const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
     } catch (e) {
@@ -215,7 +215,7 @@ export function App() {
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), SNAP_RADIUS_PX);
+      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
       const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
     } catch (e) {
