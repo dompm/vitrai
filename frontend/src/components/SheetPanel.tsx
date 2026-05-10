@@ -288,7 +288,7 @@ export function SheetPanel({
 
       const hitIds: string[] = [];
       pieces.forEach(p => {
-        const { x, y } = computeCentroid(p.polygon);
+        const { x, y } = p.transform;
         if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) hitIds.push(p.id);
       });
 
