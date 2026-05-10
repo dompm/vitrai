@@ -228,7 +228,13 @@ export function App() {
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
   const selectedPiece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]) ?? null;
-  const piecesOnActiveSheet = project.pieces.filter(p => p.glassSheetId === activeSheetId);
+  const piecesOnActiveSheet = project.pieces
+    .filter(p => p.glassSheetId === activeSheetId)
+    .sort((a, b) => {
+      const aSelected = selectedPieceIds.includes(a.id) ? 1 : 0;
+      const bSelected = selectedPieceIds.includes(b.id) ? 1 : 0;
+      return aSelected - bSelected;
+    });
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
