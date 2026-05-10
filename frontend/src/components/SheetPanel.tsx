@@ -308,13 +308,6 @@ export function SheetPanel({
     vp.endPan();
   }
 
-  function handleWheel(e: KonvaEventObject<WheelEvent>) {
-    e.evt.preventDefault();
-    const ptr = e.target.getStage()?.getPointerPosition();
-    if (!ptr) return;
-    vp.handleWheel(e.evt, ptr);
-  }
-
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
     if (!rotatingPieceId && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
   }
@@ -445,7 +438,6 @@ export function SheetPanel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          onWheel={handleWheel}
           onClick={handleStageClick}
         >
           <Layer>

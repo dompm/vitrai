@@ -436,7 +436,7 @@ export function useProject() {
     updateProject(prev => ({
       ...prev,
       pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p)
-    }));
+    }), true);
   }, [updateProject]);
 
   const markPiecePending = useCallback((pieceId: string) => {
