@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { subtractPolygons, computeCentroid, snapPolygonToNeighbors } from './utils/geometry';
+import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
 import './App.css';
@@ -223,6 +223,12 @@ export function App() {
     } finally {
       unmarkPiecePending(pieceId);
     }
+  }
+
+  function handleSmoothPiece(pieceId: string) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    updatePiecePolygon(pieceId, smoothPolygon(piece.polygon));
   }
 
 
@@ -585,6 +591,7 @@ export function App() {
           onUpdatePieceSheet={updatePieceSheet}
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
           onDeletePiece={deletePiece}
+          onSmoothPiece={handleSmoothPiece}
           onUpdatePrompt={handleUpdatePrompt}
           onUploadPattern={handleUploadPattern}
           onAutoSegment={handleAutoSegment}

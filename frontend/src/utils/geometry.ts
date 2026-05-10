@@ -6,6 +6,19 @@ export function computeCentroid(polygon: [number, number][]): { x: number; y: nu
   return { x, y };
 }
 
+export function smoothPolygon(pts: [number, number][]): [number, number][] {
+  if (pts.length < 3) return pts;
+  const n = pts.length;
+  const out: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const [cx, cy] = pts[i];
+    const [nx, ny] = pts[(i + 1) % n];
+    out.push([cx * 0.75 + nx * 0.25, cy * 0.75 + ny * 0.25]);
+    out.push([cx * 0.25 + nx * 0.75, cy * 0.25 + ny * 0.75]);
+  }
+  return out;
+}
+
 export function snapPolygonToNeighbors(
   polygon: [number, number][],
   neighbors: [number, number][][],

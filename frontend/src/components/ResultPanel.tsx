@@ -154,6 +154,7 @@ interface ResultPanelProps {
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
   onAddSheetAndAssignPiece: (id: string) => void;
   onDeletePiece: (id: string) => void;
+  onSmoothPiece: (id: string) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
@@ -181,7 +182,7 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onUpdatePrompt,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -731,6 +732,7 @@ export function ResultPanel({
                       onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
                       onAddSheet={() => handleAddSheetClick(piece.id)}
                       onDelete={() => onDeletePiece(piece.id)}
+                      onSmooth={() => onSmoothPiece(piece.id)}
                       refineMode={refineMode}
                       onRefineModeChange={setRefineMode}
                       isPending={pendingPieceIds.has(piece.id)}

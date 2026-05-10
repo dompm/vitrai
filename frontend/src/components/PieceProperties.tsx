@@ -9,12 +9,13 @@ interface Props {
   onSheetChange: (sheetId: string) => void;
   onAddSheet: () => void;
   onDelete: () => void;
+  onSmooth?: () => void;
   refineMode?: 'add' | 'remove' | null;
   onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
   isPending?: boolean;
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, refineMode, onRefineModeChange, isPending }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending }: Props) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
@@ -185,6 +186,28 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       )}
 
       <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+
+      {onSmooth && (
+        <button
+          onClick={onSmooth}
+          title={t('smoothPieceTooltip')}
+          style={{
+            background: 'none',
+            border: '1px solid #d1d5db',
+            borderRadius: 4,
+            color: '#374151',
+            cursor: 'pointer',
+            fontSize: 11,
+            padding: '2px 8px',
+            flexShrink: 0,
+            marginRight: 4,
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
+        >
+          {t('smooth')}
+        </button>
+      )}
 
       <button
         onClick={onDelete}
