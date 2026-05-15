@@ -17,42 +17,7 @@ import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
-import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
-
-function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
-  const last = useRef<{ x: number; y: number } | null>(null);
-  return (
-    <div
-      onPointerDown={e => {
-        e.stopPropagation();
-        last.current = { x: e.clientX, y: e.clientY };
-        (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      }}
-      onPointerMove={e => {
-        if (!last.current) return;
-        onDrag({ x: e.clientX - last.current.x, y: e.clientY - last.current.y });
-        last.current = { x: e.clientX, y: e.clientY };
-      }}
-      onPointerUp={() => { last.current = null; }}
-      style={{
-        height: 10,
-        cursor: pointerEvents === 'none' ? 'inherit' : 'grab',
-        pointerEvents,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: '8px 8px 0 0',
-        background: 'var(--chrome-700)',
-        borderBottom: '1px solid var(--hairline)',
-        color: 'var(--text-dim)',
-      }}
-    >
-      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="currentColor"/><circle cx="10" cy="2" r="1.5" fill="currentColor"/><circle cx="16" cy="2" r="1.5" fill="currentColor"/></svg>
-    </div>
-  );
-}
-
 
 interface PieceOverlayProps {
   piece: Piece;
@@ -155,61 +120,14 @@ interface ResultPanelProps {
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
-  onUpdatePieceLabel: (id: string, label: string) => void;
-  onUpdatePieceSheet: (id: string, sheetId: string) => void;
-  onAddSheetAndAssignPiece: (id: string) => void;
-  onDeletePiece: (id: string) => void;
-  onSmoothPiece: (id: string) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
+  refineMode: 'add' | 'remove' | null;
+  onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
-}
-
-function getTooltipAnchor(piece: Piece, allPieces: Piece[], pw: number, ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
-  const xs = piece.polygon.map(p => p[0]);
-  const ys = piece.polygon.map(p => p[1]);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
-
-  const otherPieces = allPieces.filter(p => p.id !== piece.id);
-  
-  const score = { top: 1.1, bottom: 1.0, left: 1.0, right: 1.0 };
-  
-  // Penalize edges (in screen space)
-  const toScreen = (ix: number, iy: number) => ({
-    x: ix * vp.effectiveScale + vp.pan.x,
-    y: iy * vp.effectiveScale + vp.pan.y
-  });
-
-  const sTop = toScreen(midX, minY);
-  const sBottom = toScreen(midX, maxY);
-  const sLeft = toScreen(minX, midY);
-  const sRight = toScreen(maxX, midY);
-
-  if (sTop.y < 100) score.top -= 10;
-  if (sBottom.y > vp.dims.h - 100) score.bottom -= 10;
-  if (sLeft.x < 200) score.left -= 10;
-  if (sRight.x > vp.dims.w - 200) score.right -= 10;
-
-  // Prefer sides with more neighbors
-  otherPieces.forEach(p => {
-    const c = computeCentroid(p.polygon);
-    if (c.y < minY) score.top += 1;
-    else if (c.y > maxY) score.bottom += 1;
-    if (c.x < minX) score.left += 1;
-    else if (c.x > maxX) score.right += 1;
-  });
-
-  const bestSide = (Object.keys(score) as Array<keyof typeof score>).reduce((a, b) => score[a] > score[b] ? a : b);
-
-  if (bestSide === 'top') return { x: midX, y: minY, transform: 'translate(-50%, -100%)', margin: '0 0 24px 0' };
-  if (bestSide === 'bottom') return { x: midX, y: maxY, transform: 'translate(-50%, 0)', margin: '24px 0 0 0' };
-  if (bestSide === 'left') return { x: minX, y: midY, transform: 'translate(-100%, -50%)', margin: '0 24px 0 0' };
-  return { x: maxX, y: midY, transform: 'translate(0, -50%)', margin: '0 0 0 24px' };
 }
 
 const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
@@ -231,44 +149,16 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
+  onUpdatePrompt, refineMode, onRefineModeChange,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
   const [isSpaceDown, setIsSpaceDown] = useState(false);
-  const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const refineModeRef = useRef(refineMode);
-  refineModeRef.current = refineMode;
-
-  const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
-  const addSheetInputRef = useRef<HTMLInputElement>(null);
-  const [pieceForNewSheet, setPieceForNewSheet] = useState<string | null>(null);
-
-  const handleAddSheetClick = (pieceId: string) => {
-    setPieceForNewSheet(pieceId);
-    addSheetInputRef.current?.click();
-  };
-
-  const handleAddSheetFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !pieceForNewSheet) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      onAddSheetAndAssignPiece(pieceForNewSheet, dataUrl, file.name);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-    setPieceForNewSheet(null);
-  };
+  useEffect(() => { refineModeRef.current = refineMode; }, [refineMode]);
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
-
-  useEffect(() => {
-    setRefineMode(null);
-    setTooltipDrag({x: 0, y: 0});
-  }, [selectedPieceIds]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -284,10 +174,10 @@ export function ResultPanel({
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
-      else if (e.key === 'a') setRefineMode(prev => prev === 'add' ? null : 'add');
-      else if (e.key === 's') setRefineMode(prev => prev === 'remove' ? null : 'remove');
+      else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+      else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
       else if (e.key === 'Escape') {
-        if (refineModeRef.current) setRefineMode(null);
+        if (refineModeRef.current) onRefineModeChange(null);
         else handleToolChange('select');
       }
     }
@@ -413,7 +303,7 @@ export function ResultPanel({
   function handleToolChange(id: ToolId) {
     if (id === activeTool && id !== 'select') {
       setActiveTool('select');
-      setRefineMode(null);
+      onRefineModeChange(null);
       if (id === 'measure') measure.reset();
       return;
     }
@@ -422,7 +312,7 @@ export function ResultPanel({
       if (!isEncoding) onAutoSegment?.();
       return;
     }
-    setRefineMode(null);
+    onRefineModeChange(null);
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = project.patternScale?.line;
@@ -751,58 +641,6 @@ export function ResultPanel({
                 />
               );
             })()}
-            {activeTool !== 'inspect' && (() => {
-              const lastId = selectedPieceIds[selectedPieceIds.length - 1];
-              const piece = project.pieces.find(p => p.id === lastId);
-              if (!piece) return null;
-              
-              const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
-              const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
-              const isDrawing = drawingBox !== null;
-              const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
-
-              return (
-                <div style={{
-                  position: 'absolute',
-                  left: sc.x + tooltipDrag.x,
-                  top: sc.y + tooltipDrag.y,
-                  transform: anchor.transform,
-                  padding: anchor.margin,
-                  zIndex: 10,
-                  pointerEvents: isInteracting ? 'none' : 'auto',
-                  opacity: isDrawing ? 0 : 0.95,
-                  transition: 'opacity 0.2s ease, transform 0.3s ease-out',
-                }}>
-                  <div style={{ pointerEvents: isInteracting ? 'none' : 'auto' }}>
-                    <DragHandle 
-                      onDrag={delta => setTooltipDrag(d => ({ x: d.x + delta.x, y: d.y + delta.y }))} 
-                      pointerEvents={isInteracting ? 'none' : 'auto'}
-                    />
-                    <PieceProperties
-                      piece={piece}
-                      sheets={project.sheets}
-                      onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
-                      onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
-                      onAddSheet={() => handleAddSheetClick(piece.id)}
-                      onDelete={() => onDeletePiece(piece.id)}
-                      onSmooth={() => onSmoothPiece(piece.id)}
-                      refineMode={refineMode}
-                      onRefineModeChange={setRefineMode}
-                      isPending={pendingPieceIds.has(piece.id)}
-                      isEncoding={isEncoding}
-                      pointerEvents={isInteracting ? 'none' : 'auto'}
-                    />
-                  </div>
-                </div>
-              );
-            })()}
-            <input
-              type="file"
-              ref={addSheetInputRef}
-              style={{ display: 'none' }}
-              accept="image/*"
-              onChange={handleAddSheetFileChange}
-            />
           </>
         )}
       </div>
