@@ -310,9 +310,8 @@ export function useProject() {
 
   const deleteSheet = useCallback((sheetId: string) => {
     updateProject(prev => {
-      if (prev.sheets.length <= 1) return prev;
       const remaining = prev.sheets.filter(s => s.id !== sheetId);
-      const fallbackId = remaining[0].id;
+      const fallbackId = remaining[0]?.id ?? '';
       return {
         ...prev,
         sheets: remaining,

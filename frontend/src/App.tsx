@@ -610,7 +610,7 @@ export function App() {
                 key={sheet.id}
                 sheet={sheet}
                 isActive={sheet.id === activeSheetId}
-                canDelete={project.sheets.length > 1}
+                canDelete
                 onSelect={() => setActiveSheetId(sheet.id)}
                 onRename={label => renameSheet(sheet.id, label)}
                 onDelete={() => deleteSheet(sheet.id)}
