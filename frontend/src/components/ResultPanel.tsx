@@ -112,6 +112,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       onClick={handleClick} onTap={handleClick} opacity={opacity}
       onPointerDown={handlePointerDown} onPointerMove={cancelLongPress} onPointerUp={cancelLongPress}
     >
+      <Line points={flatPts} closed fill="rgba(0,0,0,0)" />
       <Group clipFunc={clipPolygon}>
         <Group
           x={centroid.x} y={centroid.y}
