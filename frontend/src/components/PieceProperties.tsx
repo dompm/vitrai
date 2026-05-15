@@ -127,6 +127,9 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           maxWidth: 140,
         }}
       >
+        {!sheets.some(s => s.id === piece.glassSheetId) && (
+          <option value={piece.glassSheetId} disabled>—</option>
+        )}
         {sheets.map(s => (
           <option key={s.id} value={s.id}>{s.label}</option>
         ))}
