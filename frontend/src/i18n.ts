@@ -67,7 +67,16 @@ const resources = {
       newProject: "New",
       statusScale: "Scale",
       statusNoScale: "No scale",
-      statusShortcuts: "shortcuts"
+      statusShortcuts: "shortcuts",
+      openProject: "Open project…",
+      saveCopy: "Save copy…",
+      replacePattern: "Replace…",
+      replacePatternTooltip: "Replace pattern image",
+      sheets_one: "{{count}} sheet",
+      sheets_other: "{{count}} sheets",
+      pieces_one: "{{count}} piece",
+      pieces_other: "{{count}} pieces",
+      patternDimensions: "{{w}} × {{h}} px"
     }
   },
   fr: {
@@ -134,7 +143,16 @@ const resources = {
       newProject: "Nouveau",
       statusScale: "Échelle",
       statusNoScale: "Pas d'échelle",
-      statusShortcuts: "raccourcis"
+      statusShortcuts: "raccourcis",
+      openProject: "Ouvrir un projet…",
+      saveCopy: "Enregistrer une copie…",
+      replacePattern: "Remplacer…",
+      replacePatternTooltip: "Remplacer l'image du patron",
+      sheets_one: "{{count}} plaque",
+      sheets_other: "{{count}} plaques",
+      pieces_one: "{{count}} pièce",
+      pieces_other: "{{count}} pièces",
+      patternDimensions: "{{w}} × {{h}} px"
     }
   }
 };
