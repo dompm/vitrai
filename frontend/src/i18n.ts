@@ -64,7 +64,10 @@ const resources = {
       noPatternDesc: "Upload a pattern image to start segmenting your stained glass pieces.",
       uploadPatternButton: "Upload Pattern",
       noPatternSecondary: "Or drag and drop an image anywhere.",
-      newProject: "New"
+      newProject: "New",
+      statusScale: "Scale",
+      statusNoScale: "No scale",
+      statusShortcuts: "shortcuts"
     }
   },
   fr: {
@@ -128,7 +131,10 @@ const resources = {
       noPatternDesc: "Téléversez une image de patron pour commencer à segmenter vos pièces.",
       uploadPatternButton: "Téléverser un Patron",
       noPatternSecondary: "Ou glissez-déposez une image n'importe où.",
-      newProject: "Nouveau"
+      newProject: "Nouveau",
+      statusScale: "Échelle",
+      statusNoScale: "Pas d'échelle",
+      statusShortcuts: "raccourcis"
     }
   }
 };

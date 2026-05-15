@@ -524,7 +524,7 @@ export function App() {
             +
           </button>
 
-          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+          <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
           {/* Undo / Redo */}
           <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
@@ -544,7 +544,7 @@ export function App() {
               {i18n.language === 'fr' ? 'EN' : 'FR'}
             </button>
 
-            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+            <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
             <label className="btn-ghost" style={{ cursor: 'pointer' }}>
               {t('load')}
@@ -554,7 +554,7 @@ export function App() {
               {t('save')}
             </button>
 
-            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+            <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
             <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
               {t('print')}
@@ -635,15 +635,52 @@ export function App() {
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
           />
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+          <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
-              <p style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: 8 }}>{t('noSheetsTitle')}</p>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 8 }}>{t('noSheetsTitle')}</p>
               <p style={{ fontSize: '0.9rem' }}>{t('noSheetsDesc')}</p>
             </div>
           </div>
         )}
       </div>
     </div>
+
+      {/* Status bar */}
+      <div className="status-bar">
+        <div className="status-bar-section">
+          <span>
+            {project.pieces.length} {project.pieces.length === 1 ? t('piece').toLowerCase() : t('pieces')}
+          </span>
+          <span className="status-bar-divider" />
+          <span>
+            {project.patternScale
+              ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
+              : t('statusNoScale')}
+          </span>
+          {activeSheet && (
+            <>
+              <span className="status-bar-divider" />
+              <span>
+                {t('sheet')}: {activeSheet.label}
+              </span>
+            </>
+          )}
+        </div>
+        <div className="status-bar-section">
+          {backendStatus && (
+            <>
+              <span title="SAM2 backend">{backendStatus}</span>
+              <span className="status-bar-divider" />
+            </>
+          )}
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{i18n.language}</span>
+          <span className="status-bar-divider" />
+          <span className="status-bar-kbd">
+            <kbd>?</kbd>
+            <span>{t('statusShortcuts')}</span>
+          </span>
+        </div>
+      </div>
 
       {/* Mobile drawer */}
       <div className={`mobile-drawer${isMobileMenuOpen ? ' open' : ''}`}>

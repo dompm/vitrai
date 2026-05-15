@@ -121,9 +121,9 @@ function PieceOutline({
       {!handleOnly && (
         <Line
           points={relPts}
-          stroke={fillOnly ? 'transparent' : (isSelected ? '#2563eb' : 'rgba(37,99,235,0.65)')}
+          stroke={fillOnly ? 'transparent' : (isSelected ? '#d4a13a' : 'rgba(212,161,58,0.7)')}
           strokeWidth={isSelected ? STROKE_SELECTED / es : STROKE_IDLE / es}
-          fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(37,99,235,0.10)' : 'rgba(37,99,235,0.04)')}
+          fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(212,161,58,0.14)' : 'rgba(212,161,58,0.06)')}
           closed
           hitStrokeWidth={strokeOnly ? 10 / es : 0}
         />
@@ -132,13 +132,13 @@ function PieceOutline({
         <>
           <Line
             points={[0, 0, 0, -handleOffset]}
-            stroke="rgba(37,99,235,0.55)" strokeWidth={HANDLE_STEM / es}
+            stroke="rgba(212,161,58,0.6)" strokeWidth={HANDLE_STEM / es}
             listening={false}
           />
           <Circle
             x={0} y={-handleOffset}
             radius={HANDLE_RADIUS / es}
-            fill="#2563eb" stroke="white" strokeWidth={HANDLE_BORDER / es}
+            fill="#d4a13a" stroke="#16140f" strokeWidth={HANDLE_BORDER / es}
             onPointerDown={handleRotateDown}
           />
         </>
@@ -431,6 +431,7 @@ export function SheetPanel({
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
+        className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', touchAction: 'none' }}
       >
         <Stage
@@ -514,8 +515,8 @@ export function SheetPanel({
                 y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + vp.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
-                fill="rgba(37,99,235,0.2)"
-                stroke="#2563eb"
+                fill="rgba(212,161,58,0.2)"
+                stroke="#d4a13a"
                 strokeWidth={1}
                 listening={false}
               />

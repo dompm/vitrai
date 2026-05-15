@@ -133,7 +133,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? '#f59e0b' : isSelected ? '#1d4ed8' : '#2d2d2d'}
+        stroke={isPending ? '#f59e0b' : isSelected ? '#d4a13a' : '#2d2d2d'}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         lineJoin="round"
         lineCap="round"
@@ -582,12 +582,13 @@ export function ResultPanel({
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
+        className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
         {!project.patternImageUrl ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
-              <p style={{ fontSize: '1.2rem', fontWeight: 600, color: '#111827', marginBottom: 12 }}>{t('noPatternTitle')}</p>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
               <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
                 {t('noPatternDesc')}
               </p>
@@ -658,8 +659,8 @@ export function ResultPanel({
                       y={Math.min(marqueeBox.y1, marqueeBox.y2)}
                       width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
                       height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
-                      fill="rgba(67, 56, 202, 0.08)"
-                      stroke="#1d4ed8"
+                      fill="rgba(212, 161, 58, 0.10)"
+                      stroke="#d4a13a"
                       strokeWidth={1.5 / es}
                       dash={[4 / es, 2 / es]}
                       listening={false}
@@ -712,7 +713,7 @@ export function ResultPanel({
                         key={i}
                         x={pt.x} y={pt.y}
                         radius={5 / es}
-                        fill={pt.label === 1 ? '#1d4ed8' : '#ef4444'}
+                        fill={pt.label === 1 ? '#d4a13a' : '#b04a3a'}
                         listening={false}
                       />
                     ));
