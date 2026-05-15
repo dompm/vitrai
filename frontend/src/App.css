@@ -246,26 +246,28 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 6px 4px;
+  gap: 4px;
+  padding: 8px 4px;
   background: var(--chrome-800);
   border-right: 1px solid var(--hairline);
   flex-shrink: 0;
-  width: 38px;
+  width: 54px;
 }
 
 .tool-btn {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 44px;
+  min-height: 44px;
+  gap: 3px;
+  padding: 5px 4px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-soft);
   cursor: pointer;
-  padding: 0;
 }
 
 .tool-btn:hover:not(:disabled) {
@@ -576,12 +578,14 @@ html, body, #root {
 }
 
 .tool-label {
-  display: none;
-  font-size: 9px;
+  display: block;
+  font-size: 8.5px;
   font-weight: 500;
   white-space: nowrap;
   color: inherit;
   line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .mobile-drawer {

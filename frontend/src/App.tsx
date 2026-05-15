@@ -6,6 +6,9 @@ import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
+import {
+  IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter,
+} from './components/icons';
 import './App.css';
 
 interface SheetTabProps {
@@ -18,20 +21,6 @@ interface SheetTabProps {
 }
 
 const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
-
-const UndoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 7v6h6" />
-    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
-  </svg>
-);
-
-const RedoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 7v6h-6" />
-    <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7" />
-  </svg>
-);
 
 function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: SheetTabProps) {
   const [editing, setEditing] = useState(false);
@@ -528,10 +517,10 @@ export function App() {
 
           {/* Undo / Redo */}
           <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
-            <UndoIcon />
+            <IconUndo size={14} />
           </button>
           <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
-            <RedoIcon />
+            <IconRedo size={14} />
           </button>
 
           <div className="header-secondary">
@@ -714,24 +703,28 @@ export function App() {
             className="mobile-drawer-item"
             onClick={() => { i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr'); setIsMobileMenuOpen(false); }}
           >
-            🌐 {i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+            <IconGlobe size={18} />
+            <span>{i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}</span>
           </button>
 
           <div className="mobile-drawer-divider" />
 
           <label className="mobile-drawer-item" style={{ cursor: 'pointer' }}>
-            📂 {t('openProject')}
+            <IconUpload size={18} />
+            <span>{t('openProject')}</span>
             <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => { handleLoadProject(e); setIsMobileMenuOpen(false); }} />
           </label>
 
           <button className="mobile-drawer-item" onClick={() => { handleSaveProject(); setIsMobileMenuOpen(false); }}>
-            💾 {t('saveCopy')}
+            <IconDownload size={18} />
+            <span>{t('saveCopy')}</span>
           </button>
 
           <div className="mobile-drawer-divider" />
 
           <button className="mobile-drawer-item" onClick={() => { handlePrint(); setIsMobileMenuOpen(false); }}>
-            🖨️ {t('print')}
+            <IconPrinter size={18} />
+            <span>{t('print')}</span>
           </button>
         </div>
       </div>

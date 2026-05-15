@@ -8,6 +8,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon } from './Toolbar';
+import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
 import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
@@ -595,7 +596,7 @@ export function ResultPanel({
                 {t('noPatternDesc')}
               </p>
               <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <IconUpload size={16} />
                 {t('uploadPatternButton')}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
               </label>
