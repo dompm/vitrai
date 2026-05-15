@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
+import { Inspector } from './components/Inspector';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
 import { getSamBackend } from './samBackend';
@@ -91,6 +92,7 @@ export function App() {
     updateSheetScale,
     deletePiece,
     updatePieceLabel,
+    updatePieceNotes,
     updatePieceSheet,
     deleteSheet,
     renameSheet,
@@ -126,8 +128,31 @@ export function App() {
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
+  const [pieceForNewSheet, setPieceForNewSheet] = useState<string | null>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
+  const addSheetInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setRefineMode(null); }, [selectedPieceIds]);
+
+  const handleAddSheetForPiece = (pieceId: string) => {
+    setPieceForNewSheet(pieceId);
+    addSheetInputRef.current?.click();
+  };
+
+  const handleAddSheetForPieceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !pieceForNewSheet) { setPieceForNewSheet(null); return; }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      addSheetAndAssignPiece(pieceForNewSheet, dataUrl, file.name);
+      setPieceForNewSheet(null);
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => { setNameDraft(project.name); }, [project.name]);
 
@@ -589,12 +614,9 @@ export function App() {
           onPatternCropChange={updatePatternCrop}
           onPatternScaleChange={updatePatternScale}
           onAddPiece={handleAddPiece}
-          onUpdatePieceLabel={updatePieceLabel}
-          onUpdatePieceSheet={updatePieceSheet}
-          onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-          onDeletePiece={deletePiece}
-          onSmoothPiece={handleSmoothPiece}
           onUpdatePrompt={handleUpdatePrompt}
+          refineMode={refineMode}
+          onRefineModeChange={setRefineMode}
           onUploadPattern={handleUploadPattern}
           onAutoSegment={handleAutoSegment}
           isAutoSegmenting={isAutoSegmenting}
@@ -651,7 +673,58 @@ export function App() {
           </div>
         )}
       </div>
+
+      {/* ── Inspector (docked) ── */}
+      {(() => {
+        if (selectedPieceIds.length === 0) {
+          return <Inspector kind="empty" />;
+        }
+        if (selectedPieceIds.length > 1) {
+          return (
+            <Inspector
+              kind="multi"
+              count={selectedPieceIds.length}
+              sheets={project.sheets}
+              onBulkSheetChange={sheetId => selectedPieceIds.forEach(id => updatePieceSheet(id, sheetId))}
+              onBulkDelete={() => {
+                if (window.confirm(`Delete ${selectedPieceIds.length} pieces?`)) {
+                  selectedPieceIds.forEach(id => deletePiece(id));
+                }
+              }}
+              onBulkSmooth={() => selectedPieceIds.forEach(handleSmoothPiece)}
+            />
+          );
+        }
+        const piece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]);
+        if (!piece) return <Inspector kind="empty" />;
+        return (
+          <Inspector
+            kind="single"
+            piece={piece}
+            sheets={project.sheets}
+            patternScale={project.patternScale}
+            isPending={pendingPieceIds.has(piece.id)}
+            isEncoding={!!project.patternImageUrl && patternImageId === null}
+            refineMode={refineMode}
+            onLabelChange={label => updatePieceLabel(piece.id, label)}
+            onSheetChange={sheetId => updatePieceSheet(piece.id, sheetId)}
+            onAddSheet={() => handleAddSheetForPiece(piece.id)}
+            onNotesChange={notes => updatePieceNotes(piece.id, notes)}
+            onRefineModeChange={setRefineMode}
+            onSmooth={() => handleSmoothPiece(piece.id)}
+            onDelete={() => deletePiece(piece.id)}
+          />
+        );
+      })()}
     </div>
+
+    <input
+      ref={addSheetInputRef}
+      type="file"
+      accept="image/*"
+      style={{ display: 'none' }}
+      onChange={handleAddSheetForPieceFileChange}
+    />
 
       {/* Status bar */}
       <div className="status-bar">

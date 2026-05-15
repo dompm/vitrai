@@ -38,6 +38,7 @@ export interface Piece {
   transform: TextureTransform;
   promptBox?: BoundingBox;
   promptPoints?: PromptPoint[];
+  notes?: string;
 }
 
 export interface GlassSheet {

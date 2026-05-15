@@ -496,6 +496,222 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 
+/* ── Inspector dock ─────────────────────────────────── */
+.panel-inspector {
+  flex: 0 0 264px;
+  max-width: 264px;
+}
+
+.inspector-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+.inspector-body {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 14px 16px 20px;
+  gap: 16px;
+}
+
+.inspector-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inspector-heading {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.inspector-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+}
+
+.inspector-title,
+.inspector-title-static,
+.inspector-title-input {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-bright);
+  background: none;
+  border: 1px solid transparent;
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-align: left;
+  width: 100%;
+  cursor: text;
+}
+
+.inspector-title:hover {
+  border-color: var(--hairline-2);
+}
+
+.inspector-title-input {
+  background: var(--paper);
+  border-color: var(--amber);
+  outline: none;
+}
+
+.inspector-field-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.inspector-select,
+.inspector-textarea {
+  width: 100%;
+  background: var(--paper);
+  border: 1px solid var(--hairline-2);
+  border-radius: 5px;
+  color: var(--text-bright);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+}
+
+.inspector-select:focus,
+.inspector-textarea:focus {
+  outline: none;
+  border-color: var(--amber);
+}
+
+.inspector-textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+
+.inspector-static {
+  font-size: 13px;
+  color: var(--text-soft);
+  font-variant-numeric: tabular-nums;
+  padding: 2px 0;
+}
+
+.inspector-refine-row {
+  display: flex;
+  gap: 6px;
+}
+
+.inspector-pill {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--paper);
+  border: 1px solid var(--hairline-2);
+  color: var(--text-soft);
+  border-radius: 5px;
+  padding: 6px 8px;
+  font-size: 11.5px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.inspector-pill:hover:not(:disabled) {
+  border-color: var(--hairline-2);
+  color: var(--text-bright);
+  background: var(--chrome-700);
+}
+
+.inspector-pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.inspector-pill.is-active.is-add {
+  border-color: var(--amber);
+  background: var(--amber-soft);
+  color: var(--amber-ink);
+}
+
+.inspector-pill.is-active.is-remove {
+  border-color: var(--ruby);
+  background: rgba(161, 63, 48, 0.14);
+  color: var(--ruby);
+}
+
+.inspector-text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 12px;
+  padding: 4px 2px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.inspector-text-btn:hover:not(:disabled) {
+  color: var(--text-bright);
+}
+
+.inspector-text-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.inspector-text-btn-danger {
+  color: var(--ruby);
+}
+
+.inspector-text-btn-danger:hover {
+  color: var(--ruby);
+  filter: brightness(1.15);
+}
+
+.inspector-icon-btn {
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text-soft);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inspector-icon-btn:hover {
+  border-color: var(--hairline-2);
+  color: var(--text-bright);
+}
+
+.inspector-icon-btn-danger:hover {
+  color: var(--ruby);
+  border-color: rgba(161, 63, 48, 0.45);
+  background: rgba(161, 63, 48, 0.10);
+}
+
+/* Hide the docked inspector on narrow viewports — the mobile redesign
+   (#39) provides a swipe-up tray that replaces it. */
+@media (max-width: 1099px) {
+  .panel-inspector {
+    display: none;
+  }
+}
+
 /* ── Status bar ─────────────────────────────────────── */
 .status-bar {
   display: flex;

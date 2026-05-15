@@ -76,7 +76,22 @@ const resources = {
       sheets_other: "{{count}} sheets",
       pieces_one: "{{count}} piece",
       pieces_other: "{{count}} pieces",
-      patternDimensions: "{{w}} × {{h}} px"
+      patternDimensions: "{{w}} × {{h}} px",
+      inspectorTitle: "Inspector",
+      inspectorEmpty: "Select a piece on the pattern to edit its glass, refine its shape, or add notes.",
+      inspectorGlassSheet: "Glass sheet",
+      inspectorApproxSize: "Approx. size",
+      inspectorRefineShape: "Refine shape",
+      inspectorAddRegion: "Add region",
+      inspectorCutShape: "Cut from",
+      inspectorSmoothCorners: "Smooth corners",
+      inspectorNotes: "Notes",
+      inspectorNotesPlaceholder: "Cut grain horizontal, save for sky offcut…",
+      inspectorSelection: "Selection",
+      inspectorPiecesSelected: "{{count}} pieces selected",
+      inspectorChangeGlass: "Change glass for all",
+      inspectorSmoothAll: "Smooth all",
+      inspectorDeleteAll: "Delete all"
     }
   },
   fr: {
@@ -152,7 +167,22 @@ const resources = {
       sheets_other: "{{count}} plaques",
       pieces_one: "{{count}} pièce",
       pieces_other: "{{count}} pièces",
-      patternDimensions: "{{w}} × {{h}} px"
+      patternDimensions: "{{w}} × {{h}} px",
+      inspectorTitle: "Inspecteur",
+      inspectorEmpty: "Sélectionnez une pièce du patron pour modifier son verre, affiner sa forme ou ajouter des notes.",
+      inspectorGlassSheet: "Plaque de verre",
+      inspectorApproxSize: "Taille approx.",
+      inspectorRefineShape: "Affiner la forme",
+      inspectorAddRegion: "Ajouter",
+      inspectorCutShape: "Retirer",
+      inspectorSmoothCorners: "Lisser les coins",
+      inspectorNotes: "Notes",
+      inspectorNotesPlaceholder: "Couper grain horizontal, garder pour le ciel…",
+      inspectorSelection: "Sélection",
+      inspectorPiecesSelected: "{{count}} pièces sélectionnées",
+      inspectorChangeGlass: "Changer le verre",
+      inspectorSmoothAll: "Tout lisser",
+      inspectorDeleteAll: "Tout supprimer"
     }
   }
 };

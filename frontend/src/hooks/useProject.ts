@@ -288,6 +288,13 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updatePieceNotes = useCallback((pieceId: string, notes: string) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, notes } : p)
+    }));
+  }, [updateProject]);
+
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -498,6 +505,7 @@ export function useProject() {
     updateSheetCrop,
     deletePiece,
     updatePieceLabel,
+    updatePieceNotes,
     updatePieceSheet,
     deleteSheet,
     renameSheet,
