@@ -353,8 +353,8 @@ export function App() {
     const pageWPx = PAGE_W_MM * pxPerMm;
     const pageHPx = PAGE_H_MM * pxPerMm;
 
-    // 15 mm overlap between adjacent tiles for alignment
-    const OVERLAP_MM = 15;
+    // 10 mm overlap between adjacent tiles — covers typical printer hardware margins
+    const OVERLAP_MM = 10;
     const overlapPx = OVERLAP_MM * pxPerMm;
     const stepXPx = pageWPx - overlapPx;
     const stepYPx = pageHPx - overlapPx;
