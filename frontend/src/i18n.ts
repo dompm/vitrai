@@ -119,7 +119,12 @@ const resources = {
       shortcutUndo: "Undo",
       shortcutRedo: "Redo",
       shortcutRedoAlt: "Redo (alt)",
-      shortcutShowShortcuts: "Show this dialog"
+      shortcutShowShortcuts: "Show this dialog",
+      autosaveSaved: "Saved to this device",
+      autosaveSaving: "Saving…",
+      autosaveFailed: "Couldn't save",
+      autosaveRetry: "Retry",
+      autosaveOfflineHint: "Your work lives in this browser only. Export a copy from the menu to share or back up."
     }
   },
   fr: {
@@ -238,7 +243,12 @@ const resources = {
       shortcutUndo: "Annuler",
       shortcutRedo: "Rétablir",
       shortcutRedoAlt: "Rétablir (alt)",
-      shortcutShowShortcuts: "Afficher ce dialogue"
+      shortcutShowShortcuts: "Afficher ce dialogue",
+      autosaveSaved: "Enregistré sur cet appareil",
+      autosaveSaving: "Enregistrement…",
+      autosaveFailed: "Échec d'enregistrement",
+      autosaveRetry: "Réessayer",
+      autosaveOfflineHint: "Votre travail vit uniquement dans ce navigateur. Exportez une copie depuis le menu pour la partager ou la sauvegarder."
     }
   }
 };

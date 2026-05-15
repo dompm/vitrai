@@ -483,6 +483,74 @@ html, body, #root {
   background: rgba(161, 63, 48, 0.10);
 }
 
+/* Autosave indicator */
+.autosave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 16px;
+  font-size: 12.5px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.autosave-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--amber);
+  transition: background-color 0.2s ease;
+}
+
+.autosave-saving .autosave-dot {
+  background: var(--cobalt);
+  animation: autosavePulse 1.1s ease-in-out infinite;
+}
+
+.autosave-error .autosave-dot {
+  background: var(--ruby);
+}
+
+.autosave-info {
+  font-size: 10px;
+  color: var(--text-dim);
+  cursor: help;
+  margin-left: 2px;
+}
+
+.autosave-retry {
+  background: none;
+  border: 1px solid var(--ruby);
+  color: var(--ruby);
+  font-family: inherit;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.autosave-retry:hover {
+  background: rgba(176, 74, 58, 0.18);
+}
+
+@keyframes autosavePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (max-width: 768px) {
+  .autosave-label,
+  .autosave-info,
+  .autosave-retry {
+    display: none;
+  }
+  .autosave {
+    margin-left: 8px;
+  }
+}
+
 .spinner-tiny {
   width: 14px;
   height: 14px;
