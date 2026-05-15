@@ -496,6 +496,125 @@ html, body, #root {
   to { transform: rotate(360deg); }
 }
 
+/* ── Shortcuts overlay ──────────────────────────────── */
+.shortcuts-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 5, 0.5);
+  backdrop-filter: blur(2px);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.shortcuts-card {
+  background: var(--ink-800);
+  border: 1px solid var(--hairline-2);
+  border-radius: 12px;
+  padding: 28px;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+
+.shortcuts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.shortcuts-header h2 {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 28px;
+  font-weight: 400;
+  color: var(--text-bright);
+  letter-spacing: 0.005em;
+}
+
+.shortcuts-close {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--hairline-2);
+  color: var(--text-soft);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.shortcuts-close:hover {
+  background: var(--ink-700);
+  color: var(--text-bright);
+}
+
+.shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px 32px;
+}
+
+@media (max-width: 600px) {
+  .shortcuts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.shortcuts-group-title {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  margin-bottom: 10px;
+}
+
+.shortcuts-group ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.shortcuts-group li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--hairline);
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.shortcuts-group li:last-child {
+  border-bottom: none;
+}
+
+.shortcuts-keys {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.shortcuts-keys kbd {
+  font-family: "Inter Tight", monospace;
+  font-size: 11px;
+  color: var(--text-bright);
+  background: var(--ink-900);
+  border: 1px solid var(--hairline-2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  min-width: 22px;
+  text-align: center;
+  line-height: 1.3;
+}
+
 /* ── Status bar ─────────────────────────────────────── */
 .status-bar {
   display: flex;
@@ -535,6 +654,20 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
   gap: 3px;
+}
+
+.status-bar-kbd-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.status-bar-kbd-btn:hover {
+  color: var(--text-bright);
 }
 
 .status-bar-kbd kbd {
