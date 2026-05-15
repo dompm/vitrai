@@ -24,6 +24,7 @@ export type WorkerInMsg =
 
 export type WorkerOutMsg =
   | { type: 'ready';        device: string }
+  | { type: 'init:error';   error: string }
   | { type: 'status';       text: string }
   | { type: 'encode:done';  id: string; sessionId: string }
   | { type: 'encode:error'; id: string; error: string }
@@ -42,6 +43,7 @@ interface CachedEmbed {
 let encoderSession: ort.InferenceSession | null = null;
 let decoderSession: ort.InferenceSession | null = null;
 const cache = new Map<string, CachedEmbed>();
+let initStarted = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
@@ -75,6 +77,8 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
 }
 
 async function init() {
+  if (initStarted) return;
+  initStarted = true;
   try {
     post({ type: 'status', text: 'Initializing SAM2 models…' });
 
@@ -107,7 +111,8 @@ async function init() {
     post({ type: 'ready', device: 'webgpu' });
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);
-    post({ type: 'status', text: `Init failed: ${err}` });
+    const error = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err);
+    post({ type: 'init:error', error });
   }
 }
 

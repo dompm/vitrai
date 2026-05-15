@@ -167,7 +167,7 @@ export function App() {
     let cancelled = false;
     backend.encode(project.patternImageUrl)
       .then(id => { if (!cancelled) setPatternImageId(id); })
-      .catch(() => { /* model still loading — SAM unavailable */ });
+      .catch(err => { console.error("[App] SAM encode failed:", err); });
     return () => { cancelled = true; };
   }, [project.patternImageUrl]);
 
