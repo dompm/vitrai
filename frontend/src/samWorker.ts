@@ -1,7 +1,17 @@
 import * as ort from "onnxruntime-web";
 
-// Use CDN WASM
-ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+// onnxruntime-web's WASM backend can spawn Emscripten pthread workers using
+// this module's own URL when its preferred worker script isn't reachable.
+// Those workers would re-run our init() and hijack self.onmessage from the
+// pthread runtime, breaking ORT and triggering duplicate model loads.
+const isPthread = (self as { name?: string }).name === 'em-pthread';
+
+if (!isPthread) {
+  // Disable WASM threading entirely — WebGPU EP doesn't need threads, and
+  // this keeps ORT from spawning pthread workers in the first place.
+  ort.env.wasm.numThreads = 1;
+  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+}
 
 const HF = 'https://huggingface.co/onnx-community/sam2.1-hiera-base-plus-ONNX/resolve/main/onnx';
 const ENCODER_URL = `${HF}/vision_encoder.onnx`;
@@ -415,16 +425,18 @@ function douglasPeucker(pts: [number, number][], eps: number): [number, number][
 
 function post(msg: WorkerOutMsg) { self.postMessage(msg); }
 
-self.onmessage = async (e: MessageEvent<WorkerInMsg>) => {
-  const msg = e.data;
-  try {
-    if (msg.type === 'encode')       await encode(msg.id, msg.imageUrl);
-    else if (msg.type === 'segment') await segment(msg.id, msg.sessionId, msg.box, msg.points);
-  } catch (err) {
-    const error = err instanceof Error ? err.message : String(err);
-    if (msg.type === 'encode')       post({ type: 'encode:error', id: msg.id, error });
-    else if (msg.type === 'segment') post({ type: 'segment:error', id: msg.id, error });
-  }
-};
+if (!isPthread) {
+  self.onmessage = async (e: MessageEvent<WorkerInMsg>) => {
+    const msg = e.data;
+    try {
+      if (msg.type === 'encode')       await encode(msg.id, msg.imageUrl);
+      else if (msg.type === 'segment') await segment(msg.id, msg.sessionId, msg.box, msg.points);
+    } catch (err) {
+      const error = err instanceof Error ? err.message : String(err);
+      if (msg.type === 'encode')       post({ type: 'encode:error', id: msg.id, error });
+      else if (msg.type === 'segment') post({ type: 'segment:error', id: msg.id, error });
+    }
+  };
 
-init().catch(err => post({ type: 'status', text: `Init failed: ${err}` }));
+  init().catch(err => post({ type: 'init:error', error: String(err) }));
+}
