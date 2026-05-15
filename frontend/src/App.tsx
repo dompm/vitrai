@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
+import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -319,6 +320,7 @@ export function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
+  const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -500,6 +502,12 @@ export function App() {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+        e.preventDefault();
+        setIsShortcutsOpen(o => !o);
+        return;
+      }
 
       const isMod = e.ctrlKey || e.metaKey;
       if (isMod && e.key === 'Enter') {
@@ -940,6 +948,16 @@ export function App() {
           <div className="header-secondary">
             <button
               className="btn-ghost"
+              onClick={() => setIsShortcutsOpen(true)}
+              title={t('shortcutsTitle')}
+              style={{ fontWeight: 600, padding: '4px 8px' }}
+              aria-label={t('shortcutsTitle')}
+            >
+              ?
+            </button>
+
+            <button
+              className="btn-ghost"
               onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
               title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
               style={{ fontSize: '0.8rem', fontWeight: 600, padding: '4px 8px' }}
@@ -1129,10 +1147,10 @@ export function App() {
           )}
           <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{i18n.language}</span>
           <span className="status-bar-divider" />
-          <span className="status-bar-kbd">
+          <button className="status-bar-kbd status-bar-kbd-btn" onClick={() => setIsShortcutsOpen(true)}>
             <kbd>?</kbd>
             <span>{t('statusShortcuts')}</span>
-          </span>
+          </button>
         </div>
       </div>
 
@@ -1172,9 +1190,17 @@ export function App() {
             <IconPrinter size={18} />
             <span>{t('print')}</span>
           </button>
+
+          <div className="mobile-drawer-divider" />
+
+          <button className="mobile-drawer-item" onClick={() => { setIsShortcutsOpen(true); setIsMobileMenuOpen(false); }}>
+            <span style={{ width: 18, textAlign: 'center', fontWeight: 600 }}>?</span>
+            <span>{t('shortcutsTitle')}</span>
+          </button>
         </div>
       </div>
 
+<<<<<<< HEAD
       {pendingMove && pendingMoveLabels && (
         <MoveConfirmDialog
           count={pendingMoveLabels.count}
@@ -1188,6 +1214,9 @@ export function App() {
           }}
         />
       )}
+=======
+      <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+>>>>>>> 0186166 (feat(#35): keyboard shortcuts overlay (?))
   </div>
   );
 }
