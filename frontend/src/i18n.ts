@@ -67,7 +67,12 @@ const resources = {
       newProject: "New",
       statusScale: "Scale",
       statusNoScale: "No scale",
-      statusShortcuts: "shortcuts"
+      statusShortcuts: "shortcuts",
+      autosaveSaved: "Saved to this device",
+      autosaveSaving: "Saving…",
+      autosaveFailed: "Couldn't save",
+      autosaveRetry: "Retry",
+      autosaveOfflineHint: "Your work lives in this browser only. Export a copy from the menu to share or back up."
     }
   },
   fr: {
@@ -134,7 +139,12 @@ const resources = {
       newProject: "Nouveau",
       statusScale: "Échelle",
       statusNoScale: "Pas d'échelle",
-      statusShortcuts: "raccourcis"
+      statusShortcuts: "raccourcis",
+      autosaveSaved: "Enregistré sur cet appareil",
+      autosaveSaving: "Enregistrement…",
+      autosaveFailed: "Échec d'enregistrement",
+      autosaveRetry: "Réessayer",
+      autosaveOfflineHint: "Votre travail vit uniquement dans ce navigateur. Exportez une copie depuis le menu pour la partager ou la sauvegarder."
     }
   }
 };
