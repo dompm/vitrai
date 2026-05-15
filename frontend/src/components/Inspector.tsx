@@ -28,9 +28,11 @@ interface SingleSelectionProps {
 }
 
 type InspectorProps =
-  | { kind: 'empty' }
-  | ({ kind: 'single' } & SingleSelectionProps)
-  | ({ kind: 'multi' } & MultiSelectionProps);
+  ({ onClose?: () => void } & (
+    | { kind: 'empty' }
+    | ({ kind: 'single' } & SingleSelectionProps)
+    | ({ kind: 'multi' } & MultiSelectionProps)
+  ));
 
 function polygonBounds(polygon: [number, number][]): { w: number; h: number } {
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -243,19 +245,30 @@ function EmptyInspector() {
 
 export function Inspector(props: InspectorProps) {
   const { t } = useTranslation();
+  const { onClose, kind } = props;
   return (
-    <div className="panel panel-inspector">
+    <div className={`panel panel-inspector inspector-${kind}`}>
+      <div className="inspector-grab" aria-hidden="true" />
       <div className="panel-header">
         <div className="panel-title">
           <span className="panel-title-eyebrow">{t('inspectorTitle')}</span>
         </div>
+        {onClose && (
+          <button
+            className="inspector-tray-close"
+            onClick={onClose}
+            aria-label={t('shortcutsClose')}
+          >
+            <IconClose size={14} />
+          </button>
+        )}
       </div>
-      {props.kind === 'empty' ? (
+      {kind === 'empty' ? (
         <EmptyInspector />
-      ) : props.kind === 'single' ? (
-        <SinglePiece {...props} />
+      ) : kind === 'single' ? (
+        <SinglePiece {...(props as SingleSelectionProps & { kind: 'single' })} />
       ) : (
-        <MultiSelection {...props} />
+        <MultiSelection {...(props as MultiSelectionProps & { kind: 'multi' })} />
       )}
     </div>
   );

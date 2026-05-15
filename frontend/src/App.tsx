@@ -221,6 +221,7 @@ export function App() {
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const [pieceForNewSheet, setPieceForNewSheet] = useState<string | null>(null);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<'pattern' | 'glass'>('pattern');
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -580,9 +581,11 @@ export function App() {
     e.preventDefault();
   };
 
+  const isTrayOpen = selectedPieceIds.length > 0;
+
   return (
-    <div 
-      className="app" 
+    <div
+      className={`app${isTrayOpen ? ' tray-open' : ''} panel-focus-${activePanel}`}
       onDrop={handleGlobalDrop}
       onDragOver={handleDragOver}
     >
@@ -743,7 +746,10 @@ export function App() {
 
       <div className="main-container">
         {/* ── Left: pattern view ── */}
-        <div className="panel panel-left">
+        <div
+          className={`panel panel-left${activePanel === 'pattern' ? ' is-focused' : ''}`}
+          onPointerDown={() => setActivePanel('pattern')}
+        >
           <div className="panel-header">
             <div className="panel-title">
               <span className="panel-title-eyebrow">{t('pattern')}</span>
@@ -781,7 +787,10 @@ export function App() {
       </div>
 
       {/* ── Right: glass sheet workspace ── */}
-      <div className="panel panel-right">
+      <div
+        className={`panel panel-right${activePanel === 'glass' ? ' is-focused' : ''}`}
+        onPointerDown={() => setActivePanel('glass')}
+      >
         <div className="panel-header">
           <div className="panel-title" style={{ flexShrink: 0 }}>
             <span className="panel-title-eyebrow">{t('glass')}</span>
@@ -831,6 +840,7 @@ export function App() {
 
       {/* ── Inspector (docked) ── */}
       {(() => {
+        const dismissTray = () => selectPiece(null);
         if (selectedPieceIds.length === 0) {
           return <Inspector kind="empty" />;
         }
@@ -838,6 +848,7 @@ export function App() {
           return (
             <Inspector
               kind="multi"
+              onClose={dismissTray}
               count={selectedPieceIds.length}
               sheets={project.sheets}
               onBulkSheetChange={sheetId => selectedPieceIds.forEach(id => updatePieceSheet(id, sheetId))}
@@ -855,6 +866,7 @@ export function App() {
         return (
           <Inspector
             kind="single"
+            onClose={dismissTray}
             piece={piece}
             sheets={project.sheets}
             patternScale={project.patternScale}

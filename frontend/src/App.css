@@ -675,6 +675,29 @@ html, body, #root {
   max-width: 264px;
 }
 
+.inspector-grab {
+  display: none;
+}
+
+.inspector-tray-close {
+  display: none;
+  background: none;
+  border: 1px solid var(--hairline-2);
+  color: var(--text-soft);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.inspector-tray-close:hover {
+  background: var(--chrome-700);
+  color: var(--text-bright);
+}
+
 .inspector-empty {
   flex: 1;
   display: flex;
@@ -877,9 +900,9 @@ html, body, #root {
   background: rgba(161, 63, 48, 0.10);
 }
 
-/* Hide the docked inspector on narrow viewports — the mobile redesign
-   (#39) provides a swipe-up tray that replaces it. */
-@media (max-width: 1099px) {
+/* On viewports below desktop-inspector width, the docked panel is hidden.
+   On ≤768px it transforms into a bottom tray (see the mobile block below). */
+@media (max-width: 1099px) and (min-width: 769px) {
   .panel-inspector {
     display: none;
   }
@@ -1290,4 +1313,66 @@ html, body, #root {
   .mobile-drawer.open {
     display: flex;
   }
+
+  /* ── Active panel indicator ── */
+  .panel.is-focused .panel-header {
+    box-shadow: inset 0 1px 0 var(--amber);
+  }
+
+  /* ── Inspector as bottom tray ── */
+  .panel-inspector {
+    display: none;
+  }
+
+  .app.tray-open .panel-inspector {
+    display: flex;
+    flex: none;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: min(48vh, 280px);
+    max-width: none;
+    border-radius: 14px 14px 0 0;
+    border: 1px solid var(--hairline-2);
+    border-bottom: none;
+    box-shadow: 0 -16px 32px rgba(0, 0, 0, 0.5);
+    z-index: 200;
+    animation: trayUp 0.22s ease-out;
+  }
+
+  /* Reserve space above the tray so canvases aren't squashed under it */
+  .app.tray-open .main-container {
+    padding-bottom: min(48vh, 280px);
+  }
+
+  .inspector-grab {
+    display: block;
+    width: 36px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 2px;
+    background: var(--hairline-2);
+    flex-shrink: 0;
+  }
+
+  .inspector-tray-close {
+    display: inline-flex;
+  }
+
+  /* Compact tray body */
+  .panel-inspector .inspector-body {
+    padding: 10px 14px 16px;
+    gap: 10px;
+  }
+
+  /* Empty state never opens the tray on mobile */
+  .panel-inspector.inspector-empty {
+    display: none !important;
+  }
+}
+
+@keyframes trayUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
