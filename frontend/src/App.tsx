@@ -6,6 +6,7 @@ import { Inspector } from './components/Inspector';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
+import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
 import {
@@ -25,18 +26,68 @@ interface SheetTabProps {
 const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
 
 function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: SheetTabProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
 
   useEffect(() => { setDraft(sheet.label); }, [sheet.label]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  useEffect(() => {
+    if (!menuPos) return;
+    function close() { setMenuPos(null); }
+    window.addEventListener('mousedown', close);
+    window.addEventListener('keydown', close);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', close);
+    };
+  }, [menuPos]);
 
   function commit() {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== sheet.label) onRename(trimmed);
     else setDraft(sheet.label);
     setEditing(false);
+  }
+
+  function startEditing() {
+    setDraft(sheet.label);
+    setEditing(true);
+  }
+
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuPos({ x: e.clientX, y: e.clientY });
+  }
+
+  function handlePointerDown(e: React.PointerEvent) {
+    if (e.pointerType !== 'touch') return;
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      setMenuPos({ x: e.clientX, y: e.clientY });
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function handleClick() {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    onSelect();
   }
 
   if (editing) {
@@ -57,22 +108,57 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
   }
 
   return (
-    <button
-      className={`sheet-tab ${isActive ? 'active' : ''}`}
-      onClick={onSelect}
-      onDoubleClick={() => { setDraft(sheet.label); setEditing(true); }}
-      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-    >
-      {sheet.label}
-      {canDelete && (
+    <>
+      <button
+        className={`sheet-tab ${isActive ? 'active' : ''}`}
+        onClick={handleClick}
+        onDoubleClick={startEditing}
+        onContextMenu={handleContextMenu}
+        onPointerDown={handlePointerDown}
+        onPointerUp={cancelLongPress}
+        onPointerMove={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+      >
         <span
-          className="sheet-tab-close"
-          onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="sheet-tab-swatch"
+          style={{ background: sheet.swatch ?? 'var(--text-dim)' }}
+          aria-hidden="true"
+        />
+        <span className="sheet-tab-label">{sheet.label}</span>
+        {canDelete && (
+          <span
+            className="sheet-tab-close"
+            onClick={e => { e.stopPropagation(); onDelete(); }}
+            role="button"
+            aria-label={t('delete')}
+          >
+            ×
+          </span>
+        )}
+      </button>
+      {menuPos && (
+        <div
+          className="sheet-tab-menu"
+          style={{ left: menuPos.x, top: menuPos.y }}
+          onMouseDown={e => e.stopPropagation()}
         >
-          ×
-        </span>
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); startEditing(); }}
+          >
+            {t('contextRename')}
+          </button>
+          {canDelete && (
+            <button
+              className="sheet-tab-menu-item sheet-tab-menu-item-danger"
+              onClick={() => { setMenuPos(null); onDelete(); }}
+            >
+              {t('contextDelete')}
+            </button>
+          )}
+        </div>
       )}
-    </button>
+    </>
   );
 }
 
@@ -97,6 +183,7 @@ export function App() {
     updatePieceSheet,
     deleteSheet,
     renameSheet,
+    updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
@@ -159,6 +246,18 @@ export function App() {
   };
 
   useEffect(() => { setNameDraft(project.name); }, [project.name]);
+
+  // Ensure each glass sheet has a precomputed swatch (used to color its tab).
+  useEffect(() => {
+    let cancelled = false;
+    project.sheets.forEach(sheet => {
+      if (sheet.swatch || !sheet.imageUrl) return;
+      computeImageSwatch(sheet.imageUrl)
+        .then(hex => { if (!cancelled) updateSheetSwatch(sheet.id, hex); })
+        .catch(err => console.warn('[swatch] failed for sheet', sheet.id, err));
+    });
+    return () => { cancelled = true; };
+  }, [project.sheets, updateSheetSwatch]);
 
   useEffect(() => {
     if (!isProjectDropdownOpen) return;
