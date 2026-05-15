@@ -48,6 +48,7 @@ export interface GlassSheet {
   scale: Scale | null;
   naturalWidth?: number;
   naturalHeight?: number;
+  swatch?: string; // dominant color, e.g. "#3a6da8"
 }
 
 export interface Project {

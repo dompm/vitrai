@@ -311,6 +311,13 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updateSheetSwatch = useCallback((sheetId: string, swatch: string) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, swatch } : s)
+    }), true);
+  }, [updateProject]);
+
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -524,6 +531,7 @@ export function useProject() {
     updatePieceSheet,
     deleteSheet,
     renameSheet,
+    updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
     updatePatternScale,

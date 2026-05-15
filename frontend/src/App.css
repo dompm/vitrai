@@ -123,6 +123,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 18px;
   padding: 6px 10px;
   background: var(--chrome-800);
   border-bottom: 1px solid var(--hairline);
@@ -208,6 +209,9 @@ html, body, #root {
 }
 
 .sheet-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: none;
   border: none;
   border-radius: 4px;
@@ -227,7 +231,21 @@ html, body, #root {
 .sheet-tab.active {
   background: var(--amber-soft);
   color: var(--amber-ink);
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.sheet-tab-swatch {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--text-dim);
+  border: 1px solid rgba(40, 30, 15, 0.25);
+  box-shadow: 0 0 0 1px rgba(40, 30, 15, 0.06);
+}
+
+.sheet-tab-label {
+  white-space: nowrap;
 }
 
 .sheet-tab-close {
@@ -237,16 +255,69 @@ html, body, #root {
   opacity: 0;
   border-radius: 3px;
   padding: 0 2px;
+  min-width: 14px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: opacity 0.1s;
 }
 
 .sheet-tab:hover .sheet-tab-close {
-  opacity: 0.5;
+  opacity: 0.55;
 }
 
 .sheet-tab-close:hover {
   opacity: 1 !important;
   background: rgba(40, 30, 15, 0.1);
+}
+
+/* Touch devices: always show the close affordance so it's discoverable. */
+@media (pointer: coarse) {
+  .sheet-tab-close {
+    opacity: 0.6;
+  }
+}
+
+/* Context menu */
+.sheet-tab-menu {
+  position: fixed;
+  z-index: 600;
+  min-width: 140px;
+  background: var(--paper);
+  border: 1px solid var(--hairline-2);
+  border-radius: 6px;
+  box-shadow: 0 12px 32px rgba(40, 30, 15, 0.18);
+  overflow: hidden;
+  padding: 4px;
+}
+
+.sheet-tab-menu-item {
+  display: flex;
+  width: 100%;
+  padding: 7px 10px;
+  background: none;
+  border: none;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 4px;
+}
+
+.sheet-tab-menu-item:hover {
+  background: var(--chrome-700);
+  color: var(--text-bright);
+}
+
+.sheet-tab-menu-item-danger {
+  color: var(--ruby);
+}
+
+.sheet-tab-menu-item-danger:hover {
+  background: rgba(161, 63, 48, 0.14);
+  color: var(--ruby);
 }
 
 /* Vertical toolbar */
@@ -538,7 +609,7 @@ html, body, #root {
 }
 
 .autosave-retry:hover {
-  background: rgba(176, 74, 58, 0.18);
+  background: rgba(161, 63, 48, 0.14);
 }
 
 @keyframes autosavePulse {
