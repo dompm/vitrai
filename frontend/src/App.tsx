@@ -271,6 +271,11 @@ export function App() {
       }
 
       const isMod = e.ctrlKey || e.metaKey;
+      if (isMod && e.key === 'Enter') {
+        e.preventDefault();
+        if (printRef.current.ready) printRef.current.fn();
+        return;
+      }
       if (isMod && e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -335,12 +340,19 @@ export function App() {
     e.target.value = '';
   };
 
+  const isPrintReady = !!project.patternScale && project.patternScale.pxPerUnit > 0 && project.pieces.length > 0;
+  const printNotReadyReason = !project.patternScale || project.patternScale.pxPerUnit === 0
+    ? t('printNoScale')
+    : project.pieces.length === 0
+      ? t('printNoPieces')
+      : '';
+
+  const printRef = useRef<{ ready: boolean; fn: () => void }>({ ready: false, fn: () => {} });
+
   const handlePrint = () => {
+    if (!isPrintReady) return;
     const { patternScale, pieces } = project;
-    if (!patternScale || patternScale.pxPerUnit === 0) {
-      alert(t('printNoScale'));
-      return;
-    }
+    if (!patternScale || patternScale.pxPerUnit === 0) return;
     if (pieces.length === 0) return;
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -413,6 +425,8 @@ export function App() {
     `);
     printWin.document.close();
   };
+
+  printRef.current = { ready: isPrintReady, fn: handlePrint };
 
   const handleAddSheetFromImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -603,12 +617,19 @@ export function App() {
               {t('saveCopy')}
             </button>
 
-            <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
-
-            <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
-              {t('print')}
-            </button>
           </div>
+
+          <div style={{ width: 12 }} />
+
+          <button
+            className={`btn-primary header-print${isPrintReady ? '' : ' is-muted'}`}
+            onClick={() => isPrintReady ? handlePrint() : undefined}
+            title={isPrintReady ? t('printPrimaryTooltip') : printNotReadyReason}
+            aria-disabled={!isPrintReady}
+          >
+            <IconPrinter size={14} />
+            {t('printPrimary')}
+          </button>
 
           <button
             className="mobile-menu-btn"

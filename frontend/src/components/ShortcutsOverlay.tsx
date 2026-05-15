@@ -43,6 +43,7 @@ const GROUPS: Group[] = [
       { keys: [MOD, 'Z'], labelKey: 'shortcutUndo' },
       { keys: ['⇧', MOD, 'Z'], labelKey: 'shortcutRedo' },
       { keys: [MOD, 'Y'], labelKey: 'shortcutRedoAlt' },
+      { keys: [MOD, '⏎'], labelKey: 'shortcutPrint' },
     ],
   },
   {

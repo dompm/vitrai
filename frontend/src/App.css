@@ -184,6 +184,41 @@ html, body, #root {
   cursor: default;
 }
 
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--amber);
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: #1a1408;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  padding: 5px 14px;
+  height: 30px;
+  letter-spacing: 0.01em;
+  transition: background-color 0.15s ease, transform 0.05s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--amber-bright);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.btn-primary.is-muted {
+  opacity: 0.4;
+  cursor: help;
+}
+
+.btn-primary.is-muted:hover {
+  background: var(--amber);
+}
+
 /* Sheet tabs */
 .sheet-tabs {
   display: flex;
@@ -1107,7 +1142,8 @@ html, body, #root {
     min-width: 0;
     flex-shrink: 1;
   }
-  .header-secondary {
+  .header-secondary,
+  .header-print {
     display: none;
   }
   .mobile-menu-btn {
