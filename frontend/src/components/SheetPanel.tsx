@@ -383,7 +383,7 @@ export function SheetPanel({
   const TOOLS = useMemo(() => [
     {
       id: 'select' as ToolId,
-      label: t('toolSelect'),
+      label: t('toolLabelSelect'),
       icon: <SelectIcon />,
       tooltip: {
         name: t('tooltipSelectName'),
@@ -394,7 +394,7 @@ export function SheetPanel({
     },
     {
       id: 'pan' as ToolId,
-      label: t('toolPan'),
+      label: t('toolLabelPan'),
       icon: <HandIcon />,
       tooltip: {
         name: t('tooltipPanName'),
@@ -405,7 +405,7 @@ export function SheetPanel({
     },
     {
       id: 'crop' as ToolId,
-      label: t('toolCropSheet'),
+      label: t('toolLabelCrop'),
       icon: <CropIcon />,
       tooltip: {
         name: t('tooltipCropSheetName'),
@@ -416,7 +416,7 @@ export function SheetPanel({
     },
     {
       id: 'measure' as ToolId,
-      label: t('toolScaleSheet'),
+      label: t('toolLabelScale'),
       icon: <MeasureIcon />,
       tooltip: {
         name: t('tooltipScaleName'), // Using the same "Set Scale" or "Measure" key

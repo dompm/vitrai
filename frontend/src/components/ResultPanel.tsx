@@ -495,7 +495,7 @@ export function ResultPanel({
   const BASE_TOOLS = useMemo(() => [
     {
       id: 'select' as ToolId,
-      label: t('toolSelect'),
+      label: t('toolLabelSelect'),
       icon: <SelectIcon />,
       tooltip: {
         name: t('tooltipSelectName'),
@@ -506,7 +506,7 @@ export function ResultPanel({
     },
     {
       id: 'pan' as ToolId,
-      label: t('toolPan'),
+      label: t('toolLabelPan'),
       icon: <HandIcon />,
       tooltip: {
         name: t('tooltipPanName'),
@@ -517,7 +517,7 @@ export function ResultPanel({
     },
     {
       id: 'box' as ToolId,
-      label: t('toolDrawBox'),
+      label: t('toolLabelCut'),
       icon: <BoxIcon />,
       tooltip: {
         name: t('tooltipBoxName'),
@@ -528,7 +528,7 @@ export function ResultPanel({
     },
     {
       id: 'detect-all' as ToolId,
-      label: t('toolDetectAll'),
+      label: t('toolLabelAuto'),
       icon: <DetectAllIcon />,
       tooltip: {
         name: t('tooltipDetectAllName'),
@@ -539,7 +539,7 @@ export function ResultPanel({
     },
     {
       id: 'crop' as ToolId,
-      label: t('toolCropPattern'),
+      label: t('toolLabelCrop'),
       icon: <CropIcon />,
       tooltip: {
         name: t('tooltipCropPatternName'),
@@ -550,7 +550,7 @@ export function ResultPanel({
     },
     {
       id: 'measure' as ToolId,
-      label: t('toolScalePattern'),
+      label: t('toolLabelScale'),
       icon: <MeasureIcon />,
       tooltip: {
         name: t('tooltipScaleName'),
@@ -561,7 +561,7 @@ export function ResultPanel({
     },
     {
       id: 'inspect' as ToolId,
-      label: t('toolInspect'),
+      label: t('toolLabelInspect'),
       icon: <ViewIcon />,
       tooltip: {
         name: t('tooltipInspectName'),
