@@ -67,9 +67,9 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
         pointerEvents: 'none',
       }}
     >
-      <div style={{ pointerEvents: 'auto', background: '#fff', border: '1px solid #e5e7eb', borderRadius: 8, padding: '4px 10px 8px 10px', boxShadow: '0 4px 16px rgba(0,0,0,0.14)', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
+      <div style={{ pointerEvents: 'auto', background: 'var(--paper)', border: '1px solid var(--hairline-2)', borderRadius: 8, padding: '4px 10px 8px 10px', boxShadow: '0 4px 16px rgba(40,30,15,0.18)', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
 
-        <span style={{ fontSize: 11, color: '#6b7280', fontWeight: 600, textAlign: 'center' }}>
+        <span style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 600, textAlign: 'center' }}>
           {Math.round(pixelLength)} px =
         </span>
       <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
@@ -85,11 +85,14 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
           style={{
             flex: 1,
             padding: '3px 6px',
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--hairline-2)',
             borderRadius: 4,
             fontSize: 13,
             outline: 'none',
             minWidth: 0,
+            background: 'var(--paper)',
+            color: 'var(--text-bright)',
+            fontFamily: 'inherit',
           }}
         />
         <select
@@ -97,11 +100,13 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
           onChange={handleUnitChange}
           style={{
             padding: '3px 4px',
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--hairline-2)',
             borderRadius: 4,
             fontSize: 13,
-            background: '#fff',
+            background: 'var(--paper)',
+            color: 'var(--text-bright)',
             cursor: 'pointer',
+            fontFamily: 'inherit',
           }}
         >
           {units.map(u => <option key={u.id} value={u.id}>{u.label}</option>)}

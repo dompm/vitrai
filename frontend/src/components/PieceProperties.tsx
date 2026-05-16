@@ -60,10 +60,10 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         alignItems: 'center',
         gap: 8,
         padding: '6px 10px',
-        background: '#ffffff',
-        border: '1px solid #e5e7eb',
+        background: 'var(--paper)',
+        border: '1px solid var(--hairline-2)',
         borderRadius: '8px',
-        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
         flexShrink: 0,
         minHeight: 40,
         pointerEvents,
@@ -79,11 +79,13 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           style={{
             width: 140,
             padding: '2px 6px',
-            border: '1px solid #6366f1',
+            border: '1px solid var(--amber)',
             borderRadius: 4,
             fontSize: 12,
             outline: 'none',
-            background: '#fff',
+            background: 'var(--paper)',
+            color: 'var(--text-bright)',
+            fontFamily: 'inherit',
           }}
         />
       ) : (
@@ -93,7 +95,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           style={{
             fontSize: 12,
             fontWeight: 500,
-            color: '#111827',
+            color: 'var(--text-bright)',
             cursor: 'text',
             minWidth: 80,
             maxWidth: 160,
@@ -104,27 +106,29 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             borderRadius: 3,
             border: '1px solid transparent',
           }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = '#d1d5db')}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--hairline-2)')}
           onMouseLeave={e => (e.currentTarget.style.borderColor = 'transparent')}
         >
           {piece.label}
         </span>
       )}
 
-      <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+      <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
 
-      <label style={{ fontSize: 11, color: '#6b7280', flexShrink: 0 }}>{t('sheet')}</label>
+      <label style={{ fontSize: 11, color: 'var(--text-dim)', flexShrink: 0 }}>{t('sheet')}</label>
       <select
         value={piece.glassSheetId}
         onChange={handleSheetSelect}
         style={{
           padding: '2px 6px',
-          border: '1px solid #d1d5db',
+          border: '1px solid var(--hairline-2)',
           borderRadius: 4,
           fontSize: 12,
-          background: '#fff',
+          background: 'var(--paper)',
+          color: 'var(--text-bright)',
           cursor: 'pointer',
           maxWidth: 140,
+          fontFamily: 'inherit',
         }}
       >
         {!sheets.some(s => s.id === piece.glassSheetId) && (
@@ -141,16 +145,16 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
 
       {onRefineModeChange && (
         <>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
           <button
             onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'add' ? null : 'add')}
             disabled={isPending || isEncoding}
             title={`${t('addPositivePoint')} [A]`}
             style={{
-              background: refineMode === 'add' ? '#dbeafe' : 'none',
+              background: refineMode === 'add' ? 'var(--amber-soft)' : 'none',
               border: 'none',
               borderRadius: 4,
-              color: refineMode === 'add' ? '#1d4ed8' : '#6b7280',
+              color: refineMode === 'add' ? 'var(--amber-ink)' : 'var(--text-soft)',
               cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
@@ -165,10 +169,10 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             disabled={isPending || isEncoding}
             title={`${t('addNegativePoint')} [S]`}
             style={{
-              background: refineMode === 'remove' ? '#fee2e2' : 'none',
+              background: refineMode === 'remove' ? 'rgba(161, 63, 48, 0.14)' : 'none',
               border: 'none',
               borderRadius: 4,
-              color: refineMode === 'remove' ? '#b91c1c' : '#6b7280',
+              color: refineMode === 'remove' ? 'var(--ruby)' : 'var(--text-soft)',
               cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
@@ -183,7 +187,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
 
       {isPending && (
         <>
-          <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+          <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
           <div style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83">
@@ -194,7 +198,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         </>
       )}
 
-      <div style={{ width: 1, height: 18, background: '#e5e7eb', flexShrink: 0 }} />
+      <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
 
       {onSmooth && (
         <button
@@ -202,18 +206,19 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           title={t('smoothPieceTooltip')}
           style={{
             background: 'none',
-            border: '1px solid #d1d5db',
+            border: '1px solid var(--hairline-2)',
             borderRadius: 4,
-            color: '#374151',
+            color: 'var(--text-soft)',
             cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
             fontSize: 11,
             padding: '2px 8px',
             flexShrink: 0,
             marginRight: 4,
             opacity: (isPending || isEncoding) ? 0.5 : 1,
+            fontFamily: 'inherit',
           }}
           disabled={isPending || isEncoding}
-          onMouseEnter={e => { e.currentTarget.style.background = '#f3f4f6'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--chrome-700)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >
           {t('smooth')}
@@ -225,15 +230,16 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         title={t('deletePieceTooltip')}
         style={{
           background: 'none',
-          border: '1px solid #fca5a5',
+          border: '1px solid rgba(161, 63, 48, 0.45)',
           borderRadius: 4,
-          color: '#ef4444',
+          color: 'var(--ruby)',
           cursor: 'pointer',
           fontSize: 11,
           padding: '2px 8px',
           flexShrink: 0,
+          fontFamily: 'inherit',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#fef2f2'; }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(161, 63, 48, 0.10)'; }}
         onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
       >
         {t('delete')}
