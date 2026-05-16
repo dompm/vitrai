@@ -67,7 +67,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
         pointerEvents: 'none',
       }}
     >
-      <div style={{ pointerEvents: 'auto', background: 'var(--ink-800)', border: '1px solid var(--hairline-2)', borderRadius: 8, padding: '4px 10px 8px 10px', boxShadow: '0 4px 16px rgba(0,0,0,0.5)', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
+      <div style={{ pointerEvents: 'auto', background: 'var(--paper)', border: '1px solid var(--hairline-2)', borderRadius: 8, padding: '4px 10px 8px 10px', boxShadow: '0 4px 16px rgba(40,30,15,0.18)', display: 'flex', flexDirection: 'column', gap: 6, minWidth: 160 }}>
 
         <span style={{ fontSize: 11, color: 'var(--text-dim)', fontWeight: 600, textAlign: 'center' }}>
           {Math.round(pixelLength)} px =
@@ -90,7 +90,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
             fontSize: 13,
             outline: 'none',
             minWidth: 0,
-            background: 'var(--ink-900)',
+            background: 'var(--paper)',
             color: 'var(--text-bright)',
             fontFamily: 'inherit',
           }}
@@ -103,7 +103,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
             border: '1px solid var(--hairline-2)',
             borderRadius: 4,
             fontSize: 13,
-            background: 'var(--ink-900)',
+            background: 'var(--paper)',
             color: 'var(--text-bright)',
             cursor: 'pointer',
             fontFamily: 'inherit',

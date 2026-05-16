@@ -1,30 +1,41 @@
 :root {
-  /* Chrome (dark "leaded" surfaces) */
-  --ink-900: #16140f;
-  --ink-800: #1f1d17;
-  --ink-700: #2a2720;
-  --hairline:    rgba(245, 239, 226, 0.08);
-  --hairline-2:  rgba(245, 239, 226, 0.14);
-
-  /* Text */
-  --text-bright: #f5efe2;
-  --text-soft:   #b8b1a3;
-  --text-dim:    #8b8578;
-
-  /* Canvas surface */
-  --cream:       #f5efe2;
-
-  /* Accents */
-  --amber:        #d4a13a;
-  --amber-bright: #eab84a;
-  --amber-soft:   rgba(212, 161, 58, 0.18);
-  --cobalt:       #3a6da8;
-  --ruby:         #b04a3a;
-  --lead:         #2d2d2d;
+  /* Chrome — warm cream surfaces, parchment / workbench feel */
+  --chrome-900:   #ebe4d2;
+  --chrome-800:   #f1ebda;
+  --chrome-700:   #e4dcc8;
 
   /* Canvas wells */
-  --canvas-bg: radial-gradient(ellipse at center, #2a261d 0%, #16140f 80%);
-  --canvas-vignette: radial-gradient(ellipse at 50% 45%, rgba(240, 200, 120, 0.06), transparent 60%);
+  --cream:        #f7f1e3;
+  --cream-soft:   #f0e9d5;
+  --paper:        #fffefa;
+
+  /* Text */
+  --text-bright:  #23201a;
+  --text-soft:    #5a5142;
+  --text-dim:     #8a8270;
+
+  /* Hairlines (dark-on-light) */
+  --hairline:     rgba(40, 30, 15, 0.08);
+  --hairline-2:   rgba(40, 30, 15, 0.14);
+
+  /* Accents */
+  --amber:        #c08a1f;
+  --amber-bright: #d4a13a;
+  --amber-soft:   rgba(192, 138, 31, 0.16);
+  --amber-ink:    #7a5512;
+
+  --cobalt:       #2c5e98;
+  --ruby:         #a13f30;
+
+  /* Solder lines on canvas — nearly black for max contrast */
+  --lead:         #1a1a1a;
+
+  /* Canvas backdrop */
+  --canvas-bg:
+    radial-gradient(ellipse at center, var(--cream) 0%, var(--cream-soft) 80%);
+  --canvas-grain:
+    radial-gradient(circle at 20% 30%, rgba(150, 120, 60, 0.04) 0%, transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(150, 120, 60, 0.04) 0%, transparent 40%);
 }
 
 *, *::before, *::after {
@@ -35,7 +46,7 @@
 
 html, body, #root {
   height: 100%;
-  background: var(--ink-900);
+  background: var(--chrome-900);
   color: var(--text-bright);
   font-family: "Inter Tight", system-ui, -apple-system, sans-serif;
   font-size: 14px;
@@ -46,7 +57,7 @@ html, body, #root {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--ink-900);
+  background: var(--chrome-900);
 }
 
 .global-header {
@@ -54,7 +65,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  background: var(--ink-800);
+  background: var(--chrome-800);
   border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
   z-index: 100;
@@ -71,7 +82,7 @@ html, body, #root {
   height: 26px;
   border-radius: 5px;
   object-fit: cover;
-  box-shadow: 0 1px 0 rgba(245, 239, 226, 0.06) inset, 0 2px 4px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 2px rgba(40, 30, 15, 0.18);
 }
 
 .app-name {
@@ -101,11 +112,11 @@ html, body, #root {
   flex-direction: column;
   flex: 1;
   min-width: 0;
-  background: var(--ink-800);
+  background: var(--chrome-800);
   border: 1px solid var(--hairline);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 1px 0 var(--hairline) inset, 0 4px 14px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 1px 2px rgba(40, 30, 15, 0.04), 0 4px 14px rgba(40, 30, 15, 0.06);
 }
 
 .panel-header {
@@ -113,7 +124,7 @@ html, body, #root {
   align-items: center;
   justify-content: space-between;
   padding: 6px 10px;
-  background: var(--ink-800);
+  background: var(--chrome-800);
   border-bottom: 1px solid var(--hairline);
   flex-shrink: 0;
   min-height: 36px;
@@ -139,7 +150,7 @@ html, body, #root {
 }
 
 .btn-ghost:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 
@@ -174,13 +185,13 @@ html, body, #root {
 }
 
 .sheet-tab:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 
 .sheet-tab.active {
   background: var(--amber-soft);
-  color: var(--amber-bright);
+  color: var(--amber-ink);
   font-weight: 500;
 }
 
@@ -200,7 +211,7 @@ html, body, #root {
 
 .sheet-tab-close:hover {
   opacity: 1 !important;
-  background: rgba(245, 239, 226, 0.1);
+  background: rgba(40, 30, 15, 0.1);
 }
 
 /* Vertical toolbar */
@@ -210,7 +221,7 @@ html, body, #root {
   align-items: center;
   gap: 2px;
   padding: 6px 4px;
-  background: var(--ink-800);
+  background: var(--chrome-800);
   border-right: 1px solid var(--hairline);
   flex-shrink: 0;
   width: 38px;
@@ -231,13 +242,13 @@ html, body, #root {
 }
 
 .tool-btn:hover:not(:disabled) {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 
 .tool-btn.active {
   background: var(--amber-soft);
-  color: var(--amber-bright);
+  color: var(--amber-ink);
 }
 
 .tool-btn:disabled {
@@ -256,8 +267,8 @@ html, body, #root {
   left: calc(100% + 8px);
   top: 50%;
   transform: translateY(-50%) scale(0.92);
-  background: var(--ink-900);
-  color: var(--text-bright);
+  background: var(--text-bright);
+  color: var(--paper);
   font-size: 11px;
   font-weight: 500;
   padding: 4px 8px;
@@ -267,7 +278,6 @@ html, body, #root {
   opacity: 0;
   transition: opacity 0.15s ease, transform 0.15s ease;
   z-index: 100;
-  border: 1px solid var(--hairline-2);
 }
 .tooltip-wrapper:hover .tooltip-tip {
   opacity: 1;
@@ -281,7 +291,7 @@ html, body, #root {
   top: 50%;
   transform: translateY(-50%) scale(0.94);
   opacity: 0;
-  background: var(--ink-800);
+  background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 10px;
   overflow: hidden;
@@ -289,14 +299,14 @@ html, body, #root {
   pointer-events: none;
   z-index: 200;
   transition: opacity 0.18s ease, transform 0.18s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 24px rgba(40, 30, 15, 0.12), 0 2px 6px rgba(40, 30, 15, 0.06);
 }
 .tooltip-wrapper:hover .tool-tooltip-card {
   opacity: 1;
   transform: translateY(-50%) scale(1);
 }
 .tool-tooltip-preview {
-  background: var(--ink-900);
+  background: var(--cream-soft);
   height: 110px;
   overflow: hidden;
   line-height: 0;
@@ -308,7 +318,7 @@ html, body, #root {
 }
 .tool-tooltip-body {
   padding: 10px 12px 11px;
-  background: var(--ink-800);
+  background: var(--paper);
 }
 .tool-tooltip-header {
   display: flex;
@@ -322,7 +332,7 @@ html, body, #root {
   font-size: 13px;
 }
 .tool-tooltip-kbd {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-soft);
   border: 1px solid var(--hairline-2);
   border-radius: 4px;
@@ -366,7 +376,7 @@ html, body, #root {
 }
 .project-name-input:focus {
   border-color: var(--amber);
-  background: var(--ink-900);
+  background: var(--paper);
 }
 .project-chevron-btn {
   background: none;
@@ -379,17 +389,17 @@ html, body, #root {
   border-radius: 3px;
 }
 .project-chevron-btn:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 .project-dropdown {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: var(--ink-800);
+  background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px rgba(40, 30, 15, 0.14);
   min-width: 180px;
   z-index: 500;
   overflow: hidden;
@@ -404,12 +414,12 @@ html, body, #root {
   color: var(--text-soft);
 }
 .project-dropdown-item:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 .project-dropdown-item.active {
   background: var(--amber-soft);
-  color: var(--amber-bright);
+  color: var(--amber-ink);
   font-weight: 600;
 }
 .project-dropdown-check {
@@ -441,13 +451,13 @@ html, body, #root {
 }
 .project-delete-btn:hover {
   color: var(--ruby) !important;
-  background: rgba(176, 74, 58, 0.15);
+  background: rgba(161, 63, 48, 0.10);
 }
 
 .spinner-tiny {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(212, 161, 58, 0.2);
+  border: 2px solid rgba(192, 138, 31, 0.2);
   border-top-color: var(--amber);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -464,7 +474,7 @@ html, body, #root {
   justify-content: space-between;
   height: 26px;
   padding: 0 16px;
-  background: var(--ink-800);
+  background: var(--chrome-800);
   border-top: 1px solid var(--hairline);
   color: var(--text-dim);
   font-size: 11.5px;
@@ -499,7 +509,7 @@ html, body, #root {
 }
 
 .status-bar-kbd kbd {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-soft);
   border: 1px solid var(--hairline-2);
   border-radius: 3px;
@@ -511,8 +521,16 @@ html, body, #root {
 
 /* Canvas wells get the warm lightbox treatment */
 .canvas-well {
-  background-image: var(--canvas-vignette), var(--canvas-bg);
-  background-blend-mode: screen, normal;
+  background-image: var(--canvas-grain), var(--canvas-bg);
+}
+
+/* The pattern image rectangle sits on a clean paper rectangle with shadow. */
+.canvas-paper {
+  background: var(--paper);
+  box-shadow:
+    0 1px 2px rgba(40, 30, 15, 0.08),
+    0 8px 24px rgba(40, 30, 15, 0.12),
+    0 0 0 1px rgba(40, 30, 15, 0.08);
 }
 
 /* ── Mobile-only elements (hidden on desktop) ───────── */
@@ -549,7 +567,7 @@ html, body, #root {
 .mobile-drawer-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(40, 30, 15, 0.35);
 }
 
 .mobile-drawer-panel {
@@ -558,8 +576,8 @@ html, body, #root {
   right: 0;
   bottom: 0;
   width: 220px;
-  background: var(--ink-800);
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.5);
+  background: var(--chrome-800);
+  box-shadow: -4px 0 20px rgba(40, 30, 15, 0.18);
   display: flex;
   flex-direction: column;
   padding: 12px;
@@ -594,7 +612,7 @@ html, body, #root {
   border-radius: 4px;
 }
 .mobile-drawer-close:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 
@@ -614,7 +632,7 @@ html, body, #root {
   font-family: inherit;
 }
 .mobile-drawer-item:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 

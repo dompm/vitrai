@@ -60,7 +60,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         alignItems: 'center',
         gap: 8,
         padding: '6px 10px',
-        background: 'var(--ink-800)',
+        background: 'var(--paper)',
         border: '1px solid var(--hairline-2)',
         borderRadius: '8px',
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3)',
@@ -83,7 +83,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             borderRadius: 4,
             fontSize: 12,
             outline: 'none',
-            background: 'var(--ink-900)',
+            background: 'var(--paper)',
             color: 'var(--text-bright)',
             fontFamily: 'inherit',
           }}
@@ -124,7 +124,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           border: '1px solid var(--hairline-2)',
           borderRadius: 4,
           fontSize: 12,
-          background: 'var(--ink-900)',
+          background: 'var(--paper)',
           color: 'var(--text-bright)',
           cursor: 'pointer',
           maxWidth: 140,
@@ -154,7 +154,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
               background: refineMode === 'add' ? 'var(--amber-soft)' : 'none',
               border: 'none',
               borderRadius: 4,
-              color: refineMode === 'add' ? 'var(--amber-bright)' : 'var(--text-soft)',
+              color: refineMode === 'add' ? 'var(--amber-ink)' : 'var(--text-soft)',
               cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
@@ -169,7 +169,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             disabled={isPending || isEncoding}
             title={`${t('addNegativePoint')} [S]`}
             style={{
-              background: refineMode === 'remove' ? 'rgba(176, 74, 58, 0.18)' : 'none',
+              background: refineMode === 'remove' ? 'rgba(161, 63, 48, 0.14)' : 'none',
               border: 'none',
               borderRadius: 4,
               color: refineMode === 'remove' ? 'var(--ruby)' : 'var(--text-soft)',
@@ -218,7 +218,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             fontFamily: 'inherit',
           }}
           disabled={isPending || isEncoding}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--ink-700)'; }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--chrome-700)'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
         >
           {t('smooth')}
@@ -230,7 +230,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         title={t('deletePieceTooltip')}
         style={{
           background: 'none',
-          border: '1px solid rgba(176, 74, 58, 0.5)',
+          border: '1px solid rgba(161, 63, 48, 0.45)',
           borderRadius: 4,
           color: 'var(--ruby)',
           cursor: 'pointer',
@@ -239,7 +239,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           flexShrink: 0,
           fontFamily: 'inherit',
         }}
-        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(176, 74, 58, 0.15)'; }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(161, 63, 48, 0.10)'; }}
         onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}
       >
         {t('delete')}

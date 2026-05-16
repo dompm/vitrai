@@ -3,6 +3,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Circle, Rect } from 'react-konva';
+import { CANVAS } from '../theme';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
@@ -121,9 +122,9 @@ function PieceOutline({
       {!handleOnly && (
         <Line
           points={relPts}
-          stroke={fillOnly ? 'transparent' : (isSelected ? '#d4a13a' : 'rgba(212,161,58,0.7)')}
+          stroke={fillOnly ? 'transparent' : (isSelected ? CANVAS.amber : CANVAS.amberIdleStroke)}
           strokeWidth={isSelected ? STROKE_SELECTED / es : STROKE_IDLE / es}
-          fill={strokeOnly ? 'transparent' : (isSelected ? 'rgba(212,161,58,0.14)' : 'rgba(212,161,58,0.06)')}
+          fill={strokeOnly ? 'transparent' : (isSelected ? CANVAS.amberSelectedFill : CANVAS.amberIdleFill)}
           closed
           hitStrokeWidth={strokeOnly ? 10 / es : 0}
         />
@@ -132,13 +133,13 @@ function PieceOutline({
         <>
           <Line
             points={[0, 0, 0, -handleOffset]}
-            stroke="rgba(212,161,58,0.6)" strokeWidth={HANDLE_STEM / es}
+            stroke={CANVAS.amberHandleStem} strokeWidth={HANDLE_STEM / es}
             listening={false}
           />
           <Circle
             x={0} y={-handleOffset}
             radius={HANDLE_RADIUS / es}
-            fill="#d4a13a" stroke="#16140f" strokeWidth={HANDLE_BORDER / es}
+            fill={CANVAS.amberHandle} stroke={CANVAS.paper} strokeWidth={HANDLE_BORDER / es}
             onPointerDown={handleRotateDown}
           />
         </>
@@ -515,8 +516,8 @@ export function SheetPanel({
                 y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + vp.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
-                fill="rgba(212,161,58,0.2)"
-                stroke="#d4a13a"
+                fill={CANVAS.amberSelectionFill}
+                stroke={CANVAS.amber}
                 strokeWidth={1}
                 listening={false}
               />

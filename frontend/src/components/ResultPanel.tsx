@@ -17,6 +17,7 @@ import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
+import { CANVAS } from '../theme';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -41,11 +42,12 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: '8px 8px 0 0',
-        background: '#f3f4f6',
-        borderBottom: '1px solid #e5e7eb',
+        background: 'var(--chrome-700)',
+        borderBottom: '1px solid var(--hairline)',
+        color: 'var(--text-dim)',
       }}
     >
-      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="#9ca3af"/><circle cx="10" cy="2" r="1.5" fill="#9ca3af"/><circle cx="16" cy="2" r="1.5" fill="#9ca3af"/></svg>
+      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="currentColor"/><circle cx="10" cy="2" r="1.5" fill="currentColor"/><circle cx="16" cy="2" r="1.5" fill="currentColor"/></svg>
     </div>
   );
 }
@@ -133,7 +135,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? '#f59e0b' : isSelected ? '#d4a13a' : '#2d2d2d'}
+        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : CANVAS.lead}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         lineJoin="round"
         lineCap="round"
@@ -659,8 +661,8 @@ export function ResultPanel({
                       y={Math.min(marqueeBox.y1, marqueeBox.y2)}
                       width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
                       height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
-                      fill="rgba(212, 161, 58, 0.10)"
-                      stroke="#d4a13a"
+                      fill={CANVAS.amberSelectionFill}
+                      stroke={CANVAS.amber}
                       strokeWidth={1.5 / es}
                       dash={[4 / es, 2 / es]}
                       listening={false}
@@ -680,9 +682,9 @@ export function ResultPanel({
                       y={Math.min(drawingBox.y1, drawingBox.y2)}
                       width={Math.abs(drawingBox.x2 - drawingBox.x1)}
                       height={Math.abs(drawingBox.y2 - drawingBox.y1)}
-                      stroke="#f59e0b"
+                      stroke={CANVAS.drawingBoxStroke}
                       strokeWidth={2 / es}
-                      fill="rgba(245,158,11,0.08)"
+                      fill={CANVAS.drawingBoxFill}
                       dash={[6 / es, 4 / es]}
                       listening={false}
                     />
@@ -697,7 +699,7 @@ export function ResultPanel({
                           y={piece.promptBox.y1}
                           width={piece.promptBox.x2 - piece.promptBox.x1}
                           height={piece.promptBox.y2 - piece.promptBox.y1}
-                          stroke="rgba(245,158,11,0.3)"
+                          stroke={CANVAS.promptBoxStroke}
                           strokeWidth={1 / es}
                           dash={[4 / es, 6 / es]}
                           listening={false}
@@ -713,7 +715,7 @@ export function ResultPanel({
                         key={i}
                         x={pt.x} y={pt.y}
                         radius={5 / es}
-                        fill={pt.label === 1 ? '#d4a13a' : '#b04a3a'}
+                        fill={pt.label === 1 ? CANVAS.amber : CANVAS.ruby}
                         listening={false}
                       />
                     ));
