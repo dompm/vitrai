@@ -127,6 +127,8 @@ export function App() {
     createNewProject,
     switchProject,
     deleteProject,
+    saveStatus,
+    retrySave,
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
@@ -523,6 +525,21 @@ export function App() {
           >
             +
           </button>
+
+          <div className={`autosave autosave-${saveStatus}`} role="status" aria-live="polite">
+            <span className="autosave-dot" />
+            <span className="autosave-label">
+              {saveStatus === 'saving' ? t('autosaveSaving')
+                : saveStatus === 'error' ? t('autosaveFailed')
+                : t('autosaveSaved')}
+            </span>
+            {saveStatus === 'saved' && (
+              <span className="autosave-info" title={t('autosaveOfflineHint')}>ⓘ</span>
+            )}
+            {saveStatus === 'error' && (
+              <button className="autosave-retry" onClick={retrySave}>{t('autosaveRetry')}</button>
+            )}
+          </div>
 
           <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
