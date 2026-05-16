@@ -1200,7 +1200,6 @@ export function App() {
         </div>
       </div>
 
-<<<<<<< HEAD
       {pendingMove && pendingMoveLabels && (
         <MoveConfirmDialog
           count={pendingMoveLabels.count}
@@ -1214,9 +1213,7 @@ export function App() {
           }}
         />
       )}
-=======
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
->>>>>>> 0186166 (feat(#35): keyboard shortcuts overlay (?))
   </div>
   );
 }
