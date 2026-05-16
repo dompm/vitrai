@@ -119,6 +119,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       <select
         value={piece.glassSheetId}
         onChange={handleSheetSelect}
+        data-tutorial-target="piece-glass-select"
         style={{
           padding: '2px 6px',
           border: '1px solid var(--hairline-2)',

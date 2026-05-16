@@ -6,6 +6,10 @@ import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
+import { Tutorial } from './components/Tutorial/Tutorial';
+import { STEPS, STORAGE_KEY } from './components/Tutorial/types';
+import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
+import { DEFAULT_PROJECT } from './defaultProject';
 import './App.css';
 
 interface SheetTabProps {
@@ -141,6 +145,105 @@ export function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
+
+  // ─── Tutorial state ────────────────────────────────────────────────────────
+  const [tutorialStep, setTutorialStep] = useState<StepId | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const s = JSON.parse(raw) as PersistedTutorialState;
+        if (!s.completed) return s.step;
+      }
+    } catch { /* ignore */ }
+    return null;
+  });
+  const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return (JSON.parse(raw) as PersistedTutorialState).pieceId;
+    } catch { /* ignore */ }
+    return null;
+  });
+
+  const persistTutorial = (next: PersistedTutorialState) => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  };
+
+  const startTutorialTour = () => {
+    // Load the bundled sample (DEFAULT_PROJECT: mountains pattern + glass1/2/3 sheets)
+    // into a dedicated "Vitrai Tutorial" project slot. If real work is already
+    // loaded, create a fresh slot first; otherwise just load over the empty one.
+    const slotName = project.pieces.length > 0 || project.patternImageUrl
+      ? 'Vitrai Tutorial'
+      : project.name;
+    const sample = { ...DEFAULT_PROJECT, name: slotName };
+    if (slotName !== project.name) {
+      void createNewProject(slotName).then(() => loadProjectData(sample));
+    } else {
+      loadProjectData(sample);
+    }
+    setTutorialStep('calibrate-pattern');
+    setTutorialPieceId(null);
+    persistTutorial({ step: 'calibrate-pattern', completed: false, pieceId: null });
+  };
+
+  const advanceTutorial = () => {
+    setTutorialStep(curr => {
+      if (!curr) return curr;
+      const NEXT: Partial<Record<StepId, StepId>> = {
+        welcome: 'calibrate-pattern',
+        'calibrate-pattern': 'cut-piece',
+        'cut-piece': 'calibrate-sheet',
+        'calibrate-sheet': 'assign-glass',
+        'assign-glass': 'position-texture',
+        'position-texture': 'done',
+      };
+      const next = NEXT[curr] ?? null;
+      persistTutorial({ step: next, completed: false, pieceId: tutorialPieceId });
+      return next;
+    });
+  };
+
+  const setTrackedTutorialPiece = (id: string) => {
+    setTutorialPieceId(id);
+    persistTutorial({ step: tutorialStep, completed: false, pieceId: id });
+  };
+
+  const skipTutorial = () => {
+    setTutorialStep(null);
+    setTutorialPieceId(null);
+    persistTutorial({ step: null, completed: true, pieceId: null });
+  };
+
+  const completeTutorial = () => {
+    setTutorialStep(null);
+    setTutorialPieceId(null);
+    persistTutorial({ step: null, completed: true, pieceId: null });
+  };
+
+  // First-run auto-open: if user has never started/dismissed and no real work, open it.
+  useEffect(() => {
+    let completed = false;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) completed = (JSON.parse(raw) as PersistedTutorialState).completed;
+    } catch { /* ignore */ }
+    if (completed) return;
+    if (tutorialStep) return;                              // already running
+    if (project.pieces.length > 0) return;                 // user has work
+    if (project.patternImageUrl) return;                   // user has a pattern loaded
+    if (availableProjects.length > 1) return;              // existing returning user
+    setTutorialStep('welcome');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableProjects.length, project.pieces.length, project.patternImageUrl]);
+
+  // Force-tool decoders for each panel based on current step.
+  const tutorialPanelStep = tutorialStep && tutorialStep !== 'welcome' && tutorialStep !== 'done'
+    ? STEPS[tutorialStep] : null;
+  const forceToolPattern = tutorialPanelStep?.panel === 'pattern' ? tutorialPanelStep.forceTool ?? null : null;
+  const forceToolGlass = tutorialPanelStep?.panel === 'glass' ? tutorialPanelStep.forceTool ?? null : null;
 
   useEffect(() => { setNameDraft(project.name); }, [project.name]);
 
@@ -721,6 +824,7 @@ export function App() {
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
           debugMask={debugMask}
+          forceTool={forceToolPattern}
         />
       </div>
 
@@ -756,6 +860,7 @@ export function App() {
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            forceTool={forceToolGlass}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -837,8 +942,34 @@ export function App() {
           <button className="mobile-drawer-item" onClick={() => { handlePrint(); setIsMobileMenuOpen(false); }}>
             🖨️ {t('print')}
           </button>
+
+          <div className="mobile-drawer-divider" />
+
+          <button
+            className="mobile-drawer-item"
+            onClick={() => {
+              setTutorialStep('welcome');
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            {t('tutorialMenuItem')}
+          </button>
         </div>
       </div>
+
+      <Tutorial
+        step={tutorialStep}
+        pieceId={tutorialPieceId}
+        project={project}
+        selectedPieceIds={selectedPieceIds}
+        activeSheetId={activeSheetId}
+        onAdvance={advanceTutorial}
+        onSetTrackedPiece={setTrackedTutorialPiece}
+        onSelectPiece={(id) => selectPiece(id)}
+        onStartTour={startTutorialTour}
+        onSkip={skipTutorial}
+        onComplete={completeTutorial}
+      />
   </div>
   );
 }

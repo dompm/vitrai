@@ -104,6 +104,7 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
         <div key={tool.id} className="tooltip-wrapper">
           <button
             className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
+            data-tool-id={tool.id}
             onClick={() => !tool.disabled && onSelectTool(tool.id)}
             disabled={tool.disabled}
             style={tool.loading ? { position: 'relative' } : undefined}

@@ -165,6 +165,8 @@ interface ResultPanelProps {
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
+  /** Tutorial-driven override; when set, the toolbar uses this tool regardless of internal state. */
+  forceTool?: ToolId | null;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], pw: number, ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -231,10 +233,11 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask, forceTool,
 }: ResultPanelProps) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [internalActiveTool, setActiveTool] = useState<ToolId>('select');
+  const activeTool: ToolId = forceTool ?? internalActiveTool;
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const refineModeRef = useRef(refineMode);
@@ -459,6 +462,15 @@ export function ResultPanel({
     setActiveTool(id);
   }
 
+  // When the tutorial forces a tool, run the same side-effects as a user click
+  // (load measure line, switch active tool, etc.). Skip if the forced tool already matches.
+  useEffect(() => {
+    if (!forceTool) return;
+    if (forceTool === internalActiveTool) return;
+    handleToolChange(forceTool);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceTool]);
+
   function handleMeasureDragEnd(nx1: number, ny1: number, nx2: number, ny2: number) {
     if (!project.patternScale) return;
     const oldLine = project.patternScale.line;
@@ -580,7 +592,7 @@ export function ResultPanel({
   });
 
   return (
-    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}

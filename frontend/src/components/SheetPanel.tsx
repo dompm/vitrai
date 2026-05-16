@@ -157,13 +157,16 @@ interface SheetPanelProps {
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
+  /** Tutorial-driven override; when set, the toolbar uses this tool regardless of internal state. */
+  forceTool?: ToolId | null;
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad, forceTool,
 }: SheetPanelProps) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [internalActiveTool, setActiveTool] = useState<ToolId>('select');
+  const activeTool: ToolId = forceTool ?? internalActiveTool;
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
@@ -369,6 +372,13 @@ export function SheetPanel({
     setActiveTool(id);
   }
 
+  useEffect(() => {
+    if (!forceTool) return;
+    if (forceTool === internalActiveTool) return;
+    handleToolChange(forceTool);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceTool]);
+
   function setCursor(cursor: string) {
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
   }
@@ -428,7 +438,7 @@ export function SheetPanel({
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
   return (
-    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
