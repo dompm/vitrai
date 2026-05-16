@@ -72,7 +72,10 @@ const resources = {
       autosaveSaving: "Saving…",
       autosaveFailed: "Couldn't save",
       autosaveRetry: "Retry",
-      autosaveOfflineHint: "Your work lives in this browser only. Export a copy from the menu to share or back up."
+      autosaveOfflineHint: "Your work lives in this browser only. Export a copy from the menu to share or back up.",
+      printPrimary: "Print to scale",
+      printPrimaryTooltip: "Print pattern at true 1:1 scale (⌘⏎)",
+      printNoPieces: "Cut at least one piece to print."
     }
   },
   fr: {
@@ -144,7 +147,10 @@ const resources = {
       autosaveSaving: "Enregistrement…",
       autosaveFailed: "Échec d'enregistrement",
       autosaveRetry: "Réessayer",
-      autosaveOfflineHint: "Votre travail vit uniquement dans ce navigateur. Exportez une copie depuis le menu pour la partager ou la sauvegarder."
+      autosaveOfflineHint: "Votre travail vit uniquement dans ce navigateur. Exportez une copie depuis le menu pour la partager ou la sauvegarder.",
+      printPrimary: "Imprimer à l'échelle",
+      printPrimaryTooltip: "Imprimer le patron à l'échelle 1:1 (⌘⏎)",
+      printNoPieces: "Découpez au moins une pièce pour imprimer."
     }
   }
 };
