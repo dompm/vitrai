@@ -500,7 +500,7 @@ html, body, #root {
 .shortcuts-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(10, 8, 5, 0.5);
+  background: rgba(40, 30, 15, 0.35);
   backdrop-filter: blur(2px);
   z-index: 1100;
   display: flex;
@@ -510,14 +510,14 @@ html, body, #root {
 }
 
 .shortcuts-card {
-  background: var(--ink-800);
+  background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 12px;
   padding: 28px;
   width: min(720px, 100%);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 24px 64px rgba(40, 30, 15, 0.22);
 }
 
 .shortcuts-header {
@@ -550,7 +550,7 @@ html, body, #root {
 }
 
 .shortcuts-close:hover {
-  background: var(--ink-700);
+  background: var(--chrome-700);
   color: var(--text-bright);
 }
 
@@ -606,7 +606,7 @@ html, body, #root {
   font-family: "Inter Tight", monospace;
   font-size: 11px;
   color: var(--text-bright);
-  background: var(--ink-900);
+  background: var(--chrome-700);
   border: 1px solid var(--hairline-2);
   border-radius: 4px;
   padding: 2px 6px;
