@@ -138,6 +138,31 @@ html, body, #root {
   color: var(--text-dim);
 }
 
+.panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+}
+
+.panel-title-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+
+.panel-title-subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .btn-ghost {
   background: none;
   border: 1px solid var(--hairline-2);
@@ -166,6 +191,8 @@ html, body, #root {
   overflow-x: auto;
   flex-wrap: nowrap;
   scrollbar-width: none;
+  min-width: 0;
+  flex: 1;
 }
 
 .sheet-tabs::-webkit-scrollbar {

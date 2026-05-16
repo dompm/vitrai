@@ -547,11 +547,11 @@ export function App() {
             <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
             <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              {t('load')}
+              {t('openProject')}
               <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
             </label>
             <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
-              {t('save')}
+              {t('saveCopy')}
             </button>
 
             <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
@@ -573,10 +573,23 @@ export function App() {
       </header>
 
       <div className="main-container">
-        {/* ── Left: result view ── */}
+        {/* ── Left: pattern view ── */}
         <div className="panel panel-left">
           <div className="panel-header">
-            <span>{t('result')}</span>
+            <div className="panel-title">
+              <span className="panel-title-eyebrow">{t('pattern')}</span>
+              {project.patternImageUrl && (
+                <span className="panel-title-subtitle">
+                  {t('patternDimensions', { w: project.patternWidth, h: project.patternHeight })}
+                </span>
+              )}
+            </div>
+            {project.patternImageUrl && (
+              <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
+                {t('replacePattern')}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
+              </label>
+            )}
           </div>
         <ResultPanel
           project={project}
@@ -604,6 +617,12 @@ export function App() {
       {/* ── Right: glass sheet workspace ── */}
       <div className="panel panel-right">
         <div className="panel-header">
+          <div className="panel-title" style={{ flexShrink: 0 }}>
+            <span className="panel-title-eyebrow">{t('glass')}</span>
+            <span className="panel-title-subtitle">
+              {t('sheets', { count: project.sheets.length })}
+            </span>
+          </div>
           <div className="sheet-tabs">
             {project.sheets.map(sheet => (
               <SheetTab
@@ -701,12 +720,12 @@ export function App() {
           <div className="mobile-drawer-divider" />
 
           <label className="mobile-drawer-item" style={{ cursor: 'pointer' }}>
-            📂 {t('load')}
+            📂 {t('openProject')}
             <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => { handleLoadProject(e); setIsMobileMenuOpen(false); }} />
           </label>
 
           <button className="mobile-drawer-item" onClick={() => { handleSaveProject(); setIsMobileMenuOpen(false); }}>
-            💾 {t('save')}
+            💾 {t('saveCopy')}
           </button>
 
           <div className="mobile-drawer-divider" />
