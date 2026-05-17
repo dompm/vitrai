@@ -222,7 +222,7 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale) {
+      if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
       }
@@ -335,7 +335,9 @@ export function SheetPanel({
   }
 
   function handleToolChange(id: ToolId) {
-    if (id === activeTool && id !== 'select') {
+    if (forceTool && forceTool !== id) return;
+    if (forceTool === id && internalActiveTool === id) return;
+    if (id === internalActiveTool && id !== 'select') {
       setActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
@@ -364,7 +366,7 @@ export function SheetPanel({
       y2 = Math.max(0, Math.min(sheetH, y2));
 
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale) {
+      if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
       }

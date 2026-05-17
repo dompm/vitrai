@@ -413,7 +413,12 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
-    if (id === activeTool && id !== 'select') {
+    // While the tutorial forces a tool, all user tool clicks are no-ops —
+    // the tutorial owns the active tool. The force-tool effect routes through
+    // here too; it's allowed because the first call satisfies the second guard.
+    if (forceTool && forceTool !== id) return;
+    if (forceTool === id && internalActiveTool === id) return;
+    if (id === internalActiveTool && id !== 'select') {
       setActiveTool('select');
       setRefineMode(null);
       if (id === 'measure') measure.reset();
@@ -450,7 +455,9 @@ export function ResultPanel({
       measure.loadLine({ x1, y1, x2, y2 });
 
       // If there's no scale yet, initialize a default one (12 inches)
-      if (!project.patternScale) {
+      // — but skip during the tutorial so step 1 waits for a real user submission
+      //   instead of advancing on this placeholder.
+      if (!project.patternScale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onPatternScaleChange({
           pxPerUnit: px / 12,
