@@ -752,6 +752,18 @@ export function App() {
           <div className="header-secondary">
             <button
               className="btn-ghost"
+              onClick={() => setTutorialStep('welcome')}
+              title={t('tutorialMenuItem')}
+              aria-label={t('tutorialMenuItem')}
+              style={{ fontSize: '0.9rem', fontWeight: 600, padding: '4px 8px', minWidth: 26 }}
+            >
+              ?
+            </button>
+
+            <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
+
+            <button
+              className="btn-ghost"
               onClick={() => i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr')}
               title={i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
               style={{ fontSize: '0.8rem', fontWeight: 600, padding: '4px 8px' }}
