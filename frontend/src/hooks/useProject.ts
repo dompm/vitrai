@@ -38,6 +38,11 @@ function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
   };
 }
 
+/** Strip the last filename extension (e.g. "amber-rose.jpg" → "amber-rose"). */
+function stripExtension(name: string): string {
+  return name.replace(/\.[^./\\]+$/, '');
+}
+
 export function useProject() {
   const { t } = useTranslation();
   const [project, setProject] = useState<Project>(EMPTY_PROJECT);
@@ -311,6 +316,13 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updateSheetSwatch = useCallback((sheetId: string, swatch: string) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, swatch } : s)
+    }), true);
+  }, [updateProject]);
+
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -362,7 +374,7 @@ export function useProject() {
     updateProject(prev => {
       const newSheet = makeNewSheet(prev, t);
       if (url) newSheet.imageUrl = url;
-      if (label) newSheet.label = label;
+      if (label) newSheet.label = stripExtension(label);
       
       setActiveSheetId(newSheet.id);
 
@@ -491,9 +503,10 @@ export function useProject() {
 
   const addSheetFromImage = useCallback((url: string, label: string) => {
     const id = `sheet-${Date.now()}`;
+    const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
-        id, label, imageUrl: url,
+        id, label: cleanLabel, imageUrl: url,
         crop: { top: 0, left: 0, bottom: 0, right: 0 },
         scale: null,
       };
@@ -524,6 +537,7 @@ export function useProject() {
     updatePieceSheet,
     deleteSheet,
     renameSheet,
+    updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
     updatePatternScale,
