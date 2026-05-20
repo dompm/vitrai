@@ -158,6 +158,7 @@ function SheetTab({
           <button
             className="sheet-tab-menu-item"
             onClick={() => { setMenuPos(null); startEditing(); }}
+            onMouseEnter={() => setSubmenu(null)}
           >
             {t('contextRename')}
           </button>
@@ -174,6 +175,7 @@ function SheetTab({
                     e.stopPropagation();
                     setSubmenu(s => s === 'moveTo' ? null : 'moveTo');
                   }}
+                  onMouseEnter={() => setSubmenu(moveToDisabled ? null : 'moveTo')}
                   aria-disabled={moveToDisabled}
                 >
                   <span className="sheet-tab-menu-label">
@@ -218,6 +220,7 @@ function SheetTab({
                     e.stopPropagation();
                     setSubmenu(s => s === 'moveFrom' ? null : 'moveFrom');
                   }}
+                  onMouseEnter={() => setSubmenu(moveFromDisabled ? null : 'moveFrom')}
                   aria-disabled={moveFromDisabled}
                 >
                   <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
@@ -245,6 +248,7 @@ function SheetTab({
             <button
               className="sheet-tab-menu-item sheet-tab-menu-item-danger"
               onClick={() => { setMenuPos(null); onDelete(); }}
+              onMouseEnter={() => setSubmenu(null)}
             >
               {t('contextDelete')}
             </button>
