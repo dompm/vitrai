@@ -126,3 +126,13 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
     return subject;
   }
 }
+
+export function arePolygonsEqual(p1: [number, number][], p2: [number, number][], epsilon = 0.1): boolean {
+  if (p1.length !== p2.length) return false;
+  for (let i = 0; i < p1.length; i++) {
+    if (Math.abs(p1[i][0] - p2[i][0]) > epsilon || Math.abs(p1[i][1] - p2[i][1]) > epsilon) {
+      return false;
+    }
+  }
+  return true;
+}

@@ -508,6 +508,13 @@ export function useProject() {
     }), skipHistory);
   }, [updateProject]);
 
+  const updatePiecePolygonAndCurves = useCallback((pieceId: string, polygon: [number, number][], curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p)
+    }), skipHistory);
+  }, [updateProject]);
+
   const markPiecePending = useCallback((pieceId: string) => {
     setPendingPieceIds(s => new Set(s).add(pieceId));
   }, []);
@@ -583,6 +590,7 @@ export function useProject() {
     batchAddPieces,
     updatePiecePolygon,
     updatePieceCurves,
+    updatePiecePolygonAndCurves,
     updatePiecePrompt,
     addPiecePromptPoint,
     markPiecePending,

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
-import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves } from './utils/geometry';
+import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint } from './types';
@@ -189,6 +189,7 @@ export function App() {
     batchAddPieces,
     updatePiecePolygon,
     updatePieceCurves,
+    updatePiecePolygonAndCurves,
     updatePiecePrompt,
     addPiecePromptPoint,
     markPiecePending,
@@ -324,7 +325,7 @@ export function App() {
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
-      if (clipped.length >= 3) { updatePiecePolygon(pieceId, clipped, true); updatePieceCurves(pieceId, [], true); }
+      if (clipped.length >= 3) { updatePiecePolygonAndCurves(pieceId, clipped, [], true); }
     } catch (e) {
       console.error(e);
     } finally {
@@ -335,21 +336,39 @@ export function App() {
   function handleSmoothPiece(pieceId: string) {
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece) return;
-    updatePiecePolygon(pieceId, smoothPolygon(piece.polygon));
+    updatePiecePolygonAndCurves(pieceId, smoothPolygon(piece.polygon), []);
   }
 
   function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
     const others = project.pieces.filter(p => p.id !== pieceId);
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
     const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
     const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
-      updatePiecePolygon(pieceId, clipped);
+      if (clipped.length !== piece.polygon.length) {
+        updatePiecePolygonAndCurves(pieceId, clipped, []);
+      } else {
+        updatePiecePolygon(pieceId, clipped);
+      }
     }
   }
 
   function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[]) {
-    updatePieceCurves(pieceId, curvePoints);
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    const flatPolygon = flattenCurves(piece.polygon, curvePoints);
+    const others = project.pieces.filter(p => p.id !== pieceId);
+    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+    const snapped = snapPolygonToNeighbors(flatPolygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, neighborPolygons);
+
+    if (clipped.length >= 3 && !arePolygonsEqual(flatPolygon, clipped, 0.1)) {
+      updatePiecePolygonAndCurves(pieceId, clipped, []);
+    } else {
+      updatePieceCurves(pieceId, curvePoints);
+    }
   }
 
 
@@ -454,7 +473,8 @@ export function App() {
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     pieces.forEach(piece => {
-      piece.polygon.forEach(pt => {
+      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+      displayPoly.forEach(pt => {
         if (pt[0] < minX) minX = pt[0];
         if (pt[1] < minY) minY = pt[1];
         if (pt[0] > maxX) maxX = pt[0];
@@ -514,8 +534,9 @@ export function App() {
     const imageTag = `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
 
     const polygonsContent = pieces.map((piece, index) => {
-      const pts = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
-      const c = computeCentroid(piece.polygon);
+      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+      const pts = displayPoly.map(p => `${p[0]},${p[1]}`).join(' ');
+      const c = computeCentroid(displayPoly);
       return `<polygon points="${pts}" class="po" /><text x="${c.x}" y="${c.y}" class="pl">${index + 1}</text>`;
     }).join('');
 
