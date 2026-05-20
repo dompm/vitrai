@@ -7,10 +7,10 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -161,6 +161,7 @@ interface ResultPanelProps {
   onAddSheetAndAssignPiece: (id: string) => void;
   onDeletePiece: (id: string) => void;
   onSmoothPiece: (id: string) => void;
+  onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
@@ -230,10 +231,82 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
   return target;
 }
 
+function getSquareSegmentDistance(p: [number, number], p1: [number, number], p2: [number, number]): number {
+  let x = p1[0];
+  let y = p1[1];
+  let dx = p2[0] - x;
+  let dy = p2[1] - y;
+  
+  if (dx !== 0 || dy !== 0) {
+    const t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
+    if (t > 1) {
+      x = p2[0];
+      y = p2[1];
+    } else if (t > 0) {
+      x += dx * t;
+      y += dy * t;
+    }
+  }
+  
+  dx = p[0] - x;
+  dy = p[1] - y;
+  return dx * dx + dy * dy;
+}
+
+function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
+  if (points.length <= 2) return points;
+  
+  let maxSqDist = 0;
+  let index = 0;
+  const end = points.length - 1;
+  
+  for (let i = 1; i < end; i++) {
+    const sqDist = getSquareSegmentDistance(points[i], points[0], points[end]);
+    if (sqDist > maxSqDist) {
+      index = i;
+      maxSqDist = sqDist;
+    }
+  }
+  
+  if (maxSqDist > epsilon * epsilon) {
+    const results1 = simplifyPath(points.slice(0, index + 1), epsilon);
+    const results2 = simplifyPath(points.slice(index), epsilon);
+    return results1.slice(0, results1.length - 1).concat(results2);
+  }
+  
+  return [points[0], points[end]];
+}
+
+function getCurvedPolygon(polygon: [number, number][], idx: number, handleX: number, handleY: number): [number, number][] {
+  const len = polygon.length;
+  const idxNext = (idx + 1) % len;
+  const A = polygon[idx];
+  const B = polygon[idxNext];
+  
+  const ctrlX = 2 * handleX - 0.5 * (A[0] + B[0]);
+  const ctrlY = 2 * handleY - 0.5 * (A[1] + B[1]);
+  
+  const curvePoints: [number, number][] = [];
+  const numSegments = 10;
+  for (let step = 1; step < numSegments; step++) {
+    const t = step / numSegments;
+    const mt = 1 - t;
+    const cx = mt * mt * A[0] + 2 * t * mt * ctrlX + t * t * B[0];
+    const cy = mt * mt * A[1] + 2 * t * mt * ctrlY + t * t * B[1];
+    curvePoints.push([cx, cy]);
+  }
+  
+  if (idxNext === 0) {
+    return [...polygon, ...curvePoints];
+  } else {
+    return [...polygon.slice(0, idx + 1), ...curvePoints, ...polygon.slice(idxNext)];
+  }
+}
+
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePiecePolygon, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -247,6 +320,13 @@ export function ResultPanel({
   const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
+
+  const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
+  const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; idx: number } | null>(null);
+  const [dragStartPolygon, setDragStartPolygon] = useState<[number, number][] | null>(null);
+  const [activeDragPolygon, setActiveDragPolygon] = useState<[number, number][] | null>(null);
+
+  const [pencilPoints, setPencilPoints] = useState<[number, number][]>([]);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -297,6 +377,7 @@ export function ResultPanel({
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b' && !isEncoding) handleToolChange('box');
       else if (e.key === 'p') handleToolChange('pen');
+      else if (e.key === 'n') handleToolChange('pencil');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
@@ -374,6 +455,12 @@ export function ResultPanel({
       return;
     }
 
+    if (activeTool === 'pencil') {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      setPencilPoints([[x, y]]);
+      return;
+    }
+
     if (activeTool === 'box' && !isEncoding) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
@@ -408,6 +495,13 @@ export function ResultPanel({
       if (activePolygonPointsRef.current.length > 0) {
         const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
         setHoverPoint([x, y]);
+      }
+      return;
+    }
+    if (activeTool === 'pencil') {
+      if (pencilPoints.length > 0) {
+        const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+        setPencilPoints(prev => [...prev, [x, y]]);
       }
       return;
     }
@@ -449,6 +543,16 @@ export function ResultPanel({
       setMarqueeBox(null);
       return;
     }
+    if (activeTool === 'pencil') {
+      if (pencilPoints.length >= 3) {
+        const simplified = simplifyPath(pencilPoints, 2 / vp.effectiveScale);
+        if (simplified.length >= 3) {
+          onAddManualPiece(simplified);
+        }
+      }
+      setPencilPoints([]);
+      return;
+    }
     vp.endPan();
   }
 
@@ -470,6 +574,13 @@ export function ResultPanel({
       setActivePolygonPoints([]);
       setHoverPoint(null);
     }
+    if (id !== 'pencil') {
+      setPencilPoints([]);
+    }
+    setDraggedCorner(null);
+    setDraggedMidpoint(null);
+    setDragStartPolygon(null);
+    setActiveDragPolygon(null);
 
     if (id === 'detect-all') {
       if (!isEncoding) onAutoSegment?.();
@@ -593,6 +704,17 @@ export function ResultPanel({
       },
     },
     {
+      id: 'pencil' as ToolId,
+      label: t('toolDrawPencil'),
+      icon: <PencilIcon />,
+      tooltip: {
+        name: t('tooltipPencilName'),
+        shortcut: 'N',
+        description: t('tooltipPencilDesc'),
+        animation: <PencilAnimation />,
+      },
+    },
+    {
       id: 'detect-all' as ToolId,
       label: t('toolDetectAll'),
       icon: <DetectAllIcon />,
@@ -700,10 +822,13 @@ export function ResultPanel({
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIds.includes(piece.id);
+                    const displayPiece = (isSelected && activeDragPolygon)
+                      ? { ...piece, polygon: activeDragPolygon }
+                      : piece;
                     return (
                       <PieceOverlay
                         key={piece.id}
-                        piece={piece}
+                        piece={displayPiece}
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
@@ -768,6 +893,16 @@ export function ResultPanel({
                         );
                       })}
                     </Group>
+                  )}
+                  {activeTool === 'pencil' && pencilPoints.length > 0 && (
+                    <Line
+                      points={pencilPoints.flat()}
+                      stroke="#2563eb"
+                      strokeWidth={2.5 / es}
+                      lineJoin="round"
+                      lineCap="round"
+                      dash={[4 / es, 3 / es]}
+                    />
                   )}
                   {marqueeBox && (
                     <Rect
@@ -834,6 +969,122 @@ export function ResultPanel({
                       />
                     ));
                   })}
+                  {activeTool === 'select' && selectedPieceIds.length === 1 && (() => {
+                    const selectedId = selectedPieceIds[0];
+                    const piece = project.pieces.find(p => p.id === selectedId);
+                    if (!piece) return null;
+
+                    const referencePolygon = dragStartPolygon || piece.polygon;
+                    const len = referencePolygon.length;
+
+                    return (
+                      <Group>
+                        {referencePolygon.map(([x, y], idx) => {
+                          const currentX = (draggedCorner?.idx === idx && activeDragPolygon)
+                            ? activeDragPolygon[idx][0]
+                            : x;
+                          const currentY = (draggedCorner?.idx === idx && activeDragPolygon)
+                            ? activeDragPolygon[idx][1]
+                            : y;
+
+                          return (
+                            <Circle
+                              key={`corner-${idx}`}
+                              x={currentX}
+                              y={currentY}
+                              radius={6 / es}
+                              fill="#ffffff"
+                              stroke="#1d4ed8"
+                              strokeWidth={2 / es}
+                              draggable
+                              onDragStart={() => {
+                                setDraggedCorner({ pieceId: selectedId, idx });
+                                setDragStartPolygon(piece.polygon);
+                                setActiveDragPolygon(piece.polygon);
+                              }}
+                              onDragMove={(e) => {
+                                if (!dragStartPolygon) return;
+                                const newPolygon = [...dragStartPolygon];
+                                newPolygon[idx] = [e.target.x(), e.target.y()];
+                                setActiveDragPolygon(newPolygon);
+                              }}
+                              onDragEnd={(e) => {
+                                if (!dragStartPolygon) {
+                                  setDraggedCorner(null);
+                                  return;
+                                }
+                                const newPolygon = [...dragStartPolygon];
+                                newPolygon[idx] = [e.target.x(), e.target.y()];
+                                onUpdatePiecePolygon(selectedId, newPolygon);
+                                setDraggedCorner(null);
+                                setDragStartPolygon(null);
+                                setActiveDragPolygon(null);
+                              }}
+                              onMouseEnter={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'move';
+                              }}
+                              onMouseLeave={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'default';
+                              }}
+                            />
+                          );
+                        })}
+
+                        {!draggedCorner && referencePolygon.map(([x, y], idx) => {
+                          const idxNext = (idx + 1) % len;
+                          const nextPt = referencePolygon[idxNext];
+                          const midX = (x + nextPt[0]) / 2;
+                          const midY = (y + nextPt[1]) / 2;
+                          const dist = Math.hypot(nextPt[0] - x, nextPt[1] - y) * es;
+                          if (dist < 15 && draggedMidpoint?.idx !== idx) return null;
+
+                          return (
+                            <Circle
+                              key={`mid-${idx}`}
+                              x={midX}
+                              y={midY}
+                              radius={5 / es}
+                              fill="#3b82f6"
+                              stroke="#ffffff"
+                              strokeWidth={1.5 / es}
+                              draggable
+                              onDragStart={() => {
+                                setDraggedMidpoint({ pieceId: selectedId, idx });
+                                setDragStartPolygon(piece.polygon);
+                                setActiveDragPolygon(piece.polygon);
+                              }}
+                              onDragMove={(e) => {
+                                if (!dragStartPolygon) return;
+                                const newPolygon = getCurvedPolygon(dragStartPolygon, idx, e.target.x(), e.target.y());
+                                setActiveDragPolygon(newPolygon);
+                              }}
+                              onDragEnd={(e) => {
+                                if (!dragStartPolygon) {
+                                  setDraggedMidpoint(null);
+                                  return;
+                                }
+                                const newPolygon = getCurvedPolygon(dragStartPolygon, idx, e.target.x(), e.target.y());
+                                onUpdatePiecePolygon(selectedId, newPolygon);
+                                setDraggedMidpoint(null);
+                                setDragStartPolygon(null);
+                                setActiveDragPolygon(null);
+                              }}
+                              onMouseEnter={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'pointer';
+                              }}
+                              onMouseLeave={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'default';
+                              }}
+                            />
+                          );
+                        })}
+                      </Group>
+                    );
+                  })()}
                   {activeTool === 'measure' && measure.line && (
                     <MeasureLineOverlay
                       line={measure.line}
