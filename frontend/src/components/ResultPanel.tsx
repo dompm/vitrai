@@ -279,6 +279,50 @@ function simplifyPath(points: [number, number][], epsilon: number): [number, num
   return [points[0], points[end]];
 }
 
+// Screen-space radius used for: pen tool snap-to-neighbor-vertex, and the
+// "edge long enough" test that decides which vertices are eligible snap
+// targets (and which corner handles are visible). Both share the threshold
+// so the snap set always matches the visible handle set at any zoom.
+const PEN_SNAP_PX = 14;
+
+function isStructuralCorner(
+  polygon: [number, number][],
+  idx: number,
+  effectiveScale: number,
+  thresholdPx = PEN_SNAP_PX,
+): boolean {
+  const len = polygon.length;
+  const [x, y] = polygon[idx];
+  const next = polygon[(idx + 1) % len];
+  const prev = polygon[(idx - 1 + len) % len];
+  const edgeLen = Math.hypot(next[0] - x, next[1] - y) * effectiveScale;
+  const prevEdgeLen = Math.hypot(x - prev[0], y - prev[1]) * effectiveScale;
+  return edgeLen >= thresholdPx || prevEdgeLen >= thresholdPx;
+}
+
+function findPenSnapTarget(
+  cursor: [number, number],
+  pieces: Piece[],
+  effectiveScale: number,
+): [number, number] | null {
+  let best: [number, number] | null = null;
+  let bestPxDist = PEN_SNAP_PX;
+  for (const piece of pieces) {
+    const polygon = flattenCurves(piece.polygon, piece.curvePoints);
+    for (let i = 0; i < polygon.length; i++) {
+      if (!isStructuralCorner(polygon, i, effectiveScale)) continue;
+      const dx = polygon[i][0] - cursor[0];
+      const dy = polygon[i][1] - cursor[1];
+      const dist = Math.hypot(dx, dy) * effectiveScale;
+      if (dist < bestPxDist) {
+        bestPxDist = dist;
+        best = [polygon[i][0], polygon[i][1]];
+      }
+    }
+  }
+  return best;
+}
+
 
 
 export function ResultPanel({
@@ -297,6 +341,7 @@ export function ResultPanel({
 
   const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
   const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
+  const [hoverSnapped, setHoverSnapped] = useState(false);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
 
@@ -340,6 +385,7 @@ export function ResultPanel({
     }
     setActivePolygonPoints([]);
     setHoverPoint(null);
+    setHoverSnapped(false);
   }
 
   useEffect(() => {
@@ -383,6 +429,7 @@ export function ResultPanel({
         } else if (activePolygonPointsRef.current.length > 0) {
           setActivePolygonPoints([]);
           setHoverPoint(null);
+          setHoverSnapped(false);
         } else {
           handleToolChange('select');
         }
@@ -440,7 +487,8 @@ export function ResultPanel({
           return;
         }
       }
-      setActivePolygonPoints(prev => [...prev, [x, y]]);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      setActivePolygonPoints(prev => [...prev, snap ?? [x, y]]);
       return;
     }
 
@@ -483,7 +531,9 @@ export function ResultPanel({
     if (activeTool === 'pen') {
       if (activePolygonPointsRef.current.length > 0) {
         const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-        setHoverPoint([x, y]);
+        const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+        setHoverPoint(snap ?? [x, y]);
+        setHoverSnapped(snap !== null);
       }
       return;
     }
@@ -562,6 +612,7 @@ export function ResultPanel({
     if (id !== 'pen') {
       setActivePolygonPoints([]);
       setHoverPoint(null);
+      setHoverSnapped(false);
     }
     if (id !== 'pencil') {
       setPencilPoints([]);
@@ -859,6 +910,16 @@ export function ResultPanel({
                           dash={[4 / es, 4 / es]}
                         />
                       )}
+                      {hoverPoint && hoverSnapped && (
+                        <Circle
+                          x={hoverPoint[0]}
+                          y={hoverPoint[1]}
+                          radius={6 / es}
+                          fill={CANVAS.amber}
+                          stroke={CANVAS.paper}
+                          strokeWidth={2 / es}
+                        />
+                      )}
                       {activePolygonPoints.map(([x, y], idx) => {
                         const isStart = idx === 0;
                         const isCloseEnough = isStart && hoverPoint && (Math.hypot(hoverPoint[0] - x, hoverPoint[1] - y) * es < 15);
@@ -977,13 +1038,8 @@ export function ResultPanel({
                       <Group>
                         {/* Corner handles — only on edges long enough to be worth dragging */}
                         {referencePolygon.map(([x, y], idx) => {
-                          const nextPt = referencePolygon[(idx + 1) % len];
-                          const edgeLen = Math.hypot(nextPt[0] - x, nextPt[1] - y) * es;
-                          const prevIdx = (idx - 1 + len) % len;
-                          const prevPt = referencePolygon[prevIdx];
-                          const prevEdgeLen = Math.hypot(x - prevPt[0], y - prevPt[1]) * es;
                           // Show corner if either adjacent edge is long enough
-                          if (edgeLen < MIN_HANDLE_PX && prevEdgeLen < MIN_HANDLE_PX && draggedCorner?.idx !== idx) return null;
+                          if (!isStructuralCorner(referencePolygon, idx, es, MIN_HANDLE_PX) && draggedCorner?.idx !== idx) return null;
 
                           const currentX = (draggedCorner?.idx === idx && activeDragPolygon)
                             ? activeDragPolygon[idx][0] : x;
