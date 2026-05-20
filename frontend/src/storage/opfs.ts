@@ -1,7 +1,4 @@
 import type { Project } from '../types';
-import { EMPTY_PROJECT } from '../defaultProject';
-
-const FILENAME = 'vitraux-project.json';
 
 export async function listProjects(): Promise<string[]> {
   try {

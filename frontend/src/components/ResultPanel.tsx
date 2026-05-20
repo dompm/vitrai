@@ -56,17 +56,16 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 interface PieceOverlayProps {
   piece: Piece;
-  displayPolygon: [number, number][]; // flattened curved polygon for clip/render
+  displayPolygon: [number, number][];
   glassImageUrl: string;
   isSelected: boolean;
   isPending: boolean;
-  effectiveScale: number;
   opacity?: number;
   solderWidth: number;
   onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, effectiveScale, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -80,7 +79,7 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
-  function clipPolygon(ctx: CanvasRenderingContext2D) {
+  function clipPolygon(ctx: any) {
     ctx.beginPath();
     displayPolygon.forEach(([x, y], i) => {
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
@@ -159,7 +158,7 @@ interface ResultPanelProps {
   onAddManualPiece: (polygon: [number, number][]) => void;
   onUpdatePieceLabel: (id: string, label: string) => void;
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
-  onAddSheetAndAssignPiece: (id: string) => void;
+  onAddSheetAndAssignPiece: (id: string, url?: string, label?: string) => void;
   onDeletePiece: (id: string) => void;
   onSmoothPiece: (id: string) => void;
   onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
@@ -172,7 +171,7 @@ interface ResultPanelProps {
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
 }
 
-function getTooltipAnchor(piece: Piece, allPieces: Piece[], pw: number, ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
+function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
   const xs = piece.polygon.map(p => p[0]);
   const ys = piece.polygon.map(p => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -529,12 +528,10 @@ export function ResultPanel({
       return;
     }
     if (activeTool === 'pen') {
-      if (activePolygonPointsRef.current.length > 0) {
-        const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-        const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-        setHoverPoint(snap ?? [x, y]);
-        setHoverSnapped(snap !== null);
-      }
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      setHoverPoint(snap ?? [x, y]);
+      setHoverSnapped(snap !== null);
       return;
     }
     if (activeTool === 'pencil') {
@@ -876,7 +873,6 @@ export function ResultPanel({
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
-                        effectiveScale={es}
                         solderWidth={solderWidth}
                         onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
                       />
@@ -902,7 +898,7 @@ export function ResultPanel({
                           lineCap="round"
                         />
                       )}
-                      {hoverPoint && (
+                      {hoverPoint && activePolygonPoints.length > 0 && (
                         <Line
                           points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
                           stroke={CANVAS.amber}
@@ -1029,7 +1025,6 @@ export function ResultPanel({
                     if (!piece) return null;
 
                     const referencePolygon = dragStartPolygon || piece.polygon;
-                    const referenceCurves = dragStartCurvePointsRef.current;
                     const len = referencePolygon.length;
                     // Min screen-space edge length to show a handle (avoids clutter on dense polygons)
                     const MIN_HANDLE_PX = 14;

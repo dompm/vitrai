@@ -181,7 +181,6 @@ export function App() {
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
-    addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
     addManualPiece,
@@ -190,7 +189,6 @@ export function App() {
     updatePiecePolygon,
     updatePieceCurves,
     updatePiecePolygonAndCurves,
-    updatePiecePrompt,
     addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
@@ -256,6 +254,10 @@ export function App() {
   // Re-encode whenever the pattern image changes.
   useEffect(() => {
     setPatternImageId(null);
+    if (!project.patternImageUrl) {
+      setBackendStatus("No pattern image uploaded");
+      return;
+    }
     const backend = getSamBackend(setBackendStatus);
     let cancelled = false;
     backend.encode(project.patternImageUrl)
@@ -373,7 +375,6 @@ export function App() {
 
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const selectedPiece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]) ?? null;
   const piecesOnActiveSheet = project.pieces
     .filter(p => p.glassSheetId === activeSheetId)
     .sort((a, b) => {

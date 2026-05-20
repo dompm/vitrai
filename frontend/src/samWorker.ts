@@ -1,4 +1,4 @@
-import * as ort from "onnxruntime-web";
+import * as ort from "onnxruntime-web/webgpu";
 
 // onnxruntime-web's WASM backend can spawn Emscripten pthread workers using
 // this module's own URL when its preferred worker script isn't reachable.
@@ -27,20 +27,23 @@ const MASK_THRESHOLD = 0;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type WorkerInMsg =
-  | { type: 'encode';  id: string; imageUrl: string }
-  | { type: 'segment'; id: string; sessionId: string;
+  | { type: 'encode';      id: string; imageUrl: string }
+  | { type: 'segment';     id: string; sessionId: string;
       box?: [number, number, number, number];
-      points?: [number, number, number][] };
+      points?: [number, number, number][] }
+  | { type: 'autoSegment'; id: string; sessionId: string };
 
 export type WorkerOutMsg =
-  | { type: 'ready';        device: string }
-  | { type: 'init:error';   error: string }
-  | { type: 'status';       text: string }
-  | { type: 'encode:done';  id: string; sessionId: string }
-  | { type: 'encode:error'; id: string; error: string }
-  | { type: 'segment:done'; id: string; polygon: [number, number][];
+  | { type: 'ready';            device: string }
+  | { type: 'init:error';       error: string }
+  | { type: 'status';           text: string }
+  | { type: 'encode:done';      id: string; sessionId: string }
+  | { type: 'encode:error';     id: string; error: string }
+  | { type: 'segment:done';     id: string; polygon: [number, number][];
       debugMask?: { bitmap: ImageBitmap; width: number; height: number } }
-  | { type: 'segment:error';id: string; error: string };
+  | { type: 'segment:error';    id: string; error: string }
+  | { type: 'autoSegment:done'; id: string; polygons: [number, number][][] }
+  | { type: 'autoSegment:error';id: string; error: string };
 
 // ─── State ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +51,21 @@ interface CachedEmbed {
   origW: number; origH: number;
   scale: number; padX: number; padY: number;
   encoderOut: Record<string, ort.Tensor>;
+}
+
+interface SerializedTensor {
+  type: string;
+  dims: number[];
+  data: ArrayBuffer;
+}
+
+interface SerializedCachedEmbed {
+  origW: number;
+  origH: number;
+  scale: number;
+  padX: number;
+  padY: number;
+  encoderOut: Record<string, SerializedTensor>;
 }
 
 let encoderSession: ort.InferenceSession | null = null;
@@ -86,30 +104,142 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
   }
 }
 
-async function init() {
-  if (initStarted) return;
-  initStarted = true;
-  try {
-    post({ type: 'status', text: 'Initializing SAM2 models…' });
+// ─── IndexedDB Caching ────────────────────────────────────────────────────────
 
-    // Load models (concurrently if possible, but OPFS might be serial)
-    const [encModel, encData, decModel, decData] = await Promise.all([
-      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
-      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
+function serializeTensor(tensor: ort.Tensor): SerializedTensor {
+  const data = (tensor.data as ArrayBufferView).buffer.slice(
+    (tensor.data as ArrayBufferView).byteOffset,
+    (tensor.data as ArrayBufferView).byteOffset + (tensor.data as ArrayBufferView).byteLength
+  ) as ArrayBuffer;
+  return {
+    type: tensor.type,
+    dims: [...tensor.dims],
+    data
+  };
+}
+
+function deserializeTensor(s: SerializedTensor): ort.Tensor {
+  let typedArray: any;
+  if (s.type === 'float32') {
+    typedArray = new Float32Array(s.data);
+  } else if (s.type === 'int32') {
+    typedArray = new Int32Array(s.data);
+  } else {
+    throw new Error(`Unsupported tensor type for deserialization: ${s.type}`);
+  }
+  return new ort.Tensor(s.type, typedArray, s.dims);
+}
+
+function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('vitraux-sam-cache', 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains('encodings')) {
+        db.createObjectStore('encodings');
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function getEmbedFromDB(imageUrl: string): Promise<CachedEmbed | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('encodings', 'readonly');
+      const store = tx.objectStore('encodings');
+      const req = store.get(imageUrl);
+      req.onsuccess = () => {
+        const val = req.result as SerializedCachedEmbed | undefined;
+        if (!val) {
+          resolve(null);
+          return;
+        }
+        try {
+          const encoderOut: Record<string, ort.Tensor> = {};
+          for (const key of Object.keys(val.encoderOut)) {
+            encoderOut[key] = deserializeTensor(val.encoderOut[key]);
+          }
+          resolve({
+            origW: val.origW,
+            origH: val.origH,
+            scale: val.scale,
+            padX: val.padX,
+            padY: val.padY,
+            encoderOut
+          });
+        } catch (e) {
+          console.warn('[SAM Worker] Failed to deserialize cached embed:', e);
+          resolve(null);
+        }
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('[SAM Worker] IndexedDB read failed:', err);
+    return null;
+  }
+}
+
+async function saveEmbedToDB(imageUrl: string, embed: CachedEmbed): Promise<void> {
+  try {
+    const db = await openDB();
+    const encoderOut: Record<string, SerializedTensor> = {};
+    for (const key of Object.keys(embed.encoderOut)) {
+      encoderOut[key] = serializeTensor(embed.encoderOut[key]);
+    }
+    const serialized: SerializedCachedEmbed = {
+      origW: embed.origW,
+      origH: embed.origH,
+      scale: embed.scale,
+      padX: embed.padX,
+      padY: embed.padY,
+      encoderOut
+    };
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction('encodings', 'readwrite');
+      const store = tx.objectStore('encodings');
+      const req = store.put(serialized, imageUrl);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (err) {
+    console.warn('[SAM Worker] IndexedDB write failed:', err);
+  }
+}
+
+// ─── Lazy Model Init ──────────────────────────────────────────────────────────
+
+let initDecoderStarted = false;
+let initEncoderStarted = false;
+let decoderReadyPromise: Promise<void> | null = null;
+let encoderReadyPromise: Promise<void> | null = null;
+
+async function initDecoder() {
+  if (decoderSession) return;
+  if (initDecoderStarted) {
+    await decoderReadyPromise;
+    return;
+  }
+  initDecoderStarted = true;
+  let resolveReady!: () => void;
+  let rejectReady!: (e: Error) => void;
+  decoderReadyPromise = new Promise<void>((res, rej) => {
+    resolveReady = res;
+    rejectReady = rej;
+  });
+
+  try {
+    post({ type: 'status', text: 'Loading SAM2 decoder model…' });
+    const [decModel, decData] = await Promise.all([
       fetchCached(DECODER_URL, 'sam2_base_decoder.onnx'),
       fetchCached(DECODER_DATA_URL, 'sam2_base_decoder.onnx_data'),
     ]);
 
+    post({ type: 'status', text: 'Compiling SAM2 decoder model…' });
     const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
-
-    encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
-      executionProviders: ep,
-      externalData: [{
-        data: new Uint8Array(encData),
-        path: 'vision_encoder.onnx_data'
-      }]
-    });
-
     decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
       executionProviders: ep,
       externalData: [{
@@ -117,7 +247,58 @@ async function init() {
         path: 'prompt_encoder_mask_decoder.onnx_data'
       }]
     });
+    resolveReady();
+  } catch (err) {
+    console.error("[SAM Worker] Decoder initialization failed:", err);
+    rejectReady(err instanceof Error ? err : new Error(String(err)));
+    throw err;
+  }
+}
 
+async function initEncoder() {
+  if (encoderSession) return;
+  if (initEncoderStarted) {
+    await encoderReadyPromise;
+    return;
+  }
+  initEncoderStarted = true;
+  let resolveReady!: () => void;
+  let rejectReady!: (e: Error) => void;
+  encoderReadyPromise = new Promise<void>((res, rej) => {
+    resolveReady = res;
+    rejectReady = rej;
+  });
+
+  try {
+    post({ type: 'status', text: 'Loading SAM2 encoder model…' });
+    const [encModel, encData] = await Promise.all([
+      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
+      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
+    ]);
+
+    post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
+    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
+      executionProviders: ep,
+      externalData: [{
+        data: new Uint8Array(encData),
+        path: 'vision_encoder.onnx_data'
+      }]
+    });
+    resolveReady();
+  } catch (err) {
+    console.error("[SAM Worker] Encoder initialization failed:", err);
+    rejectReady(err instanceof Error ? err : new Error(String(err)));
+    throw err;
+  }
+}
+
+async function init() {
+  if (initStarted) return;
+  initStarted = true;
+  try {
+    post({ type: 'status', text: 'Initializing SAM2 models…' });
+    await initDecoder();
     post({ type: 'ready', device: 'webgpu' });
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);
@@ -175,10 +356,22 @@ async function encode(id: string, imageUrl: string) {
     return;
   }
 
+  const dbCached = await getEmbedFromDB(imageUrl);
+  if (dbCached) {
+    cache.set(imageUrl, dbCached);
+    post({ type: 'encode:done', id, sessionId: imageUrl });
+    return;
+  }
+
+  await initEncoder();
+
   const { tensor, origW, origH, scale, padX, padY } = await loadAndPreprocess(imageUrl);
   const encoderOut = await encoderSession!.run({ pixel_values: tensor });
 
-  cache.set(imageUrl, { origW, origH, scale, padX, padY, encoderOut });
+  const embed: CachedEmbed = { origW, origH, scale, padX, padY, encoderOut };
+  cache.set(imageUrl, embed);
+  await saveEmbedToDB(imageUrl, embed);
+
   post({ type: 'encode:done', id, sessionId: imageUrl });
 }
 
@@ -289,6 +482,91 @@ async function segment(
   } catch (err) {
     console.error("[SAM Worker] Decoder run failed:", err);
     throw err;
+  }
+}
+
+function computeCentroid(pts: [number, number][]): { x: number; y: number } {
+  let xs = 0, ys = 0;
+  for (const [x, y] of pts) {
+    xs += x;
+    ys += y;
+  }
+  return { x: xs / pts.length, y: ys / pts.length };
+}
+
+async function autoSegment(id: string, sessionId: string) {
+  const cached = cache.get(sessionId);
+  if (!cached) {
+    console.error("[SAM Worker] No cached session found for autoSegment:", sessionId);
+    post({ type: 'autoSegment:error', id, error: `No session: ${sessionId}` });
+    return;
+  }
+
+  const { scale, padX, padY, encoderOut, origW, origH } = cached;
+  const newW = origW * scale;
+  const newH = origH * scale;
+
+  const polygons: [number, number][][] = [];
+  const gridCount = 8;
+
+  try {
+    for (let i = 1; i <= gridCount; i++) {
+      for (let j = 1; j <= gridCount; j++) {
+        const px = (i / (gridCount + 1)) * newW;
+        const py = (j / (gridCount + 1)) * newH;
+
+        const pointCoords = new ort.Tensor('float32', new Float32Array([px, py]), [1, 1, 1, 2]);
+        const pointLabels = new ort.Tensor('int64', new BigInt64Array([1n]), [1, 1, 1]);
+        const boxTensor = new ort.Tensor('float32', new Float32Array([0, 0, 0, 0]), [1, 1, 4]);
+
+        const decoderInputs: Record<string, ort.Tensor> = {
+          ...encoderOut,
+          input_points:    pointCoords,
+          input_labels:    pointLabels,
+          input_boxes:     boxTensor,
+        };
+
+        const decoderOut = await decoderSession!.run(decoderInputs);
+        const masksTensor = decoderOut['pred_masks'];
+        const iouTensor = decoderOut['iou_scores'];
+
+        if (!masksTensor || !iouTensor) continue;
+
+        const iou = Array.from(iouTensor.data as Float32Array);
+        const bestIdx = iou.indexOf(Math.max(...iou));
+        const score = iou[bestIdx];
+
+        if (score > 0.85) {
+          const dims = masksTensor.dims;
+          const H = dims[dims.length - 2];
+          const W = dims[dims.length - 1];
+          const planeSize = H * W;
+          const maskData = (masksTensor.data as Float32Array).slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
+          
+          const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+          const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+
+          if (polygon.length >= 3) {
+            const centroid = computeCentroid(polygon);
+            let isDuplicate = false;
+            for (const poly of polygons) {
+              const c = computeCentroid(poly);
+              if (Math.hypot(c.x - centroid.x, c.y - centroid.y) < 25) {
+                isDuplicate = true;
+                break;
+              }
+            }
+            if (!isDuplicate) {
+              polygons.push(polygon);
+            }
+          }
+        }
+      }
+    }
+    post({ type: 'autoSegment:done', id, polygons });
+  } catch (err) {
+    console.error("[SAM Worker] autoSegment failed:", err);
+    post({ type: 'autoSegment:error', id, error: String(err) });
   }
 }
 
@@ -429,12 +707,14 @@ if (!isPthread) {
   self.onmessage = async (e: MessageEvent<WorkerInMsg>) => {
     const msg = e.data;
     try {
-      if (msg.type === 'encode')       await encode(msg.id, msg.imageUrl);
-      else if (msg.type === 'segment') await segment(msg.id, msg.sessionId, msg.box, msg.points);
+      if (msg.type === 'encode')            await encode(msg.id, msg.imageUrl);
+      else if (msg.type === 'segment')      await segment(msg.id, msg.sessionId, msg.box, msg.points);
+      else if (msg.type === 'autoSegment')  await autoSegment(msg.id, msg.sessionId);
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
-      if (msg.type === 'encode')       post({ type: 'encode:error', id: msg.id, error });
-      else if (msg.type === 'segment') post({ type: 'segment:error', id: msg.id, error });
+      if (msg.type === 'encode')            post({ type: 'encode:error', id: msg.id, error });
+      else if (msg.type === 'segment')      post({ type: 'segment:error', id: msg.id, error });
+      else if (msg.type === 'autoSegment')  post({ type: 'autoSegment:error', id: msg.id, error });
     }
   };
 
