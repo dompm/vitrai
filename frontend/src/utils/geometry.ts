@@ -1,4 +1,45 @@
 import polygonClipping from 'polygon-clipping';
+import type { CurvePoint } from '../types';
+
+const CURVE_SEGMENTS = 8; // samples per curved edge — enough for smooth visuals
+
+/** Convert clean polygon + parametric curve metadata into a dense display polygon. */
+export function flattenCurves(
+  polygon: [number, number][],
+  curvePoints?: CurvePoint[],
+): [number, number][] {
+  if (!curvePoints || curvePoints.length === 0) return polygon;
+  const n = polygon.length;
+  const curveMap = new Map(curvePoints.map(cp => [cp.edgeIdx, cp.ctrl]));
+  const result: [number, number][] = [];
+  for (let i = 0; i < n; i++) {
+    const A = polygon[i];
+    const B = polygon[(i + 1) % n];
+    result.push(A);
+    const ctrl = curveMap.get(i);
+    if (ctrl) {
+      for (let s = 1; s < CURVE_SEGMENTS; s++) {
+        const t = s / CURVE_SEGMENTS;
+        const mt = 1 - t;
+        result.push([
+          mt * mt * A[0] + 2 * t * mt * ctrl[0] + t * t * B[0],
+          mt * mt * A[1] + 2 * t * mt * ctrl[1] + t * t * B[1],
+        ]);
+      }
+    }
+  }
+  return result;
+}
+
+/** Given a ctrl point and edge endpoints, return the visual handle position (bezier midpoint). */
+export function ctrlToHandle(A: [number, number], B: [number, number], ctrl: [number, number]): [number, number] {
+  return [A[0] / 4 + ctrl[0] / 2 + B[0] / 4, A[1] / 4 + ctrl[1] / 2 + B[1] / 4];
+}
+
+/** Given a dragged handle position, return the implied quadratic Bezier control point. */
+export function handleToCtrl(A: [number, number], B: [number, number], H: [number, number]): [number, number] {
+  return [2 * H[0] - (A[0] + B[0]) / 2, 2 * H[1] - (A[1] + B[1]) / 2];
+}
 
 export function computeCentroid(polygon: [number, number][]): { x: number; y: number } {
   const x = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
@@ -84,4 +125,14 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
     console.warn("Clipping failed", e);
     return subject;
   }
+}
+
+export function arePolygonsEqual(p1: [number, number][], p2: [number, number][], epsilon = 0.1): boolean {
+  if (p1.length !== p2.length) return false;
+  for (let i = 0; i < p1.length; i++) {
+    if (Math.abs(p1[i][0] - p2[i][0]) > epsilon || Math.abs(p1[i][1] - p2[i][1]) > epsilon) {
+      return false;
+    }
+  }
+  return true;
 }

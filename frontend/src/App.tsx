@@ -4,10 +4,10 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { useProject } from './hooks/useProject';
-import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
+import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
-import type { BoundingBox, GlassSheet } from './types';
+import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter,
 } from './components/icons';
@@ -280,14 +280,14 @@ export function App() {
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
-    addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
     addManualPiece,
     updateSheetDimensions,
     batchAddPieces,
     updatePiecePolygon,
-    updatePiecePrompt,
+    updatePieceCurves,
+    updatePiecePolygonAndCurves,
     addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
@@ -368,6 +368,10 @@ export function App() {
   // Re-encode whenever the pattern image changes.
   useEffect(() => {
     setPatternImageId(null);
+    if (!project.patternImageUrl) {
+      setBackendStatus("No pattern image uploaded");
+      return;
+    }
     const backend = getSamBackend(setBackendStatus);
     let cancelled = false;
     backend.encode(project.patternImageUrl)
@@ -397,9 +401,11 @@ export function App() {
       const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
-      const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
-      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+      const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const clipped = subtractPolygons(snapped, neighborPolygons);
+      // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
+      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
     } catch (e) {
       console.error("SAM segment failed:", e);
     } finally {
@@ -409,8 +415,9 @@ export function App() {
 
   function handleAddManualPiece(polygon: [number, number][]) {
     const others = project.pieces;
-    const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
+    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
       addManualPiece(clipped, activeSheetId);
     }
@@ -423,15 +430,18 @@ export function App() {
     if (!piece || !patternImageId) return;
 
     const newPoints = [...(piece.promptPoints || []), point];
-    const others = project.pieces.filter(p => p.id !== pieceId);
 
     markPiecePending(pieceId);
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
-      const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
-      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+      const others = project.pieces.filter(p => p.id !== pieceId);
+      const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const clipped = subtractPolygons(snapped, neighborPolygons);
+      // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
+      // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
+      if (clipped.length >= 3) { updatePiecePolygonAndCurves(pieceId, clipped, [], true); }
     } catch (e) {
       console.error(e);
     } finally {
@@ -442,12 +452,43 @@ export function App() {
   function handleSmoothPiece(pieceId: string) {
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece) return;
-    updatePiecePolygon(pieceId, smoothPolygon(piece.polygon));
+    updatePiecePolygonAndCurves(pieceId, smoothPolygon(piece.polygon), []);
+  }
+
+  function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    const others = project.pieces.filter(p => p.id !== pieceId);
+    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, neighborPolygons);
+    if (clipped.length >= 3) {
+      if (clipped.length !== piece.polygon.length) {
+        updatePiecePolygonAndCurves(pieceId, clipped, []);
+      } else {
+        updatePiecePolygon(pieceId, clipped);
+      }
+    }
+  }
+
+  function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[]) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    const flatPolygon = flattenCurves(piece.polygon, curvePoints);
+    const others = project.pieces.filter(p => p.id !== pieceId);
+    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
+    const snapped = snapPolygonToNeighbors(flatPolygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, neighborPolygons);
+
+    if (clipped.length >= 3 && !arePolygonsEqual(flatPolygon, clipped, 0.1)) {
+      updatePiecePolygonAndCurves(pieceId, clipped, []);
+    } else {
+      updatePieceCurves(pieceId, curvePoints);
+    }
   }
 
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const selectedPiece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]) ?? null;
   const piecesOnActiveSheet = project.pieces
     .filter(p => p.glassSheetId === activeSheetId)
     .sort((a, b) => {
@@ -547,7 +588,8 @@ export function App() {
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     pieces.forEach(piece => {
-      piece.polygon.forEach(pt => {
+      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+      displayPoly.forEach(pt => {
         if (pt[0] < minX) minX = pt[0];
         if (pt[1] < minY) minY = pt[1];
         if (pt[0] > maxX) maxX = pt[0];
@@ -607,8 +649,9 @@ export function App() {
     const imageTag = `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
 
     const polygonsContent = pieces.map((piece, index) => {
-      const pts = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
-      const c = computeCentroid(piece.polygon);
+      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+      const pts = displayPoly.map(p => `${p[0]},${p[1]}`).join(' ');
+      const c = computeCentroid(displayPoly);
       return `<polygon points="${pts}" class="po" /><text x="${c.x}" y="${c.y}" class="pl">${index + 1}</text>`;
     }).join('');
 
@@ -977,6 +1020,8 @@ export function App() {
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
           onDeletePiece={deletePiece}
           onSmoothPiece={handleSmoothPiece}
+          onUpdatePiecePolygon={handleUpdatePiecePolygon}
+          onUpdatePieceCurves={handleUpdatePieceCurves}
           onUpdatePrompt={handleUpdatePrompt}
           onUploadPattern={handleUploadPattern}
           onAutoSegment={handleAutoSegment}

@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
-import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon } from './Toolbar';
+import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
+import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -56,16 +56,16 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 interface PieceOverlayProps {
   piece: Piece;
+  displayPolygon: [number, number][];
   glassImageUrl: string;
   isSelected: boolean;
   isPending: boolean;
-  effectiveScale: number;
   opacity?: number;
   solderWidth: number;
   onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveScale, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -74,14 +74,14 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     return () => clearInterval(id);
   }, [isPending]);
   const { x: tx, y: ty, rotation, scale } = piece.transform;
-  const centroid = computeCentroid(piece.polygon);
-  const flatPts = piece.polygon.flat();
+  const centroid = computeCentroid(displayPolygon);
+  const flatPts = displayPolygon.flat();
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
-  function clipPolygon(ctx: CanvasRenderingContext2D) {
+  function clipPolygon(ctx: any) {
     ctx.beginPath();
-    piece.polygon.forEach(([x, y], i) => {
+    displayPolygon.forEach(([x, y], i) => {
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.closePath();
@@ -99,7 +99,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
       longPressTimer.current = null;
-      onSelect(true); // add to selection
+      onSelect(true);
     }, 500);
   }
 
@@ -107,8 +107,8 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
 
-  const xs = piece.polygon.map(p => p[0]);
-  const ys = piece.polygon.map(p => p[1]);
+  const xs = displayPolygon.map(p => p[0]);
+  const ys = displayPolygon.map(p => p[1]);
 
   return (
     <Group
@@ -158,9 +158,11 @@ interface ResultPanelProps {
   onAddManualPiece: (polygon: [number, number][]) => void;
   onUpdatePieceLabel: (id: string, label: string) => void;
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
-  onAddSheetAndAssignPiece: (id: string) => void;
+  onAddSheetAndAssignPiece: (id: string, url?: string, label?: string) => void;
   onDeletePiece: (id: string) => void;
   onSmoothPiece: (id: string) => void;
+  onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
+  onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[]) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
@@ -169,7 +171,7 @@ interface ResultPanelProps {
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
 }
 
-function getTooltipAnchor(piece: Piece, allPieces: Piece[], pw: number, ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
+function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
   const xs = piece.polygon.map(p => p[0]);
   const ys = piece.polygon.map(p => p[1]);
   const minX = Math.min(...xs), maxX = Math.max(...xs);
@@ -230,10 +232,103 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
   return target;
 }
 
+function getSquareSegmentDistance(p: [number, number], p1: [number, number], p2: [number, number]): number {
+  let x = p1[0];
+  let y = p1[1];
+  let dx = p2[0] - x;
+  let dy = p2[1] - y;
+  
+  if (dx !== 0 || dy !== 0) {
+    const t = ((p[0] - x) * dx + (p[1] - y) * dy) / (dx * dx + dy * dy);
+    if (t > 1) {
+      x = p2[0];
+      y = p2[1];
+    } else if (t > 0) {
+      x += dx * t;
+      y += dy * t;
+    }
+  }
+  
+  dx = p[0] - x;
+  dy = p[1] - y;
+  return dx * dx + dy * dy;
+}
+
+function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
+  if (points.length <= 2) return points;
+  
+  let maxSqDist = 0;
+  let index = 0;
+  const end = points.length - 1;
+  
+  for (let i = 1; i < end; i++) {
+    const sqDist = getSquareSegmentDistance(points[i], points[0], points[end]);
+    if (sqDist > maxSqDist) {
+      index = i;
+      maxSqDist = sqDist;
+    }
+  }
+  
+  if (maxSqDist > epsilon * epsilon) {
+    const results1 = simplifyPath(points.slice(0, index + 1), epsilon);
+    const results2 = simplifyPath(points.slice(index), epsilon);
+    return results1.slice(0, results1.length - 1).concat(results2);
+  }
+  
+  return [points[0], points[end]];
+}
+
+// Screen-space radius used for: pen tool snap-to-neighbor-vertex, and the
+// "edge long enough" test that decides which vertices are eligible snap
+// targets (and which corner handles are visible). Both share the threshold
+// so the snap set always matches the visible handle set at any zoom.
+const PEN_SNAP_PX = 14;
+
+function isStructuralCorner(
+  polygon: [number, number][],
+  idx: number,
+  effectiveScale: number,
+  thresholdPx = PEN_SNAP_PX,
+): boolean {
+  const len = polygon.length;
+  const [x, y] = polygon[idx];
+  const next = polygon[(idx + 1) % len];
+  const prev = polygon[(idx - 1 + len) % len];
+  const edgeLen = Math.hypot(next[0] - x, next[1] - y) * effectiveScale;
+  const prevEdgeLen = Math.hypot(x - prev[0], y - prev[1]) * effectiveScale;
+  return edgeLen >= thresholdPx || prevEdgeLen >= thresholdPx;
+}
+
+function findPenSnapTarget(
+  cursor: [number, number],
+  pieces: Piece[],
+  effectiveScale: number,
+): [number, number] | null {
+  let best: [number, number] | null = null;
+  let bestPxDist = PEN_SNAP_PX;
+  for (const piece of pieces) {
+    const polygon = flattenCurves(piece.polygon, piece.curvePoints);
+    for (let i = 0; i < polygon.length; i++) {
+      if (!isStructuralCorner(polygon, i, effectiveScale)) continue;
+      const dx = polygon[i][0] - cursor[0];
+      const dy = polygon[i][1] - cursor[1];
+      const dist = Math.hypot(dx, dy) * effectiveScale;
+      if (dist < bestPxDist) {
+        bestPxDist = dist;
+        best = [polygon[i][0], polygon[i][1]];
+      }
+    }
+  }
+  return best;
+}
+
+
+
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
+  onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -245,8 +340,19 @@ export function ResultPanel({
 
   const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
   const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
+  const [hoverSnapped, setHoverSnapped] = useState(false);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
+
+  const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
+  const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
+  const [dragStartPolygon, setDragStartPolygon] = useState<[number, number][] | null>(null);
+  const [activeDragPolygon, setActiveDragPolygon] = useState<[number, number][] | null>(null);
+  // Parametric: live curvePoints during a midpoint drag (polygon stays unchanged)
+  const [activeDragCurvePoints, setActiveDragCurvePoints] = useState<CurvePoint[] | null>(null);
+  const dragStartCurvePointsRef = useRef<CurvePoint[]>([]);
+
+  const [pencilPoints, setPencilPoints] = useState<[number, number][]>([]);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -278,6 +384,7 @@ export function ResultPanel({
     }
     setActivePolygonPoints([]);
     setHoverPoint(null);
+    setHoverSnapped(false);
   }
 
   useEffect(() => {
@@ -297,6 +404,7 @@ export function ResultPanel({
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b' && !isEncoding) handleToolChange('box');
       else if (e.key === 'p') handleToolChange('pen');
+      else if (e.key === 'n') handleToolChange('pencil');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
@@ -307,12 +415,20 @@ export function ResultPanel({
           commitActivePolygon();
         }
       }
+      else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+        // window listener from also firing project undo on the same event.
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setActivePolygonPoints(prev => prev.slice(0, -1));
+      }
       else if (e.key === 'Escape') {
         if (refineModeRef.current) {
           setRefineMode(null);
         } else if (activePolygonPointsRef.current.length > 0) {
           setActivePolygonPoints([]);
           setHoverPoint(null);
+          setHoverSnapped(false);
         } else {
           handleToolChange('select');
         }
@@ -370,7 +486,14 @@ export function ResultPanel({
           return;
         }
       }
-      setActivePolygonPoints(prev => [...prev, [x, y]]);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      setActivePolygonPoints(prev => [...prev, snap ?? [x, y]]);
+      return;
+    }
+
+    if (activeTool === 'pencil') {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      setPencilPoints([[x, y]]);
       return;
     }
 
@@ -405,9 +528,16 @@ export function ResultPanel({
       return;
     }
     if (activeTool === 'pen') {
-      if (activePolygonPointsRef.current.length > 0) {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      setHoverPoint(snap ?? [x, y]);
+      setHoverSnapped(snap !== null);
+      return;
+    }
+    if (activeTool === 'pencil') {
+      if (pencilPoints.length > 0) {
         const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-        setHoverPoint([x, y]);
+        setPencilPoints(prev => [...prev, [x, y]]);
       }
       return;
     }
@@ -449,6 +579,16 @@ export function ResultPanel({
       setMarqueeBox(null);
       return;
     }
+    if (activeTool === 'pencil') {
+      if (pencilPoints.length >= 3) {
+        const simplified = simplifyPath(pencilPoints, 2 / vp.effectiveScale);
+        if (simplified.length >= 3) {
+          onAddManualPiece(simplified);
+        }
+      }
+      setPencilPoints([]);
+      return;
+    }
     vp.endPan();
   }
 
@@ -469,7 +609,16 @@ export function ResultPanel({
     if (id !== 'pen') {
       setActivePolygonPoints([]);
       setHoverPoint(null);
+      setHoverSnapped(false);
     }
+    if (id !== 'pencil') {
+      setPencilPoints([]);
+    }
+    setDraggedCorner(null);
+    setDraggedMidpoint(null);
+    setDragStartPolygon(null);
+    setActiveDragPolygon(null);
+    setActiveDragCurvePoints(null);
 
     if (id === 'detect-all') {
       if (!isEncoding) onAutoSegment?.();
@@ -593,6 +742,17 @@ export function ResultPanel({
       },
     },
     {
+      id: 'pencil' as ToolId,
+      label: t('toolDrawPencil'),
+      icon: <PencilIcon />,
+      tooltip: {
+        name: t('tooltipPencilName'),
+        shortcut: 'N',
+        description: t('tooltipPencilDesc'),
+        animation: <PencilAnimation />,
+      },
+    },
+    {
       id: 'detect-all' as ToolId,
       label: t('toolDetectAll'),
       icon: <DetectAllIcon />,
@@ -700,14 +860,19 @@ export function ResultPanel({
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIds.includes(piece.id);
+                    // Corner drag: override polygon directly (activeDragPolygon)
+                    const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
+                    // Midpoint drag: override curvePoints (activeDragCurvePoints); polygon stays clean
+                    const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
+                    const displayPolygon = flattenCurves(basePolygon, baseCurves);
                     return (
                       <PieceOverlay
                         key={piece.id}
                         piece={piece}
+                        displayPolygon={displayPolygon}
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
-                        effectiveScale={es}
                         solderWidth={solderWidth}
                         onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
                       />
@@ -722,7 +887,7 @@ export function ResultPanel({
                       globalCompositeOperation="difference"
                     />
                   )}
-                  {activeTool === 'pen' && activePolygonPoints.length > 0 && (
+                  {activeTool === 'pen' && (activePolygonPoints.length > 0 || hoverPoint) && (
                     <Group>
                       {activePolygonPoints.length > 1 && (
                         <Line
@@ -733,12 +898,22 @@ export function ResultPanel({
                           lineCap="round"
                         />
                       )}
-                      {hoverPoint && (
+                      {hoverPoint && activePolygonPoints.length > 0 && (
                         <Line
                           points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
                           stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           dash={[4 / es, 4 / es]}
+                        />
+                      )}
+                      {hoverPoint && hoverSnapped && (
+                        <Circle
+                          x={hoverPoint[0]}
+                          y={hoverPoint[1]}
+                          radius={6 / es}
+                          fill={CANVAS.amber}
+                          stroke={CANVAS.paper}
+                          strokeWidth={2 / es}
                         />
                       )}
                       {activePolygonPoints.map(([x, y], idx) => {
@@ -768,6 +943,16 @@ export function ResultPanel({
                         );
                       })}
                     </Group>
+                  )}
+                  {activeTool === 'pencil' && pencilPoints.length > 0 && (
+                    <Line
+                      points={pencilPoints.flat()}
+                      stroke={CANVAS.amber}
+                      strokeWidth={2.5 / es}
+                      lineJoin="round"
+                      lineCap="round"
+                      dash={[4 / es, 3 / es]}
+                    />
                   )}
                   {marqueeBox && (
                     <Rect
@@ -834,6 +1019,132 @@ export function ResultPanel({
                       />
                     ));
                   })}
+                  {activeTool === 'select' && selectedPieceIds.length === 1 && (() => {
+                    const selectedId = selectedPieceIds[0];
+                    const piece = project.pieces.find(p => p.id === selectedId);
+                    if (!piece) return null;
+
+                    const referencePolygon = dragStartPolygon || piece.polygon;
+                    const len = referencePolygon.length;
+                    // Min screen-space edge length to show a handle (avoids clutter on dense polygons)
+                    const MIN_HANDLE_PX = 14;
+
+                    return (
+                      <Group>
+                        {/* Corner handles — only on edges long enough to be worth dragging */}
+                        {referencePolygon.map(([x, y], idx) => {
+                          // Show corner if either adjacent edge is long enough
+                          if (!isStructuralCorner(referencePolygon, idx, es, MIN_HANDLE_PX) && draggedCorner?.idx !== idx) return null;
+
+                          const currentX = (draggedCorner?.idx === idx && activeDragPolygon)
+                            ? activeDragPolygon[idx][0] : x;
+                          const currentY = (draggedCorner?.idx === idx && activeDragPolygon)
+                            ? activeDragPolygon[idx][1] : y;
+
+                          return (
+                            <Circle
+                              key={`corner-${idx}`}
+                              x={currentX}
+                              y={currentY}
+                              radius={6 / es}
+                              fill={CANVAS.paper}
+                              stroke={CANVAS.amber}
+                              strokeWidth={2 / es}
+                              draggable
+                              onDragStart={() => {
+                                setDraggedCorner({ pieceId: selectedId, idx });
+                                setDragStartPolygon(piece.polygon);
+                                dragStartCurvePointsRef.current = piece.curvePoints ?? [];
+                                setActiveDragPolygon(piece.polygon);
+                              }}
+                              onDragMove={(e) => {
+                                if (!dragStartPolygon) return;
+                                const newPolygon = [...dragStartPolygon];
+                                newPolygon[idx] = [e.target.x(), e.target.y()];
+                                setActiveDragPolygon(newPolygon);
+                              }}
+                              onDragEnd={(e) => {
+                                if (!dragStartPolygon) { setDraggedCorner(null); return; }
+                                const newPolygon = [...dragStartPolygon];
+                                newPolygon[idx] = [e.target.x(), e.target.y()];
+                                // Curves use absolute ctrl coordinates so they adapt naturally
+                                // to the moved corner — no need to drop them
+                                onUpdatePiecePolygon(selectedId, newPolygon);
+                                setDraggedCorner(null);
+                                setDragStartPolygon(null);
+                                setActiveDragPolygon(null);
+                              }}
+                              onMouseEnter={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'move';
+                              }}
+                              onMouseLeave={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'default';
+                              }}
+                            />
+                          );
+                        })}
+
+                        {/* Midpoint (curve) handles — hidden while dragging a corner */}
+                        {!draggedCorner && referencePolygon.map(([x, y], idx) => {
+                          const idxNext = (idx + 1) % len;
+                          const B = referencePolygon[idxNext];
+                          const dist = Math.hypot(B[0] - x, B[1] - y) * es;
+                          const isActive = draggedMidpoint?.edgeIdx === idx;
+                          if (dist < MIN_HANDLE_PX && !isActive) return null;
+
+                          // Position the handle at the bezier midpoint if a curve exists
+                          const existingCtrl = (activeDragCurvePoints ?? piece.curvePoints ?? []).find(cp => cp.edgeIdx === idx)?.ctrl;
+                          const [hx, hy] = existingCtrl
+                            ? ctrlToHandle([x, y], B, existingCtrl)
+                            : [(x + B[0]) / 2, (y + B[1]) / 2];
+
+                          return (
+                            <Circle
+                              key={`mid-${idx}`}
+                              x={hx}
+                              y={hy}
+                              radius={5 / es}
+                              fill={CANVAS.amber}
+                              stroke={CANVAS.paper}
+                              strokeWidth={1.5 / es}
+                              draggable
+                              onDragStart={() => {
+                                setDraggedMidpoint({ pieceId: selectedId, edgeIdx: idx });
+                                dragStartCurvePointsRef.current = piece.curvePoints ?? [];
+                                setActiveDragCurvePoints(piece.curvePoints ?? []);
+                              }}
+                              onDragMove={(e) => {
+                                const A: [number, number] = [x, y];
+                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const updated = dragStartCurvePointsRef.current.filter(cp => cp.edgeIdx !== idx);
+                                updated.push({ edgeIdx: idx, ctrl });
+                                setActiveDragCurvePoints(updated);
+                              }}
+                              onDragEnd={(e) => {
+                                const A: [number, number] = [x, y];
+                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const updated = (piece.curvePoints ?? []).filter(cp => cp.edgeIdx !== idx);
+                                updated.push({ edgeIdx: idx, ctrl });
+                                onUpdatePieceCurves(selectedId, updated);
+                                setDraggedMidpoint(null);
+                                setActiveDragCurvePoints(null);
+                              }}
+                              onMouseEnter={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'pointer';
+                              }}
+                              onMouseLeave={(e) => {
+                                const stage = e.target.getStage();
+                                if (stage) stage.container().style.cursor = 'default';
+                              }}
+                            />
+                          );
+                        })}
+                      </Group>
+                    );
+                  })()}
                   {activeTool === 'measure' && measure.line && (
                     <MeasureLineOverlay
                       line={measure.line}

@@ -30,10 +30,16 @@ export interface PromptPoint {
   label: 1 | 0; // 1 for positive, 0 for negative
 }
 
+export interface CurvePoint {
+  edgeIdx: number;            // index of the start vertex of the curved edge
+  ctrl: [number, number];     // quadratic bezier control point (image coords)
+}
+
 export interface Piece {
   id: string;
   label: string;
-  polygon: [number, number][]; // points in pattern image pixel coordinates
+  polygon: [number, number][]; // clean vertex skeleton — never grows from curve edits
+  curvePoints?: CurvePoint[];  // parametric curves on edges; absent = all straight
   glassSheetId: string;
   transform: TextureTransform;
   promptBox?: BoundingBox;

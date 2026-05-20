@@ -1,4 +1,3 @@
-import React from 'react';
 
 /* ── Shared geometry ────────────────────────────────────────────────────── */
 
@@ -563,6 +562,60 @@ export function PenAnimation() {
         <path d="M3.6,6 L8.8,11.2 L11.2,8.8 L6,3.6 Z" fill="white" stroke="#1e293b" strokeWidth="0.8" />
         <line x1="0" y1="0" x2="2.8" y2="2.8" stroke="#1e293b" strokeWidth="0.8" />
         <circle cx="2.8" cy="2.8" r="0.5" fill="#1e293b" />
+      </g>
+    </svg>
+  );
+}
+
+export function PencilAnimation() {
+  const dur = '3s';
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="#eff6ff" />
+      
+      {/* Target closed curved path */}
+      <path d="M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75" fill="rgba(59, 130, 246, 0.08)" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3 3" />
+      
+      {/* Growing path representing freehand draw */}
+      <path d="" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <animate attributeName="d"
+          values="
+            M 60,75;
+            M 60,75 C 60,75 60,75 60,75;
+            M 60,75 C 60,30 110,30 110,35;
+            M 60,75 C 60,30 160,30 160,75;
+            M 60,75 C 60,30 160,30 160,75 C 160,90 110,95 110,95;
+            M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75;
+            M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75
+          "
+          keyTimes="0; 0.15; 0.35; 0.55; 0.70; 0.85; 1"
+          dur={dur} repeatCount="indefinite" />
+      </path>
+      
+      {/* Pencil cursor moving along the path */}
+      <g>
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="
+            60,75;
+            60,75;
+            110,35;
+            160,75;
+            110,95;
+            60,75;
+            60,75
+          "
+          keyTimes="0; 0.15; 0.35; 0.55; 0.70; 0.85; 1"
+          dur={dur} repeatCount="indefinite" />
+        
+        {/* Pencil body */}
+        <g transform="translate(-2, -18) rotate(45 0 16)">
+          <path d="M 0,16 L 3,8 L -3,8 Z" fill="#f59e0b" />
+          <rect x="-3" y="-8" width="6" height="16" fill="#f59e0b" />
+          <rect x="-3" y="-12" width="6" height="4" fill="#ef4444" />
+          <path d="M 0,16 L 1,14 L -1,14 Z" fill="#000000" />
+        </g>
       </g>
     </svg>
   );

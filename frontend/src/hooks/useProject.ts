@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
-import { DEFAULT_PROJECT, EMPTY_PROJECT } from '../defaultProject';
+import { EMPTY_PROJECT } from '../defaultProject';
 import { GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 
@@ -76,8 +76,8 @@ export function useProject() {
   const [redoStack, setRedoStack] = useState<Project[]>([]);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
-  const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestProjectRef = useRef(project);
   latestProjectRef.current = project;
 
@@ -516,11 +516,25 @@ export function useProject() {
     });
   }, [updateProject, t]);
 
-  const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][]) => {
+  const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][], skipHistory = false) => {
     updateProject(prev => ({
       ...prev,
       pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p)
-    }), true);
+    }), skipHistory);
+  }, [updateProject]);
+
+  const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p)
+    }), skipHistory);
+  }, [updateProject]);
+
+  const updatePiecePolygonAndCurves = useCallback((pieceId: string, polygon: [number, number][], curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p)
+    }), skipHistory);
   }, [updateProject]);
 
   const markPiecePending = useCallback((pieceId: string) => {
@@ -650,6 +664,8 @@ export function useProject() {
     updateSheetDimensions,
     batchAddPieces,
     updatePiecePolygon,
+    updatePieceCurves,
+    updatePiecePolygonAndCurves,
     updatePiecePrompt,
     addPiecePromptPoint,
     markPiecePending,

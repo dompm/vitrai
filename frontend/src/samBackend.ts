@@ -41,8 +41,11 @@ export class SamWorkerBackend {
         else if (msg.type === "segment:done") {
           if (msg.debugMask) this.onDebugMask(msg.debugMask);
           p.resolve({ polygon: msg.polygon, debugMask: msg.debugMask });
+        } else if (msg.type === "autoSegment:done") {
+          p.resolve(msg.polygons);
+        } else {
+          p.reject(new Error(msg.error));
         }
-        else p.reject(new Error(msg.error));
       }
     };
 
@@ -76,6 +79,14 @@ export class SamWorkerBackend {
       sessionId: imageId,
       box: box ? [box.x1, box.y1, box.x2, box.y2] : undefined,
       points: points?.map((p) => [p.x, p.y, p.label]),
+    });
+  }
+
+  autoSegment(imageId: string): Promise<[number, number][][]> {
+    return this.send<[number, number][][]>({
+      type: "autoSegment",
+      id: crypto.randomUUID(),
+      sessionId: imageId,
     });
   }
 }

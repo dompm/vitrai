@@ -135,7 +135,7 @@ export function useViewport(imageW: number, imageH: number) {
       // Cancel any active single-finger pan
       isPanning.current = false;
       lastPanPtr.current = null;
-      const rect = el.getBoundingClientRect();
+      const rect = el!.getBoundingClientRect();
       lastDist = pinchDist(e.touches);
       const m = pinchMid(e.touches, rect);
       lastMidX = m.x;
@@ -151,7 +151,7 @@ export function useViewport(imageW: number, imageH: number) {
       const ds = iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
 
       const newDist = pinchDist(e.touches);
-      const rect = el.getBoundingClientRect();
+      const rect = el!.getBoundingClientRect();
       const m = pinchMid(e.touches, rect);
 
       if (lastDist > 0) {
