@@ -501,6 +501,13 @@ export function useProject() {
     }), true);
   }, [updateProject]);
 
+  const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[]) => {
+    updateProject(prev => ({
+      ...prev,
+      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p)
+    }), true);
+  }, [updateProject]);
+
   const markPiecePending = useCallback((pieceId: string) => {
     setPendingPieceIds(s => new Set(s).add(pieceId));
   }, []);
@@ -575,6 +582,7 @@ export function useProject() {
     updateSheetDimensions,
     batchAddPieces,
     updatePiecePolygon,
+    updatePieceCurves,
     updatePiecePrompt,
     addPiecePromptPoint,
     markPiecePending,

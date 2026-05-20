@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
-import { computeCentroid } from '../utils/geometry';
+import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
+import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
@@ -56,6 +56,7 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 interface PieceOverlayProps {
   piece: Piece;
+  displayPolygon: [number, number][]; // flattened curved polygon for clip/render
   glassImageUrl: string;
   isSelected: boolean;
   isPending: boolean;
@@ -65,7 +66,7 @@ interface PieceOverlayProps {
   onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveScale, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, effectiveScale, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -74,14 +75,14 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     return () => clearInterval(id);
   }, [isPending]);
   const { x: tx, y: ty, rotation, scale } = piece.transform;
-  const centroid = computeCentroid(piece.polygon);
-  const flatPts = piece.polygon.flat();
+  const centroid = computeCentroid(displayPolygon);
+  const flatPts = displayPolygon.flat();
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
   function clipPolygon(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    piece.polygon.forEach(([x, y], i) => {
+    displayPolygon.forEach(([x, y], i) => {
       if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
     });
     ctx.closePath();
@@ -99,7 +100,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
       longPressTimer.current = null;
-      onSelect(true); // add to selection
+      onSelect(true);
     }, 500);
   }
 
@@ -107,8 +108,8 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
 
-  const xs = piece.polygon.map(p => p[0]);
-  const ys = piece.polygon.map(p => p[1]);
+  const xs = displayPolygon.map(p => p[0]);
+  const ys = displayPolygon.map(p => p[1]);
 
   return (
     <Group
@@ -162,6 +163,7 @@ interface ResultPanelProps {
   onDeletePiece: (id: string) => void;
   onSmoothPiece: (id: string) => void;
   onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
+  onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[]) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
@@ -277,36 +279,13 @@ function simplifyPath(points: [number, number][], epsilon: number): [number, num
   return [points[0], points[end]];
 }
 
-function getCurvedPolygon(polygon: [number, number][], idx: number, handleX: number, handleY: number): [number, number][] {
-  const len = polygon.length;
-  const idxNext = (idx + 1) % len;
-  const A = polygon[idx];
-  const B = polygon[idxNext];
-  
-  const ctrlX = 2 * handleX - 0.5 * (A[0] + B[0]);
-  const ctrlY = 2 * handleY - 0.5 * (A[1] + B[1]);
-  
-  const curvePoints: [number, number][] = [];
-  const numSegments = 10;
-  for (let step = 1; step < numSegments; step++) {
-    const t = step / numSegments;
-    const mt = 1 - t;
-    const cx = mt * mt * A[0] + 2 * t * mt * ctrlX + t * t * B[0];
-    const cy = mt * mt * A[1] + 2 * t * mt * ctrlY + t * t * B[1];
-    curvePoints.push([cx, cy]);
-  }
-  
-  if (idxNext === 0) {
-    return [...polygon, ...curvePoints];
-  } else {
-    return [...polygon.slice(0, idx + 1), ...curvePoints, ...polygon.slice(idxNext)];
-  }
-}
+
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePiecePolygon, onUpdatePrompt,
+  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
+  onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -322,9 +301,12 @@ export function ResultPanel({
   activePolygonPointsRef.current = activePolygonPoints;
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
-  const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; idx: number } | null>(null);
+  const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
   const [dragStartPolygon, setDragStartPolygon] = useState<[number, number][] | null>(null);
   const [activeDragPolygon, setActiveDragPolygon] = useState<[number, number][] | null>(null);
+  // Parametric: live curvePoints during a midpoint drag (polygon stays unchanged)
+  const [activeDragCurvePoints, setActiveDragCurvePoints] = useState<CurvePoint[] | null>(null);
+  const dragStartCurvePointsRef = useRef<CurvePoint[]>([]);
 
   const [pencilPoints, setPencilPoints] = useState<[number, number][]>([]);
 
@@ -581,6 +563,7 @@ export function ResultPanel({
     setDraggedMidpoint(null);
     setDragStartPolygon(null);
     setActiveDragPolygon(null);
+    setActiveDragCurvePoints(null);
 
     if (id === 'detect-all') {
       if (!isEncoding) onAutoSegment?.();
@@ -822,13 +805,16 @@ export function ResultPanel({
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIds.includes(piece.id);
-                    const displayPiece = (isSelected && activeDragPolygon)
-                      ? { ...piece, polygon: activeDragPolygon }
-                      : piece;
+                    // Corner drag: override polygon directly (activeDragPolygon)
+                    const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
+                    // Midpoint drag: override curvePoints (activeDragCurvePoints); polygon stays clean
+                    const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
+                    const displayPolygon = flattenCurves(basePolygon, baseCurves);
                     return (
                       <PieceOverlay
                         key={piece.id}
-                        piece={displayPiece}
+                        piece={piece}
+                        displayPolygon={displayPolygon}
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
@@ -975,17 +961,27 @@ export function ResultPanel({
                     if (!piece) return null;
 
                     const referencePolygon = dragStartPolygon || piece.polygon;
+                    const referenceCurves = dragStartCurvePointsRef.current;
                     const len = referencePolygon.length;
+                    // Min screen-space edge length to show a handle (avoids clutter on dense polygons)
+                    const MIN_HANDLE_PX = 14;
 
                     return (
                       <Group>
+                        {/* Corner handles — only on edges long enough to be worth dragging */}
                         {referencePolygon.map(([x, y], idx) => {
+                          const nextPt = referencePolygon[(idx + 1) % len];
+                          const edgeLen = Math.hypot(nextPt[0] - x, nextPt[1] - y) * es;
+                          const prevIdx = (idx - 1 + len) % len;
+                          const prevPt = referencePolygon[prevIdx];
+                          const prevEdgeLen = Math.hypot(x - prevPt[0], y - prevPt[1]) * es;
+                          // Show corner if either adjacent edge is long enough
+                          if (edgeLen < MIN_HANDLE_PX && prevEdgeLen < MIN_HANDLE_PX && draggedCorner?.idx !== idx) return null;
+
                           const currentX = (draggedCorner?.idx === idx && activeDragPolygon)
-                            ? activeDragPolygon[idx][0]
-                            : x;
+                            ? activeDragPolygon[idx][0] : x;
                           const currentY = (draggedCorner?.idx === idx && activeDragPolygon)
-                            ? activeDragPolygon[idx][1]
-                            : y;
+                            ? activeDragPolygon[idx][1] : y;
 
                           return (
                             <Circle
@@ -1000,6 +996,7 @@ export function ResultPanel({
                               onDragStart={() => {
                                 setDraggedCorner({ pieceId: selectedId, idx });
                                 setDragStartPolygon(piece.polygon);
+                                dragStartCurvePointsRef.current = piece.curvePoints ?? [];
                                 setActiveDragPolygon(piece.polygon);
                               }}
                               onDragMove={(e) => {
@@ -1009,13 +1006,14 @@ export function ResultPanel({
                                 setActiveDragPolygon(newPolygon);
                               }}
                               onDragEnd={(e) => {
-                                if (!dragStartPolygon) {
-                                  setDraggedCorner(null);
-                                  return;
-                                }
+                                if (!dragStartPolygon) { setDraggedCorner(null); return; }
                                 const newPolygon = [...dragStartPolygon];
                                 newPolygon[idx] = [e.target.x(), e.target.y()];
+                                // Drop curves on the two edges adjacent to the moved corner
+                                const adjacentEdges = new Set([idx, (idx - 1 + len) % len]);
+                                const remainingCurves = (piece.curvePoints ?? []).filter(cp => !adjacentEdges.has(cp.edgeIdx));
                                 onUpdatePiecePolygon(selectedId, newPolygon);
+                                onUpdatePieceCurves(selectedId, remainingCurves);
                                 setDraggedCorner(null);
                                 setDragStartPolygon(null);
                                 setActiveDragPolygon(null);
@@ -1032,44 +1030,50 @@ export function ResultPanel({
                           );
                         })}
 
+                        {/* Midpoint (curve) handles — hidden while dragging a corner */}
                         {!draggedCorner && referencePolygon.map(([x, y], idx) => {
                           const idxNext = (idx + 1) % len;
-                          const nextPt = referencePolygon[idxNext];
-                          const midX = (x + nextPt[0]) / 2;
-                          const midY = (y + nextPt[1]) / 2;
-                          const dist = Math.hypot(nextPt[0] - x, nextPt[1] - y) * es;
-                          if (dist < 15 && draggedMidpoint?.idx !== idx) return null;
+                          const B = referencePolygon[idxNext];
+                          const dist = Math.hypot(B[0] - x, B[1] - y) * es;
+                          const isActive = draggedMidpoint?.edgeIdx === idx;
+                          if (dist < MIN_HANDLE_PX && !isActive) return null;
+
+                          // Position the handle at the bezier midpoint if a curve exists
+                          const existingCtrl = (activeDragCurvePoints ?? referenceCurves).find(cp => cp.edgeIdx === idx)?.ctrl;
+                          const [hx, hy] = existingCtrl
+                            ? ctrlToHandle([x, y], B, existingCtrl)
+                            : [(x + B[0]) / 2, (y + B[1]) / 2];
 
                           return (
                             <Circle
                               key={`mid-${idx}`}
-                              x={midX}
-                              y={midY}
+                              x={hx}
+                              y={hy}
                               radius={5 / es}
                               fill={CANVAS.amber}
                               stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
                               draggable
                               onDragStart={() => {
-                                setDraggedMidpoint({ pieceId: selectedId, idx });
-                                setDragStartPolygon(piece.polygon);
-                                setActiveDragPolygon(piece.polygon);
+                                setDraggedMidpoint({ pieceId: selectedId, edgeIdx: idx });
+                                dragStartCurvePointsRef.current = piece.curvePoints ?? [];
+                                setActiveDragCurvePoints(piece.curvePoints ?? []);
                               }}
                               onDragMove={(e) => {
-                                if (!dragStartPolygon) return;
-                                const newPolygon = getCurvedPolygon(dragStartPolygon, idx, e.target.x(), e.target.y());
-                                setActiveDragPolygon(newPolygon);
+                                const A: [number, number] = [x, y];
+                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const updated = dragStartCurvePointsRef.current.filter(cp => cp.edgeIdx !== idx);
+                                updated.push({ edgeIdx: idx, ctrl });
+                                setActiveDragCurvePoints(updated);
                               }}
                               onDragEnd={(e) => {
-                                if (!dragStartPolygon) {
-                                  setDraggedMidpoint(null);
-                                  return;
-                                }
-                                const newPolygon = getCurvedPolygon(dragStartPolygon, idx, e.target.x(), e.target.y());
-                                onUpdatePiecePolygon(selectedId, newPolygon);
+                                const A: [number, number] = [x, y];
+                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const updated = (piece.curvePoints ?? []).filter(cp => cp.edgeIdx !== idx);
+                                updated.push({ edgeIdx: idx, ctrl });
+                                onUpdatePieceCurves(selectedId, updated);
                                 setDraggedMidpoint(null);
-                                setDragStartPolygon(null);
-                                setActiveDragPolygon(null);
+                                setActiveDragCurvePoints(null);
                               }}
                               onMouseEnter={(e) => {
                                 const stage = e.target.getStage();
