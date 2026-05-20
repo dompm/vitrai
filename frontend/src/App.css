@@ -315,7 +315,6 @@ html, body, #root {
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
   box-shadow: 0 12px 32px rgba(40, 30, 15, 0.18);
-  overflow: hidden;
   padding: 4px;
 }
 
