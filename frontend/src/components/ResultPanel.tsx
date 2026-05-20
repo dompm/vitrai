@@ -887,7 +887,7 @@ export function ResultPanel({
                       globalCompositeOperation="difference"
                     />
                   )}
-                  {activeTool === 'pen' && activePolygonPoints.length > 0 && (
+                  {activeTool === 'pen' && (activePolygonPoints.length > 0 || hoverPoint) && (
                     <Group>
                       {activePolygonPoints.length > 1 && (
                         <Line
