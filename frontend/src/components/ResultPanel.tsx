@@ -1043,7 +1043,7 @@ export function ResultPanel({
                           if (dist < MIN_HANDLE_PX && !isActive) return null;
 
                           // Position the handle at the bezier midpoint if a curve exists
-                          const existingCtrl = (activeDragCurvePoints ?? referenceCurves).find(cp => cp.edgeIdx === idx)?.ctrl;
+                          const existingCtrl = (activeDragCurvePoints ?? piece.curvePoints ?? []).find(cp => cp.edgeIdx === idx)?.ctrl;
                           const [hx, hy] = existingCtrl
                             ? ctrlToHandle([x, y], B, existingCtrl)
                             : [(x + B[0]) / 2, (y + B[1]) / 2];
