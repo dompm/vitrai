@@ -7,10 +7,10 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon } from './Toolbar';
 import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -155,6 +155,7 @@ interface ResultPanelProps {
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
+  onAddManualPiece: (polygon: [number, number][]) => void;
   onUpdatePieceLabel: (id: string, label: string) => void;
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
   onAddSheetAndAssignPiece: (id: string) => void;
@@ -231,6 +232,7 @@ function getSolderWidth(scale: Scale | null, imgWidth: number) {
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
 }: ResultPanelProps) {
@@ -240,6 +242,11 @@ export function ResultPanel({
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const refineModeRef = useRef(refineMode);
   refineModeRef.current = refineMode;
+
+  const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
+  const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
+  const activePolygonPointsRef = useRef(activePolygonPoints);
+  activePolygonPointsRef.current = activePolygonPoints;
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -265,6 +272,14 @@ export function ResultPanel({
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
 
+  function commitActivePolygon() {
+    if (activePolygonPointsRef.current.length >= 3) {
+      onAddManualPiece(activePolygonPointsRef.current);
+    }
+    setActivePolygonPoints([]);
+    setHoverPoint(null);
+  }
+
   useEffect(() => {
     setRefineMode(null);
     setTooltipDrag({x: 0, y: 0});
@@ -281,14 +296,26 @@ export function ResultPanel({
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b' && !isEncoding) handleToolChange('box');
+      else if (e.key === 'p') handleToolChange('pen');
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
       else if (e.key === 'a') setRefineMode(prev => prev === 'add' ? null : 'add');
       else if (e.key === 's') setRefineMode(prev => prev === 'remove' ? null : 'remove');
+      else if (e.key === 'Enter') {
+        if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
+          commitActivePolygon();
+        }
+      }
       else if (e.key === 'Escape') {
-        if (refineModeRef.current) setRefineMode(null);
-        else handleToolChange('select');
+        if (refineModeRef.current) {
+          setRefineMode(null);
+        } else if (activePolygonPointsRef.current.length > 0) {
+          setActivePolygonPoints([]);
+          setHoverPoint(null);
+        } else {
+          handleToolChange('select');
+        }
       }
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -333,6 +360,20 @@ export function ResultPanel({
       return;
     }
 
+    if (activeTool === 'pen') {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      if (activePolygonPointsRef.current.length >= 3) {
+        const [startX, startY] = activePolygonPointsRef.current[0];
+        const dist = Math.hypot(x - startX, y - startY) * vp.effectiveScale;
+        if (dist < 15) {
+          commitActivePolygon();
+          return;
+        }
+      }
+      setActivePolygonPoints(prev => [...prev, [x, y]]);
+      return;
+    }
+
     if (activeTool === 'box' && !isEncoding) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
@@ -361,6 +402,13 @@ export function ResultPanel({
     if (marqueeBox) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setMarqueeBox(b => b ? { ...b, x2: x, y2: y } : null);
+      return;
+    }
+    if (activeTool === 'pen') {
+      if (activePolygonPointsRef.current.length > 0) {
+        const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+        setHoverPoint([x, y]);
+      }
       return;
     }
     vp.movePan(ptr);
@@ -416,6 +464,11 @@ export function ResultPanel({
       setRefineMode(null);
       if (id === 'measure') measure.reset();
       return;
+    }
+
+    if (id !== 'pen') {
+      setActivePolygonPoints([]);
+      setHoverPoint(null);
     }
 
     if (id === 'detect-all') {
@@ -482,7 +535,9 @@ export function ResultPanel({
         ? 'no-drop' 
         : activeTool === 'box' 
           ? 'crosshair' 
-          : 'default';
+          : activeTool === 'pen'
+            ? 'crosshair'
+            : 'default';
   const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
@@ -524,6 +579,17 @@ export function ResultPanel({
         shortcut: 'B',
         description: t('tooltipBoxDesc'),
         animation: <BoxAnimation />,
+      },
+    },
+    {
+      id: 'pen' as ToolId,
+      label: t('toolDrawPen'),
+      icon: <PenIcon />,
+      tooltip: {
+        name: t('tooltipPenName'),
+        shortcut: 'P',
+        description: t('tooltipPenDesc'),
+        animation: <PenAnimation />,
       },
     },
     {
@@ -655,6 +721,53 @@ export function ResultPanel({
                       listening={false}
                       globalCompositeOperation="difference"
                     />
+                  )}
+                  {activeTool === 'pen' && activePolygonPoints.length > 0 && (
+                    <Group>
+                      {activePolygonPoints.length > 1 && (
+                        <Line
+                          points={activePolygonPoints.flat()}
+                          stroke="#2563eb"
+                          strokeWidth={2.5 / es}
+                          lineJoin="round"
+                          lineCap="round"
+                        />
+                      )}
+                      {hoverPoint && (
+                        <Line
+                          points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
+                          stroke="#2563eb"
+                          strokeWidth={2.5 / es}
+                          dash={[4 / es, 4 / es]}
+                        />
+                      )}
+                      {activePolygonPoints.map(([x, y], idx) => {
+                        const isStart = idx === 0;
+                        const isCloseEnough = isStart && hoverPoint && (Math.hypot(hoverPoint[0] - x, hoverPoint[1] - y) * es < 15);
+                        return (
+                          <Circle
+                            key={idx}
+                            x={x}
+                            y={y}
+                            radius={(isStart ? (isCloseEnough ? 8 : 6) : 4.5) / es}
+                            fill={isStart ? '#10b981' : '#ffffff'}
+                            stroke="#2563eb"
+                            strokeWidth={2 / es}
+                            shadowColor="#000"
+                            shadowBlur={3}
+                            shadowOpacity={0.2}
+                            onMouseEnter={(e) => {
+                              const stage = e.target.getStage();
+                              if (stage) stage.container().style.cursor = 'pointer';
+                            }}
+                            onMouseLeave={(e) => {
+                              const stage = e.target.getStage();
+                              if (stage) stage.container().style.cursor = containerCursor;
+                            }}
+                          />
+                        );
+                      })}
+                    </Group>
                   )}
                   {marqueeBox && (
                     <Rect

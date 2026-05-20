@@ -485,3 +485,85 @@ export function PanAnimation() {
     </svg>
   );
 }
+
+export function PenAnimation() {
+  const dur = '4s';
+  const p1 = { x: 50, y: 75 };
+  const p2 = { x: 110, y: 25 };
+  const p3 = { x: 170, y: 75 };
+  
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="#eff6ff" />
+      
+      {/* Target shape boundary that highlights on completion */}
+      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(59, 130, 246, 0.08)" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3 3" />
+      
+      {/* Growing polygon segments */}
+      <polyline points="" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <animate attributeName="points"
+          values={`
+            ${p1.x},${p1.y};
+            ${p1.x},${p1.y} ${p1.x},${p1.y};
+            ${p1.x},${p1.y} ${p2.x},${p2.y};
+            ${p1.x},${p1.y} ${p2.x},${p2.y} ${p2.x},${p2.y};
+            ${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y};
+            ${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p1.x},${p1.y};
+            ${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y} ${p1.x},${p1.y}
+          `}
+          keyTimes="0; 0.15; 0.35; 0.50; 0.70; 0.85; 1"
+          dur={dur} repeatCount="indefinite" />
+      </polyline>
+      
+      {/* Vertex handles */}
+      {/* Node 1 */}
+      <circle cx={p1.x} cy={p1.y} r="3.5" fill="#10b981" stroke="#2563eb" strokeWidth="1">
+        <animate attributeName="opacity" values="0;1;1;1;1;1;1" keyTimes="0;0.10;0.35;0.50;0.70;0.85;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+      
+      {/* Node 2 */}
+      <circle cx={p2.x} cy={p2.y} r="3" fill="#ffffff" stroke="#2563eb" strokeWidth="1">
+        <animate attributeName="opacity" values="0;0;0;1;1;1;1" keyTimes="0;0.10;0.30;0.45;0.70;0.85;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+      
+      {/* Node 3 */}
+      <circle cx={p3.x} cy={p3.y} r="3" fill="#ffffff" stroke="#2563eb" strokeWidth="1">
+        <animate attributeName="opacity" values="0;0;0;0;0;1;1" keyTimes="0;0.10;0.30;0.45;0.65;0.80;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+
+      {/* Finished shape highlight */}
+      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(59, 130, 246, 0.3)" stroke="#2563eb" strokeWidth="3" opacity="0">
+        <animate attributeName="opacity" values="0;0;0;0;0;1;1" keyTimes="0;0.10;0.30;0.45;0.65;0.85;1" dur={dur} repeatCount="indefinite" />
+      </polygon>
+      
+      {/* Pen Nib Cursor */}
+      <g transform="translate(190, 80)">
+        <animateTransform
+          attributeName="transform" type="translate"
+          values={`
+            190,80;
+            ${p1.x},${p1.y};
+            ${p2.x},${p2.y};
+            ${p3.x},${p3.y};
+            ${p1.x},${p1.y};
+            190,80;
+            190,80
+          `}
+          keyTimes="0; 0.15; 0.45; 0.70; 0.85; 0.95; 1"
+          dur={dur} repeatCount="indefinite" calcMode="spline"
+          keySplines="
+            0.4,0,0.2,1;
+            0.4,0,0.2,1;
+            0.4,0,0.2,1;
+            0.4,0,0.2,1;
+            0.4,0,0.2,1;
+            0,0,1,1
+          " />
+        <path d="M0,0 C0.8,2.4 1.6,4 3.6,6 L4.8,4.8 C2.8,2.8 1.2,2 0,0" fill="#1e293b" stroke="#1e293b" strokeWidth="0.5" />
+        <path d="M3.6,6 L8.8,11.2 L11.2,8.8 L6,3.6 Z" fill="white" stroke="#1e293b" strokeWidth="0.8" />
+        <line x1="0" y1="0" x2="2.8" y2="2.8" stroke="#1e293b" strokeWidth="0.8" />
+        <circle cx="2.8" cy="2.8" r="0.5" fill="#1e293b" />
+      </g>
+    </svg>
+  );
+}

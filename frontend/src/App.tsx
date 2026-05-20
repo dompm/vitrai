@@ -184,6 +184,7 @@ export function App() {
     addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
+    addManualPiece,
     updateSheetDimensions,
     batchAddPieces,
     updatePiecePolygon,
@@ -289,6 +290,15 @@ export function App() {
       console.error("SAM segment failed:", e);
     } finally {
       unmarkPiecePending(pieceId);
+    }
+  }
+
+  function handleAddManualPiece(polygon: [number, number][]) {
+    const others = project.pieces;
+    const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
+    if (clipped.length >= 3) {
+      addManualPiece(clipped, activeSheetId);
     }
   }
 
@@ -811,6 +821,7 @@ export function App() {
           onPatternCropChange={updatePatternCrop}
           onPatternScaleChange={updatePatternScale}
           onAddPiece={handleAddPiece}
+          onAddManualPiece={handleAddManualPiece}
           onUpdatePieceLabel={updatePieceLabel}
           onUpdatePieceSheet={updatePieceSheet}
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
