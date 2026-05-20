@@ -396,6 +396,34 @@ export function useProject() {
     return id;
   }, [updateProject, t]);
 
+  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string): string => {
+    const id = crypto.randomUUID();
+    updateProject(prev => {
+      const label = `${t('piece')} ${prev.pieces.length + 1}`;
+      const sheet = prev.sheets.find(s => s.id === sheetId);
+      const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? 1;
+      const sw = sheet?.naturalWidth ?? 800;
+      const sh = sheet?.naturalHeight ?? 600;
+      const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+      const cx = (crop.left + sw - crop.right) / 2;
+      const cy = (crop.top + sh - crop.bottom) / 2;
+      const xs = polygon.map(p => p[0]);
+      const ys = polygon.map(p => p[1]);
+      const box: BoundingBox = {
+        x1: Math.min(...xs), y1: Math.min(...ys),
+        x2: Math.max(...xs), y2: Math.max(...ys),
+      };
+      const newPiece: Piece = {
+        id, label, polygon, glassSheetId: sheetId,
+        transform: { x: cx, y: cy, rotation: 0, scale: s },
+        promptBox: box, promptPoints: [],
+      };
+      setSelectedPieceIds([newPiece.id]);
+      return { ...prev, pieces: [...prev.pieces, newPiece] };
+    });
+    return id;
+  }, [updateProject, t]);
+
   const updateSheetDimensions = useCallback((sheetId: string, w: number, h: number) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -507,6 +535,7 @@ export function useProject() {
     updatePatternScale,
     updateSheetScale,
     addPieceFromBox,
+    addManualPiece,
     updateSheetDimensions,
     batchAddPieces,
     updatePiecePolygon,
