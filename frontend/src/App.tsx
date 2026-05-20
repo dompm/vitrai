@@ -162,74 +162,84 @@ function SheetTab({
             {t('contextRename')}
           </button>
 
-          {pieceCount > 0 && (
-            <div
-              className={`sheet-tab-menu-item has-submenu${submenu === 'moveTo' ? ' open' : ''}`}
-              onClick={e => { e.stopPropagation(); setSubmenu(s => s === 'moveTo' ? null : 'moveTo'); }}
-            >
-              <span className="sheet-tab-menu-label">
-                {t('contextMoveAll', { count: pieceCount })}
-              </span>
-              <span className="sheet-tab-menu-caret">▸</span>
-              {submenu === 'moveTo' && (
-                <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
-                  {otherSheets.length === 0 ? (
-                    <div className="sheet-tab-menu-item is-disabled">
-                      {t('contextNoOtherSheets')}
-                    </div>
-                  ) : (
-                    otherSheets.map(s => (
+          {(() => {
+            const moveToDisabled = pieceCount === 0;
+            const moveFromDisabled = sheetsWithPieces.length === 0;
+            return (
+              <>
+                <div
+                  className={`sheet-tab-menu-item has-submenu${submenu === 'moveTo' ? ' open' : ''}${moveToDisabled ? ' is-disabled' : ''}`}
+                  onClick={e => {
+                    if (moveToDisabled) return;
+                    e.stopPropagation();
+                    setSubmenu(s => s === 'moveTo' ? null : 'moveTo');
+                  }}
+                  aria-disabled={moveToDisabled}
+                >
+                  <span className="sheet-tab-menu-label">
+                    {moveToDisabled
+                      ? t('contextMoveAllEmpty')
+                      : t('contextMoveAll', { count: pieceCount })}
+                  </span>
+                  <span className="sheet-tab-menu-caret">▸</span>
+                  {!moveToDisabled && submenu === 'moveTo' && (
+                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                      {otherSheets.length === 0 ? (
+                        <div className="sheet-tab-menu-item is-disabled">
+                          {t('contextNoOtherSheets')}
+                        </div>
+                      ) : (
+                        otherSheets.map(s => (
+                          <button
+                            key={s.id}
+                            className="sheet-tab-menu-item"
+                            onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllTo(s.id); }}
+                          >
+                            <span className="sheet-tab-menu-label">{s.label}</span>
+                            <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
+                          </button>
+                        ))
+                      )}
+                      <div className="sheet-tab-menu-divider" />
                       <button
-                        key={s.id}
                         className="sheet-tab-menu-item"
-                        onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllTo(s.id); }}
+                        onClick={() => { setMenuPos(null); setSubmenu(null); onNewSheetFromImage(); }}
                       >
-                        <span className="sheet-tab-menu-label">{s.label}</span>
-                        <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
+                        {t('contextNewFromImage')}
                       </button>
-                    ))
+                    </div>
                   )}
-                  <div className="sheet-tab-menu-divider" />
-                  <button
-                    className="sheet-tab-menu-item"
-                    onClick={() => { setMenuPos(null); setSubmenu(null); onNewSheetFromImage(); }}
-                  >
-                    {t('contextNewFromImage')}
-                  </button>
                 </div>
-              )}
-            </div>
-          )}
 
-          {pieceCount === 0 && (
-            <div
-              className={`sheet-tab-menu-item has-submenu${submenu === 'moveFrom' ? ' open' : ''}`}
-              onClick={e => { e.stopPropagation(); setSubmenu(s => s === 'moveFrom' ? null : 'moveFrom'); }}
-            >
-              <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
-              <span className="sheet-tab-menu-caret">▸</span>
-              {submenu === 'moveFrom' && (
-                <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
-                  {sheetsWithPieces.length === 0 ? (
-                    <div className="sheet-tab-menu-item is-disabled">
-                      {t('contextNoSheetsWithPieces')}
+                <div
+                  className={`sheet-tab-menu-item has-submenu${submenu === 'moveFrom' ? ' open' : ''}${moveFromDisabled ? ' is-disabled' : ''}`}
+                  onClick={e => {
+                    if (moveFromDisabled) return;
+                    e.stopPropagation();
+                    setSubmenu(s => s === 'moveFrom' ? null : 'moveFrom');
+                  }}
+                  aria-disabled={moveFromDisabled}
+                >
+                  <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
+                  <span className="sheet-tab-menu-caret">▸</span>
+                  {!moveFromDisabled && submenu === 'moveFrom' && (
+                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                      {sheetsWithPieces.map(s => (
+                        <button
+                          key={s.id}
+                          className="sheet-tab-menu-item"
+                          onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllFromSrc(s.id); }}
+                        >
+                          <span className="sheet-tab-menu-label">{s.label}</span>
+                          <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
+                        </button>
+                      ))}
                     </div>
-                  ) : (
-                    sheetsWithPieces.map(s => (
-                      <button
-                        key={s.id}
-                        className="sheet-tab-menu-item"
-                        onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllFromSrc(s.id); }}
-                      >
-                        <span className="sheet-tab-menu-label">{s.label}</span>
-                        <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
-                      </button>
-                    ))
                   )}
                 </div>
-              )}
-            </div>
-          )}
+              </>
+            );
+          })()}
 
           {canDelete && (
             <button

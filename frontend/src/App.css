@@ -379,6 +379,10 @@ html, body, #root {
   color: var(--text-dim);
 }
 
+.sheet-tab-menu-item.is-disabled .sheet-tab-menu-caret {
+  visibility: hidden;
+}
+
 .sheet-tab-menu-label {
   flex: 1;
   min-width: 0;
