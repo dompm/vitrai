@@ -1,7 +1,8 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
+import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -15,19 +16,30 @@ import './App.css';
 interface SheetTabProps {
   sheet: GlassSheet;
   isActive: boolean;
+  isEmpty: boolean;
   canDelete: boolean;
+  pieceCount: number;
+  pieceCountBySheet: Record<string, number>;
+  allSheets: GlassSheet[];
   onSelect: () => void;
   onRename: (label: string) => void;
   onDelete: () => void;
+  onMoveAllTo: (destSheetId: string) => void;
+  onMoveAllFromSrc: (srcSheetId: string) => void;
+  onNewSheetFromImage: () => void;
 }
 
 const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
 
-function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: SheetTabProps) {
+function SheetTab({
+  sheet, isActive, isEmpty, canDelete, pieceCount, pieceCountBySheet, allSheets,
+  onSelect, onRename, onDelete, onMoveAllTo, onMoveAllFromSrc, onNewSheetFromImage,
+}: SheetTabProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [submenu, setSubmenu] = useState<'moveTo' | 'moveFrom' | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
@@ -37,7 +49,7 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
 
   useEffect(() => {
     if (!menuPos) return;
-    function close() { setMenuPos(null); }
+    function close() { setMenuPos(null); setSubmenu(null); }
     window.addEventListener('mousedown', close);
     window.addEventListener('keydown', close);
     return () => {
@@ -45,6 +57,9 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
       window.removeEventListener('keydown', close);
     };
   }, [menuPos]);
+
+  const otherSheets = allSheets.filter(s => s.id !== sheet.id);
+  const sheetsWithPieces = otherSheets.filter(s => (pieceCountBySheet[s.id] ?? 0) > 0);
 
   function commit() {
     const trimmed = draft.trim();
@@ -108,7 +123,7 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
   return (
     <>
       <button
-        className={`sheet-tab ${isActive ? 'active' : ''}`}
+        className={`sheet-tab ${isActive ? 'active' : ''}${isEmpty ? ' is-empty' : ''}`}
         onClick={handleClick}
         onDoubleClick={startEditing}
         onContextMenu={handleContextMenu}
@@ -146,6 +161,76 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
           >
             {t('contextRename')}
           </button>
+
+          {pieceCount > 0 && (
+            <div
+              className={`sheet-tab-menu-item has-submenu${submenu === 'moveTo' ? ' open' : ''}`}
+              onClick={e => { e.stopPropagation(); setSubmenu(s => s === 'moveTo' ? null : 'moveTo'); }}
+            >
+              <span className="sheet-tab-menu-label">
+                {t('contextMoveAll', { count: pieceCount })}
+              </span>
+              <span className="sheet-tab-menu-caret">▸</span>
+              {submenu === 'moveTo' && (
+                <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                  {otherSheets.length === 0 ? (
+                    <div className="sheet-tab-menu-item is-disabled">
+                      {t('contextNoOtherSheets')}
+                    </div>
+                  ) : (
+                    otherSheets.map(s => (
+                      <button
+                        key={s.id}
+                        className="sheet-tab-menu-item"
+                        onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllTo(s.id); }}
+                      >
+                        <span className="sheet-tab-menu-label">{s.label}</span>
+                        <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
+                      </button>
+                    ))
+                  )}
+                  <div className="sheet-tab-menu-divider" />
+                  <button
+                    className="sheet-tab-menu-item"
+                    onClick={() => { setMenuPos(null); setSubmenu(null); onNewSheetFromImage(); }}
+                  >
+                    {t('contextNewFromImage')}
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {pieceCount === 0 && (
+            <div
+              className={`sheet-tab-menu-item has-submenu${submenu === 'moveFrom' ? ' open' : ''}`}
+              onClick={e => { e.stopPropagation(); setSubmenu(s => s === 'moveFrom' ? null : 'moveFrom'); }}
+            >
+              <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
+              <span className="sheet-tab-menu-caret">▸</span>
+              {submenu === 'moveFrom' && (
+                <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                  {sheetsWithPieces.length === 0 ? (
+                    <div className="sheet-tab-menu-item is-disabled">
+                      {t('contextNoSheetsWithPieces')}
+                    </div>
+                  ) : (
+                    sheetsWithPieces.map(s => (
+                      <button
+                        key={s.id}
+                        className="sheet-tab-menu-item"
+                        onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllFromSrc(s.id); }}
+                      >
+                        <span className="sheet-tab-menu-label">{s.label}</span>
+                        <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           {canDelete && (
             <button
               className="sheet-tab-menu-item sheet-tab-menu-item-danger"
@@ -198,6 +283,8 @@ export function App() {
     loadProjectData,
     updatePatternImage,
     addSheetFromImage,
+    moveAllPiecesBetweenSheets,
+    addSheetFromImageAndMovePieces,
     availableProjects,
     setProjectName,
     createNewProject,
@@ -215,8 +302,21 @@ export function App() {
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
+  const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
+  const moveSourceSheetIdRef = useRef<string | null>(null);
+  const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
   const projectNameInputRef = useRef<HTMLInputElement>(null);
+
+  const pieceCountBySheet = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const s of project.sheets) counts[s.id] = 0;
+    for (const p of project.pieces) {
+      counts[p.glassSheetId] = (counts[p.glassSheetId] ?? 0) + 1;
+    }
+    return counts;
+  }, [project.sheets, project.pieces]);
 
   useEffect(() => { setNameDraft(project.name); }, [project.name]);
 
@@ -587,6 +687,42 @@ export function App() {
     e.target.value = '';
   };
 
+  const handleNewSheetFromImageWithMove = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    const srcId = moveSourceSheetIdRef.current;
+    moveSourceSheetIdRef.current = null;
+    e.target.value = '';
+    if (!file || !srcId) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      addSheetFromImageAndMovePieces(dataUrl, file.name, srcId);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const requestMove = (srcId: string, destId: string) => {
+    if (srcId === destId) return;
+    if (suppressMoveConfirm) {
+      moveAllPiecesBetweenSheets(srcId, destId);
+      return;
+    }
+    setPendingMove({ srcId, destId });
+  };
+
+  const triggerNewSheetFromImage = (srcId: string) => {
+    moveSourceSheetIdRef.current = srcId;
+    newSheetFileInputRef.current?.click();
+  };
+
+  const pendingMoveLabels = pendingMove
+    ? {
+        src: project.sheets.find(s => s.id === pendingMove.srcId)?.label ?? '',
+        dest: project.sheets.find(s => s.id === pendingMove.destId)?.label ?? '',
+        count: pieceCountBySheet[pendingMove.srcId] ?? 0,
+      }
+    : null;
+
   const commitProjectName = () => {
     const trimmed = nameDraft.trim();
     if (trimmed && trimmed !== project.name) setProjectName(trimmed);
@@ -840,16 +976,30 @@ export function App() {
                 key={sheet.id}
                 sheet={sheet}
                 isActive={sheet.id === activeSheetId}
+                isEmpty={(pieceCountBySheet[sheet.id] ?? 0) === 0}
                 canDelete
+                pieceCount={pieceCountBySheet[sheet.id] ?? 0}
+                pieceCountBySheet={pieceCountBySheet}
+                allSheets={project.sheets}
                 onSelect={() => setActiveSheetId(sheet.id)}
                 onRename={label => renameSheet(sheet.id, label)}
                 onDelete={() => deleteSheet(sheet.id)}
+                onMoveAllTo={destId => requestMove(sheet.id, destId)}
+                onMoveAllFromSrc={srcId => requestMove(srcId, sheet.id)}
+                onNewSheetFromImage={() => triggerNewSheetFromImage(sheet.id)}
               />
             ))}
             <label className="sheet-tab" title={t('uploadSheetTooltip')} style={{ cursor: 'pointer' }}>
               +
               <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAddSheetFromImage} />
             </label>
+            <input
+              ref={newSheetFileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleNewSheetFromImageWithMove}
+            />
           </div>
         </div>
 
@@ -863,6 +1013,10 @@ export function App() {
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            showEmptyHint={
+              piecesOnActiveSheet.length === 0 &&
+              project.pieces.length > 0
+            }
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -950,6 +1104,20 @@ export function App() {
           </button>
         </div>
       </div>
+
+      {pendingMove && pendingMoveLabels && (
+        <MoveConfirmDialog
+          count={pendingMoveLabels.count}
+          srcLabel={pendingMoveLabels.src}
+          destLabel={pendingMoveLabels.dest}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={dontAsk => {
+            if (dontAsk) setSuppressMoveConfirm(true);
+            moveAllPiecesBetweenSheets(pendingMove.srcId, pendingMove.destId);
+            setPendingMove(null);
+          }}
+        />
+      )}
   </div>
   );
 }

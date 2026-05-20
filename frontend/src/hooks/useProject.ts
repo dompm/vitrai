@@ -43,6 +43,28 @@ function stripExtension(name: string): string {
   return name.replace(/\.[^./\\]+$/, '');
 }
 
+function sheetCenter(sheet: GlassSheet | undefined) {
+  const sw = sheet?.naturalWidth ?? 800;
+  const sh = sheet?.naturalHeight ?? 600;
+  const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+  return {
+    x: (crop.left + sw - crop.right) / 2,
+    y: (crop.top + sh - crop.bottom) / 2,
+  };
+}
+
+function fitScaleForPiece(polygon: [number, number][], sheet: GlassSheet | undefined): number {
+  const xs = polygon.map(p => p[0]);
+  const ys = polygon.map(p => p[1]);
+  const pw = Math.max(...xs) - Math.min(...xs);
+  const ph = Math.max(...ys) - Math.min(...ys);
+  if (pw <= 0 || ph <= 0) return 1;
+  const sw = (sheet?.naturalWidth ?? 800) - (sheet?.crop.left ?? 0) - (sheet?.crop.right ?? 0);
+  const sh = (sheet?.naturalHeight ?? 600) - (sheet?.crop.top ?? 0) - (sheet?.crop.bottom ?? 0);
+  if (sw <= 0 || sh <= 0) return 1;
+  return Math.min(sw / pw, sh / ph) * 0.95;
+}
+
 export function useProject() {
   const { t } = useTranslation();
   const [project, setProject] = useState<Project>(EMPTY_PROJECT);
@@ -515,6 +537,59 @@ export function useProject() {
     });
   }, [updateProject]);
 
+  const moveAllPiecesBetweenSheets = useCallback((srcSheetId: string, destSheetId: string) => {
+    if (srcSheetId === destSheetId) return;
+    updateProject(prev => {
+      const dest = prev.sheets.find(s => s.id === destSheetId);
+      if (!dest) return prev;
+      const { x: cx, y: cy } = sheetCenter(dest);
+      const calibrated = calibratedScale(prev.patternScale, dest.scale ?? null);
+      return {
+        ...prev,
+        pieces: prev.pieces.map(p => {
+          if (p.glassSheetId !== srcSheetId) return p;
+          const s = calibrated ?? fitScaleForPiece(p.polygon, dest);
+          return {
+            ...p,
+            glassSheetId: destSheetId,
+            transform: { x: cx, y: cy, rotation: 0, scale: s },
+          };
+        }),
+      };
+    });
+    setActiveSheetId(destSheetId);
+  }, [updateProject]);
+
+  const addSheetFromImageAndMovePieces = useCallback((url: string, label: string, srcSheetId: string) => {
+    const id = `sheet-${Date.now()}`;
+    const cleanLabel = stripExtension(label);
+    updateProject(prev => {
+      const newSheet: GlassSheet = {
+        id, label: cleanLabel, imageUrl: url,
+        crop: { top: 0, left: 0, bottom: 0, right: 0 },
+        scale: null,
+      };
+      // naturalWidth/Height are unknown until the image loads, so sheetCenter
+      // falls back to defaults; the user re-positions on the new sheet, which
+      // is the whole point of trying a new material.
+      const { x: cx, y: cy } = sheetCenter(newSheet);
+      return {
+        ...prev,
+        sheets: [...prev.sheets, newSheet],
+        pieces: prev.pieces.map(p => {
+          if (p.glassSheetId !== srcSheetId) return p;
+          const s = fitScaleForPiece(p.polygon, newSheet);
+          return {
+            ...p,
+            glassSheetId: id,
+            transform: { x: cx, y: cy, rotation: 0, scale: s },
+          };
+        }),
+      };
+    });
+    setActiveSheetId(id);
+  }, [updateProject]);
+
   return {
     project,
     isLoaded,
@@ -559,5 +634,7 @@ export function useProject() {
     loadProjectData,
     updatePatternImage,
     addSheetFromImage,
+    moveAllPiecesBetweenSheets,
+    addSheetFromImageAndMovePieces,
   };
 }
