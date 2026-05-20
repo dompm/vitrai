@@ -727,7 +727,7 @@ export function ResultPanel({
                       {activePolygonPoints.length > 1 && (
                         <Line
                           points={activePolygonPoints.flat()}
-                          stroke="#2563eb"
+                          stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           lineJoin="round"
                           lineCap="round"
@@ -736,7 +736,7 @@ export function ResultPanel({
                       {hoverPoint && (
                         <Line
                           points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
-                          stroke="#2563eb"
+                          stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           dash={[4 / es, 4 / es]}
                         />
@@ -750,8 +750,8 @@ export function ResultPanel({
                             x={x}
                             y={y}
                             radius={(isStart ? (isCloseEnough ? 8 : 6) : 4.5) / es}
-                            fill={isStart ? '#10b981' : '#ffffff'}
-                            stroke="#2563eb"
+                            fill={isStart ? (isCloseEnough ? CANVAS.patternPending : CANVAS.amber) : CANVAS.paper}
+                            stroke={CANVAS.amber}
                             strokeWidth={2 / es}
                             shadowColor="#000"
                             shadowBlur={3}
