@@ -77,7 +77,16 @@ const resources = {
       printPrimaryTooltip: "Print pattern at true 1:1 scale (⌘⏎)",
       printNoPieces: "Cut at least one piece to print.",
       contextRename: "Rename",
-      contextDelete: "Delete"
+      contextDelete: "Delete",
+      openProject: "Open project…",
+      saveCopy: "Save copy…",
+      replacePattern: "Replace…",
+      replacePatternTooltip: "Replace pattern image",
+      sheets_one: "{{count}} sheet",
+      sheets_other: "{{count}} sheets",
+      pieces_one: "{{count}} piece",
+      pieces_other: "{{count}} pieces",
+      patternDimensions: "{{w}} × {{h}} px"
     }
   },
   fr: {
@@ -154,7 +163,16 @@ const resources = {
       printPrimaryTooltip: "Imprimer le patron à l'échelle 1:1 (⌘⏎)",
       printNoPieces: "Découpez au moins une pièce pour imprimer.",
       contextRename: "Renommer",
-      contextDelete: "Supprimer"
+      contextDelete: "Supprimer",
+      openProject: "Ouvrir un projet…",
+      saveCopy: "Enregistrer une copie…",
+      replacePattern: "Remplacer…",
+      replacePatternTooltip: "Remplacer l'image du patron",
+      sheets_one: "{{count}} plaque",
+      sheets_other: "{{count}} plaques",
+      pieces_one: "{{count}} pièce",
+      pieces_other: "{{count}} pièces",
+      patternDimensions: "{{w}} × {{h}} px"
     }
   }
 };
