@@ -157,10 +157,12 @@ interface SheetPanelProps {
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
+  showEmptyHint?: boolean;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
+  showEmptyHint = false,
 }: SheetPanelProps) {
   const { t } = useTranslation();
   const [activeTool, setActiveTool] = useState<ToolId>('select');
@@ -524,6 +526,11 @@ export function SheetPanel({
             )}
           </Layer>
         </Stage>
+        {showEmptyHint && (
+          <div className="empty-sheet-hint" role="status">
+            {t('emptySheetHint')}
+          </div>
+        )}
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;
