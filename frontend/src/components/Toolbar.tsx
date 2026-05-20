@@ -1,4 +1,4 @@
-export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'pen';
+export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'pen' | 'pencil';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
@@ -43,6 +43,13 @@ export const PenIcon = () => (
     <path d="M8.5 4.5L11.5 7.5" />
     <circle cx="5" cy="11" r="0.75" fill="currentColor" />
     <line x1="3" y1="13" x2="5" y2="11" />
+  </svg>
+);
+
+export const PencilIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
   </svg>
 );
 

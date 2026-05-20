@@ -331,6 +331,15 @@ export function App() {
     updatePiecePolygon(pieceId, smoothPolygon(piece.polygon));
   }
 
+  function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
+    const others = project.pieces.filter(p => p.id !== pieceId);
+    const snapped = snapPolygonToNeighbors(polygon, others.map(p => p.polygon), getSnapRadius(project.patternWidth));
+    const clipped = subtractPolygons(snapped, others.map(p => p.polygon));
+    if (clipped.length >= 3) {
+      updatePiecePolygon(pieceId, clipped);
+    }
+  }
+
 
   const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
   const selectedPiece = project.pieces.find(p => p.id === selectedPieceIds[selectedPieceIds.length - 1]) ?? null;
@@ -827,6 +836,7 @@ export function App() {
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
           onDeletePiece={deletePiece}
           onSmoothPiece={handleSmoothPiece}
+          onUpdatePiecePolygon={handleUpdatePiecePolygon}
           onUpdatePrompt={handleUpdatePrompt}
           onUploadPattern={handleUploadPattern}
           onAutoSegment={handleAutoSegment}
