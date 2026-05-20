@@ -370,6 +370,12 @@ export function ResultPanel({
           commitActivePolygon();
         }
       }
+      else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+        // Pop the last placed vertex — don't let App.tsx fire project undo
+        e.preventDefault();
+        e.stopPropagation();
+        setActivePolygonPoints(prev => prev.slice(0, -1));
+      }
       else if (e.key === 'Escape') {
         if (refineModeRef.current) {
           setRefineMode(null);
