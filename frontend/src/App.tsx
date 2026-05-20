@@ -287,7 +287,8 @@ export function App() {
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
       const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
-      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped);
+      // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
+      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
     } catch (e) {
       console.error("SAM segment failed:", e);
     } finally {
@@ -321,8 +322,9 @@ export function App() {
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
       const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
-      // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale
-      if (clipped.length >= 3) { updatePiecePolygon(pieceId, clipped); updatePieceCurves(pieceId, []); }
+      // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
+      // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
+      if (clipped.length >= 3) { updatePiecePolygon(pieceId, clipped, true); updatePieceCurves(pieceId, [], true); }
     } catch (e) {
       console.error(e);
     } finally {

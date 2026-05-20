@@ -494,18 +494,18 @@ export function useProject() {
     });
   }, [updateProject, t]);
 
-  const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][]) => {
+  const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][], skipHistory = false) => {
     updateProject(prev => ({
       ...prev,
       pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p)
-    }), true);
+    }), skipHistory);
   }, [updateProject]);
 
-  const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[]) => {
+  const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
     updateProject(prev => ({
       ...prev,
       pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p)
-    }), true);
+    }), skipHistory);
   }, [updateProject]);
 
   const markPiecePending = useCallback((pieceId: string) => {

@@ -371,9 +371,10 @@ export function ResultPanel({
         }
       }
       else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-        // Pop the last placed vertex — don't let App.tsx fire project undo
+        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+        // window listener from also firing project undo on the same event.
         e.preventDefault();
-        e.stopPropagation();
+        e.stopImmediatePropagation();
         setActivePolygonPoints(prev => prev.slice(0, -1));
       }
       else if (e.key === 'Escape') {
