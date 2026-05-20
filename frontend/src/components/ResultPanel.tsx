@@ -1009,11 +1009,9 @@ export function ResultPanel({
                                 if (!dragStartPolygon) { setDraggedCorner(null); return; }
                                 const newPolygon = [...dragStartPolygon];
                                 newPolygon[idx] = [e.target.x(), e.target.y()];
-                                // Drop curves on the two edges adjacent to the moved corner
-                                const adjacentEdges = new Set([idx, (idx - 1 + len) % len]);
-                                const remainingCurves = (piece.curvePoints ?? []).filter(cp => !adjacentEdges.has(cp.edgeIdx));
+                                // Curves use absolute ctrl coordinates so they adapt naturally
+                                // to the moved corner — no need to drop them
                                 onUpdatePiecePolygon(selectedId, newPolygon);
-                                onUpdatePieceCurves(selectedId, remainingCurves);
                                 setDraggedCorner(null);
                                 setDragStartPolygon(null);
                                 setActiveDragPolygon(null);
