@@ -852,7 +852,7 @@ export function ResultPanel({
                       {activePolygonPoints.length > 1 && (
                         <Line
                           points={activePolygonPoints.flat()}
-                          stroke="#2563eb"
+                          stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           lineJoin="round"
                           lineCap="round"
@@ -861,7 +861,7 @@ export function ResultPanel({
                       {hoverPoint && (
                         <Line
                           points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
-                          stroke="#2563eb"
+                          stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           dash={[4 / es, 4 / es]}
                         />
@@ -875,8 +875,8 @@ export function ResultPanel({
                             x={x}
                             y={y}
                             radius={(isStart ? (isCloseEnough ? 8 : 6) : 4.5) / es}
-                            fill={isStart ? '#10b981' : '#ffffff'}
-                            stroke="#2563eb"
+                            fill={isStart ? (isCloseEnough ? CANVAS.patternPending : CANVAS.amber) : CANVAS.paper}
+                            stroke={CANVAS.amber}
                             strokeWidth={2 / es}
                             shadowColor="#000"
                             shadowBlur={3}
@@ -897,7 +897,7 @@ export function ResultPanel({
                   {activeTool === 'pencil' && pencilPoints.length > 0 && (
                     <Line
                       points={pencilPoints.flat()}
-                      stroke="#2563eb"
+                      stroke={CANVAS.amber}
                       strokeWidth={2.5 / es}
                       lineJoin="round"
                       lineCap="round"
@@ -993,8 +993,8 @@ export function ResultPanel({
                               x={currentX}
                               y={currentY}
                               radius={6 / es}
-                              fill="#ffffff"
-                              stroke="#1d4ed8"
+                              fill={CANVAS.paper}
+                              stroke={CANVAS.amber}
                               strokeWidth={2 / es}
                               draggable
                               onDragStart={() => {
@@ -1046,8 +1046,8 @@ export function ResultPanel({
                               x={midX}
                               y={midY}
                               radius={5 / es}
-                              fill="#3b82f6"
-                              stroke="#ffffff"
+                              fill={CANVAS.amber}
+                              stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
                               draggable
                               onDragStart={() => {
