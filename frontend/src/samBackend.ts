@@ -27,6 +27,10 @@ export class SamWorkerBackend {
       if (msg.type === "ready") {
         onStatusChange(`WebGPU ready (${msg.device})`);
         resolveReady(msg.device);
+      } else if (msg.type === "init:error") {
+        console.error("[SAM Backend] Worker init failed:", msg.error);
+        onStatusChange(`SAM init failed: ${msg.error.split('\n')[0]}`);
+        rejectReady(new Error(msg.error));
       } else if (msg.type === "status") {
         onStatusChange(msg.text);
       } else {
@@ -79,6 +83,9 @@ export class SamWorkerBackend {
 declare global { interface Window { __samBackend?: SamWorkerBackend } }
 
 export function getSamBackend(onStatusChange: (s: string) => void = () => {}): SamWorkerBackend {
-  if (!window.__samBackend) window.__samBackend = new SamWorkerBackend(onStatusChange);
+  if (!window.__samBackend) {
+    console.log("[SAM Backend] Creating worker singleton");
+    window.__samBackend = new SamWorkerBackend(onStatusChange);
+  }
   return window.__samBackend;
 }

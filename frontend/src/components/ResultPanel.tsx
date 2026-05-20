@@ -8,6 +8,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon } from './Toolbar';
+import { IconUpload } from './icons';
 import type { ToolId } from './Toolbar';
 import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
@@ -17,6 +18,7 @@ import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
+import { CANVAS } from '../theme';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -41,11 +43,12 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
         alignItems: 'center',
         justifyContent: 'center',
         borderRadius: '8px 8px 0 0',
-        background: '#f3f4f6',
-        borderBottom: '1px solid #e5e7eb',
+        background: 'var(--chrome-700)',
+        borderBottom: '1px solid var(--hairline)',
+        color: 'var(--text-dim)',
       }}
     >
-      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="#9ca3af"/><circle cx="10" cy="2" r="1.5" fill="#9ca3af"/><circle cx="16" cy="2" r="1.5" fill="#9ca3af"/></svg>
+      <svg width="20" height="4" viewBox="0 0 20 4"><circle cx="4" cy="2" r="1.5" fill="currentColor"/><circle cx="10" cy="2" r="1.5" fill="currentColor"/><circle cx="16" cy="2" r="1.5" fill="currentColor"/></svg>
     </div>
   );
 }
@@ -112,6 +115,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       onClick={handleClick} onTap={handleClick} opacity={opacity}
       onPointerDown={handlePointerDown} onPointerMove={cancelLongPress} onPointerUp={cancelLongPress}
     >
+      <Line points={flatPts} closed fill="rgba(0,0,0,0)" />
       <Group clipFunc={clipPolygon}>
         <Group
           x={centroid.x} y={centroid.y}
@@ -132,7 +136,7 @@ function PieceOverlay({ piece, glassImageUrl, isSelected, isPending, effectiveSc
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? '#f59e0b' : isSelected ? '#1d4ed8' : '#2d2d2d'}
+        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : CANVAS.lead}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         lineJoin="round"
         lineCap="round"
@@ -647,17 +651,18 @@ export function ResultPanel({
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
+        className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
         {!project.patternImageUrl ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
-              <p style={{ fontSize: '1.2rem', fontWeight: 600, color: '#111827', marginBottom: 12 }}>{t('noPatternTitle')}</p>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
               <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
                 {t('noPatternDesc')}
               </p>
               <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <IconUpload size={16} />
                 {t('uploadPatternButton')}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
               </label>
@@ -770,8 +775,8 @@ export function ResultPanel({
                       y={Math.min(marqueeBox.y1, marqueeBox.y2)}
                       width={Math.abs(marqueeBox.x2 - marqueeBox.x1)}
                       height={Math.abs(marqueeBox.y2 - marqueeBox.y1)}
-                      fill="rgba(67, 56, 202, 0.08)"
-                      stroke="#1d4ed8"
+                      fill={CANVAS.amberSelectionFill}
+                      stroke={CANVAS.amber}
                       strokeWidth={1.5 / es}
                       dash={[4 / es, 2 / es]}
                       listening={false}
@@ -791,9 +796,9 @@ export function ResultPanel({
                       y={Math.min(drawingBox.y1, drawingBox.y2)}
                       width={Math.abs(drawingBox.x2 - drawingBox.x1)}
                       height={Math.abs(drawingBox.y2 - drawingBox.y1)}
-                      stroke="#f59e0b"
+                      stroke={CANVAS.drawingBoxStroke}
                       strokeWidth={2 / es}
-                      fill="rgba(245,158,11,0.08)"
+                      fill={CANVAS.drawingBoxFill}
                       dash={[6 / es, 4 / es]}
                       listening={false}
                     />
@@ -808,7 +813,7 @@ export function ResultPanel({
                           y={piece.promptBox.y1}
                           width={piece.promptBox.x2 - piece.promptBox.x1}
                           height={piece.promptBox.y2 - piece.promptBox.y1}
-                          stroke="rgba(245,158,11,0.3)"
+                          stroke={CANVAS.promptBoxStroke}
                           strokeWidth={1 / es}
                           dash={[4 / es, 6 / es]}
                           listening={false}
@@ -824,7 +829,7 @@ export function ResultPanel({
                         key={i}
                         x={pt.x} y={pt.y}
                         radius={5 / es}
-                        fill={pt.label === 1 ? '#1d4ed8' : '#ef4444'}
+                        fill={pt.label === 1 ? CANVAS.amber : CANVAS.ruby}
                         listening={false}
                       />
                     ));

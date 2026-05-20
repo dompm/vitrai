@@ -38,6 +38,11 @@ function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
   };
 }
 
+/** Strip the last filename extension (e.g. "amber-rose.jpg" → "amber-rose"). */
+function stripExtension(name: string): string {
+  return name.replace(/\.[^./\\]+$/, '');
+}
+
 export function useProject() {
   const { t } = useTranslation();
   const [project, setProject] = useState<Project>(EMPTY_PROJECT);
@@ -48,9 +53,32 @@ export function useProject() {
   const [undoStack, setUndoStack] = useState<Project[]>([]);
   const [redoStack, setRedoStack] = useState<Project[]>([]);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
   const latestProjectRef = useRef(project);
   latestProjectRef.current = project;
+
+  const persist = useCallback(async (p: Project, name: string) => {
+    if (savingIndicatorTimerRef.current) clearTimeout(savingIndicatorTimerRef.current);
+    savingIndicatorTimerRef.current = setTimeout(() => {
+      setSaveStatus(s => (s === 'saved' || s === 'error' ? 'saving' : s));
+    }, 200);
+    try {
+      await saveToOPFS(p, name);
+      if (savingIndicatorTimerRef.current) clearTimeout(savingIndicatorTimerRef.current);
+      setSaveStatus('saved');
+    } catch (err) {
+      if (savingIndicatorTimerRef.current) clearTimeout(savingIndicatorTimerRef.current);
+      console.error('[useProject] save failed', err);
+      setSaveStatus('error');
+    }
+  }, []);
+
+  const retrySave = useCallback(() => {
+    const p = latestProjectRef.current;
+    void persist(p, p.name);
+  }, [persist]);
 
   const refreshProjectList = useCallback(async () => {
     const names = await listProjects();
@@ -63,8 +91,8 @@ export function useProject() {
       saveTimerRef.current = null;
     }
     const p = latestProjectRef.current;
-    return saveToOPFS(p, p.name);
-  }, []);
+    return persist(p, p.name);
+  }, [persist]);
 
   useEffect(() => {
     const last = localStorage.getItem('vitraux-last-project') ?? 'default';
@@ -97,13 +125,13 @@ export function useProject() {
         setRedoStack([]);
       }
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => { 
-        saveToOPFS(next, next.name);
+      saveTimerRef.current = setTimeout(() => {
+        void persist(next, next.name);
         refreshProjectList();
       }, 500);
       return next;
     });
-  }, [refreshProjectList]);
+  }, [refreshProjectList, persist]);
 
   const undo = useCallback(() => {
     setUndoStack(u => {
@@ -113,12 +141,12 @@ export function useProject() {
       setProject(current => {
         setRedoStack(r => [...r, current]);
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { saveToOPFS(prev, prev.name); }, 500);
+        saveTimerRef.current = setTimeout(() => { void persist(prev, prev.name); }, 500);
         return prev;
       });
       return newStack;
     });
-  }, []);
+  }, [persist]);
 
   const redo = useCallback(() => {
     setRedoStack(r => {
@@ -128,12 +156,12 @@ export function useProject() {
       setProject(current => {
         setUndoStack(u => [...u, current]);
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { saveToOPFS(next, next.name); }, 500);
+        saveTimerRef.current = setTimeout(() => { void persist(next, next.name); }, 500);
         return next;
       });
       return newStack;
     });
-  }, []);
+  }, [persist]);
 
   const setProjectName = useCallback((name: string) => {
     const oldName = project.name;
@@ -288,6 +316,13 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updateSheetSwatch = useCallback((sheetId: string, swatch: string) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, swatch } : s)
+    }), true);
+  }, [updateProject]);
+
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
       const sheet = prev.sheets.find(s => s.id === sheetId);
@@ -310,9 +345,8 @@ export function useProject() {
 
   const deleteSheet = useCallback((sheetId: string) => {
     updateProject(prev => {
-      if (prev.sheets.length <= 1) return prev;
       const remaining = prev.sheets.filter(s => s.id !== sheetId);
-      const fallbackId = remaining[0].id;
+      const fallbackId = remaining[0]?.id ?? '';
       return {
         ...prev,
         sheets: remaining,
@@ -340,7 +374,7 @@ export function useProject() {
     updateProject(prev => {
       const newSheet = makeNewSheet(prev, t);
       if (url) newSheet.imageUrl = url;
-      if (label) newSheet.label = label;
+      if (label) newSheet.label = stripExtension(label);
       
       setActiveSheetId(newSheet.id);
 
@@ -497,9 +531,10 @@ export function useProject() {
 
   const addSheetFromImage = useCallback((url: string, label: string) => {
     const id = `sheet-${Date.now()}`;
+    const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
-        id, label, imageUrl: url,
+        id, label: cleanLabel, imageUrl: url,
         crop: { top: 0, left: 0, bottom: 0, right: 0 },
         scale: null,
       };
@@ -530,6 +565,7 @@ export function useProject() {
     updatePieceSheet,
     deleteSheet,
     renameSheet,
+    updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
     updatePatternScale,
@@ -547,6 +583,8 @@ export function useProject() {
     redo,
     canUndo: undoStack.length > 0,
     canRedo: redoStack.length > 0,
+    saveStatus,
+    retrySave,
     loadProjectData,
     updatePatternImage,
     addSheetFromImage,

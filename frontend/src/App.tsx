@@ -4,8 +4,12 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon } from './utils/geometry';
+import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet } from './types';
+import {
+  IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter,
+} from './components/icons';
 import './App.css';
 
 interface SheetTabProps {
@@ -19,33 +23,69 @@ interface SheetTabProps {
 
 const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
 
-const UndoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 7v6h6" />
-    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13" />
-  </svg>
-);
-
-const RedoIcon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 7v6h-6" />
-    <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7" />
-  </svg>
-);
-
 function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: SheetTabProps) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
+  const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
 
   useEffect(() => { setDraft(sheet.label); }, [sheet.label]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  useEffect(() => {
+    if (!menuPos) return;
+    function close() { setMenuPos(null); }
+    window.addEventListener('mousedown', close);
+    window.addEventListener('keydown', close);
+    return () => {
+      window.removeEventListener('mousedown', close);
+      window.removeEventListener('keydown', close);
+    };
+  }, [menuPos]);
 
   function commit() {
     const trimmed = draft.trim();
     if (trimmed && trimmed !== sheet.label) onRename(trimmed);
     else setDraft(sheet.label);
     setEditing(false);
+  }
+
+  function startEditing() {
+    setDraft(sheet.label);
+    setEditing(true);
+  }
+
+  function handleContextMenu(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setMenuPos({ x: e.clientX, y: e.clientY });
+  }
+
+  function handlePointerDown(e: React.PointerEvent) {
+    if (e.pointerType !== 'touch') return;
+    longPressFired.current = false;
+    longPressTimer.current = setTimeout(() => {
+      longPressFired.current = true;
+      setMenuPos({ x: e.clientX, y: e.clientY });
+    }, 500);
+  }
+
+  function cancelLongPress() {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  function handleClick() {
+    if (longPressFired.current) {
+      longPressFired.current = false;
+      return;
+    }
+    onSelect();
   }
 
   if (editing) {
@@ -66,22 +106,57 @@ function SheetTab({ sheet, isActive, canDelete, onSelect, onRename, onDelete }: 
   }
 
   return (
-    <button
-      className={`sheet-tab ${isActive ? 'active' : ''}`}
-      onClick={onSelect}
-      onDoubleClick={() => { setDraft(sheet.label); setEditing(true); }}
-      style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-    >
-      {sheet.label}
-      {canDelete && (
+    <>
+      <button
+        className={`sheet-tab ${isActive ? 'active' : ''}`}
+        onClick={handleClick}
+        onDoubleClick={startEditing}
+        onContextMenu={handleContextMenu}
+        onPointerDown={handlePointerDown}
+        onPointerUp={cancelLongPress}
+        onPointerMove={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+      >
         <span
-          className="sheet-tab-close"
-          onClick={e => { e.stopPropagation(); onDelete(); }}
+          className="sheet-tab-swatch"
+          style={{ background: sheet.swatch ?? 'var(--text-dim)' }}
+          aria-hidden="true"
+        />
+        <span className="sheet-tab-label">{sheet.label}</span>
+        {canDelete && (
+          <span
+            className="sheet-tab-close"
+            onClick={e => { e.stopPropagation(); onDelete(); }}
+            role="button"
+            aria-label={t('delete')}
+          >
+            ×
+          </span>
+        )}
+      </button>
+      {menuPos && (
+        <div
+          className="sheet-tab-menu"
+          style={{ left: menuPos.x, top: menuPos.y }}
+          onMouseDown={e => e.stopPropagation()}
         >
-          ×
-        </span>
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); startEditing(); }}
+          >
+            {t('contextRename')}
+          </button>
+          {canDelete && (
+            <button
+              className="sheet-tab-menu-item sheet-tab-menu-item-danger"
+              onClick={() => { setMenuPos(null); onDelete(); }}
+            >
+              {t('contextDelete')}
+            </button>
+          )}
+        </div>
       )}
-    </button>
+    </>
   );
 }
 
@@ -105,6 +180,7 @@ export function App() {
     updatePieceSheet,
     deleteSheet,
     renameSheet,
+    updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
     addPieceFromBox,
@@ -128,6 +204,8 @@ export function App() {
     createNewProject,
     switchProject,
     deleteProject,
+    saveStatus,
+    retrySave,
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
@@ -142,6 +220,18 @@ export function App() {
   const projectNameInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setNameDraft(project.name); }, [project.name]);
+
+  // Ensure each glass sheet has a precomputed swatch (used to color its tab).
+  useEffect(() => {
+    let cancelled = false;
+    project.sheets.forEach(sheet => {
+      if (sheet.swatch || !sheet.imageUrl) return;
+      computeImageSwatch(sheet.imageUrl)
+        .then(hex => { if (!cancelled) updateSheetSwatch(sheet.id, hex); })
+        .catch(err => console.warn('[swatch] failed for sheet', sheet.id, err));
+    });
+    return () => { cancelled = true; };
+  }, [project.sheets, updateSheetSwatch]);
 
   useEffect(() => {
     if (!isProjectDropdownOpen) return;
@@ -168,7 +258,7 @@ export function App() {
     let cancelled = false;
     backend.encode(project.patternImageUrl)
       .then(id => { if (!cancelled) setPatternImageId(id); })
-      .catch(() => { /* model still loading — SAM unavailable */ });
+      .catch(err => { console.error("[App] SAM encode failed:", err); });
     return () => { cancelled = true; };
   }, [project.patternImageUrl]);
 
@@ -257,6 +347,11 @@ export function App() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
       const isMod = e.ctrlKey || e.metaKey;
+      if (isMod && e.key === 'Enter') {
+        e.preventDefault();
+        if (printRef.current.ready) printRef.current.fn();
+        return;
+      }
       if (isMod && e.key === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
@@ -321,12 +416,19 @@ export function App() {
     e.target.value = '';
   };
 
+  const isPrintReady = !!project.patternScale && project.patternScale.pxPerUnit > 0 && project.pieces.length > 0;
+  const printNotReadyReason = !project.patternScale || project.patternScale.pxPerUnit === 0
+    ? t('printNoScale')
+    : project.pieces.length === 0
+      ? t('printNoPieces')
+      : '';
+
+  const printRef = useRef<{ ready: boolean; fn: () => void }>({ ready: false, fn: () => {} });
+
   const handlePrint = () => {
+    if (!isPrintReady) return;
     const { patternScale, pieces } = project;
-    if (!patternScale || patternScale.pxPerUnit === 0) {
-      alert(t('printNoScale'));
-      return;
-    }
+    if (!patternScale || patternScale.pxPerUnit === 0) return;
     if (pieces.length === 0) return;
 
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -339,7 +441,7 @@ export function App() {
       });
     });
 
-    const margin = patternScale.pxPerUnit * 0.5; // 0.5 physical units margin
+    const margin = patternScale.pxPerUnit * 0.5;
     minX -= margin;
     minY -= margin;
     maxX += margin;
@@ -347,58 +449,141 @@ export function App() {
 
     const printWidth = maxX - minX;
     const printHeight = maxY - minY;
-    
-    // Scale physical size based on user definition
-    const pwPhysical = printWidth / patternScale.pxPerUnit;
-    const phPhysical = printHeight / patternScale.pxPerUnit;
+
+    const pxPerUnit = patternScale.pxPerUnit;
     const unit = patternScale.unit;
 
-    let svgContent = `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">`;
-    svgContent += `<style>
-      .piece-outline { fill: none; stroke: black; stroke-width: ${patternScale.pxPerUnit * 0.05}px; }
-      .piece-label { font-family: sans-serif; font-size: ${patternScale.pxPerUnit * 0.5}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
-    </style>`;
+    // Convert scale to px/mm for page-size calculations
+    let pxPerMm: number;
+    if (unit === 'mm') pxPerMm = pxPerUnit;
+    else if (unit === 'cm') pxPerMm = pxPerUnit / 10;
+    else pxPerMm = pxPerUnit / 25.4;
 
-    // Background pattern image at half opacity
-    svgContent += `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
+    // A4 portrait (mm) — used as the tile size when tiling is needed
+    const PAGE_W_MM = 210;
+    const PAGE_H_MM = 297;
+    const pageWPx = PAGE_W_MM * pxPerMm;
+    const pageHPx = PAGE_H_MM * pxPerMm;
 
-    pieces.forEach((piece, index) => {
-      const pointsStr = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
-      svgContent += `<polygon points="${pointsStr}" class="piece-outline" />`;
-      
-      const centroid = computeCentroid(piece.polygon);
-      const label = index + 1;
-      svgContent += `<text x="${centroid.x}" y="${centroid.y}" class="piece-label">${label}</text>`;
-    });
+    // 10 mm overlap between adjacent tiles — covers typical printer hardware margins
+    const OVERLAP_MM = 10;
+    const overlapPx = OVERLAP_MM * pxPerMm;
+    const stepXPx = pageWPx - overlapPx;
+    const stepYPx = pageHPx - overlapPx;
 
-    svgContent += `</svg>`;
+    const cols = Math.max(1, Math.ceil(printWidth / stepXPx));
+    const rows = Math.max(1, Math.ceil(printHeight / stepYPx));
+    const totalPages = rows * cols;
+    const needsTiling = totalPages > 1;
+
+    const strokeWidth = pxPerUnit * 0.05;
+    const fontSize = pxPerUnit * 0.5;
+    const cutLineW = Math.max(strokeWidth * 0.4, pxPerMm * 0.25);
+    const dash = overlapPx * 0.12;
+    const crossSize = overlapPx * 0.22;
+
+    const commonStyles = `
+      .po { fill: none; stroke: #000; stroke-width: ${strokeWidth}px; }
+      .pl { font-family: sans-serif; font-size: ${fontSize}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
+      .cl { fill: none; stroke: #aaa; stroke-width: ${cutLineW}px; stroke-dasharray: ${dash},${dash * 0.5}; }
+      .am { stroke: #555; stroke-width: ${cutLineW}px; }
+      .pg { font-family: sans-serif; font-size: ${fontSize * 0.45}px; fill: #aaa; }
+    `;
+
+    const imageTag = `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
+
+    const polygonsContent = pieces.map((piece, index) => {
+      const pts = piece.polygon.map(p => `${p[0]},${p[1]}`).join(' ');
+      const c = computeCentroid(piece.polygon);
+      return `<polygon points="${pts}" class="po" /><text x="${c.x}" y="${c.y}" class="pl">${index + 1}</text>`;
+    }).join('');
+
+    const pages: string[] = [];
+
+    if (!needsTiling) {
+      const pwPhysical = printWidth / pxPerUnit;
+      const phPhysical = printHeight / pxPerUnit;
+      pages.push(
+        `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+        `<style>${commonStyles}</style>${imageTag}${polygonsContent}</svg>`
+      );
+    } else {
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const tileMinX = minX + col * stepXPx;
+          const tileMinY = minY + row * stepYPx;
+          const pageNum = row * cols + col + 1;
+
+          let annotations = '';
+
+          // Dashed cut line at right overlap boundary
+          if (col < cols - 1) {
+            const cx = tileMinX + stepXPx;
+            annotations += `<line x1="${cx}" y1="${tileMinY}" x2="${cx}" y2="${tileMinY + pageHPx}" class="cl" />`;
+          }
+
+          // Dashed cut line at bottom overlap boundary
+          if (row < rows - 1) {
+            const cy = tileMinY + stepYPx;
+            annotations += `<line x1="${tileMinX}" y1="${cy}" x2="${tileMinX + pageWPx}" y2="${cy}" class="cl" />`;
+          }
+
+          // Crosshair at interior tile corners (where both cut lines meet)
+          if (col < cols - 1 && row < rows - 1) {
+            const cx = tileMinX + stepXPx;
+            const cy = tileMinY + stepYPx;
+            annotations +=
+              `<line x1="${cx - crossSize}" y1="${cy}" x2="${cx + crossSize}" y2="${cy}" class="am" />` +
+              `<line x1="${cx}" y1="${cy - crossSize}" x2="${cx}" y2="${cy + crossSize}" class="am" />`;
+          }
+
+          // Page number in bottom-right corner
+          const lx = tileMinX + pageWPx - fontSize * 0.3;
+          const ly = tileMinY + pageHPx - fontSize * 0.3;
+          annotations += `<text x="${lx}" y="${ly}" class="pg" text-anchor="end">${pageNum}/${totalPages} (${col + 1},${row + 1})</text>`;
+
+          pages.push(
+            `<svg width="${PAGE_W_MM}mm" height="${PAGE_H_MM}mm" viewBox="${tileMinX} ${tileMinY} ${pageWPx} ${pageHPx}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
+            `<style>${commonStyles}</style>${imageTag}${polygonsContent}${annotations}</svg>`
+          );
+        }
+      }
+    }
 
     const printWin = window.open('', '_blank');
     if (!printWin) return;
+
+    const pagesHtml = pages.map(svg => `<div class="page">${svg}</div>`).join('\n');
+    const pageRule = needsTiling
+      ? `@page { margin: 0; size: ${PAGE_W_MM}mm ${PAGE_H_MM}mm; }`
+      : `@page { margin: 0; }`;
+
     printWin.document.write(`
       <html>
         <head>
           <title>Print Pattern - Vitrai</title>
           <style>
-            body { margin: 0; padding: 0; display: flex; justify-content: center; background: white; }
+            body { margin: 0; padding: 0; background: white; }
+            .page { display: flex; justify-content: center; }
+            .page + .page { page-break-before: always; break-before: page; }
             @media print {
-              @page { margin: 0; }
+              ${pageRule}
               body { margin: 0; }
             }
           </style>
         </head>
         <body>
-          ${svgContent}
+          ${pagesHtml}
           <script>
-            window.onload = () => {
-              window.print();
-            };
+            window.onload = () => { window.print(); };
           </script>
         </body>
       </html>
     `);
     printWin.document.close();
   };
+
+  printRef.current = { ready: isPrintReady, fn: handlePrint };
 
   const handleAddSheetFromImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -534,14 +719,29 @@ export function App() {
             +
           </button>
 
-          <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+          <div className={`autosave autosave-${saveStatus}`} role="status" aria-live="polite">
+            <span className="autosave-dot" />
+            <span className="autosave-label">
+              {saveStatus === 'saving' ? t('autosaveSaving')
+                : saveStatus === 'error' ? t('autosaveFailed')
+                : t('autosaveSaved')}
+            </span>
+            {saveStatus === 'saved' && (
+              <span className="autosave-info" title={t('autosaveOfflineHint')}>ⓘ</span>
+            )}
+            {saveStatus === 'error' && (
+              <button className="autosave-retry" onClick={retrySave}>{t('autosaveRetry')}</button>
+            )}
+          </div>
+
+          <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
           {/* Undo / Redo */}
           <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
-            <UndoIcon />
+            <IconUndo size={14} />
           </button>
           <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
-            <RedoIcon />
+            <IconRedo size={14} />
           </button>
 
           <div className="header-secondary">
@@ -554,22 +754,33 @@ export function App() {
               {i18n.language === 'fr' ? 'EN' : 'FR'}
             </button>
 
-            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
+            <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
             <label className="btn-ghost" style={{ cursor: 'pointer' }}>
-              {t('load')}
+              {t('openProject')}
               <input type="file" accept=".json" style={{ display: 'none' }} onChange={handleLoadProject} />
             </label>
             <button className="btn-ghost" onClick={handleSaveProject} title={t('saveTooltip')}>
-              {t('save')}
+              {t('saveCopy')}
             </button>
 
-            <div style={{ width: 1, height: 16, background: 'rgba(0,0,0,0.1)', margin: '0 4px' }} />
-
-            <button className="btn-ghost" onClick={handlePrint} title={t('printTooltip')}>
-              {t('print')}
-            </button>
           </div>
+
+          <div style={{ width: 12 }} />
+
+          <button
+            className={`btn-primary header-print${isPrintReady ? '' : ' is-muted'}`}
+            onClick={() => isPrintReady ? handlePrint() : undefined}
+            title={isPrintReady ? t('printPrimaryTooltip') : printNotReadyReason}
+            aria-disabled={!isPrintReady}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 9V3h12v6" />
+              <rect x="3" y="9" width="18" height="9" rx="1.5" />
+              <rect x="7" y="14" width="10" height="7" rx="0.8" />
+            </svg>
+            {t('printPrimary')}
+          </button>
 
           <button
             className="mobile-menu-btn"
@@ -583,10 +794,23 @@ export function App() {
       </header>
 
       <div className="main-container">
-        {/* ── Left: result view ── */}
+        {/* ── Left: pattern view ── */}
         <div className="panel panel-left">
           <div className="panel-header">
-            <span>{t('result')}</span>
+            <div className="panel-title">
+              <span className="panel-title-eyebrow">{t('pattern')}</span>
+              {project.patternImageUrl && (
+                <span className="panel-title-subtitle">
+                  {t('patternDimensions', { w: project.patternWidth, h: project.patternHeight })}
+                </span>
+              )}
+            </div>
+            {project.patternImageUrl && (
+              <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
+                {t('replacePattern')}
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
+              </label>
+            )}
           </div>
         <ResultPanel
           project={project}
@@ -615,13 +839,19 @@ export function App() {
       {/* ── Right: glass sheet workspace ── */}
       <div className="panel panel-right">
         <div className="panel-header">
+          <div className="panel-title" style={{ flexShrink: 0 }}>
+            <span className="panel-title-eyebrow">{t('glass')}</span>
+            <span className="panel-title-subtitle">
+              {t('sheets', { count: project.sheets.length })}
+            </span>
+          </div>
           <div className="sheet-tabs">
             {project.sheets.map(sheet => (
               <SheetTab
                 key={sheet.id}
                 sheet={sheet}
                 isActive={sheet.id === activeSheetId}
-                canDelete={project.sheets.length > 1}
+                canDelete
                 onSelect={() => setActiveSheetId(sheet.id)}
                 onRename={label => renameSheet(sheet.id, label)}
                 onDelete={() => deleteSheet(sheet.id)}
@@ -646,15 +876,52 @@ export function App() {
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
           />
         ) : (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6b7280', padding: 40, textAlign: 'center' }}>
+          <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
-              <p style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: 8 }}>{t('noSheetsTitle')}</p>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.5rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 8 }}>{t('noSheetsTitle')}</p>
               <p style={{ fontSize: '0.9rem' }}>{t('noSheetsDesc')}</p>
             </div>
           </div>
         )}
       </div>
     </div>
+
+      {/* Status bar */}
+      <div className="status-bar">
+        <div className="status-bar-section">
+          <span>
+            {project.pieces.length} {project.pieces.length === 1 ? t('piece').toLowerCase() : t('pieces')}
+          </span>
+          <span className="status-bar-divider" />
+          <span>
+            {project.patternScale
+              ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
+              : t('statusNoScale')}
+          </span>
+          {activeSheet && (
+            <>
+              <span className="status-bar-divider" />
+              <span>
+                {t('sheet')}: {activeSheet.label}
+              </span>
+            </>
+          )}
+        </div>
+        <div className="status-bar-section">
+          {backendStatus && (
+            <>
+              <span title="SAM2 backend">{backendStatus}</span>
+              <span className="status-bar-divider" />
+            </>
+          )}
+          <span style={{ textTransform: 'uppercase', letterSpacing: '0.05em' }}>{i18n.language}</span>
+          <span className="status-bar-divider" />
+          <span className="status-bar-kbd">
+            <kbd>?</kbd>
+            <span>{t('statusShortcuts')}</span>
+          </span>
+        </div>
+      </div>
 
       {/* Mobile drawer */}
       <div className={`mobile-drawer${isMobileMenuOpen ? ' open' : ''}`}>
@@ -669,24 +936,28 @@ export function App() {
             className="mobile-drawer-item"
             onClick={() => { i18n.changeLanguage(i18n.language === 'fr' ? 'en' : 'fr'); setIsMobileMenuOpen(false); }}
           >
-            🌐 {i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}
+            <IconGlobe size={18} />
+            <span>{i18n.language === 'fr' ? 'Switch to English' : 'Passer en français'}</span>
           </button>
 
           <div className="mobile-drawer-divider" />
 
           <label className="mobile-drawer-item" style={{ cursor: 'pointer' }}>
-            📂 {t('load')}
+            <IconUpload size={18} />
+            <span>{t('openProject')}</span>
             <input type="file" accept=".json" style={{ display: 'none' }} onChange={e => { handleLoadProject(e); setIsMobileMenuOpen(false); }} />
           </label>
 
           <button className="mobile-drawer-item" onClick={() => { handleSaveProject(); setIsMobileMenuOpen(false); }}>
-            💾 {t('save')}
+            <IconDownload size={18} />
+            <span>{t('saveCopy')}</span>
           </button>
 
           <div className="mobile-drawer-divider" />
 
           <button className="mobile-drawer-item" onClick={() => { handlePrint(); setIsMobileMenuOpen(false); }}>
-            🖨️ {t('print')}
+            <IconPrinter size={18} />
+            <span>{t('print')}</span>
           </button>
         </div>
       </div>
