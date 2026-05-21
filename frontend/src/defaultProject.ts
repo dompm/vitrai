@@ -4,10 +4,10 @@ import { GLASS_ASSETS } from './assets';
 const NO_CROP = { top: 0, left: 0, bottom: 0, right: 0 };
 
 export const DEFAULT_PROJECT: Project = {
-  name: 'Mountains Pattern',
-  patternImageUrl: '/assets/mountains_pattern.png',
-  patternWidth: 1214,
-  patternHeight: 1156,
+  name: 'Orange Pattern',
+  patternImageUrl: '/assets/orange-pattern.jpg',
+  patternWidth: 3072,
+  patternHeight: 4080,
   patternCrop: NO_CROP,
   patternScale: null,
   pieces: [],
