@@ -1329,12 +1329,12 @@ html, body, #root {
 }
 
 .tutorial-modal-card {
-  background: var(--ink-800);
+  background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 16px;
   padding: 32px;
   width: min(480px, 100%);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 24px 64px rgba(40, 30, 15, 0.22);
   display: flex;
   flex-direction: column;
   align-items: center;
