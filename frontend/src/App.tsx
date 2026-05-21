@@ -15,6 +15,7 @@ import {
 import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
+import { DEFAULT_PROJECT } from './defaultProject';
 import './App.css';
 
 interface SheetTabProps {
@@ -342,6 +343,7 @@ export function App() {
   }, []);
 
   const startTutorialTour = () => {
+    loadProjectData(DEFAULT_PROJECT);
     setTutorialStep('calibrate-pattern');
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {

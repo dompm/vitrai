@@ -1232,7 +1232,8 @@ html, body, #root {
   left: 50%;
   transform: translateX(-50%) translateY(120%);
   width: min(840px, calc(100% - 32px));
-  height: 64px;
+  min-height: 64px;
+  height: auto;
   background: var(--chrome-800);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -1242,7 +1243,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 12px 20px;
   z-index: 1050;
   animation: tutorialSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
@@ -1290,9 +1291,6 @@ html, body, #root {
   margin: 0 24px;
   font-size: 13.5px;
   line-height: 1.4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .tutorial-bar-instruction-title {
