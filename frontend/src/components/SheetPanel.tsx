@@ -158,14 +158,17 @@ interface SheetPanelProps {
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
   showEmptyHint?: boolean;
+  /** Tutorial-driven override; when set, the toolbar uses this tool regardless of internal state. */
+  forceTool?: ToolId | null;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false,
+  showEmptyHint = false, forceTool,
 }: SheetPanelProps) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [internalActiveTool, setActiveTool] = useState<ToolId>('select');
+  const activeTool: ToolId = forceTool ?? internalActiveTool;
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
@@ -221,12 +224,12 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale) {
+      if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
-  }, [sheet.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sheet.id, activeTool]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [rotatingPieceId, setRotatingPieceId] = useState<string | null>(null);
   const rotatingPiece = useMemo(
@@ -334,7 +337,9 @@ export function SheetPanel({
   }
 
   function handleToolChange(id: ToolId) {
-    if (id === activeTool && id !== 'select') {
+    if (forceTool && forceTool !== id) return;
+    if (forceTool === id && internalActiveTool === id) return;
+    if (id === internalActiveTool && id !== 'select') {
       setActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
@@ -363,13 +368,22 @@ export function SheetPanel({
       y2 = Math.max(0, Math.min(sheetH, y2));
 
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale) {
+      if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
     setActiveTool(id);
   }
+
+  // When the tutorial forces a tool, run the same side-effects as a user click
+  // (load measure line, switch active tool, etc.). Skip if the forced tool already matches.
+  useEffect(() => {
+    if (!forceTool) return;
+    if (forceTool === internalActiveTool) return;
+    handleToolChange(forceTool);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceTool]);
 
   function setCursor(cursor: string) {
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
@@ -430,7 +444,7 @@ export function SheetPanel({
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
   return (
-    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}

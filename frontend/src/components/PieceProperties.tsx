@@ -117,6 +117,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
 
       <label style={{ fontSize: 11, color: 'var(--text-dim)', flexShrink: 0 }}>{t('sheet')}</label>
       <select
+        data-tutorial-target="piece-glass-select"
         value={piece.glassSheetId}
         onChange={handleSheetSelect}
         style={{

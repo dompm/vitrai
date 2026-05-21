@@ -1222,7 +1222,203 @@ html, body, #root {
   }
 
   /* Mobile drawer visible when open */
-  .mobile-drawer.open {
-    display: flex;
+}
+
+/* ── Tutorial Styles ────────────────────────────────── */
+
+.tutorial-bar {
+  position: fixed;
+  bottom: 34px; /* sits 8px above status bar (26px) */
+  left: 50%;
+  transform: translateX(-50%) translateY(120%);
+  width: min(840px, calc(100% - 32px));
+  height: 64px;
+  background: var(--chrome-800);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--hairline-2);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1050;
+  animation: tutorialSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tutorialSlideUp {
+  to {
+    transform: translateX(-50%) translateY(0);
   }
 }
+
+.tutorial-bar-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.tutorial-progress-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.tutorial-progress-dot {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--hairline-2);
+  transition: background-color 0.2s ease, width 0.2s ease;
+}
+
+.tutorial-progress-dot.is-active {
+  background: var(--amber);
+  width: 24px;
+}
+
+.tutorial-step-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.tutorial-bar-center {
+  flex: 1;
+  margin: 0 24px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tutorial-bar-instruction-title {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+.tutorial-bar-instruction-body {
+  color: var(--text-soft);
+}
+
+.tutorial-bar-right {
+  flex-shrink: 0;
+}
+
+/* Tutorial Modals */
+.tutorial-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 5, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 2100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tutorial-modal-card {
+  background: var(--ink-800);
+  border: 1px solid var(--hairline-2);
+  border-radius: 16px;
+  padding: 32px;
+  width: min(480px, 100%);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transform: scale(0.95);
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes scaleIn {
+  to { transform: scale(1); }
+}
+
+.tutorial-modal-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+
+.tutorial-modal-title {
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: 32px;
+  line-height: 1.15;
+  font-weight: 400;
+  color: var(--text-bright);
+  margin: 0 0 12px 0;
+}
+
+.tutorial-modal-body {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-soft);
+  margin: 0 0 24px 0;
+}
+
+.tutorial-modal-actions {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Spotlight Pulse ring */
+.tutorial-spotlight-pulse {
+  border: 2px solid var(--amber);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.2), 0 0 16px rgba(245, 158, 11, 0.4);
+  animation: spotlightPulseKeyframes 2s infinite ease-in-out;
+}
+
+@keyframes spotlightPulseKeyframes {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2), 0 0 12px rgba(245, 158, 11, 0.3);
+    border-color: rgba(245, 158, 11, 0.85);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.35), 0 0 24px rgba(245, 158, 11, 0.6);
+    border-color: rgba(245, 158, 11, 1);
+  }
+}
+
+/* Responsive adjustment for mobile screen sizes */
+@media (max-width: 768px) {
+  .tutorial-bar {
+    bottom: 16px;
+    height: auto;
+    flex-direction: column;
+    padding: 12px 16px;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .tutorial-bar-left {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tutorial-bar-center {
+    margin: 0;
+    white-space: normal;
+    font-size: 12.5px;
+  }
+  .tutorial-bar-right {
+    text-align: right;
+  }
+}
+

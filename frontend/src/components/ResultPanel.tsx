@@ -169,6 +169,8 @@ interface ResultPanelProps {
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
+  /** Tutorial-driven override; when set, the toolbar uses this tool regardless of internal state. */
+  forceTool?: ToolId | null;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -329,10 +331,11 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask, forceTool,
 }: ResultPanelProps) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolId>('select');
+  const [internalActiveTool, setActiveTool] = useState<ToolId>('select');
+  const activeTool: ToolId = forceTool ?? internalActiveTool;
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const refineModeRef = useRef(refineMode);
@@ -599,7 +602,9 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
-    if (id === activeTool && id !== 'select') {
+    if (forceTool && forceTool !== id) return;
+    if (forceTool === id && internalActiveTool === id) return;
+    if (id === internalActiveTool && id !== 'select') {
       setActiveTool('select');
       setRefineMode(null);
       if (id === 'measure') measure.reset();
@@ -650,7 +655,7 @@ export function ResultPanel({
       measure.loadLine({ x1, y1, x2, y2 });
 
       // If there's no scale yet, initialize a default one (12 inches)
-      if (!project.patternScale) {
+      if (!project.patternScale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onPatternScaleChange({
           pxPerUnit: px / 12,
@@ -661,6 +666,15 @@ export function ResultPanel({
     }
     setActiveTool(id);
   }
+
+  // When the tutorial forces a tool, run the same side-effects as a user click
+  // (load measure line, switch active tool, etc.). Skip if the forced tool already matches.
+  useEffect(() => {
+    if (!forceTool) return;
+    if (forceTool === internalActiveTool) return;
+    handleToolChange(forceTool);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceTool]);
 
   function handleMeasureDragEnd(nx1: number, ny1: number, nx2: number, ny2: number) {
     if (!project.patternScale) return;
@@ -807,7 +821,7 @@ export function ResultPanel({
   });
 
   return (
-    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
