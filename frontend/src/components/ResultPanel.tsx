@@ -654,11 +654,11 @@ export function ResultPanel({
 
       measure.loadLine({ x1, y1, x2, y2 });
 
-      // If there's no scale yet, initialize a default one (12 inches)
+      // If there's no scale yet, initialize a default one (6 inches)
       if (!project.patternScale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onPatternScaleChange({
-          pxPerUnit: px / 12,
+          pxPerUnit: px / 6,
           unit: 'in',
           line: { x1, y1, x2, y2 }
         });

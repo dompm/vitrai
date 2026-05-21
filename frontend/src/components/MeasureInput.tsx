@@ -26,7 +26,7 @@ export function MeasureInput({ screenX, screenY, pixelLength, initialValue, init
   ];
 
   const [value, setValue] = useState(() => initialValue != null ? formatInitial(initialValue) : '');
-  const [unit, setUnit] = useState<ScaleUnit>(initialUnit ?? 'mm');
+  const [unit, setUnit] = useState<ScaleUnit>(initialUnit ?? 'in');
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 

@@ -226,7 +226,7 @@ export function SheetPanel({
       measure.loadLine({ x1, y1, x2, y2 });
       if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
-        onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
+        onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
   }, [sheet.id, activeTool]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -332,7 +332,7 @@ export function SheetPanel({
       const newPxPerUnit = oldPxLen > 0 ? newPxLen * existing.pxPerUnit / oldPxLen : existing.pxPerUnit;
       onScaleChange({ pxPerUnit: newPxPerUnit, unit: existing.unit, line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
     } else {
-      onScaleChange({ pxPerUnit: newPxLen / 12, unit: 'in', line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
+      onScaleChange({ pxPerUnit: newPxLen / 6, unit: 'in', line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
     }
   }
 
@@ -370,7 +370,7 @@ export function SheetPanel({
       measure.loadLine({ x1, y1, x2, y2 });
       if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
-        onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
+        onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
     setActiveTool(id);
