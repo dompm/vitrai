@@ -31,6 +31,7 @@ export const DEFAULT_GLASS_ASSETS: readonly DefaultGlassAsset[] = [
   { url: '/assets/glass/turquoise.jpg', label: 'Turquoise', scale: DEFAULT_SCALE },
   { url: '/assets/glass/orange.jpg', label: 'Orange', scale: DEFAULT_SCALE },
   { url: '/assets/glass/amber.jpg', label: 'Amber', scale: DEFAULT_SCALE },
+  { url: '/assets/glass/yellow.jpg', label: 'Yellow', scale: DEFAULT_SCALE },
   { url: '/assets/glass/green.jpg', label: 'Green', scale: DEFAULT_SCALE },
   { url: '/assets/glass/blue.jpg', label: 'Cobalt Blue', scale: DEFAULT_SCALE },
   { url: '/assets/glass/red.jpg', label: 'Red', scale: DEFAULT_SCALE },
