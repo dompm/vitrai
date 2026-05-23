@@ -98,12 +98,10 @@ export function Tutorial({
     }
     const start = positionStartRef.current;
     const { x, y, rotation, scale } = piece.transform;
-    if (
-      Math.abs(x - start.x) > 0.5 ||
-      Math.abs(y - start.y) > 0.5 ||
-      Math.abs(rotation - start.rotation) > 1e-4 ||
-      Math.abs(scale - start.scale) > 1e-4
-    ) {
+    const dist = Math.hypot(x - start.x, y - start.y);
+    const rotDiff = Math.abs(rotation - start.rotation);
+    const scaleDiff = Math.abs(scale - start.scale);
+    if (dist > 40 || rotDiff > 0.15 || scaleDiff > 0.1) {
       onAdvance();
     }
   }, [step, project.pieces, pieceId, onAdvance]);

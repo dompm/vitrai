@@ -151,7 +151,7 @@ const resources = {
       tutorialStep4Body: "Open the glass dropdown and choose a sheet for the piece. Because both sides are calibrated, the piece appears on the sheet at its true size.",
       tutorialStep5Eyebrow: "Step 5 — Position the texture",
       tutorialStep5Title: "Drag the piece on the sheet",
-      tutorialStep5Body: "Drag, rotate, or scale-rotate the cutout on the glass to pick which part of the sheet you'll cut from. The texture inside follows you."
+      tutorialStep5Body: "You can move the glass pattern on the image to position it. Drag, rotate, or scale the cutout on the glass sheet to select the perfect part. Drag it around a bit to see how the texture follows!"
     }
   },
   fr: {
@@ -302,7 +302,7 @@ const resources = {
       tutorialStep4Body: "Ouvrez le menu déroulant et choisissez une plaque pour cette pièce. Les deux côtés étant calibrés, la pièce apparaît à sa taille réelle sur la plaque.",
       tutorialStep5Eyebrow: "Étape 5 — Positionner la texture",
       tutorialStep5Title: "Glissez la pièce sur la plaque",
-      tutorialStep5Body: "Glissez, tournez ou redimensionnez la pièce pour choisir la zone du verre qui sera découpée. La texture à l'intérieur suit votre mouvement."
+      tutorialStep5Body: "Vous pouvez déplacer la forme sur la plaque de verre pour la positionner. Faites glisser, pivotez ou redimensionnez la pièce pour choisir la zone parfaite. Déplacez-la un peu pour voir comment la texture suit le mouvement !"
     }
   }
 };
