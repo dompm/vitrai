@@ -348,7 +348,7 @@ export function App() {
   }, []);
 
   const startTutorialTour = () => {
-    loadProjectData(DEFAULT_PROJECT);
+    loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial' });
     setPatternTool('select');
     setSheetTool('select');
     setTutorialStep('calibrate-pattern');
@@ -1031,16 +1031,6 @@ export function App() {
           <div className="header-secondary">
             <button
               className="btn-ghost"
-              onClick={() => setTutorialStep('welcome')}
-              title={t('tutorialMenuItem')}
-              style={{ padding: '4px 8px' }}
-              aria-label={t('tutorialMenuItem')}
-            >
-              <IconSpark size={14} />
-            </button>
-
-            <button
-              className="btn-ghost"
               onClick={() => setIsShortcutsOpen(true)}
               title={t('shortcutsTitle')}
               style={{ fontWeight: 600, padding: '4px 8px' }}
@@ -1355,7 +1345,7 @@ export function App() {
           onClose={() => setAddSheetMenu(null)}
         />
       )}
-      <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+      <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />
       <Tutorial
         step={tutorialStep}
         pieceId={tutorialPieceId}

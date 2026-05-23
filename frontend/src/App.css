@@ -1022,6 +1022,31 @@ html, body, #root {
   line-height: 1.3;
 }
 
+.shortcuts-tutorial {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+.shortcuts-tutorial-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--chrome-700);
+  border: 1px solid var(--hairline-2);
+  color: var(--text-bright);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.shortcuts-tutorial-btn:hover {
+  background: var(--chrome-600, var(--chrome-700));
+  border-color: var(--amber);
+}
+
 /* ── Status bar ─────────────────────────────────────── */
 .status-bar {
   display: flex;
