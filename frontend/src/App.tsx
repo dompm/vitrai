@@ -7,6 +7,7 @@ import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
 import { CreateProjectDialog } from './components/CreateProjectDialog';
 import { LampCanvas } from './components/LampCanvas';
+import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -312,6 +313,7 @@ export function App() {
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
+    updateLampConfig,
     availableProjects,
     setProjectName,
     createNewProject,
@@ -437,7 +439,24 @@ export function App() {
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const isLamp = project.projectType === 'lamp';
+
+  function startLampPreviewResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = lampPreviewHeight;
+    function onMove(ev: PointerEvent) {
+      const next = Math.max(120, Math.min(800, startH + (ev.clientY - startY)));
+      setLampPreviewHeight(next);
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -1171,6 +1190,35 @@ export function App() {
 
       {/* ── Right: glass sheet workspace ── */}
       <div className="panel panel-right">
+        {isLamp && (
+          <>
+            <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
+              <Lamp3DPreview
+                project={project}
+                selectedPieceIds={selectedPieceIds}
+                onSelectPiece={selectPiece}
+                onUpdateLampConfig={updateLampConfig}
+                activeSheetId={activeSheetId}
+                onSetFocusedPanelIdx={setFocusedPanelIdx}
+              />
+            </div>
+            <div
+              onPointerDown={startLampPreviewResize}
+              style={{
+                height: 6,
+                cursor: 'row-resize',
+                background: 'var(--chrome-700)',
+                flexShrink: 0,
+                position: 'relative',
+              }}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize 3D preview"
+            >
+              <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 2, background: 'var(--hairline-2)', borderRadius: 1 }} />
+            </div>
+          </>
+        )}
         <div className="panel-header">
           <div className="panel-title" style={{ flexShrink: 0 }}>
             <span className="panel-title-eyebrow">{t('glass')}</span>
