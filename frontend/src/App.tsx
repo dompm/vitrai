@@ -298,6 +298,8 @@ export function App() {
     addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
+    updateSolderWidthMM,
+    updateSolderColor,
     undo,
     redo,
     canUndo,
@@ -1144,6 +1146,8 @@ export function App() {
           tutorialStep={tutorialStep}
           refineMode={patternRefineMode}
           onRefineModeChange={setPatternRefineMode}
+          onUpdateSolderWidthMM={updateSolderWidthMM}
+          onUpdateSolderColor={updateSolderColor}
         />
       </div>
 
