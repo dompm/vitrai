@@ -3,8 +3,8 @@ import type { ToolId } from '../Toolbar';
 export type StepId =
   | 'welcome'
   | 'calibrate-pattern'
-  | 'cut-piece'
   | 'calibrate-sheet'
+  | 'cut-piece'
   | 'assign-glass'
   | 'position-texture'
   | 'done';
@@ -12,8 +12,8 @@ export type StepId =
 export const STEP_ORDER: StepId[] = [
   'welcome',
   'calibrate-pattern',
-  'cut-piece',
   'calibrate-sheet',
+  'cut-piece',
   'assign-glass',
   'position-texture',
   'done',
@@ -34,8 +34,8 @@ export interface StepConfig {
 /** Steps that show the bottom instruction bar with spotlight. */
 export const ANCHORED_STEPS: StepId[] = [
   'calibrate-pattern',
-  'cut-piece',
   'calibrate-sheet',
+  'cut-piece',
   'assign-glass',
   'position-texture',
 ];
