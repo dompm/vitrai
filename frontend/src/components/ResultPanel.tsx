@@ -20,7 +20,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
-import { computeUnrolledLamp } from '../utils/lampGeometry';
+import { computeUnrolledLamp, getLampSnapPoints } from '../utils/lampGeometry';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -321,6 +321,7 @@ function findPenSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
+  extraVertices?: [number, number][],
 ): [number, number] | null {
   let best: [number, number] | null = null;
   let bestPxDist = PEN_SNAP_PX;
@@ -334,6 +335,15 @@ function findPenSnapTarget(
       if (dist < bestPxDist) {
         bestPxDist = dist;
         best = [polygon[i][0], polygon[i][1]];
+      }
+    }
+  }
+  if (extraVertices) {
+    for (const [vx, vy] of extraVertices) {
+      const dist = Math.hypot(vx - cursor[0], vy - cursor[1]) * effectiveScale;
+      if (dist < bestPxDist) {
+        bestPxDist = dist;
+        best = [vx, vy];
       }
     }
   }
@@ -581,7 +591,7 @@ export function ResultPanel({
     if (activeTool !== 'pen') return;
 
     // 1. Vertex snapping is highest priority
-    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current);
     if (snap) {
       setHoverPoint(snap);
       setHoverSnapped(true);
@@ -705,6 +715,9 @@ export function ResultPanel({
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
   const isLamp = project.projectType === 'lamp';
   const unrolledLamp = useMemo(() => (isLamp ? computeUnrolledLamp(project.lampConfig) : null), [isLamp, project.lampConfig]);
+  const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp) : undefined), [unrolledLamp]);
+  const lampSnapPointsRef = useRef(lampSnapPoints);
+  lampSnapPointsRef.current = lampSnapPoints;
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -840,7 +853,7 @@ export function ResultPanel({
       let targetX = x;
       let targetY = y;
 
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale, lampSnapPoints);
       if (snap) {
         targetX = snap[0];
         targetY = snap[1];

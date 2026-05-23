@@ -90,3 +90,26 @@ export function computeUnrolledLamp(config: LampConfig | undefined | null): Unro
 
   return { width, height, outline, facetSeams, tierSeams };
 }
+
+// All snap-worthy corners of an unrolled lamp surface — polygon outline vertices
+// and the intersection points where facet seams meet tier seams (or polygon edges).
+export function getLampSnapPoints(unrolled: UnrolledLamp): [number, number][] {
+  const seen = new Set<string>();
+  const out: [number, number][] = [];
+  const push = (x: number, y: number) => {
+    const key = `${x.toFixed(2)},${y.toFixed(2)}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push([x, y]);
+  };
+  for (const [x, y] of unrolled.outline) push(x, y);
+  for (const s of unrolled.facetSeams) {
+    push(s.x1, s.y1);
+    push(s.x2, s.y2);
+  }
+  for (const s of unrolled.tierSeams) {
+    push(s.x1, s.y1);
+    push(s.x2, s.y2);
+  }
+  return out;
+}
