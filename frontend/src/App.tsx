@@ -10,8 +10,13 @@ import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
-  IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter,
+  IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
+import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
+import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
+import { Tutorial } from './components/Tutorial/Tutorial';
+import { DEFAULT_PROJECT } from './defaultProject';
+import type { ToolId } from './components/Toolbar';
 import './App.css';
 
 interface SheetTabProps {
@@ -311,6 +316,108 @@ export function App() {
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
+
+  const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
+  const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
+  const [patternTool, setPatternTool] = useState<ToolId>('select');
+  const [sheetTool, setSheetTool] = useState<ToolId>('select');
+  const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
+  const tutorialLoadedRef = useRef(false);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as PersistedTutorialState;
+        if (!parsed.completed && parsed.step) {
+          setTutorialStep(parsed.step);
+          setTutorialPieceId(parsed.pieceId);
+        }
+      } else {
+        const hasWork = project.pieces.length > 0 || (project.patternScale && project.patternScale.pxPerUnit > 0);
+        if (!hasWork) {
+          setTutorialStep('welcome');
+        }
+      }
+    } catch (e) {
+      console.error('[Tutorial] failed to load state', e);
+    } finally {
+      tutorialLoadedRef.current = true;
+    }
+  }, []);
+
+  const startTutorialTour = () => {
+    loadProjectData(DEFAULT_PROJECT);
+    setPatternTool('select');
+    setSheetTool('select');
+    setTutorialStep('calibrate-pattern');
+    setTutorialPieceId(null);
+    const state: PersistedTutorialState = {
+      step: 'calibrate-pattern',
+      completed: false,
+      pieceId: null,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const skipTutorial = () => {
+    setTutorialStep(null);
+    setTutorialPieceId(null);
+    const state: PersistedTutorialState = {
+      step: null,
+      completed: true,
+      pieceId: null,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const completeTutorial = () => {
+    setTutorialStep(null);
+    setTutorialPieceId(null);
+    const state: PersistedTutorialState = {
+      step: null,
+      completed: true,
+      pieceId: null,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const advanceTutorial = () => {
+    if (!tutorialStep) return;
+    const currentIndex = STEP_ORDER.indexOf(tutorialStep);
+    const nextStep = currentIndex >= 0 && currentIndex < STEP_ORDER.length - 1
+      ? STEP_ORDER[currentIndex + 1]
+      : null;
+
+    setTutorialStep(nextStep);
+    const state: PersistedTutorialState = {
+      step: nextStep,
+      completed: nextStep === null,
+      pieceId: nextStep === null ? null : tutorialPieceId,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  const handleSetTrackedPiece = (id: string) => {
+    setTutorialPieceId(id);
+    const state: PersistedTutorialState = {
+      step: tutorialStep,
+      completed: false,
+      pieceId: id,
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  };
+
+  useEffect(() => {
+    if (project.pieces.length > 0) {
+      project.pieces.forEach(p => {
+        console.log(`[Tutorial Debug] Piece "${p.label}" polygon (vertices: ${p.polygon.length}):`, JSON.stringify(p.polygon));
+      });
+    }
+  }, [project.pieces]);
+
+
+
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
   const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
@@ -948,6 +1055,16 @@ export function App() {
           <div className="header-secondary">
             <button
               className="btn-ghost"
+              onClick={() => setTutorialStep('welcome')}
+              title={t('tutorialMenuItem')}
+              style={{ padding: '4px 8px' }}
+              aria-label={t('tutorialMenuItem')}
+            >
+              <IconSpark size={14} />
+            </button>
+
+            <button
+              className="btn-ghost"
               onClick={() => setIsShortcutsOpen(true)}
               title={t('shortcutsTitle')}
               style={{ fontWeight: 600, padding: '4px 8px' }}
@@ -1046,6 +1163,11 @@ export function App() {
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
           debugMask={debugMask}
+          activeTool={patternTool}
+          onChangeActiveTool={setPatternTool}
+          tutorialStep={tutorialStep}
+          refineMode={patternRefineMode}
+          onRefineModeChange={setPatternRefineMode}
         />
       </div>
 
@@ -1105,6 +1227,8 @@ export function App() {
               piecesOnActiveSheet.length === 0 &&
               project.pieces.length > 0
             }
+            activeTool={sheetTool}
+            onChangeActiveTool={setSheetTool}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1193,6 +1317,16 @@ export function App() {
 
           <div className="mobile-drawer-divider" />
 
+          <button
+            className="mobile-drawer-item"
+            onClick={() => { setTutorialStep('welcome'); setIsMobileMenuOpen(false); }}
+          >
+            <IconSpark size={18} />
+            <span>{t('tutorialMenuItem')}</span>
+          </button>
+
+          <div className="mobile-drawer-divider" />
+
           <button className="mobile-drawer-item" onClick={() => { setIsShortcutsOpen(true); setIsMobileMenuOpen(false); }}>
             <span style={{ width: 18, textAlign: 'center', fontWeight: 600 }}>?</span>
             <span>{t('shortcutsTitle')}</span>
@@ -1214,6 +1348,23 @@ export function App() {
         />
       )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+      <Tutorial
+        step={tutorialStep}
+        pieceId={tutorialPieceId}
+        project={project}
+        selectedPieceIds={selectedPieceIds}
+        activeSheetId={activeSheetId}
+        patternTool={patternTool}
+        sheetTool={sheetTool}
+        patternRefineMode={patternRefineMode}
+        onAdvance={advanceTutorial}
+        onSetStep={setTutorialStep}
+        onSetTrackedPiece={handleSetTrackedPiece}
+        onSelectPiece={selectPiece}
+        onStartTour={startTutorialTour}
+        onSkip={skipTutorial}
+        onComplete={completeTutorial}
+      />
   </div>
   );
 }

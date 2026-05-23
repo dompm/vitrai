@@ -136,3 +136,107 @@ export function arePolygonsEqual(p1: [number, number][], p2: [number, number][],
   }
   return true;
 }
+
+export function computePolygonArea(polygon: [number, number][]): number {
+  if (polygon.length < 3) return 0;
+  let area = 0;
+  const n = polygon.length;
+  const isClosed = polygon[0][0] === polygon[n - 1][0] && polygon[0][1] === polygon[n - 1][1];
+  const limit = isClosed ? n - 1 : n;
+  
+  for (let i = 0; i < limit; i++) {
+    const [x1, y1] = polygon[i];
+    const [x2, y2] = polygon[(i + 1) % limit];
+    area += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(area) / 2;
+}
+
+export function computeBleedRatio(
+  generated: [number, number][],
+  groundTruth: [number, number][],
+): number {
+  if (generated.length < 3 || groundTruth.length < 3) return 0;
+  try {
+    const gtArea = computePolygonArea(groundTruth);
+    if (gtArea === 0) return 0;
+
+    const closeRing = (ring: [number, number][]): [number, number][] => {
+      if (ring.length === 0) return [];
+      const first = ring[0];
+      const last = ring[ring.length - 1];
+      if (first[0] === last[0] && first[1] === last[1]) return ring;
+      return [...ring, [first[0], first[1]]];
+    };
+
+    const genClosed = closeRing(generated);
+    const gtClosed = closeRing(groundTruth);
+
+    const diff = polygonClipping.difference([genClosed], [gtClosed]);
+    
+    let bleedArea = 0;
+    for (const poly of diff) {
+      if (poly.length > 0) {
+        bleedArea += computePolygonArea(poly[0] as [number, number][]);
+        for (let j = 1; j < poly.length; j++) {
+          bleedArea -= computePolygonArea(poly[j] as [number, number][]);
+        }
+      }
+    }
+    return bleedArea / gtArea;
+  } catch (e) {
+    console.warn("Bleed calculation failed", e);
+    return 0;
+  }
+}
+
+export function findMatchedGroundTruth(
+  generated: [number, number][],
+  gts: [number, number][][]
+): [number, number][] | null {
+  if (generated.length < 3) return null;
+  let bestGt: [number, number][] | null = null;
+  let maxOverlap = 0;
+
+  const closeRing = (ring: [number, number][]): [number, number][] => {
+    if (ring.length === 0) return [];
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    if (first[0] === last[0] && first[1] === last[1]) return ring;
+    return [...ring, [first[0], first[1]]];
+  };
+
+  const genClosed = closeRing(generated);
+
+  for (const gt of gts) {
+    const gtClosed = closeRing(gt);
+    try {
+      const intersection = polygonClipping.intersection([genClosed], [gtClosed]);
+      let area = 0;
+      for (const poly of intersection) {
+        if (poly.length > 0) {
+          area += computePolygonArea(poly[0] as [number, number][]);
+          for (let j = 1; j < poly.length; j++) {
+            area -= computePolygonArea(poly[j] as [number, number][]);
+          }
+        }
+      }
+      if (area > maxOverlap) {
+        maxOverlap = area;
+        bestGt = gt;
+      }
+    } catch (e) {
+      // Ignore clipping errors
+    }
+  }
+
+  if (bestGt) {
+    const gtArea = computePolygonArea(bestGt);
+    if (maxOverlap > 0.15 * gtArea) {
+      return bestGt;
+    }
+  }
+  return null;
+}
+
+

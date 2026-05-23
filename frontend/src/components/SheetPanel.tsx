@@ -158,14 +158,16 @@ interface SheetPanelProps {
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
   showEmptyHint?: boolean;
+  activeTool: ToolId;
+  onChangeActiveTool: (tool: ToolId) => void;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false,
+  showEmptyHint = false, activeTool, onChangeActiveTool,
 }: SheetPanelProps) {
   const { t } = useTranslation();
-  const [activeTool, setActiveTool] = useState<ToolId>('select');
+  // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
@@ -221,12 +223,12 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale) {
+      if (!sheet.scale && !forceTool) {
         const px = Math.hypot(x2 - x1, y2 - y1);
-        onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
+        onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
-  }, [sheet.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sheet.id, activeTool]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [rotatingPieceId, setRotatingPieceId] = useState<string | null>(null);
   const rotatingPiece = useMemo(
@@ -329,13 +331,13 @@ export function SheetPanel({
       const newPxPerUnit = oldPxLen > 0 ? newPxLen * existing.pxPerUnit / oldPxLen : existing.pxPerUnit;
       onScaleChange({ pxPerUnit: newPxPerUnit, unit: existing.unit, line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
     } else {
-      onScaleChange({ pxPerUnit: newPxLen / 12, unit: 'in', line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
+      onScaleChange({ pxPerUnit: newPxLen / 6, unit: 'in', line: { x1: nx1, y1: ny1, x2: nx2, y2: ny2 } });
     }
   }
 
   function handleToolChange(id: ToolId) {
     if (id === activeTool && id !== 'select') {
-      setActiveTool('select');
+      onChangeActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
     }
@@ -365,10 +367,10 @@ export function SheetPanel({
       measure.loadLine({ x1, y1, x2, y2 });
       if (!sheet.scale) {
         const px = Math.hypot(x2 - x1, y2 - y1);
-        onScaleChange({ pxPerUnit: px / 12, unit: 'in', line: { x1, y1, x2, y2 } });
+        onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
-    setActiveTool(id);
+    onChangeActiveTool(id);
   }
 
   function setCursor(cursor: string) {
@@ -430,7 +432,7 @@ export function SheetPanel({
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
   return (
-    <div className="result-panel-inner" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
       <div
         ref={vp.containerRef}
