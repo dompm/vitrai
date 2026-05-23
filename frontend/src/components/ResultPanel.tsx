@@ -63,10 +63,11 @@ interface PieceOverlayProps {
   isPending: boolean;
   opacity?: number;
   solderWidth: number;
+  solderColor: string;
   onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -137,7 +138,7 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : CANVAS.lead}
+        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : solderColor}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         lineJoin="round"
         lineCap="round"
@@ -176,6 +177,8 @@ interface ResultPanelProps {
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
+  onUpdateSolderWidthMM: (width: number) => void;
+  onUpdateSolderColor: (color: import('../types').SolderColor) => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -223,16 +226,22 @@ function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: nu
 }
 
 const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
+export const SOLDER_COLORS = {
+  black: '#1a1a1a',  // Charcoal black patina
+  silver: '#7a828e', // Silver / Bright solder
+  copper: '#a05c3f', // Copper patina
+} as const;
+
 const DEFAULT_SOLDER_WIDTH_MM = 4.5;
 
-function getSolderWidth(scale: Scale | null, imgWidth: number) {
+function getSolderWidth(scale: Scale | null, imgWidth: number, customWidthMM?: number) {
+  const target = customWidthMM ?? DEFAULT_SOLDER_WIDTH_MM;
   if (!scale) {
-    // If no scale is set, default to a width that is 0.6% of the image width.
-    // For a 1000px image, this is 6px. For 4000px, it's 24px.
-    return Math.max(2, imgWidth * 0.006);
+    // If no scale is set, scale the baseline 0.6% image width by the ratio of custom width to default
+    const ratio = target / DEFAULT_SOLDER_WIDTH_MM;
+    return Math.max(2, imgWidth * 0.006 * ratio);
   }
   const { pxPerUnit, unit } = scale;
-  const target = DEFAULT_SOLDER_WIDTH_MM;
   if (unit === 'mm') return target * pxPerUnit;
   if (unit === 'cm') return (target / 10) * pxPerUnit;
   if (unit === 'in') return (target / 25.4) * pxPerUnit;
@@ -338,8 +347,25 @@ export function ResultPanel({
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange,
+  onUpdateSolderWidthMM, onUpdateSolderColor,
 }: ResultPanelProps) {
   const { t } = useTranslation();
+  const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
+  const solderPopoverRef = useRef<HTMLDivElement>(null);
+  const isSolderPopoverOpenRef = useRef(isSolderPopoverOpen);
+  isSolderPopoverOpenRef.current = isSolderPopoverOpen;
+
+  useEffect(() => {
+    if (!isSolderPopoverOpen) return;
+    function handleOutsideClick(e: MouseEvent) {
+      if (solderPopoverRef.current && !solderPopoverRef.current.contains(e.target as Node)) {
+        setIsSolderPopoverOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isSolderPopoverOpen]);
+
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const refineModeRef = useRef(refineMode);
@@ -415,7 +441,7 @@ export function ResultPanel({
     setPieceForNewSheet(null);
   };
 
-  const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
+  const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -470,7 +496,9 @@ export function ResultPanel({
         setActivePolygonPoints(prev => prev.slice(0, -1));
       }
       else if (e.key === 'Escape') {
-        if (refineModeRef.current) {
+        if (isSolderPopoverOpenRef.current) {
+          setIsSolderPopoverOpen(false);
+        } else if (refineModeRef.current) {
           onRefineModeChange(null);
         } else if (activePolygonPointsRef.current.length > 0) {
           setActivePolygonPoints([]);
@@ -892,7 +920,75 @@ export function ResultPanel({
 
   return (
     <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div className="toolbar-divider" />
+        <div className="tooltip-wrapper" ref={solderPopoverRef}>
+          <button
+            className={`tool-btn solder-tool-btn ${isSolderPopoverOpen ? 'active' : ''}`}
+            onClick={() => setIsSolderPopoverOpen(o => !o)}
+            aria-label={t('solderThicknessTooltip')}
+          >
+            {/* Custom line thickness stack icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6" strokeWidth="1" />
+              <line x1="4" y1="12" x2="20" y2="12" strokeWidth="2.5" />
+              <line x1="4" y1="18" x2="20" y2="18" strokeWidth="4.5" />
+            </svg>
+            <span className="tool-label" style={{ fontSize: '9px', fontWeight: 600, marginTop: '2px' }}>
+              {(project.solderWidthMM ?? 4.5).toFixed(1)}
+            </span>
+          </button>
+          
+          {!isSolderPopoverOpen && <span className="tooltip-tip">{t('solderThicknessTooltip')}</span>}
+          
+          {isSolderPopoverOpen && (
+            <div className="solder-popover">
+              <div className="solder-popover-section">
+                <div className="solder-popover-label-row">
+                  <span className="solder-popover-title">{t('solderThickness')}</span>
+                  <span className="solder-popover-val">{(project.solderWidthMM ?? 4.5).toFixed(1)} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="10.0"
+                  step="0.5"
+                  value={project.solderWidthMM ?? 4.5}
+                  onChange={e => onUpdateSolderWidthMM(parseFloat(e.target.value))}
+                  className="solder-popover-slider"
+                />
+              </div>
+              <div className="solder-popover-divider" />
+              <div className="solder-popover-section">
+                <span className="solder-popover-title" style={{ marginBottom: '8px', display: 'block' }}>{t('solderFinish')}</span>
+                <div className="solder-swatches">
+                  {(['black', 'silver', 'copper'] as const).map(color => {
+                    const active = (project.solderColor ?? 'black') === color;
+                    const hexColor = SOLDER_COLORS[color];
+                    const label = t(`solder${color.charAt(0).toUpperCase() + color.slice(1)}`);
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`solder-swatch-btn ${active ? 'active' : ''}`}
+                        onClick={() => onUpdateSolderColor(color)}
+                        title={label}
+                        aria-label={label}
+                        style={{
+                          '--swatch-color': hexColor,
+                        } as React.CSSProperties}
+                      >
+                        <span className="solder-swatch-circle" />
+                        <span className="solder-swatch-label">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Toolbar>
       <div
         ref={vp.containerRef}
         className="canvas-well"
@@ -987,6 +1083,7 @@ export function ResultPanel({
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
                         solderWidth={solderWidth}
+                        solderColor={SOLDER_COLORS[project.solderColor ?? 'black'] ?? SOLDER_COLORS.black}
                         onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
                       />
                     );

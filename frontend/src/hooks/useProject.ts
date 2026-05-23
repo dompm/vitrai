@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
+import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor } from '../types';
 import { EMPTY_PROJECT, DEFAULT_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
@@ -565,6 +565,14 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updateSolderWidthMM = useCallback((width: number) => {
+    updateProject(prev => ({ ...prev, solderWidthMM: width }));
+  }, [updateProject]);
+
+  const updateSolderColor = useCallback((color: SolderColor) => {
+    updateProject(prev => ({ ...prev, solderColor: color }));
+  }, [updateProject]);
+
   const startBlankCanvas = useCallback(() => {
     const W = 1200;
     const H = 1200;
@@ -687,6 +695,8 @@ export function useProject() {
     addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
+    updateSolderWidthMM,
+    updateSolderColor,
     undo,
     redo,
     canUndo: undoStack.length > 0,
