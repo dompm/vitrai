@@ -1358,7 +1358,7 @@ export function App() {
         <AddSheetMenu
           anchor={addSheetMenu}
           currentProjectName={project.name}
-          onPickUrl={(url, label) => addSheetFromImage(url, label)}
+          onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
           onClose={() => setAddSheetMenu(null)}
         />

@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_GLASS_ASSETS, TUTORIAL_GLASS_ASSETS } from '../assets';
 import { listAllSheetsAcrossProjects, type RecentSheet } from '../storage/opfs';
+import type { Scale } from '../types';
 
 interface AddSheetMenuProps {
   anchor: { left: number; top: number };
   currentProjectName: string;
-  onPickUrl: (url: string, label: string) => void;
+  onPickUrl: (url: string, label: string, scale?: Scale | null) => void;
   onUpload: (file: File) => void;
   onClose: () => void;
 }
@@ -102,7 +103,7 @@ export function AddSheetMenu({
         <button
           key={g.url}
           className="add-sheet-menu-item"
-          onClick={() => { onPickUrl(g.url, g.label); onClose(); }}
+          onClick={() => { onPickUrl(g.url, g.label, g.scale); onClose(); }}
         >
           <img className="add-sheet-menu-thumb" src={g.url} alt="" />
           <span className="add-sheet-menu-label">{g.label}</span>

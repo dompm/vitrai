@@ -565,17 +565,17 @@ export function useProject() {
     }));
   }, [updateProject]);
 
-  const addSheetFromImage = useCallback((url: string, label: string) => {
+  const addSheetFromImage = useCallback((url: string, label: string, scale: Scale | null = null) => {
     const id = `sheet-${Date.now()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
         id, label: cleanLabel, imageUrl: url,
         crop: { top: 0, left: 0, bottom: 0, right: 0 },
-        scale: null,
+        scale,
       };
       setActiveSheetId(id);
-      return { ...prev, sheets: [...prev.sheets, newSheet] };
+      return applyScales({ ...prev, sheets: [...prev.sheets, newSheet] }, id);
     });
   }, [updateProject]);
 
