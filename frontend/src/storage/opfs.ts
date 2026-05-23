@@ -44,3 +44,30 @@ export async function deleteFromOPFS(name: string): Promise<void> {
     // file may not exist
   }
 }
+
+export interface RecentSheet {
+  url: string;
+  label: string;
+  projectName: string;
+}
+
+/**
+ * Scan every project in OPFS and return each unique sheet image (by URL).
+ * Used by the "Add sheet" dropdown to surface glass the user has already used.
+ */
+export async function listAllSheetsAcrossProjects(excludeProjectName?: string): Promise<RecentSheet[]> {
+  const names = await listProjects();
+  const seen = new Set<string>();
+  const out: RecentSheet[] = [];
+  for (const name of names) {
+    if (name === excludeProjectName) continue;
+    const project = await loadProjectFromOPFS(name);
+    if (!project) continue;
+    for (const sheet of project.sheets) {
+      if (!sheet.imageUrl || seen.has(sheet.imageUrl)) continue;
+      seen.add(sheet.imageUrl);
+      out.push({ url: sheet.imageUrl, label: sheet.label, projectName: name });
+    }
+  }
+  return out;
+}

@@ -4,6 +4,7 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { AddSheetMenu } from './components/AddSheetMenu';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -428,6 +429,7 @@ export function App() {
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -857,16 +859,13 @@ export function App() {
 
   printRef.current = { ready: isPrintReady, fn: handlePrint };
 
-  const handleAddSheetFromImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleAddSheetFromFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       addSheetFromImage(dataUrl, file.name);
     };
     reader.readAsDataURL(file);
-    e.target.value = '';
   };
 
   const handleNewSheetFromImageWithMove = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1199,10 +1198,18 @@ export function App() {
                 onNewSheetFromImage={() => triggerNewSheetFromImage(sheet.id)}
               />
             ))}
-            <label className="sheet-tab" title={t('uploadSheetTooltip')} style={{ cursor: 'pointer' }}>
+            <button
+              type="button"
+              className="sheet-tab"
+              title={t('addSheetTooltip')}
+              onClick={e => {
+                if (addSheetMenu) { setAddSheetMenu(null); return; }
+                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                setAddSheetMenu({ left: rect.left, top: rect.bottom + 4 });
+              }}
+            >
               +
-              <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAddSheetFromImage} />
-            </label>
+            </button>
             <input
               ref={newSheetFileInputRef}
               type="file"
@@ -1345,6 +1352,15 @@ export function App() {
             moveAllPiecesBetweenSheets(pendingMove.srcId, pendingMove.destId);
             setPendingMove(null);
           }}
+        />
+      )}
+      {addSheetMenu && (
+        <AddSheetMenu
+          anchor={addSheetMenu}
+          currentProjectName={project.name}
+          onPickUrl={(url, label) => addSheetFromImage(url, label)}
+          onUpload={handleAddSheetFromFile}
+          onClose={() => setAddSheetMenu(null)}
         />
       )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
