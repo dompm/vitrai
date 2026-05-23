@@ -179,6 +179,7 @@ interface ResultPanelProps {
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
   onUpdateSolderWidthMM: (width: number) => void;
   onUpdateSolderColor: (color: import('../types').SolderColor) => void;
+  onOpenLampProfile?: () => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -531,7 +532,7 @@ export function ResultPanel({
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange,
-  onUpdateSolderWidthMM, onUpdateSolderColor,
+  onUpdateSolderWidthMM, onUpdateSolderColor, onOpenLampProfile,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
@@ -1294,6 +1295,26 @@ export function ResultPanel({
             </div>
           )}
         </div>
+        {onOpenLampProfile && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="tooltip-wrapper">
+              <button
+                className="tool-btn"
+                onClick={onOpenLampProfile}
+                aria-label={t('lampProfileButtonTooltip')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="5" rx="6" ry="2" />
+                  <path d="M6 5 L4 19" />
+                  <path d="M18 5 L20 19" />
+                  <ellipse cx="12" cy="19" rx="8" ry="2.5" />
+                </svg>
+              </button>
+              <span className="tooltip-tip">{t('lampProfileButtonTooltip')}</span>
+            </div>
+          </>
+        )}
       </Toolbar>
       <div
         ref={vp.containerRef}

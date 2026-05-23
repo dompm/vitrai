@@ -6,7 +6,6 @@ import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
 import { CreateProjectDialog } from './components/CreateProjectDialog';
-import { LampCanvas } from './components/LampCanvas';
 import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
@@ -1137,24 +1136,6 @@ export function App() {
               </label>
             )}
           </div>
-        {isLamp ? (
-          <LampCanvas
-            project={project}
-            selectedPieceIds={selectedPieceIds}
-            onSelectPiece={selectPiece}
-            onSelectPieces={selectPieces}
-            onAddPiece={(box, tierIndex) => { void handleAddPiece(box, tierIndex); }}
-            onAddManualPiece={(polygon, tierIndex) => handleAddManualPiece(polygon, tierIndex)}
-            onUpdatePiecePolygon={handleUpdatePiecePolygon}
-            onUpdatePieceCurves={handleUpdatePieceCurves}
-            onDeletePiece={deletePiece}
-            onSmoothPiece={handleSmoothPiece}
-            activeTool={patternTool}
-            onChangeActiveTool={setPatternTool}
-            focusedPanelIdx={focusedPanelIdx}
-            onSetFocusedPanelIdx={setFocusedPanelIdx}
-          />
-        ) : (
           <ResultPanel
             project={project}
             selectedPieceIds={selectedPieceIds}
@@ -1186,8 +1167,8 @@ export function App() {
             onRefineModeChange={setPatternRefineMode}
             onUpdateSolderWidthMM={updateSolderWidthMM}
             onUpdateSolderColor={updateSolderColor}
+            onOpenLampProfile={isLamp ? (() => setLampProfileDialog({ isFirstTime: false })) : undefined}
           />
-        )}
       </div>
 
       {/* ── Right: glass sheet workspace ── */}
@@ -1228,16 +1209,6 @@ export function App() {
               {t('sheets', { count: project.sheets.length })}
             </span>
           </div>
-          {isLamp && (
-            <button
-              className="btn-ghost"
-              style={{ flexShrink: 0, fontSize: 11 }}
-              title={t('lampProfileButtonTooltip')}
-              onClick={() => setLampProfileDialog({ isFirstTime: false })}
-            >
-              {t('lampProfileButton')}
-            </button>
-          )}
           <div className="sheet-tabs">
             {project.sheets.map(sheet => (
               <SheetTab
