@@ -18,3 +18,7 @@ data/
 
 # Project save files at repo root (can contain large base64 images)
 /*.json
+
+# Worktrees
+.worktrees/
+
