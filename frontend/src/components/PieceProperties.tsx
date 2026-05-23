@@ -145,8 +145,8 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       <div style={{ flex: 1 }} />
 
       {onRefineModeChange && (
-        <>
-          <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
+        <div data-tutorial-target="piece-refine-buttons" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0, marginRight: 2 }} />
           <button
             data-tutorial-target="piece-refine-add"
             onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'add' ? null : 'add')}
@@ -185,7 +185,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           >
             -
           </button>
-        </>
+        </div>
       )}
 
       {isPending && (
@@ -231,6 +231,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
       <button
         onClick={onDelete}
         title={t('deletePieceTooltip')}
+        data-tutorial-target="piece-delete"
         style={{
           background: 'none',
           border: '1px solid rgba(161, 63, 48, 0.45)',

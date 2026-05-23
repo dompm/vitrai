@@ -6,9 +6,11 @@ interface TutorialBarProps {
   onStart: () => void;
   onSkip: () => void;
   onComplete: () => void;
+  customTitle?: string;
+  customBody?: string;
 }
 
-export function TutorialBar({ step, onStart, onSkip, onComplete }: TutorialBarProps) {
+export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, customBody }: TutorialBarProps) {
   const { t } = useTranslation();
 
   if (step === 'welcome') {
@@ -71,10 +73,10 @@ export function TutorialBar({ step, onStart, onSkip, onComplete }: TutorialBarPr
 
       <div className="tutorial-bar-center">
         <span className="tutorial-bar-instruction-title">
-          {t(`tutorialStep${currentStepIndex}Title`)}:
+          {customTitle || t(`tutorialStep${currentStepIndex}Title`)}:
         </span>{' '}
         <span className="tutorial-bar-instruction-body">
-          {t(`tutorialStep${currentStepIndex}Body`)}
+          {customBody || t(`tutorialStep${currentStepIndex}Body`)}
         </span>
       </div>
 

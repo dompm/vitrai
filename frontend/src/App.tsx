@@ -321,6 +321,7 @@ export function App() {
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
+  const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
   const tutorialLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -408,10 +409,14 @@ export function App() {
   };
 
   useEffect(() => {
-    if (tutorialStep === 'cut-piece') {
-      setPatternTool('box');
+    if (project.pieces.length > 0) {
+      project.pieces.forEach(p => {
+        console.log(`[Tutorial Debug] Piece "${p.label}" polygon (vertices: ${p.polygon.length}):`, JSON.stringify(p.polygon));
+      });
     }
-  }, [tutorialStep]);
+  }, [project.pieces]);
+
+
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
@@ -1160,6 +1165,9 @@ export function App() {
           debugMask={debugMask}
           activeTool={patternTool}
           onChangeActiveTool={setPatternTool}
+          tutorialStep={tutorialStep}
+          refineMode={patternRefineMode}
+          onRefineModeChange={setPatternRefineMode}
         />
       </div>
 
@@ -1348,7 +1356,9 @@ export function App() {
         activeSheetId={activeSheetId}
         patternTool={patternTool}
         sheetTool={sheetTool}
+        patternRefineMode={patternRefineMode}
         onAdvance={advanceTutorial}
+        onSetStep={setTutorialStep}
         onSetTrackedPiece={handleSetTrackedPiece}
         onSelectPiece={selectPiece}
         onStartTour={startTutorialTour}

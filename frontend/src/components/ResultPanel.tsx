@@ -6,6 +6,7 @@ import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 're
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
+import type { StepId } from './Tutorial/types';
 import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload } from './icons';
@@ -171,6 +172,9 @@ interface ResultPanelProps {
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
+  tutorialStep?: StepId | null;
+  refineMode: 'add' | 'remove' | null;
+  onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -332,11 +336,11 @@ export function ResultPanel({
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask, activeTool, onChangeActiveTool,
+  tutorialStep, refineMode, onRefineModeChange,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
-  const [refineMode, setRefineMode] = useState<'add' | 'remove' | null>(null);
   const refineModeRef = useRef(refineMode);
   refineModeRef.current = refineMode;
 
@@ -390,7 +394,7 @@ export function ResultPanel({
   }
 
   useEffect(() => {
-    setRefineMode(null);
+    onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
 
@@ -410,8 +414,8 @@ export function ResultPanel({
       else if (e.key === 'c') handleToolChange('crop');
       else if (e.key === 'm') handleToolChange('measure');
       else if (e.key === 'i') handleToolChange('inspect');
-      else if (e.key === 'a') setRefineMode(prev => prev === 'add' ? null : 'add');
-      else if (e.key === 's') setRefineMode(prev => prev === 'remove' ? null : 'remove');
+      else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+      else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
       else if (e.key === 'Enter') {
         if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
           commitActivePolygon();
@@ -426,7 +430,7 @@ export function ResultPanel({
       }
       else if (e.key === 'Escape') {
         if (refineModeRef.current) {
-          setRefineMode(null);
+          onRefineModeChange(null);
         } else if (activePolygonPointsRef.current.length > 0) {
           setActivePolygonPoints([]);
           setHoverPoint(null);
@@ -451,6 +455,20 @@ export function ResultPanel({
   const { patternWidth: pw, patternHeight: ph } = project;
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const [dashOffset, setDashOffset] = useState(0);
+
+  useEffect(() => {
+    const isFirstPending = tutorialStep === 'cut-first-piece' && project.pieces.length === 0;
+    const isSecondPending = tutorialStep === 'cut-second-piece' && project.pieces.length <= 1;
+    if (!isFirstPending && !isSecondPending) return;
+    let animId: number;
+    const tick = () => {
+      setDashOffset(prev => (prev + 1.5) % 40);
+      animId = requestAnimationFrame(tick);
+    };
+    animId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animId);
+  }, [tutorialStep, project.pieces.length]);
   
   const vp = useViewport(pw, ph);
   const [patternImg] = useImage(project.patternImageUrl);
@@ -626,7 +644,7 @@ export function ResultPanel({
       if (!isEncoding) onAutoSegment?.();
       return;
     }
-    setRefineMode(null);
+    onRefineModeChange(null);
     if (activeTool === 'measure' && id !== 'measure') measure.reset();
     if (id === 'measure') {
       const saved = project.patternScale?.line;
@@ -990,6 +1008,34 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
+                  {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
+                    <Rect
+                      x={924.124254866509}
+                      y={1487.1442620225096}
+                      width={2505.188986758742 - 924.124254866509}
+                      height={2998.9258239124047 - 1487.1442620225096}
+                      stroke="#fbbf24"
+                      strokeWidth={3 / es}
+                      dash={[10 / es, 6 / es]}
+                      dashOffset={dashOffset}
+                      fill="rgba(251, 191, 36, 0.05)"
+                      listening={false}
+                    />
+                  )}
+                  {tutorialStep === 'cut-second-piece' && project.pieces.length <= 1 && (
+                    <Rect
+                      x={364.7371555449281}
+                      y={1249.5130966562972}
+                      width={1264.3137687154938 - 364.7371555449281}
+                      height={2725.2637575643917 - 1249.5130966562972}
+                      stroke="#fbbf24"
+                      strokeWidth={3 / es}
+                      dash={[10 / es, 6 / es]}
+                      dashOffset={dashOffset}
+                      fill="rgba(251, 191, 36, 0.05)"
+                      listening={false}
+                    />
+                  )}
                   {(() => {
                     const lastId = selectedPieceIds[selectedPieceIds.length - 1];
                     const piece = project.pieces.find(p => p.id === lastId);
@@ -1213,7 +1259,7 @@ export function ResultPanel({
                       onDelete={() => onDeletePiece(piece.id)}
                       onSmooth={() => onSmoothPiece(piece.id)}
                       refineMode={refineMode}
-                      onRefineModeChange={setRefineMode}
+                      onRefineModeChange={onRefineModeChange}
                       isPending={pendingPieceIds.has(piece.id)}
                       isEncoding={isEncoding}
                       pointerEvents={isInteracting ? 'none' : 'auto'}

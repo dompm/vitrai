@@ -25,6 +25,8 @@ export const DEFAULT_PROJECT: Project = {
       imageUrl: g.url,
       crop: NO_CROP,
       scale: isOrange ? ORANGE_SCALE : null,
+      naturalWidth: 2816,
+      naturalHeight: 1536,
     };
   }),
 };
