@@ -5,6 +5,7 @@ import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
+import { CreateProjectDialog } from './components/CreateProjectDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -433,6 +434,7 @@ export function App() {
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -1016,13 +1018,7 @@ export function App() {
           </div>
           <button
             className="btn-ghost"
-            onClick={() => {
-              const name = 'Project ' + (availableProjects.length + 1);
-              void createNewProject(name).then(() => {
-                projectNameInputRef.current?.focus();
-                projectNameInputRef.current?.select();
-              });
-            }}
+            onClick={() => setIsCreateDialogOpen(true)}
             title="New project"
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
           >
@@ -1357,6 +1353,19 @@ export function App() {
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
           onClose={() => setAddSheetMenu(null)}
+        />
+      )}
+      {isCreateDialogOpen && (
+        <CreateProjectDialog
+          defaultProjectName={`Project ${availableProjects.length + 1}`}
+          onCancel={() => setIsCreateDialogOpen(false)}
+          onConfirm={(name, type) => {
+            setIsCreateDialogOpen(false);
+            void createNewProject(name, type).then(() => {
+              projectNameInputRef.current?.focus();
+              projectNameInputRef.current?.select();
+            });
+          }}
         />
       )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />
