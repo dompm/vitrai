@@ -6,6 +6,7 @@ import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
 import { CreateProjectDialog } from './components/CreateProjectDialog';
+import { LampCanvas } from './components/LampCanvas';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -435,6 +436,8 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const isLamp = project.projectType === 'lamp';
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -509,8 +512,8 @@ export function App() {
     }
   }
 
-  async function handleAddPiece(box: BoundingBox) {
-    const pieceId = addPieceFromBox(box, activeSheetId);
+  async function handleAddPiece(box: BoundingBox, tierIndex?: number) {
+    const pieceId = addPieceFromBox(box, activeSheetId, tierIndex);
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
@@ -529,13 +532,13 @@ export function App() {
     }
   }
 
-  function handleAddManualPiece(polygon: [number, number][]) {
+  function handleAddManualPiece(polygon: [number, number][], tierIndex?: number) {
     const others = project.pieces;
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
     const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
     const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
-      addManualPiece(clipped, activeSheetId);
+      addManualPiece(clipped, activeSheetId, tierIndex);
     }
   }
 
@@ -1113,38 +1116,57 @@ export function App() {
               </label>
             )}
           </div>
-        <ResultPanel
-          project={project}
-          selectedPieceIds={selectedPieceIds}
-          pendingPieceIds={pendingPieceIds}
-          onSelectPiece={selectPiece}
-          onSelectPieces={selectPieces}
-          onPatternCropChange={updatePatternCrop}
-          onPatternScaleChange={updatePatternScale}
-          onAddPiece={handleAddPiece}
-          onAddManualPiece={handleAddManualPiece}
-          onUpdatePieceLabel={updatePieceLabel}
-          onUpdatePieceSheet={updatePieceSheet}
-          onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-          onDeletePiece={deletePiece}
-          onSmoothPiece={handleSmoothPiece}
-          onUpdatePiecePolygon={handleUpdatePiecePolygon}
-          onUpdatePieceCurves={handleUpdatePieceCurves}
-          onUpdatePrompt={handleUpdatePrompt}
-          onUploadPattern={handleUploadPattern}
-          onStartBlankCanvas={startBlankCanvas}
-          onAutoSegment={handleAutoSegment}
-          isAutoSegmenting={isAutoSegmenting}
-          isEncoding={!!project.patternImageUrl && patternImageId === null}
-          debugMask={debugMask}
-          activeTool={patternTool}
-          onChangeActiveTool={setPatternTool}
-          tutorialStep={tutorialStep}
-          refineMode={patternRefineMode}
-          onRefineModeChange={setPatternRefineMode}
-          onUpdateSolderWidthMM={updateSolderWidthMM}
-          onUpdateSolderColor={updateSolderColor}
-        />
+        {isLamp ? (
+          <LampCanvas
+            project={project}
+            selectedPieceIds={selectedPieceIds}
+            onSelectPiece={selectPiece}
+            onSelectPieces={selectPieces}
+            onAddPiece={(box, tierIndex) => { void handleAddPiece(box, tierIndex); }}
+            onAddManualPiece={(polygon, tierIndex) => handleAddManualPiece(polygon, tierIndex)}
+            onUpdatePiecePolygon={handleUpdatePiecePolygon}
+            onUpdatePieceCurves={handleUpdatePieceCurves}
+            onDeletePiece={deletePiece}
+            onSmoothPiece={handleSmoothPiece}
+            activeTool={patternTool}
+            onChangeActiveTool={setPatternTool}
+            focusedPanelIdx={focusedPanelIdx}
+            onSetFocusedPanelIdx={setFocusedPanelIdx}
+          />
+        ) : (
+          <ResultPanel
+            project={project}
+            selectedPieceIds={selectedPieceIds}
+            pendingPieceIds={pendingPieceIds}
+            onSelectPiece={selectPiece}
+            onSelectPieces={selectPieces}
+            onPatternCropChange={updatePatternCrop}
+            onPatternScaleChange={updatePatternScale}
+            onAddPiece={handleAddPiece}
+            onAddManualPiece={handleAddManualPiece}
+            onUpdatePieceLabel={updatePieceLabel}
+            onUpdatePieceSheet={updatePieceSheet}
+            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+            onDeletePiece={deletePiece}
+            onSmoothPiece={handleSmoothPiece}
+            onUpdatePiecePolygon={handleUpdatePiecePolygon}
+            onUpdatePieceCurves={handleUpdatePieceCurves}
+            onUpdatePrompt={handleUpdatePrompt}
+            onUploadPattern={handleUploadPattern}
+            onStartBlankCanvas={startBlankCanvas}
+            onAutoSegment={handleAutoSegment}
+            isAutoSegmenting={isAutoSegmenting}
+            isEncoding={!!project.patternImageUrl && patternImageId === null}
+            debugMask={debugMask}
+            activeTool={patternTool}
+            onChangeActiveTool={setPatternTool}
+            tutorialStep={tutorialStep}
+            refineMode={patternRefineMode}
+            onRefineModeChange={setPatternRefineMode}
+            onUpdateSolderWidthMM={updateSolderWidthMM}
+            onUpdateSolderColor={updateSolderColor}
+          />
+        )}
       </div>
 
       {/* ── Right: glass sheet workspace ── */}
