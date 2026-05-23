@@ -366,7 +366,7 @@ export function Lamp3DPreview({
         poly2d.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
         ctx.closePath();
         
-        ctx.strokeStyle = isActiveTier && isFront ? 'rgba(90, 81, 66, 0.4)' : 'rgba(90, 81, 66, 0.18)';
+        ctx.strokeStyle = isFront ? 'rgba(90, 81, 66, 0.4)' : 'rgba(90, 81, 66, 0.18)';
         ctx.lineWidth = 1;
         ctx.stroke();
       }
