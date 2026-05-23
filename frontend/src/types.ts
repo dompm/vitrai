@@ -44,6 +44,7 @@ export interface Piece {
   transform: TextureTransform;
   promptBox?: BoundingBox;
   promptPoints?: PromptPoint[];
+  tierIndex?: number;          // if present, this piece belongs to a lamp tier
 }
 
 export interface GlassSheet {
@@ -59,6 +60,17 @@ export interface GlassSheet {
 
 export type SolderColor = 'black' | 'silver' | 'copper';
 
+export interface LampProfilePoint {
+  r: number;
+  y: number;
+}
+
+export interface LampConfig {
+  facetCount: number;
+  profilePoints: LampProfilePoint[];
+  activeTierIndex: number;
+}
+
 export interface Project {
   name: string;
   patternImageUrl: string;
@@ -70,5 +82,7 @@ export interface Project {
   sheets: GlassSheet[];
   solderWidthMM?: number;
   solderColor?: SolderColor;
+  projectType?: 'flat' | 'lamp';
+  lampConfig?: LampConfig;
 }
 

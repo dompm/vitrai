@@ -192,9 +192,21 @@ export function useProject() {
     localStorage.setItem('vitraux-last-project', name);
   }, [project.name, updateProject]);
 
-  const createNewProject = useCallback(async (name: string) => {
+  const createNewProject = useCallback(async (name: string, type: 'flat' | 'lamp' = 'flat') => {
     await flushSave();
-    const newProject = { ...EMPTY_PROJECT, name };
+    const newProject: Project = { ...EMPTY_PROJECT, name, projectType: type };
+    if (type === 'lamp') {
+      newProject.lampConfig = {
+        facetCount: 6,
+        profilePoints: [
+          { r: 40, y: 0 },
+          { r: 80, y: 60 },
+          { r: 100, y: 140 },
+          { r: 60, y: 200 }
+        ],
+        activeTierIndex: 0
+      };
+    }
     setProject(newProject);
     setUndoStack([]);
     setRedoStack([]);
@@ -426,7 +438,7 @@ export function useProject() {
     });
   }, [updateProject]);
 
-  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string): string => {
+  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string, tierIndex?: number): string => {
     const { x1, y1, x2, y2 } = box;
     const polygon: Piece['polygon'] = [
       [x1, y1], [x2, y1], [x2, y2], [x1, y2],
@@ -445,6 +457,7 @@ export function useProject() {
         id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
         promptBox: box, promptPoints: [],
+        tierIndex
       };
       setSelectedPieceIds([newPiece.id]);
       return { ...prev, pieces: [...prev.pieces, newPiece] };
@@ -452,7 +465,7 @@ export function useProject() {
     return id;
   }, [updateProject, t]);
 
-  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string): string => {
+  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string, tierIndex?: number): string => {
     const id = crypto.randomUUID();
     updateProject(prev => {
       const label = `${t('piece')} ${prev.pieces.length + 1}`;
@@ -473,6 +486,7 @@ export function useProject() {
         id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
         promptBox: box, promptPoints: [],
+        tierIndex
       };
       setSelectedPieceIds([newPiece.id]);
       return { ...prev, pieces: [...prev.pieces, newPiece] };
@@ -656,6 +670,19 @@ export function useProject() {
     setActiveSheetId(id);
   }, [updateProject]);
 
+  const updateLampConfig = useCallback((config: Partial<import('../types').LampConfig>) => {
+    updateProject(prev => {
+      if (!prev.lampConfig) return prev;
+      return {
+        ...prev,
+        lampConfig: {
+          ...prev.lampConfig,
+          ...config
+        }
+      };
+    });
+  }, [updateProject]);
+
   return {
     project,
     isLoaded,
@@ -708,5 +735,6 @@ export function useProject() {
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
+    updateLampConfig,
   };
 }
