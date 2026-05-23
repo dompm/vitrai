@@ -45,19 +45,16 @@ export const STEPS: Record<(typeof ANCHORED_STEPS)[number], StepConfig> = {
     id: 'calibrate-pattern',
     spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="measure"]',
     panel: 'pattern',
-    forceTool: 'measure',
-  },
-  'cut-piece': {
-    id: 'cut-piece',
-    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="box"]',
-    panel: 'pattern',
-    forceTool: 'box',
   },
   'calibrate-sheet': {
     id: 'calibrate-sheet',
     spotlightTarget: '[data-tutorial-panel="glass"] [data-tool-id="measure"]',
     panel: 'glass',
-    forceTool: 'measure',
+  },
+  'cut-piece': {
+    id: 'cut-piece',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="box"]',
+    panel: 'pattern',
   },
   'assign-glass': {
     id: 'assign-glass',

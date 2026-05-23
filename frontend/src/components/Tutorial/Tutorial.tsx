@@ -4,6 +4,7 @@ import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
 import { STEPS, ANCHORED_STEPS } from './types';
 import type { StepId } from './types';
+import type { ToolId } from '../Toolbar';
 
 interface Props {
   /** Current step (null = inactive). */
@@ -13,6 +14,8 @@ interface Props {
   project: Project;
   selectedPieceIds: string[];
   activeSheetId: string;
+  patternTool: ToolId;
+  sheetTool: ToolId;
   onAdvance: () => void;
   onSetTrackedPiece: (id: string) => void;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
@@ -27,6 +30,8 @@ export function Tutorial({
   project,
   selectedPieceIds,
   activeSheetId,
+  patternTool,
+  sheetTool,
   onAdvance,
   onSetTrackedPiece,
   onSelectPiece,
@@ -45,13 +50,25 @@ export function Tutorial({
     if (step !== 'position-texture') positionStartRef.current = null;
   }, [step]);
 
-  // Step 1 → 2: pattern scale set.
+  // Step 1 → 2: pattern scale set & scale tool closed.
   useEffect(() => {
     if (step !== 'calibrate-pattern') return;
-    if (project.patternScale && project.patternScale.pxPerUnit > 0) onAdvance();
-  }, [step, project.patternScale, onAdvance]);
+    if (project.patternScale && project.patternScale.pxPerUnit > 0 && patternTool !== 'measure') {
+      onAdvance();
+    }
+  }, [step, project.patternScale, patternTool, onAdvance]);
 
-  // Step 2 → 3: a piece exists. Track it.
+  // Step 2 → 3: active sheet has a scale & scale tool closed.
+  useEffect(() => {
+    if (step !== 'calibrate-sheet') return;
+    const sheet = project.sheets.find(s => s.id === activeSheetId);
+    if (sheet?.scale && sheet.scale.pxPerUnit > 0 && sheetTool !== 'measure') {
+      if (pieceId && !selectedPieceIds.includes(pieceId)) onSelectPiece(pieceId);
+      onAdvance();
+    }
+  }, [step, project.sheets, activeSheetId, pieceId, selectedPieceIds, sheetTool, onSelectPiece, onAdvance]);
+
+  // Step 3 → 4: a piece exists. Track it.
   useEffect(() => {
     if (step !== 'cut-piece') return;
     if (project.pieces.length > 0) {
@@ -61,16 +78,6 @@ export function Tutorial({
       onAdvance();
     }
   }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onAdvance]);
-
-  // Step 3 → 4: active sheet has a scale.
-  useEffect(() => {
-    if (step !== 'calibrate-sheet') return;
-    const sheet = project.sheets.find(s => s.id === activeSheetId);
-    if (sheet?.scale && sheet.scale.pxPerUnit > 0) {
-      if (pieceId && !selectedPieceIds.includes(pieceId)) onSelectPiece(pieceId);
-      onAdvance();
-    }
-  }, [step, project.sheets, activeSheetId, pieceId, selectedPieceIds, onSelectPiece, onAdvance]);
 
   // Step 4 → 5: tracked piece's glassSheetId changed.
   useEffect(() => {

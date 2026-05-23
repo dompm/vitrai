@@ -158,17 +158,16 @@ interface SheetPanelProps {
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
   showEmptyHint?: boolean;
-  /** Tutorial-driven override; when set, the toolbar uses this tool regardless of internal state. */
-  forceTool?: ToolId | null;
+  activeTool: ToolId;
+  onChangeActiveTool: (tool: ToolId) => void;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false, forceTool,
+  showEmptyHint = false, activeTool, onChangeActiveTool,
 }: SheetPanelProps) {
   const { t } = useTranslation();
-  const [internalActiveTool, setActiveTool] = useState<ToolId>('select');
-  const activeTool: ToolId = forceTool ?? internalActiveTool;
+  // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
@@ -337,10 +336,8 @@ export function SheetPanel({
   }
 
   function handleToolChange(id: ToolId) {
-    if (forceTool && forceTool !== id) return;
-    if (forceTool === id && internalActiveTool === id) return;
-    if (id === internalActiveTool && id !== 'select') {
-      setActiveTool('select');
+    if (id === activeTool && id !== 'select') {
+      onChangeActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
     }
@@ -368,22 +365,13 @@ export function SheetPanel({
       y2 = Math.max(0, Math.min(sheetH, y2));
 
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale && !forceTool) {
+      if (!sheet.scale) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
     }
-    setActiveTool(id);
+    onChangeActiveTool(id);
   }
-
-  // When the tutorial forces a tool, run the same side-effects as a user click
-  // (load measure line, switch active tool, etc.). Skip if the forced tool already matches.
-  useEffect(() => {
-    if (!forceTool) return;
-    if (forceTool === internalActiveTool) return;
-    handleToolChange(forceTool);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [forceTool]);
 
   function setCursor(cursor: string) {
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;

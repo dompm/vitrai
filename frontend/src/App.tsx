@@ -16,6 +16,7 @@ import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
+import type { ToolId } from './components/Toolbar';
 import './App.css';
 
 interface SheetTabProps {
@@ -318,6 +319,8 @@ export function App() {
 
   const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
+  const [patternTool, setPatternTool] = useState<ToolId>('select');
+  const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const tutorialLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -344,6 +347,8 @@ export function App() {
 
   const startTutorialTour = () => {
     loadProjectData(DEFAULT_PROJECT);
+    setPatternTool('select');
+    setSheetTool('select');
     setTutorialStep('calibrate-pattern');
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
@@ -402,8 +407,12 @@ export function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   };
 
-  const patternForceTool = tutorialStep && tutorialStep in STEPS ? STEPS[tutorialStep as keyof typeof STEPS].forceTool : null;
-  const sheetForceTool = tutorialStep && tutorialStep in STEPS ? STEPS[tutorialStep as keyof typeof STEPS].forceTool : null;
+  useEffect(() => {
+    if (tutorialStep === 'cut-piece') {
+      setPatternTool('box');
+    }
+  }, [tutorialStep]);
+
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
   const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
@@ -1149,7 +1158,8 @@ export function App() {
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
           debugMask={debugMask}
-          forceTool={patternForceTool}
+          activeTool={patternTool}
+          onChangeActiveTool={setPatternTool}
         />
       </div>
 
@@ -1209,7 +1219,8 @@ export function App() {
               piecesOnActiveSheet.length === 0 &&
               project.pieces.length > 0
             }
-            forceTool={sheetForceTool}
+            activeTool={sheetTool}
+            onChangeActiveTool={setSheetTool}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1335,6 +1346,8 @@ export function App() {
         project={project}
         selectedPieceIds={selectedPieceIds}
         activeSheetId={activeSheetId}
+        patternTool={patternTool}
+        sheetTool={sheetTool}
         onAdvance={advanceTutorial}
         onSetTrackedPiece={handleSetTrackedPiece}
         onSelectPiece={selectPiece}
