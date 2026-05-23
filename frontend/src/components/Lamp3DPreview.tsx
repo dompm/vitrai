@@ -172,22 +172,33 @@ export function Lamp3DPreview({
     width: number,
     height: number
   ): { x: number; y: number; depth: number } => {
+    // Re-center the lamp on the world origin so rotation + auto-fit are stable.
+    const yMid = (profilePoints[0].y + profilePoints[profilePoints.length - 1].y) / 2;
+    const py = p[1] - yMid;
+
     // 1. Rotation yaw (around Y axis)
     const x1 = p[0] * Math.cos(yaw) - p[2] * Math.sin(yaw);
     const z1 = p[0] * Math.sin(yaw) + p[2] * Math.cos(yaw);
 
     // 2. Rotation pitch (around X axis)
-    const y2 = p[1] * Math.cos(pitch) - z1 * Math.sin(pitch);
-    const z2 = p[1] * Math.sin(pitch) + z1 * Math.cos(pitch);
+    const y2 = py * Math.cos(pitch) - z1 * Math.sin(pitch);
+    const z2 = py * Math.sin(pitch) + z1 * Math.cos(pitch);
+
+    // Auto-fit scale: bound the projected lamp extents to the canvas with padding.
+    const PAD = 24;
+    const totalH = profilePoints[profilePoints.length - 1].y - profilePoints[0].y;
+    const maxR = Math.max(...profilePoints.map(pt => pt.r));
+    const projW = 2 * maxR;
+    const projH = totalH * Math.cos(pitch) + 2 * maxR * Math.sin(Math.abs(pitch));
+    const fitScale = Math.min((width - 2 * PAD) / projW, (height - 2 * PAD) / projH);
 
     // 3. Perspective Projection
     const d_cam = 450;
-    const scale = 1.3;
     const factor = d_cam / (d_cam + z2);
 
     return {
-      x: x1 * factor * scale + width / 2,
-      y: y2 * factor * scale + height / 2 - 30, // shift slightly up
+      x: x1 * factor * fitScale + width / 2,
+      y: y2 * factor * fitScale + height / 2,
       depth: z2,
     };
   };

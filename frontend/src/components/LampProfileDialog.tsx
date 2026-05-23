@@ -83,7 +83,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
           style={{
             width: '100%',
             height: 240,
-            background: 'var(--paper)',
+            background: '#ffffff',
             border: '1px solid var(--hairline-2)',
             borderRadius: 8,
             overflow: 'hidden',
