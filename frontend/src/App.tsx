@@ -8,6 +8,7 @@ import { AddSheetMenu } from './components/AddSheetMenu';
 import { CreateProjectDialog } from './components/CreateProjectDialog';
 import { LampCanvas } from './components/LampCanvas';
 import { Lamp3DPreview } from './components/Lamp3DPreview';
+import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -440,6 +441,7 @@ export function App() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
+  const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
   const isLamp = project.projectType === 'lamp';
 
   function startLampPreviewResize(e: React.PointerEvent) {
@@ -1226,6 +1228,16 @@ export function App() {
               {t('sheets', { count: project.sheets.length })}
             </span>
           </div>
+          {isLamp && (
+            <button
+              className="btn-ghost"
+              style={{ flexShrink: 0, fontSize: 11 }}
+              title={t('lampProfileButtonTooltip')}
+              onClick={() => setLampProfileDialog({ isFirstTime: false })}
+            >
+              {t('lampProfileButton')}
+            </button>
+          )}
           <div className="sheet-tabs">
             {project.sheets.map(sheet => (
               <SheetTab
@@ -1434,7 +1446,21 @@ export function App() {
             void createNewProject(name, type).then(() => {
               projectNameInputRef.current?.focus();
               projectNameInputRef.current?.select();
+              if (type === 'lamp') {
+                setLampProfileDialog({ isFirstTime: true });
+              }
             });
+          }}
+        />
+      )}
+      {lampProfileDialog && project.lampConfig && (
+        <LampProfileDialog
+          initialConfig={project.lampConfig}
+          isFirstTime={lampProfileDialog.isFirstTime}
+          onCancel={() => setLampProfileDialog(null)}
+          onConfirm={config => {
+            updateLampConfig(config);
+            setLampProfileDialog(null);
           }}
         />
       )}
