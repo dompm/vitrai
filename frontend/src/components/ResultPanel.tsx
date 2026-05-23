@@ -169,6 +169,7 @@ interface ResultPanelProps {
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onStartBlankCanvas: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
@@ -335,7 +336,7 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -833,18 +834,27 @@ export function ResultPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
-        {!project.patternImageUrl ? (
+        {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
               <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
               <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
                 {t('noPatternDesc')}
               </p>
-              <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <IconUpload size={16} />
-                {t('uploadPatternButton')}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
-              </label>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <IconUpload size={16} />
+                  {t('uploadPatternButton')}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
+                </label>
+                <button
+                  className="btn-ghost"
+                  onClick={onStartBlankCanvas}
+                  style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}
+                >
+                  {t('startBlankCanvasButton')}
+                </button>
+              </div>
               <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
                 {t('noPatternSecondary')}
               </p>
@@ -868,12 +878,21 @@ export function ResultPanel({
                   clipWidth={activeTool === 'crop' ? pw : Math.max(1, pw - project.patternCrop.left - project.patternCrop.right)}
                   clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
                 >
-                  {patternImg && (
+                  {patternImg ? (
                     <KonvaImage
                       id="bg"
                       image={patternImg}
                       width={pw} height={ph}
                       opacity={activeTool === 'box' ? 0.5 : 1}
+                    />
+                  ) : (
+                    <Rect
+                      x={0} y={0}
+                      width={pw} height={ph}
+                      fill="#fffefa"
+                      stroke="rgba(40, 30, 15, 0.14)"
+                      strokeWidth={1 / es}
+                      listening={false}
                     />
                   )}
                   {activeTool !== 'inspect' && project.pieces.map(piece => {

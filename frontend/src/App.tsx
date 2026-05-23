@@ -304,6 +304,7 @@ export function App() {
     canRedo,
     loadProjectData,
     updatePatternImage,
+    startBlankCanvas,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
@@ -1125,6 +1126,7 @@ export function App() {
           onUpdatePieceCurves={handleUpdatePieceCurves}
           onUpdatePrompt={handleUpdatePrompt}
           onUploadPattern={handleUploadPattern}
+          onStartBlankCanvas={startBlankCanvas}
           onAutoSegment={handleAutoSegment}
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
