@@ -408,14 +408,6 @@ export function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   };
 
-  useEffect(() => {
-    if (project.pieces.length > 0) {
-      project.pieces.forEach(p => {
-        console.log(`[Tutorial Debug] Piece "${p.label}" polygon (vertices: ${p.polygon.length}):`, JSON.stringify(p.polygon));
-      });
-    }
-  }, [project.pieces]);
-
 
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
