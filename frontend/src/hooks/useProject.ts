@@ -4,6 +4,7 @@ import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassS
 import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
+import { computeUnrolledLamp } from '../utils/lampGeometry';
 
 function toPxPerMm(s: Scale): number {
   if (s.unit === 'mm') return s.pxPerUnit;
@@ -196,7 +197,7 @@ export function useProject() {
     await flushSave();
     const newProject: Project = { ...EMPTY_PROJECT, name, projectType: type };
     if (type === 'lamp') {
-      newProject.lampConfig = {
+      const lampConfig = {
         facetCount: 6,
         profilePoints: [
           { r: 40, y: 0 },
@@ -205,6 +206,15 @@ export function useProject() {
           { r: 60, y: 200 }
         ],
         activeTierIndex: 0
+      };
+      const { width, height } = computeUnrolledLamp(lampConfig);
+      newProject.lampConfig = lampConfig;
+      newProject.patternWidth = width;
+      newProject.patternHeight = height;
+      newProject.patternScale = {
+        pxPerUnit: 10, // 10 px = 1 cm (profile points are in mm)
+        unit: 'cm',
+        line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
       };
     }
     setProject(newProject);
@@ -673,12 +683,19 @@ export function useProject() {
   const updateLampConfig = useCallback((config: Partial<import('../types').LampConfig>) => {
     updateProject(prev => {
       if (!prev.lampConfig) return prev;
+      const merged = { ...prev.lampConfig, ...config };
+      // Reflow pattern dimensions whenever the lamp's footprint changes.
+      const geometryChanged =
+        config.facetCount !== undefined || config.profilePoints !== undefined;
+      if (!geometryChanged) {
+        return { ...prev, lampConfig: merged };
+      }
+      const { width, height } = computeUnrolledLamp(merged);
       return {
         ...prev,
-        lampConfig: {
-          ...prev.lampConfig,
-          ...config
-        }
+        lampConfig: merged,
+        patternWidth: width,
+        patternHeight: height,
       };
     });
   }, [updateProject]);

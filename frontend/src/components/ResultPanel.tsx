@@ -20,6 +20,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
+import { computeUnrolledLamp } from '../utils/lampGeometry';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -702,6 +703,8 @@ export function ResultPanel({
   };
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
+  const isLamp = project.projectType === 'lamp';
+  const unrolledLamp = useMemo(() => (isLamp ? computeUnrolledLamp(project.lampConfig) : null), [isLamp, project.lampConfig]);
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -1367,7 +1370,39 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {(() => {
+                  {isLamp && unrolledLamp && unrolledLamp.outline.length > 0 ? (
+                    <>
+                      {/* Unrolled lamp paper backdrop */}
+                      <Line
+                        points={unrolledLamp.outline.flat()}
+                        closed
+                        fill="#fffefa"
+                        stroke="rgba(40, 30, 15, 0.32)"
+                        strokeWidth={1.5 / es}
+                        listening={false}
+                      />
+                      {/* Tier seams */}
+                      {unrolledLamp.tierSeams.map((s, i) => (
+                        <Line
+                          key={`tier-${i}`}
+                          points={[s.x1, s.y1, s.x2, s.y2]}
+                          stroke="rgba(40, 30, 15, 0.22)"
+                          strokeWidth={1 / es}
+                          listening={false}
+                        />
+                      ))}
+                      {/* Facet seams */}
+                      {unrolledLamp.facetSeams.map((s, i) => (
+                        <Line
+                          key={`facet-${i}`}
+                          points={[s.x1, s.y1, s.x2, s.y2]}
+                          stroke="rgba(40, 30, 15, 0.14)"
+                          strokeWidth={0.8 / es}
+                          listening={false}
+                        />
+                      ))}
+                    </>
+                  ) : (() => {
                     const cL = project.patternCrop.left;
                     const cT = project.patternCrop.top;
                     const cR = project.patternCrop.right;
@@ -1385,7 +1420,7 @@ export function ResultPanel({
                       />
                     );
                   })()}
-                  {patternImg && (
+                  {!isLamp && patternImg && (
                     <KonvaImage
                       id="bg"
                       image={patternImg}
