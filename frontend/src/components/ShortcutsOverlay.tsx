@@ -56,9 +56,10 @@ const GROUPS: Group[] = [
 interface Props {
   open: boolean;
   onClose: () => void;
+  onStartTutorial: () => void;
 }
 
-export function ShortcutsOverlay({ open, onClose }: Props) {
+export function ShortcutsOverlay({ open, onClose, onStartTutorial }: Props) {
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -112,6 +113,16 @@ export function ShortcutsOverlay({ open, onClose }: Props) {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="shortcuts-tutorial">
+          <div className="shortcuts-group-title">{t('shortcutsGroupTutorial')}</div>
+          <button
+            className="shortcuts-tutorial-btn"
+            onClick={() => { onClose(); onStartTutorial(); }}
+          >
+            {t('tutorialMenuItem')}
+          </button>
         </div>
       </div>
     </div>
