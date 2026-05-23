@@ -145,13 +145,16 @@ const resources = {
       tutorialStep2Body: "Same idea over here: draw a line and enter its real-world size (this sample is 6 inches wide). Click the scale tool again to hide the ruler. You do this once for each new sheet you import — not once per piece.",
       tutorialStep3Eyebrow: "Step 3 — Cut your first piece",
       tutorialStep3Title: "Drag a box around one of the orange slices",
-      tutorialStep3Body: "Drag a box around one of the orange slices in the pattern. Vitrai's segmentation model traces the exact shape. You'll repeat this for every piece in your pattern.",
-      tutorialStep4Eyebrow: "Step 4 — Assign a glass",
-      tutorialStep4Title: "Pick a glass for the piece",
-      tutorialStep4Body: "Open the glass dropdown and choose a sheet for the piece. Because both sides are calibrated, the piece appears on the sheet at its true size.",
-      tutorialStep5Eyebrow: "Step 5 — Position the texture",
-      tutorialStep5Title: "Drag the piece on the sheet",
-      tutorialStep5Body: "You can move the glass pattern on the image to position it. Drag, rotate, or scale the cutout on the glass sheet to select the perfect part. Drag it around a bit to see how the texture follows!"
+      tutorialStep3Body: "Drag a box around one of the orange slices in the pattern. Vitrai's segmentation model traces the shape, but it might bleed slightly outside the lines.",
+      tutorialStep4Eyebrow: "Step 4 — Refine the piece",
+      tutorialStep4Title: "Clean up the edges",
+      tutorialStep4Body: "Sometimes the cutout goes outside the lines. Click the `-` (Remove) button in the properties panel below, then click on the bleeding area of the cutout to place a red correction point.",
+      tutorialStep5Eyebrow: "Step 5 — Assign a glass",
+      tutorialStep5Title: "Pick a glass for the piece",
+      tutorialStep5Body: "Open the glass dropdown and choose a sheet for the piece. Because both sides are calibrated, the piece appears on the sheet at its true size.",
+      tutorialStep6Eyebrow: "Step 6 — Position the texture",
+      tutorialStep6Title: "Drag the piece on the sheet",
+      tutorialStep6Body: "You can move the glass pattern on the image to position it. Drag, rotate, or scale the cutout on the glass sheet to select the perfect part. Drag it around a bit to see how the texture follows!"
     }
   },
   fr: {
@@ -296,13 +299,16 @@ const resources = {
       tutorialStep2Body: "Même principe ici : tracez une ligne et entrez sa taille réelle (cet exemple fait 6 pouces de large). Cliquez à nouveau sur l'outil de mesure pour masquer la règle. À faire une fois par plaque importée — pas par pièce.",
       tutorialStep3Eyebrow: "Étape 3 — Découpez votre première pièce",
       tutorialStep3Title: "Tracez une boîte autour d'un quartier d'orange",
-      tutorialStep3Body: "Tracez une boîte autour d'un des quartiers d'orange dans le patron. Le modèle de segmentation trace la forme exacte. Répétez pour chaque pièce du patron.",
-      tutorialStep4Eyebrow: "Étape 4 — Attribuer un verre",
-      tutorialStep4Title: "Choisissez un verre pour la pièce",
-      tutorialStep4Body: "Ouvrez le menu déroulant et choisissez une plaque pour cette pièce. Les deux côtés étant calibrés, la pièce apparaît à sa taille réelle sur la plaque.",
-      tutorialStep5Eyebrow: "Étape 5 — Positionner la texture",
-      tutorialStep5Title: "Glissez la pièce sur la plaque",
-      tutorialStep5Body: "Vous pouvez déplacer la forme sur la plaque de verre pour la positionner. Faites glisser, pivotez ou redimensionnez la pièce pour choisir la zone parfaite. Déplacez-la un peu pour voir comment la texture suit le mouvement !"
+      tutorialStep3Body: "Tracez une boîte autour d'un des quartiers d'orange dans le patron. Le modèle de segmentation va tracer la forme, mais elle peut déborder légèrement.",
+      tutorialStep4Eyebrow: "Étape 4 — Affiner la pièce",
+      tutorialStep4Title: "Nettoyez les contours",
+      tutorialStep4Body: "Parfois, la découpe dépasse des lignes. Cliquez sur le bouton `-` (Retirer) dans le panneau de propriétés ci-dessous, puis cliquez sur la zone qui déborde pour placer un point rouge de correction.",
+      tutorialStep5Eyebrow: "Étape 5 — Attribuer un verre",
+      tutorialStep5Title: "Choisissez un verre pour la pièce",
+      tutorialStep5Body: "Ouvrez le menu déroulant et choisissez une plaque pour cette pièce. Les deux côtés étant calibrés, la pièce apparaît à sa taille réelle sur la plaque.",
+      tutorialStep6Eyebrow: "Étape 6 — Positionner la texture",
+      tutorialStep6Title: "Glissez la pièce sur la plaque",
+      tutorialStep6Body: "Vous pouvez déplacer la forme sur la plaque de verre pour la positionner. Faites glisser, pivotez ou redimensionnez la pièce pour choisir la zone parfaite. Déplacez-la un peu pour voir comment la texture suit le mouvement !"
     }
   }
 };

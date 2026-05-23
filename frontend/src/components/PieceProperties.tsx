@@ -148,6 +148,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
         <>
           <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0 }} />
           <button
+            data-tutorial-target="piece-refine-add"
             onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'add' ? null : 'add')}
             disabled={isPending || isEncoding}
             title={`${t('addPositivePoint')} [A]`}
@@ -166,6 +167,7 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             +
           </button>
           <button
+            data-tutorial-target="piece-refine-remove"
             onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
             disabled={isPending || isEncoding}
             title={`${t('addNegativePoint')} [S]`}

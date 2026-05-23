@@ -5,6 +5,7 @@ export type StepId =
   | 'calibrate-pattern'
   | 'calibrate-sheet'
   | 'cut-piece'
+  | 'refine-piece'
   | 'assign-glass'
   | 'position-texture'
   | 'done';
@@ -14,6 +15,7 @@ export const STEP_ORDER: StepId[] = [
   'calibrate-pattern',
   'calibrate-sheet',
   'cut-piece',
+  'refine-piece',
   'assign-glass',
   'position-texture',
   'done',
@@ -36,6 +38,7 @@ export const ANCHORED_STEPS: StepId[] = [
   'calibrate-pattern',
   'calibrate-sheet',
   'cut-piece',
+  'refine-piece',
   'assign-glass',
   'position-texture',
 ];
@@ -54,6 +57,11 @@ export const STEPS: Record<(typeof ANCHORED_STEPS)[number], StepConfig> = {
   'cut-piece': {
     id: 'cut-piece',
     spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="box"]',
+    panel: 'pattern',
+  },
+  'refine-piece': {
+    id: 'refine-piece',
+    spotlightTarget: '[data-tutorial-target="piece-refine-remove"]',
     panel: 'pattern',
   },
   'assign-glass': {

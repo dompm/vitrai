@@ -79,7 +79,18 @@ export function Tutorial({
     }
   }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onAdvance]);
 
-  // Step 4 → 5: tracked piece's glassSheetId changed.
+  // Step 4 → 5: a negative prompt point is added.
+  useEffect(() => {
+    if (step !== 'refine-piece') return;
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    const hasNegative = piece.promptPoints?.some(pt => pt.label === 0);
+    if (hasNegative) {
+      onAdvance();
+    }
+  }, [step, project.pieces, pieceId, onAdvance]);
+
+  // Step 5 → 6: tracked piece's glassSheetId changed.
   useEffect(() => {
     if (step !== 'assign-glass') return;
     const piece = project.pieces.find(p => p.id === pieceId);
