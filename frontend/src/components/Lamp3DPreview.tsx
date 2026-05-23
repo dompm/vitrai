@@ -327,11 +327,8 @@ export function Lamp3DPreview({
       poly2d.slice(1).forEach(pt => ctx.lineTo(pt.x, pt.y));
       ctx.closePath();
 
-      // Translucent parchment color for the blank frame, darker if active tier is different
-      const isActiveTier = tierIdx === activeTierIndex;
-      const baseFill = isActiveTier
-        ? `rgba(247, 241, 227, ${lightShading * 0.9})`
-        : `rgba(220, 215, 200, ${lightShading * 0.6})`;
+      // Translucent parchment fill, shaded by face normal — uniform across tiers.
+      const baseFill = `rgba(247, 241, 227, ${lightShading * 0.9})`;
 
       ctx.fillStyle = baseFill;
       ctx.fill();
