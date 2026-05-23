@@ -338,7 +338,191 @@ function findPenSnapTarget(
   return best;
 }
 
+interface AlignmentGuide {
+  type: 'h' | 'v';
+  from: [number, number];
+  to: [number, number];
+}
 
+interface LengthGuide {
+  matchLength: number;
+  center: [number, number];
+  snappedPoint: [number, number];
+  matchingSegment: { p1: [number, number]; p2: [number, number] };
+}
+
+function findAlignmentGuides(
+  cursor: [number, number],
+  pieces: Piece[],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+): { snapped: [number, number]; guides: AlignmentGuide[] } {
+  let snapX: number | null = null;
+  let snapY: number | null = null;
+  let bestDistX = tolerancePx;
+  let bestDistY = tolerancePx;
+  let guideV: [number, number] | null = null;
+  let guideH: [number, number] | null = null;
+
+  for (const piece of pieces) {
+    const polygon = flattenCurves(piece.polygon, piece.curvePoints);
+    for (const v of polygon) {
+      const dx = Math.abs(v[0] - cursor[0]) * effectiveScale;
+      if (dx < bestDistX) {
+        bestDistX = dx;
+        snapX = v[0];
+        guideV = [v[0], v[1]];
+      }
+      const dy = Math.abs(v[1] - cursor[1]) * effectiveScale;
+      if (dy < bestDistY) {
+        bestDistY = dy;
+        snapY = v[1];
+        guideH = [v[0], v[1]];
+      }
+    }
+  }
+
+  const snapped: [number, number] = [
+    snapX !== null ? snapX : cursor[0],
+    snapY !== null ? snapY : cursor[1],
+  ];
+
+  const guides: AlignmentGuide[] = [];
+  if (snapX !== null && guideV) {
+    guides.push({ type: 'v', from: guideV, to: [snapped[0], snapped[1]] });
+  }
+  if (snapY !== null && guideH) {
+    guides.push({ type: 'h', from: guideH, to: [snapped[0], snapped[1]] });
+  }
+
+  return { snapped, guides };
+}
+
+function findShiftAlignmentGuides(
+  cursor: [number, number],
+  lastPt: [number, number],
+  snappedTheta: number,
+  pieces: Piece[],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+): { snapped: [number, number]; guides: AlignmentGuide[] } {
+  const cosT = Math.cos(snappedTheta);
+  const sinT = Math.sin(snappedTheta);
+  
+  let bestDist = tolerancePx;
+  let snapped: [number, number] = [cursor[0], cursor[1]];
+  let guide: AlignmentGuide | null = null;
+
+  for (const piece of pieces) {
+    const poly = flattenCurves(piece.polygon, piece.curvePoints);
+    for (const v of poly) {
+      if (Math.abs(cosT) > 1e-5) {
+        const rx = (v[0] - lastPt[0]) / cosT;
+        if (rx >= 0) {
+          const px = v[0];
+          const py = lastPt[1] + rx * sinT;
+          const distPx = Math.hypot(cursor[0] - px, cursor[1] - py) * effectiveScale;
+          if (distPx < bestDist) {
+            bestDist = distPx;
+            snapped = [px, py];
+            guide = { type: 'v', from: [v[0], v[1]], to: [px, py] };
+          }
+        }
+      }
+      
+      if (Math.abs(sinT) > 1e-5) {
+        const ry = (v[1] - lastPt[1]) / sinT;
+        if (ry >= 0) {
+          const px = lastPt[0] + ry * cosT;
+          const py = v[1];
+          const distPx = Math.hypot(cursor[0] - px, cursor[1] - py) * effectiveScale;
+          if (distPx < bestDist) {
+            bestDist = distPx;
+            snapped = [px, py];
+            guide = { type: 'h', from: [v[0], v[1]], to: [px, py] };
+          }
+        }
+      }
+    }
+  }
+
+  return { snapped, guides: guide ? [guide] : [] };
+}
+
+function findLengthSnap(
+  cursor: [number, number],
+  lastPt: [number, number],
+  pieces: Piece[],
+  activePolygonPoints: [number, number][],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+) {
+  const segments: { length: number; p1: [number, number]; p2: [number, number] }[] = [];
+  
+  if (activePolygonPoints.length > 1) {
+    for (let i = 0; i < activePolygonPoints.length - 1; i++) {
+      const p1 = activePolygonPoints[i];
+      const p2 = activePolygonPoints[i + 1];
+      segments.push({
+        length: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+        p1,
+        p2,
+      });
+    }
+  }
+
+  if (activePolygonPoints.length > 0) {
+    for (const piece of pieces) {
+      const poly = flattenCurves(piece.polygon, piece.curvePoints);
+      let shares = false;
+      for (const ap of activePolygonPoints) {
+        for (const pp of poly) {
+          if (ap[0] === pp[0] && ap[1] === pp[1]) {
+            shares = true;
+            break;
+          }
+        }
+        if (shares) break;
+      }
+      if (shares) {
+        for (let i = 0; i < poly.length; i++) {
+          const p1 = poly[i];
+          const p2 = poly[(i + 1) % poly.length];
+          segments.push({
+            length: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+            p1,
+            p2,
+          });
+        }
+      }
+    }
+  }
+
+  const dx = cursor[0] - lastPt[0];
+  const dy = cursor[1] - lastPt[1];
+  const currentLen = Math.hypot(dx, dy);
+
+  let bestMatch: typeof segments[0] | null = null;
+  let bestDistPx = tolerancePx;
+  const tolerance = tolerancePx / effectiveScale;
+
+  for (const seg of segments) {
+    const dist = Math.abs(currentLen - seg.length);
+    const distPx = dist * effectiveScale;
+    if (distPx < bestDistPx) {
+      bestDistPx = distPx;
+      bestMatch = seg;
+    }
+  }
+
+  if (bestMatch) {
+    return {
+      matchLength: bestMatch.length,
+      matchingSegment: { p1: bestMatch.p1, p2: bestMatch.p2 },
+    };
+  }
+  return null;
+}
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
@@ -388,25 +572,100 @@ export function ResultPanel({
   const effectiveScaleRef = useRef(vp.effectiveScale);
   effectiveScaleRef.current = vp.effectiveScale;
 
+  const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
+  const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
+
   function updateHoverPoint(imageX: number, imageY: number, shiftPressed: boolean) {
     if (activeTool !== 'pen') return;
-    
-    if (shiftPressed && activePolygonPointsRef.current.length > 0) {
-      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-      const dx = imageX - lastPt[0];
-      const dy = imageY - lastPt[1];
-      const r = Math.hypot(dx, dy);
-      const theta = Math.atan2(dy, dx);
-      const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-      const snappedX = lastPt[0] + r * Math.cos(snappedTheta);
-      const snappedY = lastPt[1] + r * Math.sin(snappedTheta);
-      setHoverPoint([snappedX, snappedY]);
-      setHoverSnapped(false);
-    } else {
-      const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
-      setHoverPoint(snap ?? [imageX, imageY]);
-      setHoverSnapped(snap !== null);
+
+    // 1. Vertex snapping is highest priority
+    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+    if (snap) {
+      setHoverPoint(snap);
+      setHoverSnapped(true);
+      setActiveAlignmentGuides([]);
+      setActiveLengthGuide(null);
+      return;
     }
+
+    let finalX = imageX;
+    let finalY = imageY;
+    let alignmentGuides: AlignmentGuide[] = [];
+    let lengthGuide: LengthGuide | null = null;
+
+    if (activePolygonPointsRef.current.length > 0) {
+      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+
+      let theta = Math.atan2(imageY - lastPt[1], imageX - lastPt[0]);
+      if (shiftPressed) {
+        theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+      }
+
+      // 2. Length Snapping
+      const lenSnap = findLengthSnap(
+        [imageX, imageY],
+        lastPt,
+        piecesRef.current,
+        activePolygonPointsRef.current,
+        effectiveScaleRef.current
+      );
+
+      if (lenSnap) {
+        finalX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
+        finalY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
+
+        lengthGuide = {
+          matchLength: lenSnap.matchLength,
+          center: lastPt,
+          snappedPoint: [finalX, finalY],
+          matchingSegment: lenSnap.matchingSegment,
+        };
+      } else {
+        if (shiftPressed) {
+          const align = findShiftAlignmentGuides(
+            [imageX, imageY],
+            lastPt,
+            theta,
+            piecesRef.current,
+            effectiveScaleRef.current
+          );
+          if (align.guides.length > 0) {
+            finalX = align.snapped[0];
+            finalY = align.snapped[1];
+            alignmentGuides = align.guides;
+          } else {
+            const r = Math.hypot(imageX - lastPt[0], imageY - lastPt[1]);
+            finalX = lastPt[0] + r * Math.cos(theta);
+            finalY = lastPt[1] + r * Math.sin(theta);
+          }
+        } else {
+          // 3. Horizontal/Vertical Alignment Snapping
+          const align = findAlignmentGuides(
+            [imageX, imageY],
+            piecesRef.current,
+            effectiveScaleRef.current
+          );
+          finalX = align.snapped[0];
+          finalY = align.snapped[1];
+          alignmentGuides = align.guides;
+        }
+      }
+    } else {
+      // 3. Horizontal/Vertical Alignment Snapping
+      const align = findAlignmentGuides(
+        [imageX, imageY],
+        piecesRef.current,
+        effectiveScaleRef.current
+      );
+      finalX = align.snapped[0];
+      finalY = align.snapped[1];
+      alignmentGuides = align.guides;
+    }
+
+    setHoverPoint([finalX, finalY]);
+    setHoverSnapped(false);
+    setActiveAlignmentGuides(alignmentGuides);
+    setActiveLengthGuide(lengthGuide);
   }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
@@ -450,6 +709,8 @@ export function ResultPanel({
     setActivePolygonPoints([]);
     setHoverPoint(null);
     setHoverSnapped(false);
+    setActiveAlignmentGuides([]);
+    setActiveLengthGuide(null);
   }
 
   useEffect(() => {
@@ -574,21 +835,63 @@ export function ResultPanel({
       const isShift = e.evt ? e.evt.shiftKey : false;
       let targetX = x;
       let targetY = y;
-      if (isShift && activePolygonPointsRef.current.length > 0) {
+
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      if (snap) {
+        targetX = snap[0];
+        targetY = snap[1];
+      } else if (activePolygonPointsRef.current.length > 0) {
         const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-        const dx = x - lastPt[0];
-        const dy = y - lastPt[1];
-        const r = Math.hypot(dx, dy);
-        const theta = Math.atan2(dy, dx);
-        const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-        targetX = lastPt[0] + r * Math.cos(snappedTheta);
-        targetY = lastPt[1] + r * Math.sin(snappedTheta);
-      } else {
-        const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-        if (snap) {
-          targetX = snap[0];
-          targetY = snap[1];
+
+        let theta = Math.atan2(y - lastPt[1], x - lastPt[0]);
+        if (isShift) {
+          theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
         }
+
+        const lenSnap = findLengthSnap(
+          [x, y],
+          lastPt,
+          project.pieces,
+          activePolygonPointsRef.current,
+          vp.effectiveScale
+        );
+
+        if (lenSnap) {
+          targetX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
+          targetY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
+        } else if (isShift) {
+          const align = findShiftAlignmentGuides(
+            [x, y],
+            lastPt,
+            theta,
+            project.pieces,
+            vp.effectiveScale
+          );
+          if (align.guides.length > 0) {
+            targetX = align.snapped[0];
+            targetY = align.snapped[1];
+          } else {
+            const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
+            targetX = lastPt[0] + r * Math.cos(theta);
+            targetY = lastPt[1] + r * Math.sin(theta);
+          }
+        } else {
+          const align = findAlignmentGuides(
+            [x, y],
+            project.pieces,
+            vp.effectiveScale
+          );
+          targetX = align.snapped[0];
+          targetY = align.snapped[1];
+        }
+      } else {
+        const align = findAlignmentGuides(
+          [x, y],
+          project.pieces,
+          vp.effectiveScale
+        );
+        targetX = align.snapped[0];
+        targetY = align.snapped[1];
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
@@ -722,6 +1025,9 @@ export function ResultPanel({
       setActivePolygonPoints([]);
       setHoverPoint(null);
       setHoverSnapped(false);
+      lastMousePosRef.current = null;
+      setActiveAlignmentGuides([]);
+      setActiveLengthGuide(null);
     }
     if (id !== 'pencil') {
       setPencilPoints([]);
@@ -1099,6 +1405,52 @@ export function ResultPanel({
                   )}
                   {activeTool === 'pen' && (activePolygonPoints.length > 0 || hoverPoint) && (
                     <Group>
+                      {/* Alignment Guides */}
+                      {activeAlignmentGuides.map((guide, idx) => (
+                        <Group key={`align-guide-${idx}`} listening={false}>
+                          <Line
+                            points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
+                            stroke="rgba(192, 138, 31, 0.4)"
+                            strokeWidth={1 / es}
+                            dash={[4 / es, 4 / es]}
+                          />
+                          <Circle
+                            x={guide.from[0]}
+                            y={guide.from[1]}
+                            radius={4.5 / es}
+                            fill={CANVAS.paper}
+                            stroke={CANVAS.amber}
+                            strokeWidth={1.5 / es}
+                          />
+                        </Group>
+                      ))}
+
+                      {/* Equal Length Guide */}
+                      {activeLengthGuide && (
+                        <Group listening={false}>
+                          <Circle
+                            x={activeLengthGuide.center[0]}
+                            y={activeLengthGuide.center[1]}
+                            radius={activeLengthGuide.matchLength}
+                            stroke="rgba(192, 138, 31, 0.25)"
+                            strokeWidth={1.5 / es}
+                            dash={[6 / es, 6 / es]}
+                          />
+                          <Line
+                            points={[
+                              activeLengthGuide.matchingSegment.p1[0],
+                              activeLengthGuide.matchingSegment.p1[1],
+                              activeLengthGuide.matchingSegment.p2[0],
+                              activeLengthGuide.matchingSegment.p2[1],
+                            ]}
+                            stroke={CANVAS.amber}
+                            strokeWidth={4 / es}
+                            lineCap="round"
+                            opacity={0.8}
+                          />
+                        </Group>
+                      )}
+
                       {activePolygonPoints.length > 1 && (
                         <Line
                           points={activePolygonPoints.flat()}
