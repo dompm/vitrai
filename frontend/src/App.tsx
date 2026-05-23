@@ -1426,6 +1426,7 @@ export function App() {
       )}
       {lampProfileDialog && project.lampConfig && (
         <LampProfileDialog
+          project={project}
           initialConfig={project.lampConfig}
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}

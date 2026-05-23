@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { LampConfig, LampProfilePoint } from '../types';
+import type { LampConfig, LampProfilePoint, Project } from '../types';
+import { Lamp3DPreview } from './Lamp3DPreview';
 
 interface Props {
+  project: Project;
   initialConfig: LampConfig;
   isFirstTime?: boolean;
   onCancel: () => void;
@@ -32,10 +34,15 @@ const PRESETS: Record<Preset, LampProfilePoint[]> = {
   ],
 };
 
-export function LampProfileDialog({ initialConfig, isFirstTime, onCancel, onConfirm }: Props) {
+export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm }: Props) {
   const { t } = useTranslation();
   const [facetCount, setFacetCount] = useState(initialConfig.facetCount);
   const [profilePoints, setProfilePoints] = useState<LampProfilePoint[]>(initialConfig.profilePoints);
+
+  const previewProject = useMemo<Project>(() => ({
+    ...project,
+    lampConfig: { facetCount, profilePoints, activeTierIndex: initialConfig.activeTierIndex },
+  }), [project, facetCount, profilePoints, initialConfig.activeTierIndex]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -72,8 +79,25 @@ export function LampProfileDialog({ initialConfig, isFirstTime, onCancel, onConf
           </p>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '12px 0 4px' }}>
-          <LampProfileSketch profilePoints={profilePoints} facetCount={facetCount} />
+        <div
+          style={{
+            width: '100%',
+            height: 240,
+            background: 'var(--paper)',
+            border: '1px solid var(--hairline-2)',
+            borderRadius: 8,
+            overflow: 'hidden',
+            margin: '12px 0 4px',
+          }}
+        >
+          <Lamp3DPreview
+            project={previewProject}
+            selectedPieceIds={[]}
+            onSelectPiece={() => {}}
+            onUpdateLampConfig={() => {}}
+            activeSheetId=""
+            onSetFocusedPanelIdx={() => {}}
+          />
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, margin: '16px 0' }}>
@@ -139,103 +163,3 @@ export function LampProfileDialog({ initialConfig, isFirstTime, onCancel, onConf
   );
 }
 
-interface SketchProps {
-  profilePoints: LampProfilePoint[];
-  facetCount: number;
-}
-
-function LampProfileSketch({ profilePoints, facetCount }: SketchProps) {
-  if (profilePoints.length < 2) return null;
-
-  // Layout: 160x140 sketch box, 10px margin.
-  const W = 160;
-  const H = 140;
-  const PAD = 12;
-
-  const maxR = Math.max(...profilePoints.map(p => p.r));
-  const minY = Math.min(...profilePoints.map(p => p.y));
-  const maxY = Math.max(...profilePoints.map(p => p.y));
-  const drawH = H - 2 * PAD;
-  // Reserve a bit of vertical room for the bottom ellipse arc.
-  const usableH = drawH - 10;
-  const sx = (W / 2 - PAD) / Math.max(1, maxR);
-  const sy = usableH / Math.max(1, maxY - minY);
-  const s = Math.min(sx, sy);
-
-  const px = (r: number) => W / 2 + r * s;
-  const py = (y: number) => PAD + (y - minY) * s;
-
-  const top = profilePoints[0];
-  const bot = profilePoints[profilePoints.length - 1];
-  const topRpx = top.r * s;
-  const botRpx = bot.r * s;
-  // Ellipse "depth" — perspective hint. Wider at base.
-  const ellipseRy = (r: number) => Math.max(2, r * 0.22);
-
-  const rightSide = profilePoints.map(p => `${px(p.r)},${py(p.y)}`).join(' ');
-  const leftSide = [...profilePoints].reverse().map(p => `${px(-p.r)},${py(p.y)}`).join(' ');
-
-  const stroke = 'var(--amber-ink)';
-  const strokeW = 1.4;
-
-  return (
-    <svg
-      width={W}
-      height={H}
-      viewBox={`0 0 ${W} ${H}`}
-      style={{ background: 'var(--paper)', border: '1px solid var(--hairline-2)', borderRadius: 8 }}
-      aria-hidden="true"
-    >
-      {/* Faint facet hints — vertical lines on the inside */}
-      {facetCount >= 3 && Array.from({ length: Math.min(facetCount, 8) - 1 }).map((_, i) => {
-        const t = (i + 1) / Math.min(facetCount, 8);
-        const x = px(-maxR + 2 * maxR * t);
-        return (
-          <line
-            key={i}
-            x1={x}
-            y1={py(top.y) + ellipseRy(topRpx) * 0.2}
-            x2={x}
-            y2={py(bot.y) - ellipseRy(botRpx) * 0.2}
-            stroke={stroke}
-            strokeWidth={0.5}
-            opacity={0.2}
-          />
-        );
-      })}
-
-      {/* Top ellipse (full ring — full lip visible from above) */}
-      <ellipse
-        cx={W / 2}
-        cy={py(top.y)}
-        rx={topRpx}
-        ry={ellipseRy(topRpx)}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={strokeW}
-      />
-
-      {/* Right silhouette */}
-      <polyline points={rightSide} fill="none" stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round" />
-      {/* Left silhouette */}
-      <polyline points={leftSide} fill="none" stroke={stroke} strokeWidth={strokeW} strokeLinejoin="round" />
-
-      {/* Bottom ellipse front-half (back half is hidden by the lamp body) */}
-      <path
-        d={`M ${px(-bot.r)},${py(bot.y)} A ${botRpx},${ellipseRy(botRpx)} 0 0 0 ${px(bot.r)},${py(bot.y)}`}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={strokeW}
-      />
-      {/* Bottom ellipse back-half (dashed to suggest hidden edge) */}
-      <path
-        d={`M ${px(-bot.r)},${py(bot.y)} A ${botRpx},${ellipseRy(botRpx)} 0 0 1 ${px(bot.r)},${py(bot.y)}`}
-        fill="none"
-        stroke={stroke}
-        strokeWidth={strokeW * 0.7}
-        strokeDasharray="2 3"
-        opacity={0.5}
-      />
-    </svg>
-  );
-}
