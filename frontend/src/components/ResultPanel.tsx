@@ -20,7 +20,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
-import { computeUnrolledLamp, getLampSnapPoints } from '../utils/lampGeometry';
+import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints } from '../utils/lampGeometry';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -600,6 +600,18 @@ export function ResultPanel({
       return;
     }
 
+    // 1b. Lamp seam edge snap — project onto nearest seam line.
+    if (unrolledLampRef.current) {
+      const edgeSnap = findLampEdgeSnap([imageX, imageY], unrolledLampRef.current, effectiveScaleRef.current, PEN_SNAP_PX);
+      if (edgeSnap) {
+        setHoverPoint(edgeSnap);
+        setHoverSnapped(true);
+        setActiveAlignmentGuides([]);
+        setActiveLengthGuide(null);
+        return;
+      }
+    }
+
     let finalX = imageX;
     let finalY = imageY;
     let alignmentGuides: AlignmentGuide[] = [];
@@ -718,6 +730,8 @@ export function ResultPanel({
   const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp) : undefined), [unrolledLamp]);
   const lampSnapPointsRef = useRef(lampSnapPoints);
   lampSnapPointsRef.current = lampSnapPoints;
+  const unrolledLampRef = useRef(unrolledLamp);
+  unrolledLampRef.current = unrolledLamp;
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -854,9 +868,15 @@ export function ResultPanel({
       let targetY = y;
 
       const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale, lampSnapPoints);
+      const edgeSnap = !snap && unrolledLamp
+        ? findLampEdgeSnap([x, y], unrolledLamp, vp.effectiveScale, PEN_SNAP_PX)
+        : null;
       if (snap) {
         targetX = snap[0];
         targetY = snap[1];
+      } else if (edgeSnap) {
+        targetX = edgeSnap[0];
+        targetY = edgeSnap[1];
       } else if (activePolygonPointsRef.current.length > 0) {
         const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
 

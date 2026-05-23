@@ -91,6 +91,45 @@ export function computeUnrolledLamp(config: LampConfig | undefined | null): Unro
   return { width, height, outline, facetSeams, tierSeams };
 }
 
+// Project the cursor onto the closest seam line on the unrolled lamp surface,
+// if within thresholdPx in screen pixels. Returns the projection point in
+// pattern coords, or null if no seam is close enough.
+export function findLampEdgeSnap(
+  cursor: [number, number],
+  unrolled: UnrolledLamp,
+  effectiveScale: number,
+  thresholdPx: number,
+): [number, number] | null {
+  let bestPt: [number, number] | null = null;
+  let bestDist = thresholdPx;
+
+  const tryProject = (ax: number, ay: number, bx: number, by: number) => {
+    const dx = bx - ax;
+    const dy = by - ay;
+    const len2 = dx * dx + dy * dy;
+    if (len2 < 1e-6) return;
+    const t = Math.max(0, Math.min(1, ((cursor[0] - ax) * dx + (cursor[1] - ay) * dy) / len2));
+    const px = ax + t * dx;
+    const py = ay + t * dy;
+    const dist = Math.hypot(px - cursor[0], py - cursor[1]) * effectiveScale;
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestPt = [px, py];
+    }
+  };
+
+  const o = unrolled.outline;
+  for (let i = 0; i < o.length; i++) {
+    const a = o[i];
+    const b = o[(i + 1) % o.length];
+    tryProject(a[0], a[1], b[0], b[1]);
+  }
+  for (const s of unrolled.facetSeams) tryProject(s.x1, s.y1, s.x2, s.y2);
+  for (const s of unrolled.tierSeams) tryProject(s.x1, s.y1, s.x2, s.y2);
+
+  return bestPt;
+}
+
 // All snap-worthy corners of an unrolled lamp surface — polygon outline vertices
 // and the intersection points where facet seams meet tier seams (or polygon edges).
 export function getLampSnapPoints(unrolled: UnrolledLamp): [number, number][] {
