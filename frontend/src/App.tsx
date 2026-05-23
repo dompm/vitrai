@@ -16,7 +16,7 @@ import {
 import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
-import { DEFAULT_PROJECT } from './defaultProject';
+import { DEFAULT_PROJECT, EMPTY_PROJECT } from './defaultProject';
 import type { ToolId } from './components/Toolbar';
 import './App.css';
 
@@ -362,6 +362,9 @@ export function App() {
   };
 
   const skipTutorial = () => {
+    if (tutorialStep === 'welcome') {
+      loadProjectData({ ...EMPTY_PROJECT, name: project.name });
+    }
     setTutorialStep(null);
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
