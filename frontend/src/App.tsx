@@ -325,6 +325,7 @@ export function App() {
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
   const tutorialLoadedRef = useRef(false);
+  const preTutorialProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
     try {
@@ -349,6 +350,7 @@ export function App() {
   }, []);
 
   const startTutorialTour = () => {
+    preTutorialProjectRef.current = project.name;
     loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial' });
     setPatternTool('select');
     setSheetTool('select');
@@ -362,7 +364,7 @@ export function App() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   };
 
-  const skipTutorial = () => {
+  const skipTutorial = async () => {
     setTutorialStep(null);
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
@@ -371,6 +373,12 @@ export function App() {
       pieceId: null,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const prev = preTutorialProjectRef.current;
+    preTutorialProjectRef.current = null;
+    if (prev && prev !== 'Tutorial' && project.name === 'Tutorial') {
+      await switchProject(prev);
+      await deleteProject('Tutorial');
+    }
   };
 
   const completeTutorial = () => {
