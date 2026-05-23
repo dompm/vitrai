@@ -218,20 +218,32 @@ function ProfileEditor({
 }: ProfileEditorProps) {
   const W = 360;
   const H = 240;
-  const PAD = 22;
+  const PAD = 28;
+  const GRID_MM = 10;       // minor grid step (mm)
+  const GRID_MAJOR_MM = 50; // major grid + label step (mm)
+  const SNAP_PX = 8;        // align-to-other-handle threshold (screen px)
 
-  const maxR = Math.max(120, ...profilePoints.map(p => p.r)) + 20;
-  const minY = profilePoints.length ? Math.min(...profilePoints.map(p => p.y)) : 0;
-  const maxY = profilePoints.length ? Math.max(...profilePoints.map(p => p.y), minY + 100) : 200;
-  const sx = (W - 2 * PAD) / maxR;
-  const sy = (H - 2 * PAD) / Math.max(1, maxY - minY);
+  // Data bounds with a comfortable margin so the canvas accommodates dragging
+  // past the current extent of the profile.
+  const dataMaxR = Math.max(0, ...profilePoints.map(p => p.r));
+  const dataMinY = profilePoints.length ? Math.min(...profilePoints.map(p => p.y)) : 0;
+  const dataMaxY = profilePoints.length ? Math.max(...profilePoints.map(p => p.y)) : 200;
+  // Round bounds up to the next major-grid step so axis ticks land cleanly.
+  const round = (v: number, step: number) => Math.ceil(v / step) * step;
+  const viewMaxR = Math.max(GRID_MAJOR_MM * 3, round(dataMaxR + 20, GRID_MAJOR_MM));
+  const viewMinY = Math.min(0, dataMinY);
+  const viewMaxY = Math.max(viewMinY + GRID_MAJOR_MM * 3, round(dataMaxY + 20, GRID_MAJOR_MM));
+
+  const sx = (W - 2 * PAD) / viewMaxR;
+  const sy = (H - 2 * PAD) / (viewMaxY - viewMinY);
 
   const toSx = (r: number) => PAD + r * sx;
-  const toSy = (y: number) => PAD + (y - minY) * sy;
-  const fromSx = (xPx: number) => Math.max(0, (xPx - PAD) / sx);
-  const fromSy = (yPx: number) => minY + (yPx - PAD) / sy;
+  const toSy = (y: number) => PAD + (y - viewMinY) * sy;
+  const fromSx = (xPx: number) => (xPx - PAD) / sx;
+  const fromSy = (yPx: number) => viewMinY + (yPx - PAD) / sy;
 
   const svgRef = useRef<SVGSVGElement>(null);
+  const [activeGuides, setActiveGuides] = useState<{ v?: number; h?: number }>({});
 
   function pointerToCoords(ev: PointerEvent | React.PointerEvent): [number, number] {
     const svg = svgRef.current;
@@ -246,14 +258,53 @@ function ProfileEditor({
     e.preventDefault();
     e.stopPropagation();
     onSelectIdx(idx);
+    const startR = profilePoints[idx].r;
+    const startY = profilePoints[idx].y;
+
     function onMove(ev: PointerEvent) {
-      const [r, y] = pointerToCoords(ev);
-      onUpdatePoint(idx, { r: Math.max(0, Math.round(r)), y: Math.round(y) });
+      let [r, y] = pointerToCoords(ev);
+
+      // Shift = lock the drag to the dominant axis from the starting position.
+      if (ev.shiftKey) {
+        if (Math.abs(r - startR) > Math.abs(y - startY)) y = startY;
+        else r = startR;
+      }
+
+      // Alignment snap: match r or y to any other handle within SNAP_PX.
+      const guides: { v?: number; h?: number } = {};
+      let snappedR = false;
+      let snappedY = false;
+      for (let i = 0; i < profilePoints.length; i++) {
+        if (i === idx) continue;
+        const p = profilePoints[i];
+        if (!snappedR && Math.abs(toSx(p.r) - toSx(r)) < SNAP_PX) {
+          r = p.r;
+          guides.v = p.r;
+          snappedR = true;
+        }
+        if (!snappedY && Math.abs(toSy(p.y) - toSy(y)) < SNAP_PX) {
+          y = p.y;
+          guides.h = p.y;
+          snappedY = true;
+        }
+      }
+
+      // Grid snap on any axis that hasn't already been alignment-snapped.
+      if (!snappedR) r = Math.round(r / GRID_MM) * GRID_MM;
+      if (!snappedY) y = Math.round(y / GRID_MM) * GRID_MM;
+
+      r = Math.max(0, r);
+
+      setActiveGuides(guides);
+      onUpdatePoint(idx, { r, y });
     }
+
     function onUp() {
+      setActiveGuides({});
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     }
+
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
   }
@@ -262,6 +313,14 @@ function ProfileEditor({
   const mirroredPts = profilePoints.map(p => `${2 * PAD - toSx(p.r)},${toSy(p.y)}`).join(' ');
 
   const selected = profilePoints[selectedIdx];
+
+  // Grid ticks
+  const minorRTicks: number[] = [];
+  for (let r = 0; r <= viewMaxR; r += GRID_MM) minorRTicks.push(r);
+  const minorYTicks: number[] = [];
+  for (let y = Math.ceil(viewMinY / GRID_MM) * GRID_MM; y <= viewMaxY; y += GRID_MM) minorYTicks.push(y);
+  const majorRTicks = minorRTicks.filter(r => r % GRID_MAJOR_MM === 0);
+  const majorYTicks = minorYTicks.filter(y => y % GRID_MAJOR_MM === 0);
 
   return (
     <>
@@ -272,8 +331,111 @@ function ProfileEditor({
         viewBox={`0 0 ${W} ${H}`}
         style={{ background: '#ffffff', border: '1px solid var(--hairline-2)', borderRadius: 8, touchAction: 'none', flexShrink: 0 }}
       >
-        {/* Center axis (left edge — r=0) */}
-        <line x1={PAD} y1={PAD - 8} x2={PAD} y2={H - PAD + 8} stroke="var(--hairline-2)" strokeWidth={1} strokeDasharray="3 3" />
+        {/* Minor grid */}
+        {minorRTicks.map(r => (
+          <line
+            key={`mr-${r}`}
+            x1={toSx(r)}
+            y1={PAD}
+            x2={toSx(r)}
+            y2={H - PAD}
+            stroke="rgba(40, 30, 15, 0.05)"
+            strokeWidth={1}
+          />
+        ))}
+        {minorYTicks.map(y => (
+          <line
+            key={`my-${y}`}
+            x1={PAD}
+            y1={toSy(y)}
+            x2={W - PAD}
+            y2={toSy(y)}
+            stroke="rgba(40, 30, 15, 0.05)"
+            strokeWidth={1}
+          />
+        ))}
+        {/* Major grid */}
+        {majorRTicks.map(r => (
+          <line
+            key={`Mr-${r}`}
+            x1={toSx(r)}
+            y1={PAD}
+            x2={toSx(r)}
+            y2={H - PAD}
+            stroke="rgba(40, 30, 15, 0.12)"
+            strokeWidth={1}
+          />
+        ))}
+        {majorYTicks.map(y => (
+          <line
+            key={`My-${y}`}
+            x1={PAD}
+            y1={toSy(y)}
+            x2={W - PAD}
+            y2={toSy(y)}
+            stroke="rgba(40, 30, 15, 0.12)"
+            strokeWidth={1}
+          />
+        ))}
+
+        {/* Axes */}
+        <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="rgba(40, 30, 15, 0.45)" strokeWidth={1} />
+        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="rgba(40, 30, 15, 0.45)" strokeWidth={1} />
+
+        {/* Axis tick labels (major only) */}
+        {majorRTicks.map(r => (
+          <text
+            key={`lr-${r}`}
+            x={toSx(r)}
+            y={H - PAD + 12}
+            fontSize={9}
+            fill="var(--text-dim)"
+            textAnchor="middle"
+            fontFamily="Inter Tight, system-ui, sans-serif"
+          >
+            {r}
+          </text>
+        ))}
+        {majorYTicks.map(y => (
+          <text
+            key={`ly-${y}`}
+            x={PAD - 4}
+            y={toSy(y) + 3}
+            fontSize={9}
+            fill="var(--text-dim)"
+            textAnchor="end"
+            fontFamily="Inter Tight, system-ui, sans-serif"
+          >
+            {y}
+          </text>
+        ))}
+        {/* Axis labels */}
+        <text x={W - PAD} y={H - PAD + 22} fontSize={9} fill="var(--text-soft)" textAnchor="end" fontFamily="Inter Tight, system-ui, sans-serif">r (mm)</text>
+        <text x={PAD - 4} y={PAD - 8} fontSize={9} fill="var(--text-soft)" textAnchor="end" fontFamily="Inter Tight, system-ui, sans-serif">y (mm)</text>
+
+        {/* Active alignment guides */}
+        {activeGuides.v !== undefined && (
+          <line
+            x1={toSx(activeGuides.v)}
+            y1={PAD - 4}
+            x2={toSx(activeGuides.v)}
+            y2={H - PAD + 4}
+            stroke="var(--amber)"
+            strokeWidth={1}
+            strokeDasharray="4 3"
+          />
+        )}
+        {activeGuides.h !== undefined && (
+          <line
+            x1={PAD - 4}
+            y1={toSy(activeGuides.h)}
+            x2={W - PAD + 4}
+            y2={toSy(activeGuides.h)}
+            stroke="var(--amber)"
+            strokeWidth={1}
+            strokeDasharray="4 3"
+          />
+        )}
 
         {/* Mirrored silhouette (subtle, just for vase-feel context) */}
         <polyline
@@ -293,18 +455,17 @@ function ProfileEditor({
           const cy = toSy(p.y);
           const isSel = i === selectedIdx;
           return (
-            <g key={i}>
-              <circle
-                cx={cx}
-                cy={cy}
-                r={isSel ? 7 : 5}
-                fill={isSel ? 'var(--amber)' : '#ffffff'}
-                stroke="var(--amber-ink)"
-                strokeWidth={isSel ? 2 : 1.4}
-                style={{ cursor: 'grab' }}
-                onPointerDown={e => startDrag(i, e)}
-              />
-            </g>
+            <circle
+              key={i}
+              cx={cx}
+              cy={cy}
+              r={isSel ? 7 : 5}
+              fill={isSel ? 'var(--amber)' : '#ffffff'}
+              stroke="var(--amber-ink)"
+              strokeWidth={isSel ? 2 : 1.4}
+              style={{ cursor: 'grab' }}
+              onPointerDown={e => startDrag(i, e)}
+            />
           );
         })}
       </svg>
