@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
 import { EMPTY_PROJECT, DEFAULT_PROJECT } from '../defaultProject';
-import { GLASS_ASSETS } from '../assets';
+import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 
 function toPxPerMm(s: Scale): number {
@@ -28,7 +28,7 @@ function applyScales(project: Project, sheetId?: string): Project {
 }
 
 function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
-  const glass = GLASS_ASSETS[prev.sheets.length % GLASS_ASSETS.length];
+  const glass = DEFAULT_GLASS_ASSETS[prev.sheets.length % DEFAULT_GLASS_ASSETS.length];
   return {
     id: `sheet-${Date.now()}`,
     label: `${t('sheet')} ${prev.sheets.length + 1}`,
@@ -565,17 +565,17 @@ export function useProject() {
     }));
   }, [updateProject]);
 
-  const addSheetFromImage = useCallback((url: string, label: string) => {
+  const addSheetFromImage = useCallback((url: string, label: string, scale: Scale | null = null) => {
     const id = `sheet-${Date.now()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
         id, label: cleanLabel, imageUrl: url,
         crop: { top: 0, left: 0, bottom: 0, right: 0 },
-        scale: null,
+        scale,
       };
       setActiveSheetId(id);
-      return { ...prev, sheets: [...prev.sheets, newSheet] };
+      return applyScales({ ...prev, sheets: [...prev.sheets, newSheet] }, id);
     });
   }, [updateProject]);
 

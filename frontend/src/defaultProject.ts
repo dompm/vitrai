@@ -1,5 +1,5 @@
 import type { Project, Scale } from './types';
-import { GLASS_ASSETS } from './assets';
+import { TUTORIAL_GLASS_ASSETS } from './assets';
 
 const NO_CROP = { top: 0, left: 0, bottom: 0, right: 0 };
 
@@ -17,7 +17,7 @@ export const DEFAULT_PROJECT: Project = {
   patternCrop: NO_CROP,
   patternScale: null,
   pieces: [],
-  sheets: GLASS_ASSETS.map((g, i) => {
+  sheets: TUTORIAL_GLASS_ASSETS.map((g, i) => {
     const isOrange = g.label === 'Orange';
     return {
       id: `sheet-${i + 1}`,
