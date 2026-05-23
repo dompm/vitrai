@@ -557,6 +557,7 @@ export function ResultPanel({
       };
       const minBox = getMinBoxSize(pw);
       if (box.x2 - box.x1 >= minBox && box.y2 - box.y1 >= minBox) {
+        console.log('[Tutorial Debug] Box drawn:', JSON.stringify(box));
         onAddPiece(box);
       }
       setDrawingBox(null);
