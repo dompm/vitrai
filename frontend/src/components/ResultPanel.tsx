@@ -169,6 +169,7 @@ interface ResultPanelProps {
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onStartBlankCanvas: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
@@ -335,7 +336,7 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -344,11 +345,43 @@ export function ResultPanel({
   const refineModeRef = useRef(refineMode);
   refineModeRef.current = refineMode;
 
+  const { patternWidth: pw, patternHeight: ph } = project;
+  const vp = useViewport(pw, ph);
+
   const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
   const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
   const [hoverSnapped, setHoverSnapped] = useState(false);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
+
+  const [isShiftDown, setIsShiftDown] = useState(false);
+  const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+
+  const piecesRef = useRef(project.pieces);
+  piecesRef.current = project.pieces;
+  const effectiveScaleRef = useRef(vp.effectiveScale);
+  effectiveScaleRef.current = vp.effectiveScale;
+
+  function updateHoverPoint(imageX: number, imageY: number, shiftPressed: boolean) {
+    if (activeTool !== 'pen') return;
+    
+    if (shiftPressed && activePolygonPointsRef.current.length > 0) {
+      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+      const dx = imageX - lastPt[0];
+      const dy = imageY - lastPt[1];
+      const r = Math.hypot(dx, dy);
+      const theta = Math.atan2(dy, dx);
+      const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+      const snappedX = lastPt[0] + r * Math.cos(snappedTheta);
+      const snappedY = lastPt[1] + r * Math.sin(snappedTheta);
+      setHoverPoint([snappedX, snappedY]);
+      setHoverSnapped(false);
+    } else {
+      const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+      setHoverPoint(snap ?? [imageX, imageY]);
+      setHoverSnapped(snap !== null);
+    }
+  }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
   const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
@@ -406,6 +439,14 @@ export function ResultPanel({
         setIsSpaceDown(true);
         return;
       }
+      if (e.key === 'Shift') {
+        if (!e.repeat) {
+          setIsShiftDown(true);
+          if (lastMousePosRef.current) {
+            updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
+          }
+        }
+      }
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b' && !isEncoding) handleToolChange('box');
@@ -442,6 +483,12 @@ export function ResultPanel({
     }
     function handleKeyUp(e: KeyboardEvent) {
       if (e.code === 'Space') setIsSpaceDown(false);
+      if (e.key === 'Shift') {
+        setIsShiftDown(false);
+        if (lastMousePosRef.current) {
+          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
+        }
+      }
     }
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
@@ -452,7 +499,6 @@ export function ResultPanel({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTool]);
 
-  const { patternWidth: pw, patternHeight: ph } = project;
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [dashOffset, setDashOffset] = useState(0);
@@ -470,7 +516,6 @@ export function ResultPanel({
     return () => cancelAnimationFrame(animId);
   }, [tutorialStep, project.pieces.length]);
   
-  const vp = useViewport(pw, ph);
   const [patternImg] = useImage(project.patternImageUrl);
   const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
   const measure = useMeasure();
@@ -498,16 +543,35 @@ export function ResultPanel({
 
     if (activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const isShift = e.evt ? e.evt.shiftKey : false;
+      let targetX = x;
+      let targetY = y;
+      if (isShift && activePolygonPointsRef.current.length > 0) {
+        const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+        const dx = x - lastPt[0];
+        const dy = y - lastPt[1];
+        const r = Math.hypot(dx, dy);
+        const theta = Math.atan2(dy, dx);
+        const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+        targetX = lastPt[0] + r * Math.cos(snappedTheta);
+        targetY = lastPt[1] + r * Math.sin(snappedTheta);
+      } else {
+        const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+        if (snap) {
+          targetX = snap[0];
+          targetY = snap[1];
+        }
+      }
+
       if (activePolygonPointsRef.current.length >= 3) {
         const [startX, startY] = activePolygonPointsRef.current[0];
-        const dist = Math.hypot(x - startX, y - startY) * vp.effectiveScale;
+        const dist = Math.hypot(targetX - startX, targetY - startY) * vp.effectiveScale;
         if (dist < 15) {
           commitActivePolygon();
           return;
         }
       }
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-      setActivePolygonPoints(prev => [...prev, snap ?? [x, y]]);
+      setActivePolygonPoints(prev => [...prev, [targetX, targetY]]);
       return;
     }
 
@@ -549,9 +613,10 @@ export function ResultPanel({
     }
     if (activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-      setHoverPoint(snap ?? [x, y]);
-      setHoverSnapped(snap !== null);
+      lastMousePosRef.current = { x, y };
+      const isShift = e.evt ? e.evt.shiftKey : false;
+      setIsShiftDown(isShift);
+      updateHoverPoint(x, y, isShift);
       return;
     }
     if (activeTool === 'pencil') {
@@ -833,18 +898,27 @@ export function ResultPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
-        {!project.patternImageUrl ? (
+        {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div>
               <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
               <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
                 {t('noPatternDesc')}
               </p>
-              <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <IconUpload size={16} />
-                {t('uploadPatternButton')}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
-              </label>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <IconUpload size={16} />
+                  {t('uploadPatternButton')}
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
+                </label>
+                <button
+                  className="btn-ghost"
+                  onClick={onStartBlankCanvas}
+                  style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}
+                >
+                  {t('startBlankCanvasButton')}
+                </button>
+              </div>
               <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
                 {t('noPatternSecondary')}
               </p>
@@ -863,11 +937,31 @@ export function ResultPanel({
                 <Group
                   x={vp.pan.x} y={vp.pan.y}
                   scaleX={es} scaleY={es}
-                  clipX={activeTool === 'crop' ? 0 : project.patternCrop.left}
-                  clipY={activeTool === 'crop' ? 0 : project.patternCrop.top}
-                  clipWidth={activeTool === 'crop' ? pw : Math.max(1, pw - project.patternCrop.left - project.patternCrop.right)}
-                  clipHeight={activeTool === 'crop' ? ph : Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom)}
+                  {...(activeTool === 'crop' ? {} : {
+                    clipX: project.patternCrop.left,
+                    clipY: project.patternCrop.top,
+                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                  })}
                 >
+                  {(() => {
+                    const cL = project.patternCrop.left;
+                    const cT = project.patternCrop.top;
+                    const cR = project.patternCrop.right;
+                    const cB = project.patternCrop.bottom;
+                    const ux = Math.min(0, cL);
+                    const uy = Math.min(0, cT);
+                    const uw = Math.max(pw, pw - cR) - ux;
+                    const uh = Math.max(ph, ph - cB) - uy;
+                    return (
+                      <Rect
+                        x={ux} y={uy}
+                        width={uw} height={uh}
+                        fill="#fffefa"
+                        listening={false}
+                      />
+                    );
+                  })()}
                   {patternImg && (
                     <KonvaImage
                       id="bg"

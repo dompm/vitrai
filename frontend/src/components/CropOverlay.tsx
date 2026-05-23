@@ -85,6 +85,14 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
   const iw = W - crop.left - crop.right;
   const ih = H - crop.top - crop.bottom;
 
+  // Dim bands only cover positive insets (area inside the image but outside
+  // the crop rect). Negative crop values extend the canvas past the image and
+  // those extension regions stay bright so the user sees the new canvas area.
+  const insetTop = Math.max(0, crop.top);
+  const insetBottom = Math.max(0, crop.bottom);
+  const middleY = insetTop;
+  const middleH = Math.max(0, H - insetTop - insetBottom);
+
   function setCursor(e: KonvaEventObject<MouseEvent>, cursor: string) {
     const c = e.target.getStage()?.container();
     if (c) c.style.cursor = cursor;
@@ -92,11 +100,19 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
 
   return (
     <Group>
-      {/* Dim bands outside the crop rect */}
-      <Rect x={0} y={0} width={W} height={iy} fill={DIM} listening={false} />
-      <Rect x={0} y={iy + ih} width={W} height={H - iy - ih} fill={DIM} listening={false} />
-      <Rect x={0} y={iy} width={ix} height={ih} fill={DIM} listening={false} />
-      <Rect x={ix + iw} y={iy} width={W - ix - iw} height={ih} fill={DIM} listening={false} />
+      {/* Dim bands — only positive insets, no negatives */}
+      {crop.top > 0 && (
+        <Rect x={0} y={0} width={W} height={crop.top} fill={DIM} listening={false} />
+      )}
+      {crop.bottom > 0 && (
+        <Rect x={0} y={H - crop.bottom} width={W} height={crop.bottom} fill={DIM} listening={false} />
+      )}
+      {crop.left > 0 && (
+        <Rect x={0} y={middleY} width={crop.left} height={middleH} fill={DIM} listening={false} />
+      )}
+      {crop.right > 0 && (
+        <Rect x={W - crop.right} y={middleY} width={crop.right} height={middleH} fill={DIM} listening={false} />
+      )}
 
       {/* Edge handles */}
       <Line
@@ -105,7 +121,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
-          const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
           e.target.x(0); e.target.y(y);
           onCropChange({ top: Math.round(y) });
         }}
@@ -118,7 +134,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
-          const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
+          const y = Math.max(crop.top + 20, e.target.y());
           e.target.x(0); e.target.y(y);
           onCropChange({ bottom: Math.round(H - y) });
         }}
@@ -131,7 +147,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
-          const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
+          const x = Math.min(W - crop.right - 20, e.target.x());
           e.target.x(x); e.target.y(0);
           onCropChange({ left: Math.round(x) });
         }}
@@ -144,7 +160,7 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
-          const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
+          const x = Math.max(crop.left + 20, e.target.x());
           e.target.x(x); e.target.y(0);
           onCropChange({ right: Math.round(W - x) });
         }}
@@ -157,8 +173,8 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         x={ix} y={iy} es={es} flipX={false} flipY={false} cursor="nwse-resize"
         onCursorChange={setCursor}
         onDragMove={e => {
-          const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
-          const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
+          const x = Math.min(W - crop.right - 20, e.target.x());
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
           e.target.x(x); e.target.y(y);
           onCropChange({ left: Math.round(x), top: Math.round(y) });
         }}
@@ -167,8 +183,8 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         x={ix + iw} y={iy} es={es} flipX={true} flipY={false} cursor="nesw-resize"
         onCursorChange={setCursor}
         onDragMove={e => {
-          const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
-          const y = Math.max(0, Math.min(H - crop.bottom - 20, e.target.y()));
+          const x = Math.max(crop.left + 20, e.target.x());
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
           e.target.x(x); e.target.y(y);
           onCropChange({ right: Math.round(W - x), top: Math.round(y) });
         }}
@@ -177,8 +193,8 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         x={ix} y={iy + ih} es={es} flipX={false} flipY={true} cursor="nesw-resize"
         onCursorChange={setCursor}
         onDragMove={e => {
-          const x = Math.max(0, Math.min(W - crop.right - 20, e.target.x()));
-          const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
+          const x = Math.min(W - crop.right - 20, e.target.x());
+          const y = Math.max(crop.top + 20, e.target.y());
           e.target.x(x); e.target.y(y);
           onCropChange({ left: Math.round(x), bottom: Math.round(H - y) });
         }}
@@ -187,8 +203,8 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
         x={ix + iw} y={iy + ih} es={es} flipX={true} flipY={true} cursor="nwse-resize"
         onCursorChange={setCursor}
         onDragMove={e => {
-          const x = Math.max(crop.left + 20, Math.min(W, e.target.x()));
-          const y = Math.max(crop.top + 20, Math.min(H, e.target.y()));
+          const x = Math.max(crop.left + 20, e.target.x());
+          const y = Math.max(crop.top + 20, e.target.y());
           e.target.x(x); e.target.y(y);
           onCropChange({ right: Math.round(W - x), bottom: Math.round(H - y) });
         }}

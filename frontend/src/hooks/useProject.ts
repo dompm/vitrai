@@ -565,6 +565,23 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const startBlankCanvas = useCallback(() => {
+    const W = 1200;
+    const H = 1200;
+    updateProject(prev => ({
+      ...prev,
+      patternImageUrl: '',
+      patternWidth: W,
+      patternHeight: H,
+      patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+      patternScale: {
+        pxPerUnit: 100,
+        unit: 'in',
+        line: { x1: 0, y1: H / 2, x2: W, y2: H / 2 },
+      },
+    }));
+  }, [updateProject]);
+
   const addSheetFromImage = useCallback((url: string, label: string, scale: Scale | null = null) => {
     const id = `sheet-${Date.now()}`;
     const cleanLabel = stripExtension(label);
@@ -678,6 +695,7 @@ export function useProject() {
     retrySave,
     loadProjectData,
     updatePatternImage,
+    startBlankCanvas,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,

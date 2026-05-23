@@ -23,6 +23,8 @@ const GROUPS: Group[] = [
       { keys: ['H'], labelKey: 'shortcutPan' },
       { keys: ['Space'], labelKey: 'shortcutPanHold' },
       { keys: ['B'], labelKey: 'shortcutCut' },
+      { keys: ['P'], labelKey: 'shortcutPen' },
+      { keys: ['N'], labelKey: 'shortcutPencil' },
       { keys: ['C'], labelKey: 'shortcutCrop' },
       { keys: ['M'], labelKey: 'shortcutMeasure' },
       { keys: ['I'], labelKey: 'shortcutInspect' },

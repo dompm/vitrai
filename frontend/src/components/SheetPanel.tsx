@@ -449,10 +449,12 @@ export function SheetPanel({
           <Layer>
             <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
               <Group
-                clipX={activeTool === 'crop' ? 0 : sheet.crop.left}
-                clipY={activeTool === 'crop' ? 0 : sheet.crop.top}
-                clipWidth={activeTool === 'crop' ? sheetW : Math.max(1, sheetW - sheet.crop.left - sheet.crop.right)}
-                clipHeight={activeTool === 'crop' ? sheetH : Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom)}
+                {...(activeTool === 'crop' ? {} : {
+                  clipX: sheet.crop.left,
+                  clipY: sheet.crop.top,
+                  clipWidth: Math.max(1, sheetW - sheet.crop.left - sheet.crop.right),
+                  clipHeight: Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom),
+                })}
               >
                 {sheetImg && (
                   <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} />
