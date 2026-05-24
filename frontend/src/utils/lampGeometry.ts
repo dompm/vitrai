@@ -245,17 +245,24 @@ export function patternToSurface(
   py: number,
   unrolled: UnrolledLamp,
 ): SurfaceMapping | null {
+  // Small tolerance so vertices that landed a hair past a strip's edge (e.g. a
+  // box-tool release slightly outside the strip outline) still map onto that
+  // strip's tier instead of getting dropped from 3D rendering entirely.
+  const TOL_Y = 1;        // mm
+  const TOL_U = 0.02;     // fraction of strip width
   if (unrolled.mode === 'faceted') {
     for (const strip of unrolled.strips) {
       const cx = strip.centerX;
       for (const tier of strip.tiers) {
-        if (py < tier.topY || py > tier.botY) continue;
-        const vy = (py - tier.topY) / Math.max(1e-6, tier.botY - tier.topY);
+        if (py < tier.topY - TOL_Y || py > tier.botY + TOL_Y) continue;
+        const tierH = Math.max(1e-6, tier.botY - tier.topY);
+        const vy = Math.max(0, Math.min(1, (py - tier.topY) / tierH));
         const widthAtV = tier.topChord * (1 - vy) + tier.botChord * vy;
         const leftAtV = cx - widthAtV / 2;
         const u = (px - leftAtV) / Math.max(1e-6, widthAtV);
-        if (u < 0 || u > 1) continue;
-        return { mode: 'faceted', tierIdx: tier.tierIdx, facetIdx: strip.facetIdx, u, v: vy };
+        if (u < -TOL_U || u > 1 + TOL_U) continue;
+        const uClamped = Math.max(0, Math.min(1, u));
+        return { mode: 'faceted', tierIdx: tier.tierIdx, facetIdx: strip.facetIdx, u: uClamped, v: vy };
       }
     }
     return null;
