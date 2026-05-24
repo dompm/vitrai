@@ -176,6 +176,10 @@ interface ResultPanelProps {
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
+  onPenStatusChange?: (status: {
+    coords: { x: number; y: number } | null;
+    lastPoint: { x: number; y: number } | null;
+  }) => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -337,7 +341,7 @@ export function ResultPanel({
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
-  tutorialStep, refineMode, onRefineModeChange,
+  tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -430,6 +434,21 @@ export function ResultPanel({
     onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
+
+  const onPenStatusChangeRef = useRef(onPenStatusChange);
+  onPenStatusChangeRef.current = onPenStatusChange;
+
+  const lastPoint = activePolygonPoints.length > 0 ? activePolygonPoints[activePolygonPoints.length - 1] : null;
+  useEffect(() => {
+    if (activeTool === 'pen') {
+      onPenStatusChangeRef.current?.({
+        coords: hoverPoint ? { x: hoverPoint[0], y: hoverPoint[1] } : null,
+        lastPoint: lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
+      });
+    } else {
+      onPenStatusChangeRef.current?.({ coords: null, lastPoint: null });
+    }
+  }, [hoverPoint, lastPoint, activeTool]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -931,6 +950,11 @@ export function ResultPanel({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerLeave={() => {
+                if (activeTool === 'pen') {
+                  setHoverPoint(null);
+                }
+              }}
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer>
