@@ -93,7 +93,7 @@ function reportProgress() {
 async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> {
   let guessTotal = 4000000; // default for .onnx
   if (filename.endsWith('.onnx_data')) {
-    guessTotal = filename.includes('encoder') ? 30000000 : 15000000;
+    guessTotal = filename.includes('encoder') ? 305000000 : 21000000;
   }
   if (!downloadProgress.has(filename)) {
     downloadProgress.set(filename, { loaded: 0, total: guessTotal });
