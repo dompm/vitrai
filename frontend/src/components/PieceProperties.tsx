@@ -15,9 +15,10 @@ interface Props {
   isPending?: boolean;
   isEncoding?: boolean;
   pointerEvents?: 'auto' | 'none';
+  multiple?: boolean;
 }
 
-export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending, isEncoding, pointerEvents = 'auto' }: Props) {
+export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, onAddSheet, onDelete, onSmooth, refineMode, onRefineModeChange, isPending, isEncoding, pointerEvents = 'auto', multiple }: Props) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(piece.label);
@@ -87,16 +88,17 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
             color: 'var(--text-bright)',
             fontFamily: 'inherit',
           }}
+          disabled={multiple}
         />
       ) : (
         <span
-          onClick={() => setEditing(true)}
-          title={t('clickToRename')}
+          onClick={() => { if (!multiple) setEditing(true); }}
+          title={multiple ? '' : t('clickToRename')}
           style={{
             fontSize: 12,
             fontWeight: 500,
-            color: 'var(--text-bright)',
-            cursor: 'text',
+            color: multiple ? 'var(--text-dim)' : 'var(--text-bright)',
+            cursor: multiple ? 'default' : 'text',
             minWidth: 80,
             maxWidth: 160,
             overflow: 'hidden',
@@ -132,7 +134,8 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           fontFamily: 'inherit',
         }}
       >
-        {!sheets.some(s => s.id === piece.glassSheetId) && (
+        <option value="__multiple__" disabled hidden>—</option>
+        {!sheets.some(s => s.id === piece.glassSheetId) && piece.glassSheetId !== '__multiple__' && (
           <option value={piece.glassSheetId} disabled>—</option>
         )}
         {sheets.map(s => (
@@ -149,38 +152,38 @@ export function PieceProperties({ piece, sheets, onLabelChange, onSheetChange, o
           <div style={{ width: 1, height: 18, background: 'var(--hairline-2)', flexShrink: 0, marginRight: 2 }} />
           <button
             data-tutorial-target="piece-refine-add"
-            onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'add' ? null : 'add')}
-            disabled={isPending || isEncoding}
+            onClick={() => !isPending && !isEncoding && !multiple && onRefineModeChange(refineMode === 'add' ? null : 'add')}
+            disabled={isPending || isEncoding || multiple}
             title={`${t('addPositivePoint')} [A]`}
             style={{
               background: refineMode === 'add' ? 'var(--amber-soft)' : 'none',
               border: 'none',
               borderRadius: 4,
               color: refineMode === 'add' ? 'var(--amber-ink)' : 'var(--text-soft)',
-              cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
+              cursor: (isPending || isEncoding || multiple) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
               fontWeight: 'bold',
-              opacity: (isPending || isEncoding) ? 0.5 : 1,
+              opacity: (isPending || isEncoding || multiple) ? 0.5 : 1,
             }}
           >
             +
           </button>
           <button
             data-tutorial-target="piece-refine-remove"
-            onClick={() => !isPending && !isEncoding && onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
-            disabled={isPending || isEncoding}
+            onClick={() => !isPending && !isEncoding && !multiple && onRefineModeChange(refineMode === 'remove' ? null : 'remove')}
+            disabled={isPending || isEncoding || multiple}
             title={`${t('addNegativePoint')} [S]`}
             style={{
               background: refineMode === 'remove' ? 'rgba(161, 63, 48, 0.14)' : 'none',
               border: 'none',
               borderRadius: 4,
               color: refineMode === 'remove' ? 'var(--ruby)' : 'var(--text-soft)',
-              cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
+              cursor: (isPending || isEncoding || multiple) ? 'not-allowed' : 'pointer',
               fontSize: 16,
               padding: '0 6px',
               fontWeight: 'bold',
-              opacity: (isPending || isEncoding) ? 0.5 : 1,
+              opacity: (isPending || isEncoding || multiple) ? 0.5 : 1,
             }}
           >
             -

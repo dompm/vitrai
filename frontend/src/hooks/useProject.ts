@@ -331,6 +331,11 @@ export function useProject() {
     setSelectedPieceIds(ids => ids.filter(id => id !== pieceId));
   }, [updateProject]);
 
+  const deletePieces = useCallback((pieceIds: string[]) => {
+    updateProject(prev => ({ ...prev, pieces: prev.pieces.filter(p => !pieceIds.includes(p.id)) }));
+    setSelectedPieceIds(ids => ids.filter(id => !pieceIds.includes(id)));
+  }, [updateProject]);
+
   const updatePieceLabel = useCallback((pieceId: string, label: string) => {
     updateProject(prev => ({
       ...prev,
@@ -358,6 +363,26 @@ export function useProject() {
         ...prev,
         pieces: prev.pieces.map(p =>
           p.id === pieceId ? { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } } : p
+        )
+      };
+      return applyScales(next, sheetId);
+    });
+    setActiveSheetId(sheetId);
+  }, [updateProject]);
+
+  const updatePiecesSheet = useCallback((pieceIds: string[], sheetId: string) => {
+    updateProject(prev => {
+      const sheet = prev.sheets.find(s => s.id === sheetId);
+      const sw = sheet?.naturalWidth ?? 800;
+      const sh = sheet?.naturalHeight ?? 600;
+      const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+      const cx = (crop.left + sw - crop.right) / 2;
+      const cy = (crop.top + sh - crop.bottom) / 2;
+
+      const next = {
+        ...prev,
+        pieces: prev.pieces.map(p =>
+          pieceIds.includes(p.id) ? { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } } : p
         )
       };
       return applyScales(next, sheetId);
@@ -409,6 +434,28 @@ export function useProject() {
         sheets: [...prev.sheets, newSheet],
         pieces: prev.pieces.map(p =>
           p.id === pieceId ? { ...p, glassSheetId: newSheet.id, transform: { ...p.transform, x: cx, y: cy } } : p
+        ),
+      };
+      return applyScales(next, newSheet.id);
+    });
+  }, [updateProject, t]);
+
+  const addSheetAndAssignPieces = useCallback((pieceIds: string[], url?: string, label?: string) => {
+    updateProject(prev => {
+      const newSheet = makeNewSheet(prev, t);
+      if (url) newSheet.imageUrl = url;
+      if (label) newSheet.label = stripExtension(label);
+      
+      setActiveSheetId(newSheet.id);
+
+      const cx = 400;
+      const cy = 300;
+
+      const next = {
+        ...prev,
+        sheets: [...prev.sheets, newSheet],
+        pieces: prev.pieces.map(p =>
+          pieceIds.includes(p.id) ? { ...p, glassSheetId: newSheet.id, transform: { ...p.transform, x: cx, y: cy } } : p
         ),
       };
       return applyScales(next, newSheet.id);
@@ -667,13 +714,16 @@ export function useProject() {
     updatePatternCrop,
     updateSheetCrop,
     deletePiece,
+    deletePieces,
     updatePieceLabel,
     updatePieceSheet,
+    updatePiecesSheet,
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
     addSheet,
     addSheetAndAssignPiece,
+    addSheetAndAssignPieces,
     updatePatternScale,
     updateSheetScale,
     addPieceFromBox,
