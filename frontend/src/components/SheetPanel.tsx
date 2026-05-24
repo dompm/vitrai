@@ -8,7 +8,7 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
-import { packPiecesOnSheet, defaultCuttingGapPx } from '../utils/packing';
+import { packPiecesSmart, defaultCuttingGapPx } from '../utils/packing';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
@@ -182,6 +182,8 @@ export function SheetPanel({
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
+  const [isPacking, setIsPacking] = useState(false);
+  const [allowRotations, setAllowRotations] = useState(false);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
@@ -444,29 +446,29 @@ export function SheetPanel({
     },
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
-  function handleSmartPack() {
-    if (pieces.length === 0) return;
+  async function handleSmartPack() {
+    if (pieces.length === 0 || isPacking) return;
+    setIsPacking(true);
+    // Clear selection so handles don't follow jumping pieces
+    onSelectPiece(null);
+
     const gapPx = defaultCuttingGapPx(sheet);
-    const placements = packPiecesOnSheet(pieces, sheet, gapPx);
-    if (placements.length === 0) return;
-    const updates = placements.map(p => ({
-      pieceId: p.pieceId,
-      transform: { x: p.x, y: p.y } as Partial<TextureTransform>,
-    }));
-    if (onBatchTransformChange) {
-      onBatchTransformChange(updates);
-    } else {
-      updates.forEach((u, i) => onTransformChange(u.pieceId, u.transform, i < updates.length - 1));
+    try {
+      await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
+        onTransformChange(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
+      });
+    } finally {
+      setIsPacking(false);
     }
   }
 
-  const packDisabled = pieces.length === 0;
+  const packDisabled = pieces.length === 0 || isPacking;
 
   return (
     <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
-        <div className="tooltip-wrapper">
+        <div className="tooltip-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             type="button"
             className="tool-btn"
@@ -474,10 +476,24 @@ export function SheetPanel({
             disabled={packDisabled}
             aria-label={t('toolPack')}
           >
-            <PackIcon />
-            <span className="tool-label">{t('toolPack')}</span>
+            {isPacking ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+              </svg>
+            ) : <PackIcon />}
+            <span className="tool-label">{isPacking ? t('packing', 'Packing...') : t('toolPack')}</span>
           </button>
-          <span className="tooltip-tip">{t('tooltipPackDesc')}</span>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: CANVAS.fg, cursor: 'pointer', userSelect: 'none' }}>
+            <input 
+              type="checkbox" 
+              checked={allowRotations} 
+              onChange={e => setAllowRotations(e.target.checked)} 
+              disabled={isPacking}
+              style={{ accentColor: CANVAS.amber }}
+            />
+            {t('allowRotations', 'Rotations')}
+          </label>
         </div>
       </Toolbar>
       <div
