@@ -363,7 +363,10 @@ export function Tutorial({
         customBody={customBody}
       />
       {currentSpotlightTarget && (
-        <SpotlightPulse selector={currentSpotlightTarget} />
+        <SpotlightPulse
+          selector={currentSpotlightTarget}
+          withBackdrop={step === 'refine-first-piece'}
+        />
       )}
     </>
   );
