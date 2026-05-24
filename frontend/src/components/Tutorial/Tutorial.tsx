@@ -293,7 +293,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep4Title');
         customBody = t('tutorialStep4Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   } else if (step === 'refine-second-piece' && pieceId) {
@@ -315,7 +317,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep8Title');
         customBody = t('tutorialStep8Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   } else if (step === 'refine-remaining-pieces' && pieceId) {
@@ -329,7 +333,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep10Title');
         customBody = t('tutorialStep10Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   }
