@@ -277,6 +277,7 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
+    batchUpdatePieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -1244,6 +1245,7 @@ export function App() {
             onSelectPiece={selectPiece}
             onSelectPieces={selectPieces}
             onUpdatePieceTransform={updatePieceTransform}
+            onBatchTransformChange={batchUpdatePieceTransforms}
             onUpdatePieceLabel={updatePieceLabel}
             onUpdatePieceSheet={updatePieceSheet}
             onUpdatePiecesSheet={updatePiecesSheet}

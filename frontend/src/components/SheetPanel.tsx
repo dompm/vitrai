@@ -8,6 +8,7 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
 import { computeCentroid } from '../utils/geometry';
+import { packPiecesOnSheet, defaultCuttingGapPx } from '../utils/packing';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
@@ -148,12 +149,23 @@ function PieceOutline({
   );
 }
 
+const PackIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="1.5" />
+    <rect x="5.5" y="5.5" width="6" height="6" rx="0.6" />
+    <rect x="13" y="5.5" width="5.5" height="4" rx="0.6" />
+    <rect x="5.5" y="13" width="4.5" height="5.5" rx="0.6" />
+    <rect x="11.5" y="11" width="7" height="7.5" rx="0.6" />
+  </svg>
+);
+
 interface SheetPanelProps {
   sheet: GlassSheet;
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onBatchTransformChange?: (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -163,7 +175,8 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onBatchTransformChange,
+  onCropChange, onScaleChange, onImageLoad,
   showEmptyHint = false, activeTool, onChangeActiveTool,
 }: SheetPanelProps) {
   const { t } = useTranslation();
@@ -431,9 +444,42 @@ export function SheetPanel({
     },
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
+  function handleSmartPack() {
+    if (pieces.length === 0) return;
+    const gapPx = defaultCuttingGapPx(sheet);
+    const placements = packPiecesOnSheet(pieces, sheet, gapPx);
+    if (placements.length === 0) return;
+    const updates = placements.map(p => ({
+      pieceId: p.pieceId,
+      transform: { x: p.x, y: p.y } as Partial<TextureTransform>,
+    }));
+    if (onBatchTransformChange) {
+      onBatchTransformChange(updates);
+    } else {
+      updates.forEach((u, i) => onTransformChange(u.pieceId, u.transform, i < updates.length - 1));
+    }
+  }
+
+  const packDisabled = pieces.length === 0;
+
   return (
     <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div className="toolbar-divider" />
+        <div className="tooltip-wrapper">
+          <button
+            type="button"
+            className="tool-btn"
+            onClick={handleSmartPack}
+            disabled={packDisabled}
+            aria-label={t('toolPack')}
+          >
+            <PackIcon />
+            <span className="tool-label">{t('toolPack')}</span>
+          </button>
+          <span className="tooltip-tip">{t('tooltipPackDesc')}</span>
+        </div>
+      </Toolbar>
       <div
         ref={vp.containerRef}
         className="canvas-well"
