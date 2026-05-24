@@ -113,8 +113,9 @@ function unrollTier(
   const bottomPolyline: [number, number][] = [];
   for (let k = 0; k <= N; k++) {
     const a = startAngle + k * phi;
-    // Radial direction from apex: rotate the bisector vector (0, bisectorSign) by angle a.
-    const dx = -bisectorSign * Math.sin(a);
+    // Radial direction from apex. The sign convention keeps k=0 on the left of
+    // the layout, matching the cylinder strip's facet-0-is-leftmost convention.
+    const dx = bisectorSign * Math.sin(a);
     const dy = bisectorSign * Math.cos(a);
     topPolyline.push([centerX + L_top * dx, apexY + L_top * dy]);
     bottomPolyline.push([centerX + L_bot * dx, apexY + L_bot * dy]);
@@ -234,13 +235,10 @@ export function patternToFacetUV(
     const dy = py - m.apexY;
     const d = Math.hypot(dx, dy);
     if (d < 1e-6) continue;
-    // Angle of (dx, dy) relative to the bisector. The bisector vector is (0, bisectorSign).
-    // Use atan2 of the cross / dot of (dx, dy) against the bisector to get a signed angle.
-    const bisX = 0;
-    const bisY = m.bisectorSign;
-    const cross = bisX * dy - bisY * dx;
-    const dot = bisX * dx + bisY * dy;
-    const angleRel = Math.atan2(cross, dot);
+    // Signed angle from the bisector (0, bisectorSign) to (dx, dy). Sign chosen so
+    // points on the LEFT of the bisector give a NEGATIVE angle (= facetIdx 0 side),
+    // matching the unrollTier convention above.
+    const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
     if (angleRel < -m.theta / 2 || angleRel > m.theta / 2) continue;
     const v = (d - m.L_top) / (m.L_bot - m.L_top);
     if (v < -0.05 || v > 1.05) continue; // small tolerance
