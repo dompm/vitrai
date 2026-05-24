@@ -16,10 +16,9 @@ interface Props {
 const DEFAULT_CONFIG: LampConfig = {
   facetCount: 6,
   profilePoints: [
-    { r: 40, y: 0 },
-    { r: 80, y: 60 },
+    { r: 50, y: 0 },
+    { r: 100, y: 80 },
     { r: 100, y: 140 },
-    { r: 60, y: 200 },
   ],
   activeTierIndex: 0,
 };

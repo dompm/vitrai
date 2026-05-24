@@ -197,13 +197,13 @@ export function useProject() {
     await flushSave();
     const newProject: Project = { ...EMPTY_PROJECT, name, projectType: type };
     if (type === 'lamp') {
+      // Classic tapered lampshade: narrow top, widens to a short cylindrical skirt.
       const lampConfig = {
         facetCount: 6,
         profilePoints: [
-          { r: 40, y: 0 },
-          { r: 80, y: 60 },
+          { r: 50, y: 0 },
+          { r: 100, y: 80 },
           { r: 100, y: 140 },
-          { r: 60, y: 200 }
         ],
         activeTierIndex: 0
       };
