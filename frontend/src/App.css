@@ -1528,3 +1528,152 @@ html, body, #root {
   }
 }
 
+/* Solder Thickness & Finish Popover */
+.toolbar-divider {
+  width: 32px;
+  height: 1px;
+  background: var(--hairline-2);
+  margin: 6px 0;
+}
+
+.solder-tool-btn {
+  position: relative;
+}
+
+.solder-popover {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--paper);
+  border: 1px solid var(--hairline-2);
+  border-radius: 10px;
+  width: 220px;
+  padding: 14px;
+  z-index: 500;
+  box-shadow: 0 12px 32px rgba(40, 30, 15, 0.18), 0 2px 8px rgba(40, 30, 15, 0.08);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto; /* override tooltip wrapper pointer-events if any */
+}
+
+/* Arrow pointing left to the button */
+.solder-popover::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent var(--hairline-2) transparent transparent;
+}
+
+.solder-popover::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: translateY(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent var(--paper) transparent transparent;
+  margin-right: -1px;
+}
+
+.solder-popover-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.solder-popover-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.solder-popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+}
+
+.solder-popover-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+.solder-popover-slider {
+  width: 100%;
+  margin: 4px 0;
+  cursor: pointer;
+  accent-color: var(--amber);
+}
+
+.solder-popover-divider {
+  height: 1px;
+  background: var(--hairline-2);
+}
+
+.solder-swatches {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.solder-swatch-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.solder-swatch-btn:hover {
+  background: var(--chrome-700);
+}
+
+.solder-swatch-btn.active {
+  background: var(--cream-soft);
+  border-color: var(--amber-soft);
+}
+
+.solder-swatch-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--swatch-color);
+  border: 1px solid rgba(40, 30, 15, 0.2);
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  flex-shrink: 0;
+}
+
+.solder-swatch-btn.active .solder-swatch-circle {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 3px var(--amber);
+}
+
+.solder-swatch-label {
+  font-size: 12px;
+  color: var(--text-soft);
+  font-weight: 500;
+}
+
+.solder-swatch-btn.active .solder-swatch-label {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+

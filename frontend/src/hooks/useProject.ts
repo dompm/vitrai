@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet } from '../types';
-import { EMPTY_PROJECT, DEFAULT_PROJECT } from '../defaultProject';
+import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor } from '../types';
+import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 
@@ -123,7 +123,7 @@ export function useProject() {
         setProject(p);
         setActiveSheetId(p.sheets[0]?.id ?? '');
       } else {
-        const fresh = { ...DEFAULT_PROJECT, name: last };
+        const fresh = { ...EMPTY_PROJECT, name: last };
         setProject(fresh);
         await saveToOPFS(fresh, last);
       }
@@ -238,7 +238,7 @@ export function useProject() {
           localStorage.setItem('vitraux-last-project', p.name);
         }
       } else {
-        const fresh = { ...DEFAULT_PROJECT, name: 'default' };
+        const fresh = { ...EMPTY_PROJECT, name: 'default' };
         setProject(fresh);
         setUndoStack([]);
         setRedoStack([]);
@@ -565,6 +565,13 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updateSolderWidthMM = useCallback((width: number) => {
+    updateProject(prev => ({ ...prev, solderWidthMM: width }));
+  }, [updateProject]);
+
+  const updateSolderColor = useCallback((color: SolderColor) => {
+    updateProject(prev => ({ ...prev, solderColor: color }));
+  }, [updateProject]);
   const startBlankCanvas = useCallback(() => {
     const W = 1200;
     const H = 1200;
@@ -687,6 +694,8 @@ export function useProject() {
     addPiecePromptPoint,
     markPiecePending,
     unmarkPiecePending,
+    updateSolderWidthMM,
+    updateSolderColor,
     undo,
     redo,
     canUndo: undoStack.length > 0,

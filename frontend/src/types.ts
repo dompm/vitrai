@@ -57,6 +57,8 @@ export interface GlassSheet {
   swatch?: string; // dominant color, e.g. "#3a6da8"
 }
 
+export type SolderColor = 'black' | 'silver' | 'copper';
+
 export interface Project {
   name: string;
   patternImageUrl: string;
@@ -66,4 +68,7 @@ export interface Project {
   patternScale: Scale | null;
   pieces: Piece[];
   sheets: GlassSheet[];
+  solderWidthMM?: number;
+  solderColor?: SolderColor;
 }
+
