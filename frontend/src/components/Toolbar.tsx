@@ -62,35 +62,37 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
             className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
             data-tool-id={tool.id}
             onClick={() => !tool.disabled && onSelectTool(tool.id)}
-            disabled={tool.disabled}
-            style={tool.loading ? { position: 'relative' } : undefined}
+            disabled={tool.disabled && !tool.loading}
+            style={tool.disabled && tool.loading ? { cursor: 'default' } : undefined}
           >
-            {tool.icon}
-            <span className="tool-label">{tool.label}</span>
-            {tool.loading !== undefined && tool.loading !== false && (
-              <div style={{
-                position: 'absolute', inset: 0, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(255, 254, 250, 0.7)', borderRadius: 'inherit',
-              }}>
-                {typeof tool.loading === 'number' ? (
-                  <svg width="14" height="14" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="8" cy="8" r="6" stroke="rgba(192, 138, 31, 0.2)" strokeWidth="2" fill="none" />
-                    <circle 
-                      cx="8" cy="8" r="6" 
-                      stroke="var(--amber)" 
-                      strokeWidth="2" 
-                      fill="none" 
-                      strokeDasharray={2 * Math.PI * 6} 
-                      strokeDashoffset={(2 * Math.PI * 6) - (tool.loading * 2 * Math.PI * 6)} 
-                      style={{ transition: 'stroke-dashoffset 0.1s linear' }}
-                    />
-                  </svg>
-                ) : (
-                  <div className="spinner-tiny" />
-                )}
+            <div style={{ position: 'relative', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ opacity: tool.disabled && tool.loading ? 0.35 : 1, display: 'flex' }}>
+                {tool.icon}
               </div>
-            )}
+              {tool.loading !== undefined && tool.loading !== false && (
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {typeof tool.loading === 'number' ? (
+                    <svg width="20" height="20" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx="8" cy="8" r="7" stroke="rgba(192, 138, 31, 0.15)" strokeWidth="1.5" fill="none" />
+                      <circle 
+                        cx="8" cy="8" r="7" 
+                        stroke="var(--amber)" 
+                        strokeWidth="1.5" 
+                        fill="none" 
+                        strokeDasharray={2 * Math.PI * 7} 
+                        strokeDashoffset={(2 * Math.PI * 7) - (tool.loading * 2 * Math.PI * 7)} 
+                        style={{ transition: 'stroke-dashoffset 0.1s linear' }}
+                      />
+                    </svg>
+                  ) : (
+                    <div className="spinner-tiny" style={{ width: 16, height: 16 }} />
+                  )}
+                </div>
+              )}
+            </div>
+            <span className="tool-label" style={{ opacity: tool.disabled && tool.loading ? 0.35 : 1 }}>
+              {tool.label}
+            </span>
           </button>
           {tool.tooltip ? (
             <ToolTooltip
