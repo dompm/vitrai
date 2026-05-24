@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
@@ -63,10 +63,11 @@ interface PieceOverlayProps {
   isPending: boolean;
   opacity?: number;
   solderWidth: number;
+  solderColor: string;
   onSelect: (multi?: boolean) => void;
 }
 
-function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, onSelect }: PieceOverlayProps) {
+function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelect }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -137,7 +138,7 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
       </Group>
       <Line
         points={flatPts}
-        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : CANVAS.lead}
+        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : solderColor}
         strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
         lineJoin="round"
         lineCap="round"
@@ -180,6 +181,12 @@ interface ResultPanelProps {
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
+  onPenStatusChange?: (status: {
+    coords: { x: number; y: number } | null;
+    lastPoint: { x: number; y: number } | null;
+  }) => void;
+  onUpdateSolderWidthMM: (width: number) => void;
+  onUpdateSolderColor: (color: import('../types').SolderColor) => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -227,16 +234,22 @@ function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: nu
 }
 
 const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
+export const SOLDER_COLORS = {
+  black: '#1a1a1a',  // Charcoal black patina
+  silver: '#7a828e', // Silver / Bright solder
+  copper: '#a05c3f', // Copper patina
+} as const;
+
 const DEFAULT_SOLDER_WIDTH_MM = 4.5;
 
-function getSolderWidth(scale: Scale | null, imgWidth: number) {
+function getSolderWidth(scale: Scale | null, imgWidth: number, customWidthMM?: number) {
+  const target = customWidthMM ?? DEFAULT_SOLDER_WIDTH_MM;
   if (!scale) {
-    // If no scale is set, default to a width that is 0.6% of the image width.
-    // For a 1000px image, this is 6px. For 4000px, it's 24px.
-    return Math.max(2, imgWidth * 0.006);
+    // If no scale is set, scale the baseline 0.6% image width by the ratio of custom width to default
+    const ratio = target / DEFAULT_SOLDER_WIDTH_MM;
+    return Math.max(2, imgWidth * 0.006 * ratio);
   }
   const { pxPerUnit, unit } = scale;
-  const target = DEFAULT_SOLDER_WIDTH_MM;
   if (unit === 'mm') return target * pxPerUnit;
   if (unit === 'cm') return (target / 10) * pxPerUnit;
   if (unit === 'in') return (target / 25.4) * pxPerUnit;
@@ -333,7 +346,302 @@ function findPenSnapTarget(
   return best;
 }
 
+function getCanvasSnapping(
+  x: number,
+  y: number,
+  crop: Crop,
+  patternWidth: number,
+  patternHeight: number,
+  effectiveScale: number,
+  t: (key: string) => string,
+  thresholdPx = PEN_SNAP_PX
+): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
+  const threshold = thresholdPx / effectiveScale;
+  let targetX = x;
+  let targetY = y;
+  const guides: AlignmentGuide[] = [];
+  const labels: string[] = [];
 
+  const left = crop.left;
+  const right = patternWidth - crop.right;
+  const top = crop.top;
+  const bottom = patternHeight - crop.bottom;
+  const W = right - left;
+  const H = bottom - top;
+
+  // 1. Edge Snapping (Highest Priority)
+  let snappedX = false;
+  let snappedY = false;
+
+  if (Math.abs(x - left) < threshold) {
+    targetX = left;
+    snappedX = true;
+    guides.push({ type: 'v', from: [left, top], to: [left, bottom] });
+  } else if (Math.abs(x - right) < threshold) {
+    targetX = right;
+    snappedX = true;
+    guides.push({ type: 'v', from: [right, top], to: [right, bottom] });
+  }
+
+  if (Math.abs(y - top) < threshold) {
+    targetY = top;
+    snappedY = true;
+    guides.push({ type: 'h', from: [left, top], to: [right, top] });
+  } else if (Math.abs(y - bottom) < threshold) {
+    targetY = bottom;
+    snappedY = true;
+    guides.push({ type: 'h', from: [left, bottom], to: [right, bottom] });
+  }
+
+  // 2. Fractional Snapping (Lower Priority)
+  const FRACTIONS: { value: number; label: string }[] = [];
+  const seen = new Set<string>();
+  const denominators = [2, 3, 4, 5, 6, 8, 10, 12, 16];
+  
+  for (const d of denominators) {
+    for (let n = 1; n < d; n++) {
+      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+      const g = gcd(n, d);
+      const num = n / g;
+      const den = d / g;
+      const key = `${num}/${den}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        const val = num / den;
+        const label = den === 2 ? t('snapCenter') : key;
+        FRACTIONS.push({ value: val, label });
+      }
+    }
+  }
+
+  const minGap = 32; // minimum screen pixels between active guides
+
+  // X fractional snapping
+  if (!snappedX && W > 0) {
+    const activeXValues = [left, right];
+    for (const frac of FRACTIONS) {
+      const posX = left + frac.value * W;
+      const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
+      if (!tooClose) {
+        activeXValues.push(posX);
+        if (Math.abs(x - posX) < threshold) {
+          targetX = posX;
+          snappedX = true;
+          guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
+          labels.push(frac.label);
+          break;
+        }
+      }
+    }
+  }
+
+  // Y fractional snapping
+  if (!snappedY && H > 0) {
+    const activeYValues = [top, bottom];
+    for (const frac of FRACTIONS) {
+      const posY = top + frac.value * H;
+      const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
+      if (!tooClose) {
+        activeYValues.push(posY);
+        if (Math.abs(y - posY) < threshold) {
+          targetY = posY;
+          snappedY = true;
+          guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
+          labels.push(frac.label);
+          break;
+        }
+      }
+    }
+  }
+
+  return { x: targetX, y: targetY, guides, labels };
+}
+
+interface AlignmentGuide {
+  type: 'h' | 'v';
+  from: [number, number];
+  to: [number, number];
+}
+
+interface LengthGuide {
+  matchLength: number;
+  center: [number, number];
+  snappedPoint: [number, number];
+  matchingSegment: { p1: [number, number]; p2: [number, number] };
+}
+
+function findAlignmentGuides(
+  cursor: [number, number],
+  pieces: Piece[],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+): { snapped: [number, number]; guides: AlignmentGuide[] } {
+  let snapX: number | null = null;
+  let snapY: number | null = null;
+  let bestDistX = tolerancePx;
+  let bestDistY = tolerancePx;
+  let guideV: [number, number] | null = null;
+  let guideH: [number, number] | null = null;
+
+  for (const piece of pieces) {
+    const polygon = flattenCurves(piece.polygon, piece.curvePoints);
+    for (const v of polygon) {
+      const dx = Math.abs(v[0] - cursor[0]) * effectiveScale;
+      if (dx < bestDistX) {
+        bestDistX = dx;
+        snapX = v[0];
+        guideV = [v[0], v[1]];
+      }
+      const dy = Math.abs(v[1] - cursor[1]) * effectiveScale;
+      if (dy < bestDistY) {
+        bestDistY = dy;
+        snapY = v[1];
+        guideH = [v[0], v[1]];
+      }
+    }
+  }
+
+  const snapped: [number, number] = [
+    snapX !== null ? snapX : cursor[0],
+    snapY !== null ? snapY : cursor[1],
+  ];
+
+  const guides: AlignmentGuide[] = [];
+  if (snapX !== null && guideV) {
+    guides.push({ type: 'v', from: guideV, to: [snapped[0], snapped[1]] });
+  }
+  if (snapY !== null && guideH) {
+    guides.push({ type: 'h', from: guideH, to: [snapped[0], snapped[1]] });
+  }
+
+  return { snapped, guides };
+}
+
+function findShiftAlignmentGuides(
+  cursor: [number, number],
+  lastPt: [number, number],
+  snappedTheta: number,
+  pieces: Piece[],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+): { snapped: [number, number]; guides: AlignmentGuide[] } {
+  const cosT = Math.cos(snappedTheta);
+  const sinT = Math.sin(snappedTheta);
+  
+  let bestDist = tolerancePx;
+  let snapped: [number, number] = [cursor[0], cursor[1]];
+  let guide: AlignmentGuide | null = null;
+
+  for (const piece of pieces) {
+    const poly = flattenCurves(piece.polygon, piece.curvePoints);
+    for (const v of poly) {
+      if (Math.abs(cosT) > 1e-5) {
+        const rx = (v[0] - lastPt[0]) / cosT;
+        if (rx >= 0) {
+          const px = v[0];
+          const py = lastPt[1] + rx * sinT;
+          const distPx = Math.hypot(cursor[0] - px, cursor[1] - py) * effectiveScale;
+          if (distPx < bestDist) {
+            bestDist = distPx;
+            snapped = [px, py];
+            guide = { type: 'v', from: [v[0], v[1]], to: [px, py] };
+          }
+        }
+      }
+      
+      if (Math.abs(sinT) > 1e-5) {
+        const ry = (v[1] - lastPt[1]) / sinT;
+        if (ry >= 0) {
+          const px = lastPt[0] + ry * cosT;
+          const py = v[1];
+          const distPx = Math.hypot(cursor[0] - px, cursor[1] - py) * effectiveScale;
+          if (distPx < bestDist) {
+            bestDist = distPx;
+            snapped = [px, py];
+            guide = { type: 'h', from: [v[0], v[1]], to: [px, py] };
+          }
+        }
+      }
+    }
+  }
+
+  return { snapped, guides: guide ? [guide] : [] };
+}
+
+function findLengthSnap(
+  cursor: [number, number],
+  lastPt: [number, number],
+  pieces: Piece[],
+  activePolygonPoints: [number, number][],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+) {
+  const segments: { length: number; p1: [number, number]; p2: [number, number] }[] = [];
+  
+  if (activePolygonPoints.length > 1) {
+    for (let i = 0; i < activePolygonPoints.length - 1; i++) {
+      const p1 = activePolygonPoints[i];
+      const p2 = activePolygonPoints[i + 1];
+      segments.push({
+        length: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+        p1,
+        p2,
+      });
+    }
+  }
+
+  if (activePolygonPoints.length > 0) {
+    for (const piece of pieces) {
+      const poly = flattenCurves(piece.polygon, piece.curvePoints);
+      let shares = false;
+      for (const ap of activePolygonPoints) {
+        for (const pp of poly) {
+          if (ap[0] === pp[0] && ap[1] === pp[1]) {
+            shares = true;
+            break;
+          }
+        }
+        if (shares) break;
+      }
+      if (shares) {
+        for (let i = 0; i < poly.length; i++) {
+          const p1 = poly[i];
+          const p2 = poly[(i + 1) % poly.length];
+          segments.push({
+            length: Math.hypot(p2[0] - p1[0], p2[1] - p1[1]),
+            p1,
+            p2,
+          });
+        }
+      }
+    }
+  }
+
+  const dx = cursor[0] - lastPt[0];
+  const dy = cursor[1] - lastPt[1];
+  const currentLen = Math.hypot(dx, dy);
+
+  let bestMatch: typeof segments[0] | null = null;
+  let bestDistPx = tolerancePx;
+  const tolerance = tolerancePx / effectiveScale;
+
+  for (const seg of segments) {
+    const dist = Math.abs(currentLen - seg.length);
+    const distPx = dist * effectiveScale;
+    if (distPx < bestDistPx) {
+      bestDistPx = distPx;
+      bestMatch = seg;
+    }
+  }
+
+  if (bestMatch) {
+    return {
+      matchLength: bestMatch.length,
+      matchingSegment: { p1: bestMatch.p1, p2: bestMatch.p2 },
+    };
+  }
+  return null;
+}
 
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
@@ -341,9 +649,26 @@ export function ResultPanel({
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
-  tutorialStep, refineMode, onRefineModeChange,
+  tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
+  onUpdateSolderWidthMM, onUpdateSolderColor,
 }: ResultPanelProps) {
   const { t } = useTranslation();
+  const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
+  const solderPopoverRef = useRef<HTMLDivElement>(null);
+  const isSolderPopoverOpenRef = useRef(isSolderPopoverOpen);
+  isSolderPopoverOpenRef.current = isSolderPopoverOpen;
+
+  useEffect(() => {
+    if (!isSolderPopoverOpen) return;
+    function handleOutsideClick(e: MouseEvent) {
+      if (solderPopoverRef.current && !solderPopoverRef.current.contains(e.target as Node)) {
+        setIsSolderPopoverOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isSolderPopoverOpen]);
+
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const refineModeRef = useRef(refineMode);
@@ -366,25 +691,118 @@ export function ResultPanel({
   const effectiveScaleRef = useRef(vp.effectiveScale);
   effectiveScaleRef.current = vp.effectiveScale;
 
+  const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
+  const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
+  const [activeSnapLabels, setActiveSnapLabels] = useState<string[]>([]);
+
   function updateHoverPoint(imageX: number, imageY: number, shiftPressed: boolean) {
     if (activeTool !== 'pen') return;
-    
-    if (shiftPressed && activePolygonPointsRef.current.length > 0) {
-      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-      const dx = imageX - lastPt[0];
-      const dy = imageY - lastPt[1];
-      const r = Math.hypot(dx, dy);
-      const theta = Math.atan2(dy, dx);
-      const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-      const snappedX = lastPt[0] + r * Math.cos(snappedTheta);
-      const snappedY = lastPt[1] + r * Math.sin(snappedTheta);
-      setHoverPoint([snappedX, snappedY]);
-      setHoverSnapped(false);
-    } else {
-      const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
-      setHoverPoint(snap ?? [imageX, imageY]);
-      setHoverSnapped(snap !== null);
+
+    // 1. Vertex snapping is highest priority
+    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+    if (snap) {
+      setHoverPoint(snap);
+      setHoverSnapped(true);
+      setActiveAlignmentGuides([]);
+      setActiveLengthGuide(null);
+      setActiveSnapLabels([]);
+      return;
     }
+
+    let finalX = imageX;
+    let finalY = imageY;
+    let alignmentGuides: AlignmentGuide[] = [];
+    let lengthGuide: LengthGuide | null = null;
+
+    if (activePolygonPointsRef.current.length > 0) {
+      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+
+      let theta = Math.atan2(imageY - lastPt[1], imageX - lastPt[0]);
+      if (shiftPressed) {
+        theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+      }
+
+      // 2. Length Snapping
+      const lenSnap = findLengthSnap(
+        [imageX, imageY],
+        lastPt,
+        piecesRef.current,
+        activePolygonPointsRef.current,
+        effectiveScaleRef.current
+      );
+
+      if (lenSnap) {
+        finalX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
+        finalY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
+
+        lengthGuide = {
+          matchLength: lenSnap.matchLength,
+          center: lastPt,
+          snappedPoint: [finalX, finalY],
+          matchingSegment: lenSnap.matchingSegment,
+        };
+      } else {
+        if (shiftPressed) {
+          const align = findShiftAlignmentGuides(
+            [imageX, imageY],
+            lastPt,
+            theta,
+            piecesRef.current,
+            effectiveScaleRef.current
+          );
+          if (align.guides.length > 0) {
+            finalX = align.snapped[0];
+            finalY = align.snapped[1];
+            alignmentGuides = align.guides;
+          } else {
+            const r = Math.hypot(imageX - lastPt[0], imageY - lastPt[1]);
+            finalX = lastPt[0] + r * Math.cos(theta);
+            finalY = lastPt[1] + r * Math.sin(theta);
+          }
+        } else {
+          // 3. Horizontal/Vertical Alignment Snapping
+          const align = findAlignmentGuides(
+            [imageX, imageY],
+            piecesRef.current,
+            effectiveScaleRef.current
+          );
+          finalX = align.snapped[0];
+          finalY = align.snapped[1];
+          alignmentGuides = align.guides;
+        }
+      }
+    } else {
+      // 3. Horizontal/Vertical Alignment Snapping
+      const align = findAlignmentGuides(
+        [imageX, imageY],
+        piecesRef.current,
+        effectiveScaleRef.current
+      );
+      finalX = align.snapped[0];
+      finalY = align.snapped[1];
+      alignmentGuides = align.guides;
+    }
+
+    const edgeSnap = getCanvasSnapping(
+      finalX,
+      finalY,
+      project.patternCrop,
+      project.patternWidth,
+      project.patternHeight,
+      effectiveScaleRef.current,
+      t
+    );
+    finalX = edgeSnap.x;
+    finalY = edgeSnap.y;
+    if (edgeSnap.guides.length > 0) {
+      alignmentGuides = [...alignmentGuides, ...edgeSnap.guides];
+    }
+    setActiveSnapLabels(edgeSnap.labels);
+
+    setHoverPoint([finalX, finalY]);
+    setHoverSnapped(false);
+    setActiveAlignmentGuides(alignmentGuides);
+    setActiveLengthGuide(lengthGuide);
   }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
@@ -423,7 +841,7 @@ export function ResultPanel({
     setPieceForNewSheet(null);
   };
 
-  const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth), [project.patternScale, project.patternWidth]);
+  const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -432,12 +850,30 @@ export function ResultPanel({
     setActivePolygonPoints([]);
     setHoverPoint(null);
     setHoverSnapped(false);
+    setActiveAlignmentGuides([]);
+    setActiveLengthGuide(null);
+    setActiveSnapLabels([]);
   }
 
   useEffect(() => {
     onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
+
+  const onPenStatusChangeRef = useRef(onPenStatusChange);
+  onPenStatusChangeRef.current = onPenStatusChange;
+
+  const lastPoint = activePolygonPoints.length > 0 ? activePolygonPoints[activePolygonPoints.length - 1] : null;
+  useEffect(() => {
+    if (activeTool === 'pen') {
+      onPenStatusChangeRef.current?.({
+        coords: hoverPoint ? { x: hoverPoint[0], y: hoverPoint[1] } : null,
+        lastPoint: lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
+      });
+    } else {
+      onPenStatusChangeRef.current?.({ coords: null, lastPoint: null });
+    }
+  }, [hoverPoint, lastPoint, activeTool]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -478,12 +914,15 @@ export function ResultPanel({
         setActivePolygonPoints(prev => prev.slice(0, -1));
       }
       else if (e.key === 'Escape') {
-        if (refineModeRef.current) {
+        if (isSolderPopoverOpenRef.current) {
+          setIsSolderPopoverOpen(false);
+        } else if (refineModeRef.current) {
           onRefineModeChange(null);
         } else if (activePolygonPointsRef.current.length > 0) {
           setActivePolygonPoints([]);
           setHoverPoint(null);
           setHoverSnapped(false);
+          setActiveSnapLabels([]);
         } else {
           handleToolChange('select');
         }
@@ -554,21 +993,76 @@ export function ResultPanel({
       const isShift = e.evt ? e.evt.shiftKey : false;
       let targetX = x;
       let targetY = y;
-      if (isShift && activePolygonPointsRef.current.length > 0) {
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      if (snap) {
+        targetX = snap[0];
+        targetY = snap[1];
+      } else if (activePolygonPointsRef.current.length > 0) {
         const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-        const dx = x - lastPt[0];
-        const dy = y - lastPt[1];
-        const r = Math.hypot(dx, dy);
-        const theta = Math.atan2(dy, dx);
-        const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-        targetX = lastPt[0] + r * Math.cos(snappedTheta);
-        targetY = lastPt[1] + r * Math.sin(snappedTheta);
-      } else {
-        const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-        if (snap) {
-          targetX = snap[0];
-          targetY = snap[1];
+
+        let theta = Math.atan2(y - lastPt[1], x - lastPt[0]);
+        if (isShift) {
+          theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
         }
+
+        const lenSnap = findLengthSnap(
+          [x, y],
+          lastPt,
+          project.pieces,
+          activePolygonPointsRef.current,
+          vp.effectiveScale
+        );
+
+        if (lenSnap) {
+          targetX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
+          targetY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
+        } else if (isShift) {
+          const align = findShiftAlignmentGuides(
+            [x, y],
+            lastPt,
+            theta,
+            project.pieces,
+            vp.effectiveScale
+          );
+          if (align.guides.length > 0) {
+            targetX = align.snapped[0];
+            targetY = align.snapped[1];
+          } else {
+            const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
+            targetX = lastPt[0] + r * Math.cos(theta);
+            targetY = lastPt[1] + r * Math.sin(theta);
+          }
+        } else {
+          const align = findAlignmentGuides(
+            [x, y],
+            project.pieces,
+            vp.effectiveScale
+          );
+          targetX = align.snapped[0];
+          targetY = align.snapped[1];
+        }
+      } else {
+        const align = findAlignmentGuides(
+          [x, y],
+          project.pieces,
+          vp.effectiveScale
+        );
+        targetX = align.snapped[0];
+        targetY = align.snapped[1];
+      }
+
+      if (!snap) {
+        const edgeSnap = getCanvasSnapping(
+          targetX,
+          targetY,
+          project.patternCrop,
+          project.patternWidth,
+          project.patternHeight,
+          vp.effectiveScale,
+          t
+        );
+        targetX = edgeSnap.x;
+        targetY = edgeSnap.y;
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
@@ -702,6 +1196,10 @@ export function ResultPanel({
       setActivePolygonPoints([]);
       setHoverPoint(null);
       setHoverSnapped(false);
+      lastMousePosRef.current = null;
+      setActiveAlignmentGuides([]);
+      setActiveLengthGuide(null);
+      setActiveSnapLabels([]);
     }
     if (id !== 'pencil') {
       setPencilPoints([]);
@@ -900,7 +1398,75 @@ export function ResultPanel({
 
   return (
     <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div className="toolbar-divider" />
+        <div className="tooltip-wrapper" ref={solderPopoverRef}>
+          <button
+            className={`tool-btn solder-tool-btn ${isSolderPopoverOpen ? 'active' : ''}`}
+            onClick={() => setIsSolderPopoverOpen(o => !o)}
+            aria-label={t('solderThicknessTooltip')}
+          >
+            {/* Custom line thickness stack icon */}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="6" x2="20" y2="6" strokeWidth="1" />
+              <line x1="4" y1="12" x2="20" y2="12" strokeWidth="2.5" />
+              <line x1="4" y1="18" x2="20" y2="18" strokeWidth="4.5" />
+            </svg>
+            <span className="tool-label" style={{ fontSize: '9px', fontWeight: 600, marginTop: '2px' }}>
+              {(project.solderWidthMM ?? 4.5).toFixed(1)}
+            </span>
+          </button>
+          
+          {!isSolderPopoverOpen && <span className="tooltip-tip">{t('solderThicknessTooltip')}</span>}
+          
+          {isSolderPopoverOpen && (
+            <div className="solder-popover">
+              <div className="solder-popover-section">
+                <div className="solder-popover-label-row">
+                  <span className="solder-popover-title">{t('solderThickness')}</span>
+                  <span className="solder-popover-val">{(project.solderWidthMM ?? 4.5).toFixed(1)} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="1.0"
+                  max="10.0"
+                  step="0.5"
+                  value={project.solderWidthMM ?? 4.5}
+                  onChange={e => onUpdateSolderWidthMM(parseFloat(e.target.value))}
+                  className="solder-popover-slider"
+                />
+              </div>
+              <div className="solder-popover-divider" />
+              <div className="solder-popover-section">
+                <span className="solder-popover-title" style={{ marginBottom: '8px', display: 'block' }}>{t('solderFinish')}</span>
+                <div className="solder-swatches">
+                  {(['black', 'silver', 'copper'] as const).map(color => {
+                    const active = (project.solderColor ?? 'black') === color;
+                    const hexColor = SOLDER_COLORS[color];
+                    const label = t(`solder${color.charAt(0).toUpperCase() + color.slice(1)}`);
+                    return (
+                      <button
+                        key={color}
+                        type="button"
+                        className={`solder-swatch-btn ${active ? 'active' : ''}`}
+                        onClick={() => onUpdateSolderColor(color)}
+                        title={label}
+                        aria-label={label}
+                        style={{
+                          '--swatch-color': hexColor,
+                        } as React.CSSProperties}
+                      >
+                        <span className="solder-swatch-circle" />
+                        <span className="solder-swatch-label">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </Toolbar>
       <div
         ref={vp.containerRef}
         className="canvas-well"
@@ -939,6 +1505,12 @@ export function ResultPanel({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerLeave={() => {
+                if (activeTool === 'pen') {
+                  setHoverPoint(null);
+                  setActiveSnapLabels([]);
+                }
+              }}
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer>
@@ -995,6 +1567,7 @@ export function ResultPanel({
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
                         solderWidth={solderWidth}
+                        solderColor={SOLDER_COLORS[project.solderColor ?? 'black'] ?? SOLDER_COLORS.black}
                         onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
                       />
                     );
@@ -1010,6 +1583,52 @@ export function ResultPanel({
                   )}
                   {activeTool === 'pen' && (activePolygonPoints.length > 0 || hoverPoint) && (
                     <Group>
+                      {/* Alignment Guides */}
+                      {activeAlignmentGuides.map((guide, idx) => (
+                        <Group key={`align-guide-${idx}`} listening={false}>
+                          <Line
+                            points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
+                            stroke="rgba(192, 138, 31, 0.4)"
+                            strokeWidth={1 / es}
+                            dash={[4 / es, 4 / es]}
+                          />
+                          <Circle
+                            x={guide.from[0]}
+                            y={guide.from[1]}
+                            radius={4.5 / es}
+                            fill={CANVAS.paper}
+                            stroke={CANVAS.amber}
+                            strokeWidth={1.5 / es}
+                          />
+                        </Group>
+                      ))}
+
+                      {/* Equal Length Guide */}
+                      {activeLengthGuide && (
+                        <Group listening={false}>
+                          <Circle
+                            x={activeLengthGuide.center[0]}
+                            y={activeLengthGuide.center[1]}
+                            radius={activeLengthGuide.matchLength}
+                            stroke="rgba(192, 138, 31, 0.25)"
+                            strokeWidth={1.5 / es}
+                            dash={[6 / es, 6 / es]}
+                          />
+                          <Line
+                            points={[
+                              activeLengthGuide.matchingSegment.p1[0],
+                              activeLengthGuide.matchingSegment.p1[1],
+                              activeLengthGuide.matchingSegment.p2[0],
+                              activeLengthGuide.matchingSegment.p2[1],
+                            ]}
+                            stroke={CANVAS.amber}
+                            strokeWidth={4 / es}
+                            lineCap="round"
+                            opacity={0.8}
+                          />
+                        </Group>
+                      )}
+
                       {activePolygonPoints.length > 1 && (
                         <Line
                           points={activePolygonPoints.flat()}
@@ -1063,6 +1682,45 @@ export function ResultPanel({
                           />
                         );
                       })}
+
+                      {/* Snap Labels (Center, 1/3, etc.) */}
+                      {hoverPoint && activeSnapLabels.length > 0 && (
+                        <Group x={hoverPoint[0]} y={hoverPoint[1] - 18 / es} listening={false}>
+                          {(() => {
+                            const text = activeSnapLabels.join(' · ');
+                            const fontSize = 10.5 / es;
+                            const textWidth = text.length * (6 / es);
+                            const paddingX = 6 / es;
+                            const paddingY = 3.5 / es;
+                            const rectW = textWidth + paddingX * 2;
+                            const rectH = fontSize + paddingY * 2;
+                            return (
+                              <Group>
+                                <Rect
+                                  x={-rectW / 2}
+                                  y={-rectH / 2}
+                                  width={rectW}
+                                  height={rectH}
+                                  fill="rgba(40, 30, 15, 0.85)"
+                                  cornerRadius={4 / es}
+                                />
+                                <KonvaText
+                                  text={text}
+                                  fontSize={fontSize}
+                                  fontFamily='"Inter Tight", system-ui, -apple-system, sans-serif'
+                                  fill="#fffefa"
+                                  align="center"
+                                  verticalAlign="middle"
+                                  x={-rectW / 2}
+                                  y={-rectH / 2}
+                                  width={rectW}
+                                  height={rectH}
+                                />
+                              </Group>
+                            );
+                          })()}
+                        </Group>
+                      )}
                     </Group>
                   )}
                   {activeTool === 'pencil' && pencilPoints.length > 0 && (
