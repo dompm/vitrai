@@ -1403,37 +1403,30 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {isLamp && unrolledLamp && unrolledLamp.outline.length > 0 ? (
+                  {isLamp && unrolledLamp && unrolledLamp.tiers.length > 0 ? (
                     <>
-                      {/* Unrolled lamp paper backdrop */}
-                      <Line
-                        points={unrolledLamp.outline.flat()}
-                        closed
-                        fill="#fffefa"
-                        stroke="rgba(40, 30, 15, 0.32)"
-                        strokeWidth={1.5 / es}
-                        listening={false}
-                      />
-                      {/* Tier seams */}
-                      {unrolledLamp.tierSeams.map((s, i) => (
+                      {unrolledLamp.tiers.map((tier, ti) => (
                         <Line
-                          key={`tier-${i}`}
-                          points={[s.x1, s.y1, s.x2, s.y2]}
-                          stroke="rgba(40, 30, 15, 0.22)"
-                          strokeWidth={1 / es}
+                          key={`tier-poly-${ti}`}
+                          points={tier.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5 / es}
                           listening={false}
                         />
                       ))}
-                      {/* Facet seams */}
-                      {unrolledLamp.facetSeams.map((s, i) => (
-                        <Line
-                          key={`facet-${i}`}
-                          points={[s.x1, s.y1, s.x2, s.y2]}
-                          stroke="rgba(40, 30, 15, 0.14)"
-                          strokeWidth={0.8 / es}
-                          listening={false}
-                        />
-                      ))}
+                      {unrolledLamp.tiers.map((tier, ti) =>
+                        tier.facetSeams.map((s, i) => (
+                          <Line
+                            key={`facet-${ti}-${i}`}
+                            points={[s.x1, s.y1, s.x2, s.y2]}
+                            stroke="rgba(40, 30, 15, 0.14)"
+                            strokeWidth={0.8 / es}
+                            listening={false}
+                          />
+                        ))
+                      )}
                     </>
                   ) : (() => {
                     const cL = project.patternCrop.left;

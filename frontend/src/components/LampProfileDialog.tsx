@@ -218,9 +218,9 @@ function ProfileEditor({
 }: ProfileEditorProps) {
   const W = 360;
   const H = 240;
-  const PAD = 28;
-  const GRID_MM = 10;       // minor grid step (mm)
-  const GRID_MAJOR_MM = 50; // major grid + label step (mm)
+  const PAD = 14;
+  const GRID_MM = 50;       // single grid step (mm) — coarse, no minor grid
+  const SNAP_GRID_MM = 10;  // grid snap resolution (mm)
   const SNAP_PX = 8;        // align-to-other-handle threshold (screen px)
 
   // Data bounds with a comfortable margin so the canvas accommodates dragging
@@ -230,9 +230,9 @@ function ProfileEditor({
   const dataMaxY = profilePoints.length ? Math.max(...profilePoints.map(p => p.y)) : 200;
   // Round bounds up to the next major-grid step so axis ticks land cleanly.
   const round = (v: number, step: number) => Math.ceil(v / step) * step;
-  const viewMaxR = Math.max(GRID_MAJOR_MM * 3, round(dataMaxR + 20, GRID_MAJOR_MM));
+  const viewMaxR = Math.max(GRID_MM * 3, round(dataMaxR + 20, GRID_MM));
   const viewMinY = Math.min(0, dataMinY);
-  const viewMaxY = Math.max(viewMinY + GRID_MAJOR_MM * 3, round(dataMaxY + 20, GRID_MAJOR_MM));
+  const viewMaxY = Math.max(viewMinY + GRID_MM * 3, round(dataMaxY + 20, GRID_MM));
 
   const sx = (W - 2 * PAD) / viewMaxR;
   const sy = (H - 2 * PAD) / (viewMaxY - viewMinY);
@@ -290,8 +290,8 @@ function ProfileEditor({
       }
 
       // Grid snap on any axis that hasn't already been alignment-snapped.
-      if (!snappedR) r = Math.round(r / GRID_MM) * GRID_MM;
-      if (!snappedY) y = Math.round(y / GRID_MM) * GRID_MM;
+      if (!snappedR) r = Math.round(r / SNAP_GRID_MM) * SNAP_GRID_MM;
+      if (!snappedY) y = Math.round(y / SNAP_GRID_MM) * SNAP_GRID_MM;
 
       r = Math.max(0, r);
 
@@ -314,13 +314,11 @@ function ProfileEditor({
 
   const selected = profilePoints[selectedIdx];
 
-  // Grid ticks
-  const minorRTicks: number[] = [];
-  for (let r = 0; r <= viewMaxR; r += GRID_MM) minorRTicks.push(r);
-  const minorYTicks: number[] = [];
-  for (let y = Math.ceil(viewMinY / GRID_MM) * GRID_MM; y <= viewMaxY; y += GRID_MM) minorYTicks.push(y);
-  const majorRTicks = minorRTicks.filter(r => r % GRID_MAJOR_MM === 0);
-  const majorYTicks = minorYTicks.filter(y => y % GRID_MAJOR_MM === 0);
+  // Single coarse grid (~50 mm steps).
+  const rTicks: number[] = [];
+  for (let r = 0; r <= viewMaxR; r += GRID_MM) rTicks.push(r);
+  const yTicks: number[] = [];
+  for (let y = Math.ceil(viewMinY / GRID_MM) * GRID_MM; y <= viewMaxY; y += GRID_MM) yTicks.push(y);
 
   return (
     <>
@@ -331,87 +329,29 @@ function ProfileEditor({
         viewBox={`0 0 ${W} ${H}`}
         style={{ background: '#ffffff', border: '1px solid var(--hairline-2)', borderRadius: 8, touchAction: 'none', flexShrink: 0 }}
       >
-        {/* Minor grid */}
-        {minorRTicks.map(r => (
+        {/* Grid */}
+        {rTicks.map(r => (
           <line
-            key={`mr-${r}`}
+            key={`gr-${r}`}
             x1={toSx(r)}
             y1={PAD}
             x2={toSx(r)}
             y2={H - PAD}
-            stroke="rgba(40, 30, 15, 0.05)"
+            stroke="rgba(40, 30, 15, 0.10)"
             strokeWidth={1}
           />
         ))}
-        {minorYTicks.map(y => (
+        {yTicks.map(y => (
           <line
-            key={`my-${y}`}
+            key={`gy-${y}`}
             x1={PAD}
             y1={toSy(y)}
             x2={W - PAD}
             y2={toSy(y)}
-            stroke="rgba(40, 30, 15, 0.05)"
+            stroke="rgba(40, 30, 15, 0.10)"
             strokeWidth={1}
           />
         ))}
-        {/* Major grid */}
-        {majorRTicks.map(r => (
-          <line
-            key={`Mr-${r}`}
-            x1={toSx(r)}
-            y1={PAD}
-            x2={toSx(r)}
-            y2={H - PAD}
-            stroke="rgba(40, 30, 15, 0.12)"
-            strokeWidth={1}
-          />
-        ))}
-        {majorYTicks.map(y => (
-          <line
-            key={`My-${y}`}
-            x1={PAD}
-            y1={toSy(y)}
-            x2={W - PAD}
-            y2={toSy(y)}
-            stroke="rgba(40, 30, 15, 0.12)"
-            strokeWidth={1}
-          />
-        ))}
-
-        {/* Axes */}
-        <line x1={PAD} y1={PAD} x2={PAD} y2={H - PAD} stroke="rgba(40, 30, 15, 0.45)" strokeWidth={1} />
-        <line x1={PAD} y1={H - PAD} x2={W - PAD} y2={H - PAD} stroke="rgba(40, 30, 15, 0.45)" strokeWidth={1} />
-
-        {/* Axis tick labels (major only) */}
-        {majorRTicks.map(r => (
-          <text
-            key={`lr-${r}`}
-            x={toSx(r)}
-            y={H - PAD + 12}
-            fontSize={9}
-            fill="var(--text-dim)"
-            textAnchor="middle"
-            fontFamily="Inter Tight, system-ui, sans-serif"
-          >
-            {r}
-          </text>
-        ))}
-        {majorYTicks.map(y => (
-          <text
-            key={`ly-${y}`}
-            x={PAD - 4}
-            y={toSy(y) + 3}
-            fontSize={9}
-            fill="var(--text-dim)"
-            textAnchor="end"
-            fontFamily="Inter Tight, system-ui, sans-serif"
-          >
-            {y}
-          </text>
-        ))}
-        {/* Axis labels */}
-        <text x={W - PAD} y={H - PAD + 22} fontSize={9} fill="var(--text-soft)" textAnchor="end" fontFamily="Inter Tight, system-ui, sans-serif">r (mm)</text>
-        <text x={PAD - 4} y={PAD - 8} fontSize={9} fill="var(--text-soft)" textAnchor="end" fontFamily="Inter Tight, system-ui, sans-serif">y (mm)</text>
 
         {/* Active alignment guides */}
         {activeGuides.v !== undefined && (
