@@ -282,12 +282,15 @@ export function App() {
     updateSheetCrop,
     updateSheetScale,
     deletePiece,
+    deletePieces,
     updatePieceLabel,
     updatePieceSheet,
+    updatePiecesSheet,
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
     addSheetAndAssignPiece,
+    addSheetAndAssignPieces,
     addPieceFromBox,
     addManualPiece,
     updateSheetDimensions,
@@ -573,6 +576,16 @@ export function App() {
     updatePiecePolygonAndCurves(pieceId, smoothPolygon(piece.polygon), []);
   }
 
+  function handleSmoothPieces(pieceIds: string[]) {
+    // skipHistory = true for all but the last to avoid pushing many history entries
+    pieceIds.forEach((id, idx) => {
+      const piece = project.pieces.find(p => p.id === id);
+      if (piece) {
+        updatePiecePolygonAndCurves(id, smoothPolygon(piece.polygon), [], idx < pieceIds.length - 1);
+      }
+    });
+  }
+
   function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece) return;
@@ -645,7 +658,7 @@ export function App() {
 
       if (selectedPieceIds.length === 0) return;
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        selectedPieceIds.forEach(id => deletePiece(id));
+        deletePieces(selectedPieceIds);
       }
     }
     window.addEventListener('keydown', handleKeyDown);
@@ -1145,9 +1158,13 @@ export function App() {
           onAddManualPiece={handleAddManualPiece}
           onUpdatePieceLabel={updatePieceLabel}
           onUpdatePieceSheet={updatePieceSheet}
+          onUpdatePiecesSheet={updatePiecesSheet}
           onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+          onAddSheetAndAssignPieces={addSheetAndAssignPieces}
           onDeletePiece={deletePiece}
+          onDeletePieces={deletePieces}
           onSmoothPiece={handleSmoothPiece}
+          onSmoothPieces={handleSmoothPieces}
           onUpdatePiecePolygon={handleUpdatePiecePolygon}
           onUpdatePieceCurves={handleUpdatePieceCurves}
           onUpdatePrompt={handleUpdatePrompt}
@@ -1223,11 +1240,22 @@ export function App() {
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
+            pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
-            onTransformChange={updatePieceTransform}
+            onSelectPieces={selectPieces}
+            onUpdatePieceTransform={updatePieceTransform}
+            onUpdatePieceLabel={updatePieceLabel}
+            onUpdatePieceSheet={updatePieceSheet}
+            onUpdatePiecesSheet={updatePiecesSheet}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            onDeletePiece={deletePiece}
+            onDeletePieces={deletePieces}
+            onSmoothPiece={handleSmoothPiece}
+            onSmoothPieces={handleSmoothPieces}
+            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
             showEmptyHint={
               piecesOnActiveSheet.length === 0 &&
               project.pieces.length > 0

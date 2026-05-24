@@ -160,9 +160,13 @@ interface ResultPanelProps {
   onAddManualPiece: (polygon: [number, number][]) => void;
   onUpdatePieceLabel: (id: string, label: string) => void;
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
+  onUpdatePiecesSheet: (ids: string[], sheetId: string) => void;
   onAddSheetAndAssignPiece: (id: string, url?: string, label?: string) => void;
+  onAddSheetAndAssignPieces: (ids: string[], url?: string, label?: string) => void;
   onDeletePiece: (id: string) => void;
+  onDeletePieces: (ids: string[]) => void;
   onSmoothPiece: (id: string) => void;
+  onSmoothPieces: (ids: string[]) => void;
   onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
   onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[]) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
@@ -642,7 +646,7 @@ function findLengthSnap(
 export function ResultPanel({
   project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
-  onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
+  onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
@@ -826,7 +830,11 @@ export function ResultPanel({
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
-      onAddSheetAndAssignPiece(pieceForNewSheet, dataUrl, file.name);
+      if (pieceForNewSheet === '__multiple__') {
+        onAddSheetAndAssignPieces(selectedPieceIds, dataUrl, file.name);
+      } else {
+        onAddSheetAndAssignPiece(pieceForNewSheet, dataUrl, file.name);
+      }
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -1975,10 +1983,25 @@ export function ResultPanel({
               );
             })()}
             {activeTool !== 'inspect' && (() => {
+              if (selectedPieceIds.length === 0) return null;
+              
+              const isMultiple = selectedPieceIds.length > 1;
               const lastId = selectedPieceIds[selectedPieceIds.length - 1];
               const piece = project.pieces.find(p => p.id === lastId);
               if (!piece) return null;
               
+              // For multiple selection, we construct a dummy piece for PieceProperties
+              const displayPiece = isMultiple ? {
+                ...piece,
+                id: '__multiple__',
+                label: `${selectedPieceIds.length} pieces`,
+                // If all selected pieces share the same sheet, show it; otherwise, use a special value
+                glassSheetId: project.pieces.filter(p => selectedPieceIds.includes(p.id))
+                  .every((p, _, arr) => p.glassSheetId === arr[0].glassSheetId) 
+                    ? piece.glassSheetId 
+                    : '__multiple__'
+              } : piece;
+
               const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
               const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
               const isDrawing = drawingBox !== null;
@@ -2002,18 +2025,28 @@ export function ResultPanel({
                       pointerEvents={isInteracting ? 'none' : 'auto'}
                     />
                     <PieceProperties
-                      piece={piece}
+                      piece={displayPiece}
                       sheets={project.sheets}
                       onLabelChange={label => onUpdatePieceLabel(piece.id, label)}
-                      onSheetChange={sheetId => onUpdatePieceSheet(piece.id, sheetId)}
-                      onAddSheet={() => handleAddSheetClick(piece.id)}
-                      onDelete={() => onDeletePiece(piece.id)}
-                      onSmooth={() => onSmoothPiece(piece.id)}
+                      onSheetChange={sheetId => {
+                        if (isMultiple) onUpdatePiecesSheet(selectedPieceIds, sheetId);
+                        else onUpdatePieceSheet(piece.id, sheetId);
+                      }}
+                      onAddSheet={() => handleAddSheetClick(isMultiple ? '__multiple__' : piece.id)}
+                      onDelete={() => {
+                        if (isMultiple) onDeletePieces(selectedPieceIds);
+                        else onDeletePiece(piece.id);
+                      }}
+                      onSmooth={() => {
+                        if (isMultiple) onSmoothPieces(selectedPieceIds);
+                        else onSmoothPiece(piece.id);
+                      }}
                       refineMode={refineMode}
                       onRefineModeChange={onRefineModeChange}
-                      isPending={pendingPieceIds.has(piece.id)}
+                      isPending={selectedPieceIds.some(id => pendingPieceIds.has(id))}
                       isEncoding={isEncoding}
                       pointerEvents={isInteracting ? 'none' : 'auto'}
+                      multiple={isMultiple}
                     />
                   </div>
                 </div>
