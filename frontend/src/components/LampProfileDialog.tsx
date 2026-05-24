@@ -13,25 +13,37 @@ interface Props {
 
 type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid';
 
-const PRESETS: Record<Preset, LampProfilePoint[]> = {
-  cylinder: [
-    { r: 80, y: 0 },
-    { r: 80, y: 200 },
-  ],
-  cone: [
-    { r: 40, y: 0 },
-    { r: 120, y: 200 },
-  ],
-  dome: [
-    { r: 20, y: 0 },
-    { r: 80, y: 60 },
-    { r: 100, y: 140 },
-    { r: 60, y: 200 },
-  ],
-  pyramid: [
-    { r: 10, y: 0 },
-    { r: 120, y: 200 },
-  ],
+const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePoint[] }> = {
+  cylinder: {
+    facetCount: 6,
+    profilePoints: [
+      { r: 80, y: 0 },
+      { r: 80, y: 200 },
+    ],
+  },
+  cone: {
+    facetCount: 12,
+    profilePoints: [
+      { r: 40, y: 0 },
+      { r: 120, y: 200 },
+    ],
+  },
+  dome: {
+    facetCount: 12,
+    profilePoints: [
+      { r: 20, y: 0 },
+      { r: 80, y: 60 },
+      { r: 100, y: 140 },
+      { r: 60, y: 200 },
+    ],
+  },
+  pyramid: {
+    facetCount: 4,
+    profilePoints: [
+      { r: 10, y: 0 },
+      { r: 120, y: 200 },
+    ],
+  },
 };
 
 export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm }: Props) {
@@ -54,8 +66,9 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
   }, [onCancel]);
 
   function applyPreset(p: Preset) {
-    const next = PRESETS[p];
-    setProfilePoints(next);
+    const preset = PRESETS[p];
+    setProfilePoints(preset.profilePoints);
+    setFacetCount(preset.facetCount);
     setSelectedIdx(0);
   }
 
