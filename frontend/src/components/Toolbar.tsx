@@ -74,11 +74,11 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
                 background: 'rgba(255, 254, 250, 0.7)', borderRadius: 'inherit',
               }}>
                 {typeof tool.loading === 'number' ? (
-                  <svg width="18" height="18" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
-                    <circle cx="8" cy="8" r="6" stroke="var(--hairline-2)" strokeWidth="2" fill="none" />
+                  <svg width="14" height="14" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="8" cy="8" r="6" stroke="rgba(192, 138, 31, 0.2)" strokeWidth="2" fill="none" />
                     <circle 
                       cx="8" cy="8" r="6" 
-                      stroke="var(--blue)" 
+                      stroke="var(--amber)" 
                       strokeWidth="2" 
                       fill="none" 
                       strokeDasharray={2 * Math.PI * 6} 

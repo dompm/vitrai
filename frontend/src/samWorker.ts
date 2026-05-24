@@ -146,7 +146,6 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
       await writable.close();
       console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
       
-      downloadProgress.delete(filename);
       return buf.buffer;
     }
   } catch (err) {
