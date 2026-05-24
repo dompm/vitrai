@@ -263,8 +263,11 @@ export function Lamp3DPreview({ project }: Props) {
       const material = new THREE.MeshBasicMaterial({
         map: texture,
         side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 1,
       });
       const mesh = new THREE.Mesh(geom, material);
+      // Render after the shell so the glass pixels show through cleanly.
       mesh.renderOrder = 1;
       group.add(mesh);
     }
