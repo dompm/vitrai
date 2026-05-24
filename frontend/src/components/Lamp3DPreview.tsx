@@ -347,19 +347,21 @@ export function Lamp3DPreview({ project }: Props) {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      style={{ width: '100%', height: '100%', position: 'relative', touchAction: 'none', overscrollBehavior: 'none' }}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-    >
-      <div style={{ position: 'absolute', top: 8, left: 10, pointerEvents: 'none', zIndex: 1 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.07em', color: 'var(--text-dim)' }}>
-          3D Preview (Drag to Spin)
-        </span>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', minHeight: 0 }}>
+      <div className="panel-header">
+        <div className="panel-title">
+          <span className="panel-title-eyebrow">3D PREVIEW (DRAG TO SPIN)</span>
+        </div>
       </div>
+      <div
+        className="canvas-well"
+        ref={containerRef}
+        style={{ flex: 1, minHeight: 0, position: 'relative', touchAction: 'none', overscrollBehavior: 'none' }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      />
     </div>
   );
 }

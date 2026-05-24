@@ -1,4 +1,5 @@
 import type { LampConfig } from '../types';
+import { getSnapFractions } from './snapping';
 
 // Two flat-pattern layouts for a lamp, chosen by config.smooth:
 //   - 'faceted' (default): one strip per facet column, side by side. Each strip
@@ -343,29 +344,73 @@ export function findLampEdgeSnap(
   return bestPt;
 }
 
-// All snap-worthy corners — strip/tier outline vertices and (faceted) tier seam endpoints.
-export function getLampSnapPoints(unrolled: UnrolledLamp): [number, number][] {
+export interface LampSnapPoint {
+  pt: [number, number];
+  label?: string;
+}
+
+// All snap-worthy points — strip/tier outline vertices and (faceted) tier seam endpoints, plus fractional edge points.
+export function getLampSnapPoints(unrolled: UnrolledLamp, effectiveScale: number, t: (k: string) => string): LampSnapPoint[] {
   const seen = new Set<string>();
-  const out: [number, number][] = [];
-  const push = (x: number, y: number) => {
+  const out: LampSnapPoint[] = [];
+
+  const FRACTIONS = getSnapFractions(t);
+
+  const pushCorner = (x: number, y: number) => {
     const key = `${x.toFixed(2)},${y.toFixed(2)}`;
     if (seen.has(key)) return;
     seen.add(key);
-    out.push([x, y]);
+    out.push({ pt: [x, y] });
   };
+
+  const pushEdgeFractions = (ax: number, ay: number, bx: number, by: number) => {
+    const lineLen = Math.hypot(bx - ax, by - ay);
+    const pixelLen = lineLen * effectiveScale;
+    
+    const activeFractions = [0, 1]; // corners are always active
+    const minGapPx = 32;
+
+    for (const frac of FRACTIONS) {
+      const tooClose = activeFractions.some(val => Math.abs(frac.value - val) * pixelLen < minGapPx);
+      if (!tooClose) {
+        activeFractions.push(frac.value);
+        const x = ax + (bx - ax) * frac.value;
+        const y = ay + (by - ay) * frac.value;
+        const key = `${x.toFixed(2)},${y.toFixed(2)}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push({ pt: [x, y], label: frac.label });
+      }
+    }
+  };
+
   if (unrolled.mode === 'faceted') {
     for (const strip of unrolled.strips) {
-      for (const [x, y] of strip.outline) push(x, y);
+      const o = strip.outline;
+      for (let i = 0; i < o.length; i++) {
+        const a = o[i];
+        const b = o[(i + 1) % o.length];
+        pushCorner(a[0], a[1]);
+        pushEdgeFractions(a[0], a[1], b[0], b[1]);
+      }
       for (const s of strip.tierSeams) {
-        push(s.x1, s.y1);
-        push(s.x2, s.y2);
+        pushCorner(s.x1, s.y1);
+        pushCorner(s.x2, s.y2);
+        pushEdgeFractions(s.x1, s.y1, s.x2, s.y2);
       }
     }
   } else {
     for (const tier of unrolled.tiers) {
-      for (const [x, y] of tier.outline) push(x, y);
+      const o = tier.outline;
+      for (let i = 0; i < o.length; i++) {
+        const a = o[i];
+        const b = o[(i + 1) % o.length];
+        pushCorner(a[0], a[1]);
+        pushEdgeFractions(a[0], a[1], b[0], b[1]);
+      }
     }
   }
+
   return out;
 }
 

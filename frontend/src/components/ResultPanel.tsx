@@ -20,7 +20,8 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
-import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints } from '../utils/lampGeometry';
+import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint } from '../utils/lampGeometry';
+import { getSnapFractions } from '../utils/snapping';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -327,9 +328,9 @@ function findPenSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
-  extraVertices?: [number, number][],
-): [number, number] | null {
-  let best: [number, number] | null = null;
+  extraVertices?: LampSnapPoint[],
+): { pt: [number, number]; label?: string } | null {
+  let best: { pt: [number, number]; label?: string } | null = null;
   let bestPxDist = PEN_SNAP_PX;
   for (const piece of pieces) {
     const polygon = flattenCurves(piece.polygon, piece.curvePoints);
@@ -340,16 +341,17 @@ function findPenSnapTarget(
       const dist = Math.hypot(dx, dy) * effectiveScale;
       if (dist < bestPxDist) {
         bestPxDist = dist;
-        best = [polygon[i][0], polygon[i][1]];
+        best = { pt: [polygon[i][0], polygon[i][1]] };
       }
     }
   }
   if (extraVertices) {
-    for (const [vx, vy] of extraVertices) {
+    for (const sv of extraVertices) {
+      const [vx, vy] = sv.pt;
       const dist = Math.hypot(vx - cursor[0], vy - cursor[1]) * effectiveScale;
       if (dist < bestPxDist) {
         bestPxDist = dist;
-        best = [vx, vy];
+        best = { pt: [vx, vy], label: sv.label };
       }
     }
   }
@@ -404,25 +406,7 @@ function getCanvasSnapping(
   }
 
   // 2. Fractional Snapping (Lower Priority)
-  const FRACTIONS: { value: number; label: string }[] = [];
-  const seen = new Set<string>();
-  const denominators = [2, 3, 4, 5, 6, 8, 10, 12, 16];
-  
-  for (const d of denominators) {
-    for (let n = 1; n < d; n++) {
-      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
-      const g = gcd(n, d);
-      const num = n / g;
-      const den = d / g;
-      const key = `${num}/${den}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        const val = num / den;
-        const label = den === 2 ? t('snapCenter') : key;
-        FRACTIONS.push({ value: val, label });
-      }
-    }
-  }
+  const FRACTIONS = getSnapFractions(t);
 
   const minGap = 32; // minimum screen pixels between active guides
 
@@ -712,11 +696,11 @@ export function ResultPanel({
     // 1. Vertex snapping is highest priority
     const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current);
     if (snap) {
-      setHoverPoint(snap);
+      setHoverPoint(snap.pt);
       setHoverSnapped(true);
       setActiveAlignmentGuides([]);
       setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
+      setActiveSnapLabels(snap.label ? [snap.label] : []);
       return;
     }
 
@@ -863,7 +847,7 @@ export function ResultPanel({
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
   const isLamp = project.projectType === 'lamp';
   const unrolledLamp = useMemo(() => (isLamp ? computeUnrolledLamp(project.lampConfig) : null), [isLamp, project.lampConfig]);
-  const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp) : undefined), [unrolledLamp]);
+  const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp, vp.effectiveScale, t) : undefined), [unrolledLamp, vp.effectiveScale, t]);
   const lampSnapPointsRef = useRef(lampSnapPoints);
   lampSnapPointsRef.current = lampSnapPoints;
   const unrolledLampRef = useRef(unrolledLamp);
@@ -1024,8 +1008,11 @@ export function ResultPanel({
         ? findLampEdgeSnap([x, y], unrolledLamp, vp.effectiveScale, PEN_SNAP_PX)
         : null;
       if (snap) {
-        targetX = snap[0];
-        targetY = snap[1];
+        targetX = snap.pt[0];
+        targetY = snap.pt[1];
+        if (snap.label) {
+          setActiveSnapLabels([snap.label]);
+        }
       } else if (edgeSnap) {
         targetX = edgeSnap[0];
         targetY = edgeSnap[1];

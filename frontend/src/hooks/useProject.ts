@@ -71,9 +71,10 @@ function syncSymmetricPieces(
   targetPieceId: string,
   newPolygon: [number, number][] | undefined,
   newCurvePoints: import('../types').CurvePoint[] | undefined,
-  lampConfig: import('../types').LampConfig | undefined | null
+  lampConfig: import('../types').LampConfig | undefined | null,
+  isSymmetryEnabled: boolean
 ): Piece[] {
-  if (!lampConfig) return pieces;
+  if (!lampConfig || !isSymmetryEnabled) return pieces;
   const target = pieces.find(p => p.id === targetPieceId);
   if (!target || !target.symmetryGroupId || target.facetIndex === undefined) return pieces;
 
@@ -396,7 +397,7 @@ export function useProject() {
   const deletePiece = useCallback((pieceId: string) => {
     updateProject(prev => {
       const piece = prev.pieces.find(p => p.id === pieceId);
-      if (piece?.symmetryGroupId) {
+      if (piece?.symmetryGroupId && isSymmetryEnabled) {
         const deletedIds = prev.pieces.filter(p => p.symmetryGroupId === piece.symmetryGroupId).map(p => p.id);
         setSelectedPieceIds(ids => ids.filter(id => !deletedIds.includes(id)));
         return {
@@ -407,7 +408,7 @@ export function useProject() {
       setSelectedPieceIds(ids => ids.filter(id => id !== pieceId));
       return { ...prev, pieces: prev.pieces.filter(p => p.id !== pieceId) };
     });
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePieceLabel = useCallback((pieceId: string, label: string) => {
     updateProject(prev => ({
@@ -425,6 +426,9 @@ export function useProject() {
 
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
+      const targetPiece = prev.pieces.find(p => p.id === pieceId);
+      const targetSymmetryGroupId = targetPiece?.symmetryGroupId;
+
       const sheet = prev.sheets.find(s => s.id === sheetId);
       const sw = sheet?.naturalWidth ?? 800;
       const sh = sheet?.naturalHeight ?? 600;
@@ -434,14 +438,17 @@ export function useProject() {
 
       const next = {
         ...prev,
-        pieces: prev.pieces.map(p =>
-          p.id === pieceId ? { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } } : p
-        )
+        pieces: prev.pieces.map(p => {
+          if (p.id === pieceId || (isSymmetryEnabled && targetSymmetryGroupId && p.symmetryGroupId === targetSymmetryGroupId)) {
+            return { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } };
+          }
+          return p;
+        })
       };
       return applyScales(next, sheetId);
     });
     setActiveSheetId(sheetId);
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const deleteSheet = useCallback((sheetId: string) => {
     updateProject(prev => {
@@ -725,26 +732,26 @@ export function useProject() {
   const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][], skipHistory = false) => {
     updateProject(prev => {
       const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, undefined, prev.lampConfig);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, undefined, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
     updateProject(prev => {
       const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, undefined, curvePoints, prev.lampConfig);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, undefined, curvePoints, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePiecePolygonAndCurves = useCallback((pieceId: string, polygon: [number, number][], curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
     updateProject(prev => {
       const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, curvePoints, prev.lampConfig);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, curvePoints, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const markPiecePending = useCallback((pieceId: string) => {
     setPendingPieceIds(s => new Set(s).add(pieceId));
