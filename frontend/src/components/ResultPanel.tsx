@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
@@ -177,6 +177,10 @@ interface ResultPanelProps {
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
+  onPenStatusChange?: (status: {
+    coords: { x: number; y: number } | null;
+    lastPoint: { x: number; y: number } | null;
+  }) => void;
   onUpdateSolderWidthMM: (width: number) => void;
   onUpdateSolderColor: (color: import('../types').SolderColor) => void;
 }
@@ -336,6 +340,117 @@ function findPenSnapTarget(
     }
   }
   return best;
+}
+
+function getCanvasSnapping(
+  x: number,
+  y: number,
+  crop: Crop,
+  patternWidth: number,
+  patternHeight: number,
+  effectiveScale: number,
+  t: (key: string) => string,
+  thresholdPx = PEN_SNAP_PX
+): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
+  const threshold = thresholdPx / effectiveScale;
+  let targetX = x;
+  let targetY = y;
+  const guides: AlignmentGuide[] = [];
+  const labels: string[] = [];
+
+  const left = crop.left;
+  const right = patternWidth - crop.right;
+  const top = crop.top;
+  const bottom = patternHeight - crop.bottom;
+  const W = right - left;
+  const H = bottom - top;
+
+  // 1. Edge Snapping (Highest Priority)
+  let snappedX = false;
+  let snappedY = false;
+
+  if (Math.abs(x - left) < threshold) {
+    targetX = left;
+    snappedX = true;
+    guides.push({ type: 'v', from: [left, top], to: [left, bottom] });
+  } else if (Math.abs(x - right) < threshold) {
+    targetX = right;
+    snappedX = true;
+    guides.push({ type: 'v', from: [right, top], to: [right, bottom] });
+  }
+
+  if (Math.abs(y - top) < threshold) {
+    targetY = top;
+    snappedY = true;
+    guides.push({ type: 'h', from: [left, top], to: [right, top] });
+  } else if (Math.abs(y - bottom) < threshold) {
+    targetY = bottom;
+    snappedY = true;
+    guides.push({ type: 'h', from: [left, bottom], to: [right, bottom] });
+  }
+
+  // 2. Fractional Snapping (Lower Priority)
+  const FRACTIONS: { value: number; label: string }[] = [];
+  const seen = new Set<string>();
+  const denominators = [2, 3, 4, 5, 6, 8, 10, 12, 16];
+  
+  for (const d of denominators) {
+    for (let n = 1; n < d; n++) {
+      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
+      const g = gcd(n, d);
+      const num = n / g;
+      const den = d / g;
+      const key = `${num}/${den}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        const val = num / den;
+        const label = den === 2 ? t('snapCenter') : key;
+        FRACTIONS.push({ value: val, label });
+      }
+    }
+  }
+
+  const minGap = 32; // minimum screen pixels between active guides
+
+  // X fractional snapping
+  if (!snappedX && W > 0) {
+    const activeXValues = [left, right];
+    for (const frac of FRACTIONS) {
+      const posX = left + frac.value * W;
+      const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
+      if (!tooClose) {
+        activeXValues.push(posX);
+        if (Math.abs(x - posX) < threshold) {
+          targetX = posX;
+          snappedX = true;
+          guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
+          labels.push(frac.label);
+          break;
+        }
+      }
+    }
+  }
+
+  // Y fractional snapping
+  if (!snappedY && H > 0) {
+    const activeYValues = [top, bottom];
+    for (const frac of FRACTIONS) {
+      const posY = top + frac.value * H;
+      const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
+      if (!tooClose) {
+        activeYValues.push(posY);
+        if (Math.abs(y - posY) < threshold) {
+          targetY = posY;
+          snappedY = true;
+          guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
+          labels.push(frac.label);
+          break;
+        }
+      }
+    }
+  }
+
+  return { x: targetX, y: targetY, guides, labels };
 }
 
 interface AlignmentGuide {
@@ -530,7 +645,7 @@ export function ResultPanel({
   onUpdatePieceLabel, onUpdatePieceSheet, onAddSheetAndAssignPiece, onDeletePiece, onSmoothPiece,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
-  tutorialStep, refineMode, onRefineModeChange,
+  tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
   onUpdateSolderWidthMM, onUpdateSolderColor,
 }: ResultPanelProps) {
   const { t } = useTranslation();
@@ -574,6 +689,7 @@ export function ResultPanel({
 
   const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
   const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
+  const [activeSnapLabels, setActiveSnapLabels] = useState<string[]>([]);
 
   function updateHoverPoint(imageX: number, imageY: number, shiftPressed: boolean) {
     if (activeTool !== 'pen') return;
@@ -585,6 +701,7 @@ export function ResultPanel({
       setHoverSnapped(true);
       setActiveAlignmentGuides([]);
       setActiveLengthGuide(null);
+      setActiveSnapLabels([]);
       return;
     }
 
@@ -662,6 +779,22 @@ export function ResultPanel({
       alignmentGuides = align.guides;
     }
 
+    const edgeSnap = getCanvasSnapping(
+      finalX,
+      finalY,
+      project.patternCrop,
+      project.patternWidth,
+      project.patternHeight,
+      effectiveScaleRef.current,
+      t
+    );
+    finalX = edgeSnap.x;
+    finalY = edgeSnap.y;
+    if (edgeSnap.guides.length > 0) {
+      alignmentGuides = [...alignmentGuides, ...edgeSnap.guides];
+    }
+    setActiveSnapLabels(edgeSnap.labels);
+
     setHoverPoint([finalX, finalY]);
     setHoverSnapped(false);
     setActiveAlignmentGuides(alignmentGuides);
@@ -711,12 +844,28 @@ export function ResultPanel({
     setHoverSnapped(false);
     setActiveAlignmentGuides([]);
     setActiveLengthGuide(null);
+    setActiveSnapLabels([]);
   }
 
   useEffect(() => {
     onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
+
+  const onPenStatusChangeRef = useRef(onPenStatusChange);
+  onPenStatusChangeRef.current = onPenStatusChange;
+
+  const lastPoint = activePolygonPoints.length > 0 ? activePolygonPoints[activePolygonPoints.length - 1] : null;
+  useEffect(() => {
+    if (activeTool === 'pen') {
+      onPenStatusChangeRef.current?.({
+        coords: hoverPoint ? { x: hoverPoint[0], y: hoverPoint[1] } : null,
+        lastPoint: lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
+      });
+    } else {
+      onPenStatusChangeRef.current?.({ coords: null, lastPoint: null });
+    }
+  }, [hoverPoint, lastPoint, activeTool]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -765,6 +914,7 @@ export function ResultPanel({
           setActivePolygonPoints([]);
           setHoverPoint(null);
           setHoverSnapped(false);
+          setActiveSnapLabels([]);
         } else {
           handleToolChange('select');
         }
@@ -835,7 +985,6 @@ export function ResultPanel({
       const isShift = e.evt ? e.evt.shiftKey : false;
       let targetX = x;
       let targetY = y;
-
       const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
       if (snap) {
         targetX = snap[0];
@@ -892,6 +1041,20 @@ export function ResultPanel({
         );
         targetX = align.snapped[0];
         targetY = align.snapped[1];
+      }
+
+      if (!snap) {
+        const edgeSnap = getCanvasSnapping(
+          targetX,
+          targetY,
+          project.patternCrop,
+          project.patternWidth,
+          project.patternHeight,
+          vp.effectiveScale,
+          t
+        );
+        targetX = edgeSnap.x;
+        targetY = edgeSnap.y;
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
@@ -1028,6 +1191,7 @@ export function ResultPanel({
       lastMousePosRef.current = null;
       setActiveAlignmentGuides([]);
       setActiveLengthGuide(null);
+      setActiveSnapLabels([]);
     }
     if (id !== 'pencil') {
       setPencilPoints([]);
@@ -1333,6 +1497,12 @@ export function ResultPanel({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerLeave={() => {
+                if (activeTool === 'pen') {
+                  setHoverPoint(null);
+                  setActiveSnapLabels([]);
+                }
+              }}
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer>
@@ -1504,6 +1674,45 @@ export function ResultPanel({
                           />
                         );
                       })}
+
+                      {/* Snap Labels (Center, 1/3, etc.) */}
+                      {hoverPoint && activeSnapLabels.length > 0 && (
+                        <Group x={hoverPoint[0]} y={hoverPoint[1] - 18 / es} listening={false}>
+                          {(() => {
+                            const text = activeSnapLabels.join(' · ');
+                            const fontSize = 10.5 / es;
+                            const textWidth = text.length * (6 / es);
+                            const paddingX = 6 / es;
+                            const paddingY = 3.5 / es;
+                            const rectW = textWidth + paddingX * 2;
+                            const rectH = fontSize + paddingY * 2;
+                            return (
+                              <Group>
+                                <Rect
+                                  x={-rectW / 2}
+                                  y={-rectH / 2}
+                                  width={rectW}
+                                  height={rectH}
+                                  fill="rgba(40, 30, 15, 0.85)"
+                                  cornerRadius={4 / es}
+                                />
+                                <KonvaText
+                                  text={text}
+                                  fontSize={fontSize}
+                                  fontFamily='"Inter Tight", system-ui, -apple-system, sans-serif'
+                                  fill="#fffefa"
+                                  align="center"
+                                  verticalAlign="middle"
+                                  x={-rectW / 2}
+                                  y={-rectH / 2}
+                                  width={rectW}
+                                  height={rectH}
+                                />
+                              </Group>
+                            );
+                          })()}
+                        </Group>
+                      )}
                     </Group>
                   )}
                   {activeTool === 'pencil' && pencilPoints.length > 0 && (

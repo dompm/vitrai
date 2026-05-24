@@ -326,6 +326,10 @@ export function App() {
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
+  const [penStatus, setPenStatus] = useState<{
+    coords: { x: number; y: number } | null;
+    lastPoint: { x: number; y: number } | null;
+  }>({ coords: null, lastPoint: null });
   const tutorialLoadedRef = useRef(false);
   const preTutorialProjectRef = useRef<string | null>(null);
 
@@ -948,6 +952,18 @@ export function App() {
     e.preventDefault();
   };
 
+  const penSegment = (() => {
+    if (patternTool === 'pen' && penStatus.coords && penStatus.lastPoint) {
+      const dx = penStatus.coords.x - penStatus.lastPoint.x;
+      const dy = penStatus.coords.y - penStatus.lastPoint.y;
+      const lengthPx = Math.hypot(dx, dy);
+      let angle = Math.round((Math.atan2(-dy, dx) * 180) / Math.PI);
+      if (angle < 0) angle += 360;
+      return { lengthPx, angle };
+    }
+    return null;
+  })();
+
   return (
     <div 
       className="app" 
@@ -1146,6 +1162,7 @@ export function App() {
           tutorialStep={tutorialStep}
           refineMode={patternRefineMode}
           onRefineModeChange={setPatternRefineMode}
+          onPenStatusChange={setPenStatus}
           onUpdateSolderWidthMM={updateSolderWidthMM}
           onUpdateSolderColor={updateSolderColor}
         />
@@ -1241,6 +1258,32 @@ export function App() {
               ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
               : t('statusNoScale')}
           </span>
+          {patternTool === 'pen' && penStatus.coords && (
+            <>
+              <span className="status-bar-divider" />
+              <span>
+                {t('statusPenPosition')}: {penStatus.coords.x.toFixed(0)}, {penStatus.coords.y.toFixed(0)} px
+                {project.patternScale && project.patternScale.pxPerUnit > 0 && (
+                  ` (${(penStatus.coords.x / project.patternScale.pxPerUnit).toFixed(1)} × ${(penStatus.coords.y / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
+                )}
+              </span>
+              {penSegment && (
+                <>
+                  <span className="status-bar-divider" />
+                  <span>
+                    {t('statusPenLength')}: {penSegment.lengthPx.toFixed(0)} px
+                    {project.patternScale && project.patternScale.pxPerUnit > 0 && (
+                      ` (${(penSegment.lengthPx / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
+                    )}
+                  </span>
+                  <span className="status-bar-divider" />
+                  <span>
+                    {t('statusPenAngle')}: {penSegment.angle}°
+                  </span>
+                </>
+              )}
+            </>
+          )}
           {activeSheet && (
             <>
               <span className="status-bar-divider" />
