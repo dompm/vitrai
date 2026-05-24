@@ -181,13 +181,14 @@ export function Lamp3DPreview({ project }: Props) {
       color: 0xf7f1e3,
       side: THREE.DoubleSide,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.18,
+      depthWrite: false,
     });
     const shell = new THREE.Mesh(shellGeom, shellMat);
     group.add(shell);
 
     const edges = new THREE.EdgesGeometry(shellGeom, 1);
-    const wireMat = new THREE.LineBasicMaterial({ color: 0x5a5142, transparent: true, opacity: 0.55 });
+    const wireMat = new THREE.LineBasicMaterial({ color: 0x5a5142, transparent: true, opacity: 0.32 });
     group.add(new THREE.LineSegments(edges, wireMat));
 
     // ── Pieces, textured with their glass sheet ────────────────────────
