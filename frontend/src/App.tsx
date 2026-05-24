@@ -1243,7 +1243,7 @@ export function App() {
             pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
             onSelectPieces={selectPieces}
-            onUpdatePieceTransform={updatePieceTransform}
+            onTransformChange={updatePieceTransform}
             onUpdatePieceLabel={updatePieceLabel}
             onUpdatePieceSheet={updatePieceSheet}
             onUpdatePiecesSheet={updatePiecesSheet}
