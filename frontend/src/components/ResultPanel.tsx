@@ -173,6 +173,7 @@ interface ResultPanelProps {
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
+  downloadProgress?: number | null;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStartBlankCanvas: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
@@ -648,7 +649,7 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
   onUpdateSolderWidthMM, onUpdateSolderColor,
 }: ResultPanelProps) {
@@ -1391,8 +1392,8 @@ export function ResultPanel({
   const TOOLS = BASE_TOOLS
     .filter(tool => !IS_TOUCH || tool.id !== 'pan')
     .map(tool => {
-    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: !!isEncoding };
-    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: !!isAutoSegmenting || !!isEncoding };
+    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
+    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
     return tool;
   });
 

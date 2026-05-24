@@ -18,7 +18,7 @@ interface Tool {
   label: string;
   icon: React.ReactNode;
   disabled?: boolean;
-  loading?: boolean;
+  loading?: boolean | number;
   tooltip?: ToolTooltipData;
 }
 
@@ -67,13 +67,28 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
           >
             {tool.icon}
             <span className="tool-label">{tool.label}</span>
-            {tool.loading && (
+            {tool.loading !== undefined && tool.loading !== false && (
               <div style={{
                 position: 'absolute', inset: 0, display: 'flex',
                 alignItems: 'center', justifyContent: 'center',
                 background: 'rgba(255, 254, 250, 0.7)', borderRadius: 'inherit',
               }}>
-                <div className="spinner-tiny" />
+                {typeof tool.loading === 'number' ? (
+                  <svg width="18" height="18" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
+                    <circle cx="8" cy="8" r="6" stroke="var(--hairline-2)" strokeWidth="2" fill="none" />
+                    <circle 
+                      cx="8" cy="8" r="6" 
+                      stroke="var(--blue)" 
+                      strokeWidth="2" 
+                      fill="none" 
+                      strokeDasharray={2 * Math.PI * 6} 
+                      strokeDashoffset={(2 * Math.PI * 6) - (tool.loading * 2 * Math.PI * 6)} 
+                      style={{ transition: 'stroke-dashoffset 0.1s linear' }}
+                    />
+                  </svg>
+                ) : (
+                  <div className="spinner-tiny" />
+                )}
               </div>
             )}
           </button>
