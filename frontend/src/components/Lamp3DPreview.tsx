@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import type { Project, LampConfig, GlassSheet } from '../types';
-import { computeUnrolledLamp, patternToFacetUV } from '../utils/lampGeometry';
+import { computeUnrolledLamp, patternToSurface } from '../utils/lampGeometry';
 import { computeCentroid, flattenCurves } from '../utils/geometry';
 
 interface Props {
@@ -143,14 +143,16 @@ export function Lamp3DPreview({ project }: Props) {
       }
     }
 
-    const { facetCount: N, profilePoints } = config;
+    const { profilePoints } = config;
+    // Use a high segment count when smooth so the lamp reads as curved.
+    const N = config.smooth ? 48 : config.facetCount;
     const sheetById = new Map<string, GlassSheet>();
     project.sheets.forEach(s => sheetById.set(s.id, s));
 
     const requestRender = () =>
       (renderer as unknown as { _render?: () => void })._render?.();
 
-    // ── Lamp shell (parchment quads per facet) ─────────────────────────
+    // ── Lamp shell (parchment quads per segment around) ─────────────────
     const shellPositions: number[] = [];
     const shellIndices: number[] = [];
     let nextIdx = 0;
@@ -186,11 +188,44 @@ export function Lamp3DPreview({ project }: Props) {
     const shell = new THREE.Mesh(shellGeom, shellMat);
     group.add(shell);
 
-    const edges = new THREE.EdgesGeometry(shellGeom, 1);
-    const wireMat = new THREE.LineBasicMaterial({ color: 0x5a5142, transparent: true, opacity: 0.32 });
-    group.add(new THREE.LineSegments(edges, wireMat));
+    // Wireframe edges — skip in smooth mode where we don't want individual segment lines.
+    if (!config.smooth) {
+      const edges = new THREE.EdgesGeometry(shellGeom, 1);
+      const wireMat = new THREE.LineBasicMaterial({ color: 0x5a5142, transparent: true, opacity: 0.32 });
+      group.add(new THREE.LineSegments(edges, wireMat));
+    }
 
     // ── Pieces, textured with their glass sheet ────────────────────────
+    // Map a piece vertex (in pattern coords) to its 3D position on the lamp.
+    const vertexTo3D = (px: number, py: number): [number, number, number] | null => {
+      const surf = patternToSurface(px, py, unrolledLamp);
+      if (!surf) return null;
+      if (surf.tierIdx >= profilePoints.length - 1) return null;
+      const Rt = profilePoints[surf.tierIdx].r;
+      const Yt = profilePoints[surf.tierIdx].y;
+      const Rb = profilePoints[surf.tierIdx + 1].r;
+      const Yb = profilePoints[surf.tierIdx + 1].y;
+      if (surf.mode === 'faceted') {
+        const a0 = surf.facetIdx * (2 * Math.PI / N);
+        const a1 = (surf.facetIdx + 1) * (2 * Math.PI / N);
+        const v_tl = [Rt * Math.cos(a0), Yt, Rt * Math.sin(a0)];
+        const v_tr = [Rt * Math.cos(a1), Yt, Rt * Math.sin(a1)];
+        const v_br = [Rb * Math.cos(a1), Yb, Rb * Math.sin(a1)];
+        const v_bl = [Rb * Math.cos(a0), Yb, Rb * Math.sin(a0)];
+        const { u, v } = surf;
+        return [
+          (1 - v) * ((1 - u) * v_tl[0] + u * v_tr[0]) + v * ((1 - u) * v_bl[0] + u * v_br[0]),
+          (1 - v) * ((1 - u) * v_tl[1] + u * v_tr[1]) + v * ((1 - u) * v_bl[1] + u * v_br[1]),
+          (1 - v) * ((1 - u) * v_tl[2] + u * v_tr[2]) + v * ((1 - u) * v_bl[2] + u * v_br[2]),
+        ];
+      }
+      // smooth: direct parametric mapping on the lamp surface.
+      const theta = surf.theta01 * 2 * Math.PI;
+      const radius = Rt * (1 - surf.v) + Rb * surf.v;
+      const yLamp = Yt * (1 - surf.v) + Yb * surf.v;
+      return [radius * Math.cos(theta), yLamp, radius * Math.sin(theta)];
+    };
+
     for (const piece of project.pieces) {
       const flat = flattenCurves(piece.polygon, piece.curvePoints);
       if (flat.length < 3) continue;
@@ -209,30 +244,9 @@ export function Lamp3DPreview({ project }: Props) {
       const uvs: number[] = [];
       let skip = false;
       for (const [px, py] of flat) {
-        const uvFacet = patternToFacetUV(px, py, unrolledLamp);
-        if (!uvFacet || uvFacet.tierIdx >= profilePoints.length - 1) {
-          skip = true;
-          break;
-        }
-        const Rt = profilePoints[uvFacet.tierIdx].r;
-        const Yt = profilePoints[uvFacet.tierIdx].y;
-        const Rb = profilePoints[uvFacet.tierIdx + 1].r;
-        const Yb = profilePoints[uvFacet.tierIdx + 1].y;
-        const a0 = uvFacet.facetIdx * (2 * Math.PI / N);
-        const a1 = (uvFacet.facetIdx + 1) * (2 * Math.PI / N);
-        const v_tl = [Rt * Math.cos(a0), Yt, Rt * Math.sin(a0)];
-        const v_tr = [Rt * Math.cos(a1), Yt, Rt * Math.sin(a1)];
-        const v_br = [Rb * Math.cos(a1), Yb, Rb * Math.sin(a1)];
-        const v_bl = [Rb * Math.cos(a0), Yb, Rb * Math.sin(a0)];
-        const { u, v } = uvFacet;
-        positions.push(
-          (1 - v) * ((1 - u) * v_tl[0] + u * v_tr[0]) +
-            v * ((1 - u) * v_bl[0] + u * v_br[0]),
-          (1 - v) * ((1 - u) * v_tl[1] + u * v_tr[1]) +
-            v * ((1 - u) * v_bl[1] + u * v_br[1]),
-          (1 - v) * ((1 - u) * v_tl[2] + u * v_tr[2]) +
-            v * ((1 - u) * v_bl[2] + u * v_br[2]),
-        );
+        const pos = vertexTo3D(px, py);
+        if (!pos) { skip = true; break; }
+        positions.push(...pos);
 
         // Pattern → sheet via the piece transform, then sheet → UV.
         // V is flipped because three.js samples textures bottom-up.

@@ -1403,7 +1403,7 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {isLamp && unrolledLamp && unrolledLamp.strips.length > 0 ? (
+                  {isLamp && unrolledLamp && unrolledLamp.mode === 'faceted' && unrolledLamp.strips.length > 0 ? (
                     <>
                       {unrolledLamp.strips.map((strip, si) => (
                         <Line
@@ -1427,6 +1427,20 @@ export function ResultPanel({
                           />
                         ))
                       )}
+                    </>
+                  ) : isLamp && unrolledLamp && unrolledLamp.mode === 'smooth' && unrolledLamp.tiers.length > 0 ? (
+                    <>
+                      {unrolledLamp.tiers.map((tier, ti) => (
+                        <Line
+                          key={`smooth-tier-${ti}`}
+                          points={tier.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5 / es}
+                          listening={false}
+                        />
+                      ))}
                     </>
                   ) : (() => {
                     const cL = project.patternCrop.left;

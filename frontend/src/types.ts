@@ -69,6 +69,10 @@ export interface LampConfig {
   facetCount: number;
   profilePoints: LampProfilePoint[];
   activeTierIndex: number;
+  // When true, the lamp surface is treated as continuous: each tier unrolls to
+  // its true smooth shape (rectangle for a cylinder, annular sector for a cone)
+  // instead of N flat facets. `facetCount` is ignored except for visualization.
+  smooth?: boolean;
 }
 
 export interface Project {

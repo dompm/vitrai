@@ -686,7 +686,7 @@ export function useProject() {
       const merged = { ...prev.lampConfig, ...config };
       // Reflow pattern dimensions whenever the lamp's footprint changes.
       const geometryChanged =
-        config.facetCount !== undefined || config.profilePoints !== undefined;
+        config.facetCount !== undefined || config.profilePoints !== undefined || config.smooth !== undefined;
       if (!geometryChanged) {
         return { ...prev, lampConfig: merged };
       }

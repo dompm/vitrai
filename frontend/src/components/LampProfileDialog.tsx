@@ -49,13 +49,19 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
 export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm }: Props) {
   const { t } = useTranslation();
   const [facetCount, setFacetCount] = useState(initialConfig.facetCount);
+  const [smooth, setSmooth] = useState<boolean>(!!initialConfig.smooth);
   const [profilePoints, setProfilePoints] = useState<LampProfilePoint[]>(initialConfig.profilePoints);
   const [selectedIdx, setSelectedIdx] = useState<number>(0);
 
+  const FACET_MIN = 3;
+  const FACET_MAX = 24;
+  // The slider's effective range goes one tick past FACET_MAX to represent "Smooth".
+  const sliderValue = smooth ? FACET_MAX + 1 : facetCount;
+
   const previewProject = useMemo<Project>(() => ({
     ...project,
-    lampConfig: { facetCount, profilePoints, activeTierIndex: initialConfig.activeTierIndex },
-  }), [project, facetCount, profilePoints, initialConfig.activeTierIndex]);
+    lampConfig: { facetCount, profilePoints, activeTierIndex: initialConfig.activeTierIndex, smooth },
+  }), [project, facetCount, profilePoints, initialConfig.activeTierIndex, smooth]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -69,6 +75,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
     const preset = PRESETS[p];
     setProfilePoints(preset.profilePoints);
     setFacetCount(preset.facetCount);
+    setSmooth(false);
     setSelectedIdx(0);
   }
 
@@ -96,7 +103,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
   function commit() {
     // Sort top-to-bottom by y on commit so downstream geometry stays well-defined.
     const sorted = [...profilePoints].sort((a, b) => a.y - b.y);
-    onConfirm({ facetCount, profilePoints: sorted });
+    onConfirm({ facetCount, profilePoints: sorted, smooth });
   }
 
   return (
@@ -175,17 +182,31 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
               <label style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-soft)' }}>
                 {t('lampProfileFacets')}
               </label>
-              <span style={{ fontSize: 12, color: 'var(--text-bright)', fontVariantNumeric: 'tabular-nums' }}>{facetCount}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-bright)', fontVariantNumeric: 'tabular-nums' }}>
+                {smooth ? t('lampProfileSmooth') : facetCount}
+              </span>
             </div>
             <input
               type="range"
-              min={3}
-              max={24}
+              min={FACET_MIN}
+              max={FACET_MAX + 1}
               step={1}
-              value={facetCount}
-              onChange={e => setFacetCount(parseInt(e.target.value, 10))}
+              value={sliderValue}
+              onChange={e => {
+                const v = parseInt(e.target.value, 10);
+                if (v > FACET_MAX) {
+                  setSmooth(true);
+                } else {
+                  setSmooth(false);
+                  setFacetCount(v);
+                }
+              }}
               style={{ width: '100%' }}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-dim)' }}>
+              <span>{FACET_MIN}</span>
+              <span>{t('lampProfileSmooth')}</span>
+            </div>
           </div>
         </div>
 
