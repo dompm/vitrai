@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import type { Project, LampConfig, LampProfilePoint, Piece, GlassSheet } from '../types';
+import { computeUnrolledLamp, patternToFacetUV } from '../utils/lampGeometry';
+import { computeCentroid, flattenCurves } from '../utils/geometry';
 
 interface Props {
   project: Project;
@@ -86,86 +88,48 @@ export function Lamp3DPreview({
     setSelectedPointIdx(0);
   };
 
-  // Math: map unrolled 2D coordinates to 3D
-  const get3DCoords = useMemo(() => {
-    return (x: number, y: number, tierIndex: number, panelIdx: number): [number, number, number] => {
-      if (tierIndex >= profilePoints.length - 1) return [0, 0, 0];
-      const Rt = profilePoints[tierIndex].r;
-      const Yt = profilePoints[tierIndex].y;
-      const Rb = profilePoints[tierIndex + 1].r;
-      const Yb = profilePoints[tierIndex + 1].y;
+  const unrolledLamp = useMemo(() => computeUnrolledLamp(config), [config]);
 
-      const H = Yb - Yt;
-      const d_side = Math.hypot(Rb - Rt, H);
-      const d_top = 2 * Rt * Math.sin(Math.PI / N);
-      const d_bottom = 2 * Rb * Math.sin(Math.PI / N);
-
-      let u = 0;
-      let v = 0;
-
-      if (Math.abs(Rb - Rt) < 0.1) {
-        // Cylinder
-        const W = d_bottom;
-        const W_total = N * W;
-        const x_norm = x + W_total / 2;
-        const y_norm = y + d_side / 2;
-        const k = Math.min(Math.max(Math.floor(x_norm / W), 0), N - 1);
-        u = (x_norm - k * W) / W;
-        v = y_norm / d_side;
-      } else {
-        // Cone / Dome Segment
-        const phi = 2 * Math.asin(Math.abs(d_bottom - d_top) / (2 * d_side));
-        const A_total = N * phi;
-        const d = Math.hypot(x, y);
-        const alpha = Math.atan2(x, -y);
-        const theta_rel = alpha + A_total / 2;
-        const k = Math.min(Math.max(Math.floor(theta_rel / phi), 0), N - 1);
-        u = (theta_rel - k * phi) / phi;
-
-        if (Rb > Rt) {
-          const r_top = d_top * d_side / (d_bottom - d_top);
-          const r_bottom = r_top + d_side;
-          v = (d - r_top) / (r_bottom - r_top);
-        } else {
-          const r_bottom = d_bottom * d_side / (d_top - d_bottom);
-          const r_top = r_bottom + d_side;
-          v = (r_top - d) / (r_top - r_bottom);
-        }
-      }
-
-      u = Math.min(Math.max(u, 0), 1);
-      v = Math.min(Math.max(v, 0), 1);
-
-      // Now map to 3D space on the specific panelIdx
-      const theta_start = panelIdx * (2 * Math.PI / N);
-      const theta_end = (panelIdx + 1) * (2 * Math.PI / N);
-
-      // Top-Left, Top-Right, Bottom-Right, Bottom-Left vertices
+  // Map a pattern-coord point onto the 3D lamp surface using the unrolled metadata.
+  const vertexTo3D = useMemo(() => {
+    return (px: number, py: number): { pos: [number, number, number]; tierIdx: number; facetIdx: number } | null => {
+      const uv = patternToFacetUV(px, py, unrolledLamp);
+      if (!uv) return null;
+      const { tierIdx, facetIdx, u, v } = uv;
+      if (tierIdx >= profilePoints.length - 1) return null;
+      const Rt = profilePoints[tierIdx].r;
+      const Yt = profilePoints[tierIdx].y;
+      const Rb = profilePoints[tierIdx + 1].r;
+      const Yb = profilePoints[tierIdx + 1].y;
+      const theta_start = facetIdx * (2 * Math.PI / N);
+      const theta_end = (facetIdx + 1) * (2 * Math.PI / N);
       const v_tl: [number, number, number] = [Rt * Math.cos(theta_start), Yt, Rt * Math.sin(theta_start)];
       const v_tr: [number, number, number] = [Rt * Math.cos(theta_end), Yt, Rt * Math.sin(theta_end)];
       const v_br: [number, number, number] = [Rb * Math.cos(theta_end), Yb, Rb * Math.sin(theta_end)];
       const v_bl: [number, number, number] = [Rb * Math.cos(theta_start), Yb, Rb * Math.sin(theta_start)];
-
-      // Bilinear interpolation
-      const p_top = [
+      const p_top: [number, number, number] = [
         (1 - u) * v_tl[0] + u * v_tr[0],
         (1 - u) * v_tl[1] + u * v_tr[1],
         (1 - u) * v_tl[2] + u * v_tr[2],
       ];
-      const p_bottom = [
+      const p_bot: [number, number, number] = [
         (1 - u) * v_bl[0] + u * v_br[0],
         (1 - u) * v_bl[1] + u * v_br[1],
         (1 - u) * v_bl[2] + u * v_br[2],
       ];
-
-      return [
-        (1 - v) * p_top[0] + v * p_bottom[0],
-        (1 - v) * p_top[1] + v * p_bottom[1],
-        (1 - v) * p_top[2] + v * p_bottom[2],
-      ];
+      return {
+        pos: [
+          (1 - v) * p_top[0] + v * p_bot[0],
+          (1 - v) * p_top[1] + v * p_bot[1],
+          (1 - v) * p_top[2] + v * p_bot[2],
+        ],
+        tierIdx,
+        facetIdx,
+      };
     };
-  }, [N, profilePoints]);
+  }, [unrolledLamp, profilePoints, N]);
 
+  // Math: map unrolled 2D coordinates to 3D
   // Project 3D coordinate to 2D Screen Space
   const projectPoint = (
     p: [number, number, number],
@@ -242,6 +206,8 @@ export function Lamp3DPreview({
 
     const isSmooth = N === 32;
 
+    const faceByKey = new Map<string, typeof faces[number]>();
+
     for (let t = 0; t < profilePoints.length - 1; t++) {
       const Rt = profilePoints[t].r;
       const Yt = profilePoints[t].y;
@@ -265,32 +231,35 @@ export function Lamp3DPreview({
 
         const avgDepth = (s_tl.depth + s_tr.depth + s_br.depth + s_bl.depth) / 4;
 
-        // Gather all pieces belonging to this tier and project them to this panel
-        const tierPieces = project.pieces.filter(
-          p => (p.tierIndex === t || (!p.tierIndex && t === 0))
-        );
-
-        const projectedPieces = tierPieces.map(piece => {
-          // Wrap the 2D polygon of this piece to 3D and project to screen
-          const poly3d = piece.polygon.map(([px, py]) => get3DCoords(px, py, t, i));
-          const poly2d = poly3d.map(pt => projectPoint(pt, width, height));
-          const color = sheetColorMap.get(piece.glassSheetId) || '#cccccc';
-
-          return {
-            piece,
-            poly2d,
-            color,
-          };
-        });
-
-        faces.push({
+        const face = {
           tierIdx: t,
           panelIdx: i,
           depth: avgDepth,
           poly2d: [s_tl, s_tr, s_br, s_bl],
-          pieces: projectedPieces,
-        });
+          pieces: [],
+        } as (typeof faces)[number];
+        faces.push(face);
+        faceByKey.set(`${t},${i}`, face);
       }
+    }
+
+    // Assign each piece to its home facet (by centroid). Each vertex is mapped
+    // to 3D individually, so pieces that span facets stay roughly visible
+    // (with some distortion at facet seams).
+    for (const piece of project.pieces) {
+      const flat = flattenCurves(piece.polygon, piece.curvePoints);
+      if (flat.length < 3) continue;
+      const centroid = computeCentroid(flat);
+      const home = patternToFacetUV(centroid.x, centroid.y, unrolledLamp);
+      if (!home) continue;
+      const face = faceByKey.get(`${home.tierIdx},${home.facetIdx}`);
+      if (!face) continue;
+
+      const poly3d = flat.map(([x, y]) => vertexTo3D(x, y)?.pos ?? null);
+      if (poly3d.some(p => p === null)) continue;
+      const poly2d = (poly3d as [number, number, number][]).map(p => projectPoint(p, width, height));
+      const color = sheetColorMap.get(piece.glassSheetId) || '#cccccc';
+      face.pieces.push({ piece, poly2d, color });
     }
 
     // Depth Sorting (Painter's Algorithm) — Back-to-Front

@@ -15,7 +15,35 @@ export interface UnrolledTier {
   outline: [number, number][];
   // Slanted seams between adjacent facets within the tier.
   facetSeams: { x1: number; y1: number; x2: number; y2: number }[];
+  // Layout metadata for reverse-projection (pattern coords → tier-local u,v).
+  meta: TierMeta;
 }
+
+export type TierMeta =
+  | {
+      type: 'cylinder';
+      tierIdx: number;
+      // Top-left corner of the tier rectangle in pattern coords.
+      leftX: number;
+      topY: number;
+      chordWidth: number; // 2 * R * sin(pi/N), one facet wide
+      tierHeight: number;
+      facetCount: number;
+    }
+  | {
+      type: 'cone';
+      tierIdx: number;
+      apexX: number;
+      apexY: number;
+      // bisectorSign = +1 if apex is above the layout (lamp's small radius at top),
+      //              = -1 if apex is below the layout (lamp's small radius at bottom).
+      bisectorSign: 1 | -1;
+      L_top: number;
+      L_bot: number;
+      phi: number;   // angle per facet, in radians
+      theta: number; // total fan angle = N * phi
+      facetCount: number;
+    };
 
 const PAD = 40;
 
@@ -23,6 +51,7 @@ interface TierLayout {
   topPolyline: [number, number][];   // N+1 points across the top edge
   bottomPolyline: [number, number][]; // N+1 points across the bottom edge
   bottomCenterY: number;              // y of the tier's bottom centerline (for stacking)
+  meta: TierMeta;
 }
 
 // Lay out a single conical/cylindrical tier in flat pattern coords.
@@ -32,12 +61,12 @@ function unrollTier(
   Rb: number,
   H: number,
   N: number,
+  tierIdx: number,
   centerX: number,
   topY: number,
 ): TierLayout {
   const sinPiN = Math.sin(Math.PI / N);
   const topChord = 2 * Rt * sinPiN;
-  const botChord = 2 * Rb * sinPiN;
 
   // Cylinder: each facet is a rectangle. Lay them out side-by-side.
   if (Math.abs(Rt - Rb) < 1e-6) {
@@ -49,7 +78,20 @@ function unrollTier(
       topPolyline.push([x, topY]);
       bottomPolyline.push([x, topY + H]);
     }
-    return { topPolyline, bottomPolyline, bottomCenterY: topY + H };
+    return {
+      topPolyline,
+      bottomPolyline,
+      bottomCenterY: topY + H,
+      meta: {
+        type: 'cylinder',
+        tierIdx,
+        leftX: centerX - totalW / 2,
+        topY,
+        chordWidth: topChord,
+        tierHeight: H,
+        facetCount: N,
+      },
+    };
   }
 
   // Cone frustum: each facet fans out from the apex by phiPerFacet radians.
@@ -63,7 +105,7 @@ function unrollTier(
   // bisectorSign +1 = apex above the layout (bisector points down). This is the case when
   // the small-radius end of the cone is at the top. For Rt > Rb (narrows downward), the
   // apex sits below the layout and the bisector points up.
-  const bisectorSign = Rt < Rb ? +1 : -1;
+  const bisectorSign: 1 | -1 = Rt < Rb ? +1 : -1;
   const apexY = topY - bisectorSign * L_top;
 
   const startAngle = -theta / 2;
@@ -79,7 +121,23 @@ function unrollTier(
   }
   // Note: the center of the bottom polyline sits at (centerX, topY + L)
   // regardless of whether bisectorSign is +1 or -1.
-  return { topPolyline, bottomPolyline, bottomCenterY: topY + L };
+  return {
+    topPolyline,
+    bottomPolyline,
+    bottomCenterY: topY + L,
+    meta: {
+      type: 'cone',
+      tierIdx,
+      apexX: centerX,
+      apexY,
+      bisectorSign,
+      L_top,
+      L_bot,
+      phi,
+      theta,
+      facetCount: N,
+    },
+  };
 }
 
 export function computeUnrolledLamp(config: LampConfig | undefined | null): UnrolledLamp {
@@ -98,7 +156,7 @@ export function computeUnrolledLamp(config: LampConfig | undefined | null): Unro
     const Rt = profilePoints[t].r;
     const Rb = profilePoints[t + 1].r;
     const H = profilePoints[t + 1].y - profilePoints[t].y;
-    const layout = unrollTier(Rt, Rb, H, N, 0, topY);
+    const layout = unrollTier(Rt, Rb, H, N, t, 0, topY);
 
     // Facet seams = the lines connecting topPolyline[k] to bottomPolyline[k] for k = 1..N-1.
     const facetSeams: UnrolledTier['facetSeams'] = [];
@@ -143,10 +201,55 @@ export function computeUnrolledLamp(config: LampConfig | undefined | null): Unro
       x1: s.x1 + dx, y1: s.y1 + dy,
       x2: s.x2 + dx, y2: s.y2 + dy,
     }));
-    return { outline, facetSeams };
+    const meta: TierMeta = c.meta.type === 'cylinder'
+      ? { ...c.meta, leftX: c.meta.leftX + dx, topY: c.meta.topY + dy }
+      : { ...c.meta, apexX: c.meta.apexX + dx, apexY: c.meta.apexY + dy };
+    return { outline, facetSeams, meta };
   });
 
   return { width, height, tiers };
+}
+
+// Reverse-project a pattern-space point onto the unrolled lamp surface,
+// returning the tier + facet it lies on plus (u, v) facet-local coords.
+// u runs 0→1 left-to-right across a facet, v runs 0→1 top-to-bottom.
+// Returns null if the point lies outside every tier polygon.
+export function patternToFacetUV(
+  px: number,
+  py: number,
+  unrolled: UnrolledLamp,
+): { tierIdx: number; facetIdx: number; u: number; v: number } | null {
+  for (const tier of unrolled.tiers) {
+    const m = tier.meta;
+    if (m.type === 'cylinder') {
+      const uTotal = (px - m.leftX) / m.chordWidth;
+      const v = (py - m.topY) / m.tierHeight;
+      if (uTotal < 0 || uTotal > m.facetCount || v < 0 || v > 1) continue;
+      const facetIdx = Math.min(m.facetCount - 1, Math.max(0, Math.floor(uTotal)));
+      const u = uTotal - facetIdx;
+      return { tierIdx: m.tierIdx, facetIdx, u, v };
+    }
+    // cone
+    const dx = px - m.apexX;
+    const dy = py - m.apexY;
+    const d = Math.hypot(dx, dy);
+    if (d < 1e-6) continue;
+    // Angle of (dx, dy) relative to the bisector. The bisector vector is (0, bisectorSign).
+    // Use atan2 of the cross / dot of (dx, dy) against the bisector to get a signed angle.
+    const bisX = 0;
+    const bisY = m.bisectorSign;
+    const cross = bisX * dy - bisY * dx;
+    const dot = bisX * dx + bisY * dy;
+    const angleRel = Math.atan2(cross, dot);
+    if (angleRel < -m.theta / 2 || angleRel > m.theta / 2) continue;
+    const v = (d - m.L_top) / (m.L_bot - m.L_top);
+    if (v < -0.05 || v > 1.05) continue; // small tolerance
+    const vClamped = Math.max(0, Math.min(1, v));
+    const facetIdx = Math.min(m.facetCount - 1, Math.max(0, Math.floor((angleRel + m.theta / 2) / m.phi)));
+    const u = (angleRel + m.theta / 2 - facetIdx * m.phi) / m.phi;
+    return { tierIdx: m.tierIdx, facetIdx, u, v: vClamped };
+  }
+  return null;
 }
 
 // Project the cursor onto the closest seam line on the unrolled lamp surface,
