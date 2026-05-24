@@ -76,6 +76,12 @@ export function packPiecesOnSheet(
       cursorY += rowHeight;
       rowHeight = 0;
     }
+    // If the new row would spill past the bottom, wrap back to the top so
+    // overflow pieces overlap earlier rows on the sheet instead of falling
+    // off the cropped area entirely.
+    if (cursorY + r.h > usableH) {
+      cursorY = 0;
+    }
     placements.push({
       pieceId: r.pieceId,
       x: originX + cursorX + r.centroidOffsetX,
@@ -84,10 +90,6 @@ export function packPiecesOnSheet(
     cursorX += r.w;
     if (r.h > rowHeight) rowHeight = r.h;
   }
-
-  // Pieces that overflow vertically just sit past the bottom of the usable area —
-  // the user gets visual feedback that the sheet is too small and can react.
-  void usableH;
 
   return placements;
 }
