@@ -1403,12 +1403,12 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {isLamp && unrolledLamp && unrolledLamp.tiers.length > 0 ? (
+                  {isLamp && unrolledLamp && unrolledLamp.strips.length > 0 ? (
                     <>
-                      {unrolledLamp.tiers.map((tier, ti) => (
+                      {unrolledLamp.strips.map((strip, si) => (
                         <Line
-                          key={`tier-poly-${ti}`}
-                          points={tier.outline.flat()}
+                          key={`strip-poly-${si}`}
+                          points={strip.outline.flat()}
                           closed
                           fill="#fffefa"
                           stroke="rgba(40, 30, 15, 0.32)"
@@ -1416,12 +1416,12 @@ export function ResultPanel({
                           listening={false}
                         />
                       ))}
-                      {unrolledLamp.tiers.map((tier, ti) =>
-                        tier.facetSeams.map((s, i) => (
+                      {unrolledLamp.strips.map((strip, si) =>
+                        strip.tierSeams.map((s, i) => (
                           <Line
-                            key={`facet-${ti}-${i}`}
+                            key={`tierseam-${si}-${i}`}
                             points={[s.x1, s.y1, s.x2, s.y2]}
-                            stroke="rgba(40, 30, 15, 0.14)"
+                            stroke="rgba(40, 30, 15, 0.18)"
                             strokeWidth={0.8 / es}
                             listening={false}
                           />
