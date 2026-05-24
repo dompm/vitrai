@@ -321,6 +321,8 @@ export function App() {
     deleteProject,
     saveStatus,
     retrySave,
+    isSymmetryEnabled,
+    setIsSymmetryEnabled,
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
@@ -1168,6 +1170,8 @@ export function App() {
             onUpdateSolderWidthMM={updateSolderWidthMM}
             onUpdateSolderColor={updateSolderColor}
             onOpenLampProfile={isLamp ? (() => setLampProfileDialog({ isFirstTime: false })) : undefined}
+            isSymmetryEnabled={isSymmetryEnabled}
+            onToggleSymmetry={setIsSymmetryEnabled}
           />
       </div>
 

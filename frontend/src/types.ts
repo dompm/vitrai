@@ -45,6 +45,8 @@ export interface Piece {
   promptBox?: BoundingBox;
   promptPoints?: PromptPoint[];
   tierIndex?: number;          // if present, this piece belongs to a lamp tier
+  facetIndex?: number;         // column index for symmetry mirroring
+  symmetryGroupId?: string;    // links symmetrical duplicates
 }
 
 export interface GlassSheet {

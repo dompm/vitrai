@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { LampConfig, LampProfilePoint, Project } from '../types';
 import { Lamp3DPreview } from './Lamp3DPreview';
+import { computeUnrolledLamp, reflowLampPoints } from '../utils/lampGeometry';
 
 interface Props {
   project: Project;
@@ -11,11 +12,12 @@ interface Props {
   onConfirm: (config: Partial<LampConfig>) => void;
 }
 
-type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid';
+type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid' | 'tulip';
 
-const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePoint[] }> = {
+const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePoint[]; smooth?: boolean }> = {
   cylinder: {
     facetCount: 6,
+    smooth: true,
     profilePoints: [
       { r: 80, y: 0 },
       { r: 80, y: 200 },
@@ -23,6 +25,7 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
   },
   cone: {
     facetCount: 12,
+    smooth: true,
     profilePoints: [
       { r: 40, y: 0 },
       { r: 120, y: 200 },
@@ -30,18 +33,31 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
   },
   dome: {
     facetCount: 12,
+    smooth: false,
     profilePoints: [
-      { r: 20, y: 0 },
-      { r: 80, y: 60 },
-      { r: 100, y: 140 },
-      { r: 60, y: 200 },
+      { r: 40, y: 0 },
+      { r: 80, y: 40 },
+      { r: 110, y: 100 },
+      { r: 120, y: 160 },
     ],
   },
   pyramid: {
     facetCount: 4,
+    smooth: false,
     profilePoints: [
-      { r: 10, y: 0 },
+      { r: 20, y: 0 },
       { r: 120, y: 200 },
+    ],
+  },
+  tulip: {
+    facetCount: 12,
+    smooth: false,
+    profilePoints: [
+      { r: 30, y: 0 },
+      { r: 25, y: 30 },
+      { r: 70, y: 100 },
+      { r: 110, y: 160 },
+      { r: 120, y: 180 },
     ],
   },
 };
@@ -58,10 +74,60 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
   // The slider's effective range goes one tick past FACET_MAX to represent "Smooth".
   const sliderValue = smooth ? FACET_MAX + 1 : facetCount;
 
-  const previewProject = useMemo<Project>(() => ({
-    ...project,
-    lampConfig: { facetCount, profilePoints, activeTierIndex: initialConfig.activeTierIndex, smooth },
-  }), [project, facetCount, profilePoints, initialConfig.activeTierIndex, smooth]);
+  const previewProject = useMemo<Project>(() => {
+    const mergedConfig = { facetCount, profilePoints, activeTierIndex: initialConfig.activeTierIndex, smooth };
+    if (!project.lampConfig) return { ...project, lampConfig: mergedConfig };
+
+    const oldN = project.lampConfig.facetCount;
+    const newN = mergedConfig.facetCount;
+    const oldUnrolled = computeUnrolledLamp(project.lampConfig);
+    const newUnrolled = computeUnrolledLamp(mergedConfig);
+
+    const reflowedPieces = project.pieces.map(piece => {
+      const newPolygon = reflowLampPoints(piece.polygon, oldUnrolled, newUnrolled, oldN, newN);
+
+      const newCurvePoints = piece.curvePoints?.map(cp => {
+        const [newCtrl] = reflowLampPoints([cp.ctrl], oldUnrolled, newUnrolled, oldN, newN);
+        return { ...cp, ctrl: newCtrl };
+      });
+
+      const newPromptPoints = piece.promptPoints?.map(pt => {
+        const [newPt] = reflowLampPoints([[pt.x, pt.y]], oldUnrolled, newUnrolled, oldN, newN);
+        return { ...pt, x: newPt[0], y: newPt[1] };
+      });
+
+      let newPromptBox = piece.promptBox;
+      if (piece.promptBox) {
+        const [p1, p2] = reflowLampPoints(
+          [[piece.promptBox.x1, piece.promptBox.y1], [piece.promptBox.x2, piece.promptBox.y2]],
+          oldUnrolled,
+          newUnrolled,
+          oldN,
+          newN
+        );
+        newPromptBox = {
+          x1: Math.min(p1[0], p2[0]),
+          y1: Math.min(p1[1], p2[1]),
+          x2: Math.max(p1[0], p2[0]),
+          y2: Math.max(p1[1], p2[1]),
+        };
+      }
+
+      return {
+        ...piece,
+        polygon: newPolygon,
+        curvePoints: newCurvePoints,
+        promptPoints: newPromptPoints,
+        promptBox: newPromptBox,
+      };
+    });
+
+    return {
+      ...project,
+      lampConfig: mergedConfig,
+      pieces: reflowedPieces,
+    };
+  }, [project, facetCount, profilePoints, initialConfig.activeTierIndex, smooth]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -75,12 +141,15 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
     const preset = PRESETS[p];
     setProfilePoints(preset.profilePoints);
     setFacetCount(preset.facetCount);
-    setSmooth(false);
+    setSmooth(!!preset.smooth);
     setSelectedIdx(0);
   }
 
   function updatePoint(idx: number, patch: Partial<LampProfilePoint>) {
-    setProfilePoints(prev => prev.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+    setProfilePoints(prev => prev.map((p, i) => {
+      if (i !== idx) return p;
+      return { ...p, ...patch, y: patch.y ?? p.y };
+    }));
   }
 
   function addPointAfter(idx: number) {
@@ -252,7 +321,10 @@ function ProfileEditor({
 }: ProfileEditorProps) {
   const W = 360;
   const H = 240;
-  const PAD = 14;
+  const PAD_LEFT = 32;
+  const PAD_RIGHT = 16;
+  const PAD_TOP = 12;
+  const PAD_BOTTOM = 22;
   const GRID_MM = 50;       // single grid step (mm) — coarse, no minor grid
   const SNAP_GRID_MM = 10;  // grid snap resolution (mm)
   const SNAP_PX = 8;        // align-to-other-handle threshold (screen px)
@@ -268,13 +340,13 @@ function ProfileEditor({
   const viewMinY = Math.min(0, dataMinY);
   const viewMaxY = Math.max(viewMinY + GRID_MM * 3, round(dataMaxY + 20, GRID_MM));
 
-  const sx = (W - 2 * PAD) / viewMaxR;
-  const sy = (H - 2 * PAD) / (viewMaxY - viewMinY);
+  const sx = (W - PAD_LEFT - PAD_RIGHT) / viewMaxR;
+  const sy = (H - PAD_TOP - PAD_BOTTOM) / (viewMaxY - viewMinY);
 
-  const toSx = (r: number) => PAD + r * sx;
-  const toSy = (y: number) => PAD + (y - viewMinY) * sy;
-  const fromSx = (xPx: number) => (xPx - PAD) / sx;
-  const fromSy = (yPx: number) => viewMinY + (yPx - PAD) / sy;
+  const toSx = (r: number) => PAD_LEFT + r * sx;
+  const toSy = (y: number) => PAD_TOP + (y - viewMinY) * sy;
+  const fromSx = (xPx: number) => (xPx - PAD_LEFT) / sx;
+  const fromSy = (yPx: number) => viewMinY + (yPx - PAD_TOP) / sy;
 
   const svgRef = useRef<SVGSVGElement>(null);
   const [activeGuides, setActiveGuides] = useState<{ v?: number; h?: number }>({});
@@ -344,7 +416,7 @@ function ProfileEditor({
   }
 
   const polylinePts = profilePoints.map(p => `${toSx(p.r)},${toSy(p.y)}`).join(' ');
-  const mirroredPts = profilePoints.map(p => `${2 * PAD - toSx(p.r)},${toSy(p.y)}`).join(' ');
+  const mirroredPts = profilePoints.map(p => `${2 * PAD_LEFT - toSx(p.r)},${toSy(p.y)}`).join(' ');
 
   const selected = profilePoints[selectedIdx];
 
@@ -368,9 +440,9 @@ function ProfileEditor({
           <line
             key={`gr-${r}`}
             x1={toSx(r)}
-            y1={PAD}
+            y1={PAD_TOP}
             x2={toSx(r)}
-            y2={H - PAD}
+            y2={H - PAD_BOTTOM}
             stroke="rgba(40, 30, 15, 0.10)"
             strokeWidth={1}
           />
@@ -378,22 +450,48 @@ function ProfileEditor({
         {yTicks.map(y => (
           <line
             key={`gy-${y}`}
-            x1={PAD}
+            x1={PAD_LEFT}
             y1={toSy(y)}
-            x2={W - PAD}
+            x2={W - PAD_RIGHT}
             y2={toSy(y)}
             stroke="rgba(40, 30, 15, 0.10)"
             strokeWidth={1}
           />
         ))}
 
+        {/* Axis Ticks/Labels */}
+        {rTicks.map(r => (
+          <text
+            key={`lbl-r-${r}`}
+            x={toSx(r)}
+            y={H - PAD_BOTTOM + 13}
+            textAnchor="middle"
+            fill="var(--text-dim)"
+            style={{ fontSize: 9, fontFamily: 'var(--font-sans, sans-serif)', opacity: 0.6 }}
+          >
+            {r}
+          </text>
+        ))}
+        {yTicks.map(y => (
+          <text
+            key={`lbl-y-${y}`}
+            x={PAD_LEFT - 6}
+            y={toSy(y) + 3}
+            textAnchor="end"
+            fill="var(--text-dim)"
+            style={{ fontSize: 9, fontFamily: 'var(--font-sans, sans-serif)', opacity: 0.6 }}
+          >
+            {y}
+          </text>
+        ))}
+
         {/* Active alignment guides */}
         {activeGuides.v !== undefined && (
           <line
             x1={toSx(activeGuides.v)}
-            y1={PAD - 4}
+            y1={PAD_TOP - 4}
             x2={toSx(activeGuides.v)}
-            y2={H - PAD + 4}
+            y2={H - PAD_BOTTOM + 4}
             stroke="var(--amber)"
             strokeWidth={1}
             strokeDasharray="4 3"
@@ -401,9 +499,9 @@ function ProfileEditor({
         )}
         {activeGuides.h !== undefined && (
           <line
-            x1={PAD - 4}
+            x1={PAD_LEFT - 4}
             y1={toSy(activeGuides.h)}
-            x2={W - PAD + 4}
+            x2={W - PAD_RIGHT + 4}
             y2={toSy(activeGuides.h)}
             stroke="var(--amber)"
             strokeWidth={1}
@@ -491,15 +589,17 @@ interface NumberFieldProps {
   label: string;
   value: number;
   onChange: (value: number) => void;
+  disabled?: boolean;
 }
 
-function NumberField({ label, value, onChange }: NumberFieldProps) {
+function NumberField({ label, value, onChange, disabled }: NumberFieldProps) {
   return (
-    <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+    <label style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: disabled ? 0.5 : 1 }}>
       <span style={{ fontSize: 12, color: 'var(--text-soft)', width: 56 }}>{label}</span>
       <input
         type="number"
         value={value}
+        disabled={disabled}
         onChange={e => {
           const n = parseFloat(e.target.value);
           if (!Number.isNaN(n)) onChange(n);

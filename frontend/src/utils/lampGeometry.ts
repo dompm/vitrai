@@ -368,3 +368,180 @@ export function getLampSnapPoints(unrolled: UnrolledLamp): [number, number][] {
   }
   return out;
 }
+
+// Robust conversion helpers for reflowing pieces on geometry change.
+export function patternToSurfaceRobust(
+  px: number,
+  py: number,
+  unrolled: UnrolledLamp,
+  N: number,
+): { tierIdx: number; facetIdx: number; u: number; v: number; theta01: number } {
+  let tierIdx = 0;
+  let v = 0.5;
+
+  if (unrolled.mode === 'faceted') {
+    let bestTierIdx = 0;
+    let bestDistY = Infinity;
+    let bestV = 0.5;
+
+    const refStrip = unrolled.strips[0];
+    if (refStrip) {
+      for (let t = 0; t < refStrip.tiers.length; t++) {
+        const tier = refStrip.tiers[t];
+        const midY = (tier.topY + tier.botY) / 2;
+        const dist = Math.abs(py - midY);
+        if (dist < bestDistY) {
+          bestDistY = dist;
+          bestTierIdx = t;
+          const tierH = Math.max(1e-6, tier.botY - tier.topY);
+          bestV = Math.max(0, Math.min(1, (py - tier.topY) / tierH));
+        }
+      }
+    }
+    tierIdx = bestTierIdx;
+    v = bestV;
+
+    let bestFacetIdx = 0;
+    let bestDistX = Infinity;
+    let bestU = 0.5;
+
+    for (const strip of unrolled.strips) {
+      const tier = strip.tiers[tierIdx];
+      if (!tier) continue;
+      const widthAtV = tier.topChord * (1 - v) + tier.botChord * v;
+      const leftAtV = strip.centerX - widthAtV / 2;
+      const u = (px - leftAtV) / Math.max(1e-6, widthAtV);
+      const uClamped = Math.max(0, Math.min(1, u));
+      const dist = Math.abs(px - (strip.centerX + (uClamped - 0.5) * widthAtV));
+      if (dist < bestDistX) {
+        bestDistX = dist;
+        bestFacetIdx = strip.facetIdx;
+        bestU = uClamped;
+      }
+    }
+
+    return {
+      tierIdx,
+      facetIdx: bestFacetIdx,
+      u: bestU,
+      v,
+      theta01: (bestFacetIdx + bestU) / N,
+    };
+  } else {
+    let bestTierIdx = 0;
+    let bestDistY = Infinity;
+    let bestV = 0.5;
+    let bestTheta01 = 0.5;
+
+    for (let t = 0; t < unrolled.tiers.length; t++) {
+      const tier = unrolled.tiers[t];
+      const m = tier.meta;
+      if (m.type === 'cylinder') {
+        const midY = m.topY + m.height / 2;
+        const dist = Math.abs(py - midY);
+        if (dist < bestDistY) {
+          bestDistY = dist;
+          bestTierIdx = t;
+          bestV = Math.max(0, Math.min(1, (py - m.topY) / m.height));
+          bestTheta01 = Math.max(0, Math.min(1, (px - m.leftX) / m.width));
+        }
+      } else {
+        const dx = px - m.apexX;
+        const dy = py - m.apexY;
+        const d = Math.hypot(dx, dy);
+        const midD = (m.L_top + m.L_bot) / 2;
+        const dist = Math.abs(d - midD);
+        if (dist < bestDistY) {
+          bestDistY = dist;
+          bestTierIdx = t;
+          bestV = Math.max(0, Math.min(1, (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top)));
+          const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+          bestTheta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
+        }
+      }
+    }
+
+    const facetIdxFloat = bestTheta01 * N;
+    const facetIdx = Math.min(Math.max(Math.floor(facetIdxFloat), 0), N - 1);
+    const u = facetIdxFloat - facetIdx;
+
+    return {
+      tierIdx: bestTierIdx,
+      facetIdx,
+      u,
+      v: bestV,
+      theta01: bestTheta01,
+    };
+  }
+}
+
+export function surfaceToPatternRobust(
+  tierIdx: number,
+  facetIdx: number,
+  u: number,
+  v: number,
+  theta01: number,
+  unrolled: UnrolledLamp,
+  N: number,
+): [number, number] {
+  if (unrolled.mode === 'faceted') {
+    const newFacetIdx = Math.min(Math.max(facetIdx, 0), N - 1);
+    const strip = unrolled.strips[newFacetIdx];
+    if (!strip) return [0, 0];
+
+    const tIdx = Math.min(Math.max(tierIdx, 0), strip.tiers.length - 1);
+    const tier = strip.tiers[tIdx];
+    if (!tier) return [0, 0];
+
+    const widthAtV = tier.topChord * (1 - v) + tier.botChord * v;
+    const x = strip.centerX + (u - 0.5) * widthAtV;
+    const y = tier.topY + v * (tier.botY - tier.topY);
+    return [x, y];
+  } else {
+    const tIdx = Math.min(Math.max(tierIdx, 0), unrolled.tiers.length - 1);
+    const tier = unrolled.tiers[tIdx];
+    if (!tier) return [0, 0];
+
+    const m = tier.meta;
+    if (m.type === 'cylinder') {
+      const x = m.leftX + theta01 * m.width;
+      const y = m.topY + v * m.height;
+      return [x, y];
+    } else {
+      const d = m.L_top + v * (m.L_bot - m.L_top);
+      const angleRel = -m.theta / 2 + theta01 * m.theta;
+      const dx = m.bisectorSign * Math.sin(angleRel);
+      const dy = m.bisectorSign * Math.cos(angleRel);
+      const x = m.apexX + d * dx;
+      const y = m.apexY + d * dy;
+      return [x, y];
+    }
+  }
+}
+
+export function reflowLampPoints(
+  points: [number, number][],
+  oldUnrolled: UnrolledLamp,
+  newUnrolled: UnrolledLamp,
+  oldN: number,
+  newN: number,
+): [number, number][] {
+  return points.map(([px, py]) => {
+    const norm = patternToSurfaceRobust(px, py, oldUnrolled, oldN);
+    return surfaceToPatternRobust(norm.tierIdx, norm.facetIdx, norm.u, norm.v, norm.theta01, newUnrolled, newN);
+  });
+}
+
+export function replicatePointToFacet(
+  px: number,
+  py: number,
+  fromFacet: number,
+  toFacet: number,
+  unrolled: UnrolledLamp,
+  N: number,
+): [number, number] {
+  const norm = patternToSurfaceRobust(px, py, unrolled, N);
+  const newFacetIdx = toFacet;
+  const newTheta01 = (norm.theta01 + (toFacet - fromFacet) / N + 1.0) % 1.0;
+  return surfaceToPatternRobust(norm.tierIdx, newFacetIdx, norm.u, norm.v, newTheta01, unrolled, N);
+}

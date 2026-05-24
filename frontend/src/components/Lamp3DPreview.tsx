@@ -56,6 +56,7 @@ export function Lamp3DPreview({ project }: Props) {
 
   const [yaw, setYaw] = useState(0.6);
   const [pitch, setPitch] = useState(0.3);
+  const [zoom, setZoom] = useState(1.0);
   const yawRef = useRef(yaw);
   yawRef.current = yaw;
   const pitchRef = useRef(pitch);
@@ -302,7 +303,7 @@ export function Lamp3DPreview({ project }: Props) {
     const maxY = Math.max(...profilePoints.map(p => p.y));
     const centerY = (minY + maxY) / 2;
     const totalH = maxY - minY;
-    const fitDist = Math.max(maxR, totalH) * 4.2;
+    const fitDist = (Math.max(maxR, totalH) * 4.2) / zoom;
 
     const cx = fitDist * Math.cos(pitch) * Math.sin(yaw);
     const cy = centerY - fitDist * Math.sin(pitch);
@@ -314,7 +315,7 @@ export function Lamp3DPreview({ project }: Props) {
     camera.lookAt(0, centerY, 0);
 
     (renderer as unknown as { _render?: () => void })._render?.();
-  }, [yaw, pitch, config]);
+  }, [yaw, pitch, zoom, config]);
 
   function onPointerDown(e: React.PointerEvent) {
     (e.target as Element).setPointerCapture?.(e.pointerId);
@@ -334,10 +335,21 @@ export function Lamp3DPreview({ project }: Props) {
     if (rendererRef.current) rendererRef.current.domElement.style.cursor = 'grab';
   }
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    function handleWheel(e: WheelEvent) {
+      e.preventDefault();
+      setZoom(z => Math.max(0.1, Math.min(10.0, z * (1 - e.deltaY * 0.001))));
+    }
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
   return (
     <div
       ref={containerRef}
-      style={{ width: '100%', height: '100%', position: 'relative' }}
+      style={{ width: '100%', height: '100%', position: 'relative', touchAction: 'none', overscrollBehavior: 'none' }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
