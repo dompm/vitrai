@@ -91,13 +91,24 @@ function reportProgress() {
 }
 
 async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> {
+  let guessTotal = 4000000; // default for .onnx
+  if (filename.endsWith('.onnx_data')) {
+    guessTotal = filename.includes('encoder') ? 30000000 : 15000000;
+  }
+  if (!downloadProgress.has(filename)) {
+    downloadProgress.set(filename, { loaded: 0, total: guessTotal });
+  }
+
   try {
     const root = await navigator.storage.getDirectory();
     try {
       const handle = await root.getFileHandle(filename);
       const file = await handle.getFile();
       console.log(`[SAM Worker] Loading ${filename} from OPFS cache...`);
-      return await file.arrayBuffer();
+      const buf = await file.arrayBuffer();
+      downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+      reportProgress();
+      return buf;
     } catch {
       console.log(`[SAM Worker] Fetching ${filename} from ${url}...`);
       const res = await fetch(url);
@@ -151,7 +162,10 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
   } catch (err) {
     console.warn(`[SAM Worker] Cache failed for ${filename}, falling back to network:`, err);
     const res = await fetch(url);
-    return await res.arrayBuffer();
+    const buf = await res.arrayBuffer();
+    downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+    reportProgress();
+    return buf;
   }
 }
 
