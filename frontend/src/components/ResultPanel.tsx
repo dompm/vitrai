@@ -342,6 +342,60 @@ function findPenSnapTarget(
   return best;
 }
 
+function getCanvasEdgeSnapping(
+  x: number,
+  y: number,
+  crop: Crop,
+  patternWidth: number,
+  patternHeight: number,
+  effectiveScale: number,
+  thresholdPx = PEN_SNAP_PX
+): { x: number; y: number; guides: AlignmentGuide[] } {
+  const threshold = thresholdPx / effectiveScale;
+  let targetX = x;
+  let targetY = y;
+  const guides: AlignmentGuide[] = [];
+
+  const left = crop.left;
+  const right = patternWidth - crop.right;
+  const top = crop.top;
+  const bottom = patternHeight - crop.bottom;
+
+  if (Math.abs(x - left) < threshold) {
+    targetX = left;
+    guides.push({
+      type: 'v',
+      from: [left, top],
+      to: [left, bottom],
+    });
+  } else if (Math.abs(x - right) < threshold) {
+    targetX = right;
+    guides.push({
+      type: 'v',
+      from: [right, top],
+      to: [right, bottom],
+    });
+  }
+
+  if (Math.abs(y - top) < threshold) {
+    targetY = top;
+    guides.push({
+      type: 'h',
+      from: [left, top],
+      to: [right, top],
+    });
+  } else if (Math.abs(y - bottom) < threshold) {
+    targetY = bottom;
+    guides.push({
+      type: 'h',
+      from: [left, bottom],
+      to: [right, bottom],
+    });
+  }
+
+  return { x: targetX, y: targetY, guides };
+}
+
 interface AlignmentGuide {
   type: 'h' | 'v';
   from: [number, number];
@@ -666,6 +720,20 @@ export function ResultPanel({
       alignmentGuides = align.guides;
     }
 
+    const edgeSnap = getCanvasEdgeSnapping(
+      finalX,
+      finalY,
+      project.patternCrop,
+      project.patternWidth,
+      project.patternHeight,
+      effectiveScaleRef.current
+    );
+    finalX = edgeSnap.x;
+    finalY = edgeSnap.y;
+    if (edgeSnap.guides.length > 0) {
+      alignmentGuides = [...alignmentGuides, ...edgeSnap.guides];
+    }
+
     setHoverPoint([finalX, finalY]);
     setHoverSnapped(false);
     setActiveAlignmentGuides(alignmentGuides);
@@ -910,6 +978,19 @@ export function ResultPanel({
         );
         targetX = align.snapped[0];
         targetY = align.snapped[1];
+      }
+
+      if (!snap) {
+        const edgeSnap = getCanvasEdgeSnapping(
+          targetX,
+          targetY,
+          project.patternCrop,
+          project.patternWidth,
+          project.patternHeight,
+          vp.effectiveScale
+        );
+        targetX = edgeSnap.x;
+        targetY = edgeSnap.y;
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
