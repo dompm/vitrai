@@ -1224,9 +1224,10 @@ export function ResultPanel({
       const cropR = pw - project.patternCrop.right;
       const cropB = ph - project.patternCrop.bottom;
       
-      const defaultX1 = cropL + (cropR - cropL) * 0.25;
-      const defaultX2 = cropL + (cropR - cropL) * 0.75;
-      const defaultY = cropT + (cropB - cropT) * 0.5;
+      const isTutorial = project.name === 'Tutorial';
+      const defaultX1 = isTutorial ? 142.774 : cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = isTutorial ? 2859.777 : cropL + (cropR - cropL) * 0.75;
+      const defaultY = isTutorial ? 2040 : cropT + (cropB - cropT) * 0.5;
 
       let x1 = saved?.x1 ?? defaultX1;
       let y1 = saved?.y1 ?? defaultY;

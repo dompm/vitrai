@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
@@ -19,6 +19,8 @@ interface Props {
   patternTool: ToolId;
   sheetTool: ToolId;
   patternRefineMode: 'add' | 'remove' | null;
+  isEncoding?: boolean;
+  downloadProgress?: number | null;
   onAdvance: () => void;
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
@@ -37,6 +39,8 @@ export function Tutorial({
   patternTool,
   sheetTool,
   patternRefineMode,
+  isEncoding,
+  downloadProgress,
   onAdvance,
   onSetStep,
   onSetTrackedPiece,
@@ -50,6 +54,40 @@ export function Tutorial({
   // Initial glass sheet at the start of step 4, to detect "changed".
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
+  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
+  const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
+
+  useEffect(() => {
+    if (downloadProgress == null || downloadProgress === 0) {
+      progressHistoryRef.current = [];
+      setEtaSeconds(null);
+      return;
+    }
+    
+    const now = Date.now();
+    const history = progressHistoryRef.current;
+    history.push({ time: now, fraction: downloadProgress });
+    
+    // Keep only the last 3 seconds of history for a dynamic but stable ETA
+    while (history.length > 0 && now - history[0].time > 3000) {
+      history.shift();
+    }
+
+    if (history.length > 1) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const timeDiff = last.time - first.time;
+      const fracDiff = last.fraction - first.fraction;
+      
+      // Compute ETA if we have at least 500ms of history and some progress
+      if (timeDiff > 500 && fracDiff > 0.001) {
+        const remainingFrac = 1 - last.fraction;
+        const timePerFrac = timeDiff / fracDiff;
+        setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
+      }
+    }
+  }, [downloadProgress]);
 
   // Reset transitional refs when stepping out of a step.
   useEffect(() => {
@@ -293,7 +331,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep4Title');
         customBody = t('tutorialStep4Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   } else if (step === 'refine-second-piece' && pieceId) {
@@ -315,7 +355,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep8Title');
         customBody = t('tutorialStep8Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   } else if (step === 'refine-remaining-pieces' && pieceId) {
@@ -329,7 +371,9 @@ export function Tutorial({
       } else {
         customTitle = t('tutorialStep10Title');
         customBody = t('tutorialStep10Body');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
       }
     }
   }
@@ -346,6 +390,12 @@ export function Tutorial({
     currentSpotlightTarget = undefined;
   }
 
+  // Show loading dialog if they are asked to cut the first piece but the model is still loading
+  const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
+
+  const percent = downloadProgress != null ? Math.round(downloadProgress * 100) : null;
+  const etaText = etaSeconds != null ? (etaSeconds > 60 ? `~${Math.ceil(etaSeconds/60)}m` : `${etaSeconds}s`) : '...';
+
   return (
     <>
       <TutorialBar
@@ -356,8 +406,33 @@ export function Tutorial({
         customTitle={customTitle}
         customBody={customBody}
       />
-      {currentSpotlightTarget && (
-        <SpotlightPulse selector={currentSpotlightTarget} />
+      {currentSpotlightTarget && !showLoadingDialog && (
+        <SpotlightPulse
+          selector={currentSpotlightTarget}
+          withBackdrop={!['cut-remaining-pieces', 'refine-remaining-pieces'].includes(step)}
+        />
+      )}
+      {showLoadingDialog && (
+        <div className="move-confirm-backdrop" style={{ zIndex: 3000 }}>
+          <div className="move-confirm-dialog">
+            <p className="move-confirm-title">
+              {t('tutorialModelLoadingTitle', 'Downloading AI Model')}
+            </p>
+            <p className="move-confirm-body">
+              {t('tutorialModelLoadingBody', 'The segmentation model is currently downloading to your browser. This may take a few moments depending on your connection, but it only happens the very first time you use the app!')}
+            </p>
+            {percent != null && (
+              <p className="move-confirm-body" style={{ fontWeight: 'bold', marginTop: '1rem' }}>
+                Progress: {percent}% (ETA: {etaText})
+              </p>
+            )}
+            <div className="move-confirm-actions" style={{ justifyContent: 'flex-end' }}>
+              <button className="btn-primary" onClick={() => setHasSeenLoadingDialog(true)}>
+                {t('tutorialModelLoadingOk', 'Got it')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

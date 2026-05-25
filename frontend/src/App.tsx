@@ -326,11 +326,16 @@ export function App() {
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
   useEffect(() => {
+    let lastUpdate = 0;
     const backend = getSamBackend(setBackendStatus);
     backend.onProgress = (fraction) => {
-      setDownloadProgress(fraction);
-      if (fraction >= 1) {
-        setTimeout(() => setDownloadProgress(null), 500);
+      const now = Date.now();
+      if (fraction >= 1 || now - lastUpdate > 250) {
+        lastUpdate = now;
+        setDownloadProgress(fraction);
+        if (fraction >= 1) {
+          setTimeout(() => setDownloadProgress(null), 500);
+        }
       }
     };
   }, []);
@@ -1268,12 +1273,9 @@ export function App() {
             onSmoothPieces={handleSmoothPieces}
             onAddSheetAndAssignPiece={addSheetAndAssignPiece}
             onAddSheetAndAssignPieces={addSheetAndAssignPieces}
-            showEmptyHint={
-              piecesOnActiveSheet.length === 0 &&
-              project.pieces.length > 0
-            }
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
+            isTutorial={project.name === 'Tutorial'}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1459,6 +1461,8 @@ export function App() {
         onStartTour={startTutorialTour}
         onSkip={skipTutorial}
         onComplete={completeTutorial}
+        isEncoding={!!project.patternImageUrl && patternImageId === null}
+        downloadProgress={downloadProgress}
       />
   </div>
   );
