@@ -323,6 +323,17 @@ export function App() {
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    const backend = getSamBackend(setBackendStatus);
+    backend.onProgress = (fraction) => {
+      setDownloadProgress(fraction);
+      if (fraction >= 1) {
+        setTimeout(() => setDownloadProgress(null), 500);
+      }
+    };
+  }, []);
 
   const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
@@ -1173,6 +1184,7 @@ export function App() {
           onAutoSegment={handleAutoSegment}
           isAutoSegmenting={isAutoSegmenting}
           isEncoding={!!project.patternImageUrl && patternImageId === null}
+          downloadProgress={downloadProgress}
           debugMask={debugMask}
           activeTool={patternTool}
           onChangeActiveTool={setPatternTool}
