@@ -427,9 +427,31 @@ export function useProject() {
   }, [updateProject, isSymmetryEnabled]);
 
   const deletePieces = useCallback((pieceIds: string[]) => {
-    updateProject(prev => ({ ...prev, pieces: prev.pieces.filter(p => !pieceIds.includes(p.id)) }));
-    setSelectedPieceIds(ids => ids.filter(id => !pieceIds.includes(id)));
-  }, [updateProject]);
+    updateProject(prev => {
+      const finalIdsToDelete = [...pieceIds];
+      if (isSymmetryEnabled) {
+        const symmetryGroupIds = new Set<string>();
+        prev.pieces.forEach(p => {
+          if (pieceIds.includes(p.id) && p.symmetryGroupId) {
+            symmetryGroupIds.add(p.symmetryGroupId);
+          }
+        });
+        if (symmetryGroupIds.size > 0) {
+          prev.pieces.forEach(p => {
+            if (p.symmetryGroupId && symmetryGroupIds.has(p.symmetryGroupId)) {
+              finalIdsToDelete.push(p.id);
+            }
+          });
+        }
+      }
+      const toDeleteSet = new Set(finalIdsToDelete);
+      setSelectedPieceIds(ids => ids.filter(id => !toDeleteSet.has(id)));
+      return {
+        ...prev,
+        pieces: prev.pieces.filter(p => !toDeleteSet.has(p.id))
+      };
+    });
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePieceLabel = useCallback((pieceId: string, label: string) => {
     updateProject(prev => ({
