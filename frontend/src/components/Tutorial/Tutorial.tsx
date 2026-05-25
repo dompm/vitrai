@@ -55,6 +55,39 @@ export function Tutorial({
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
+  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
+  const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
+
+  useEffect(() => {
+    if (downloadProgress == null || downloadProgress === 0) {
+      progressHistoryRef.current = [];
+      setEtaSeconds(null);
+      return;
+    }
+    
+    const now = Date.now();
+    const history = progressHistoryRef.current;
+    history.push({ time: now, fraction: downloadProgress });
+    
+    // Keep only the last 3 seconds of history for a dynamic but stable ETA
+    while (history.length > 0 && now - history[0].time > 3000) {
+      history.shift();
+    }
+
+    if (history.length > 1) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const timeDiff = last.time - first.time;
+      const fracDiff = last.fraction - first.fraction;
+      
+      // Compute ETA if we have at least 500ms of history and some progress
+      if (timeDiff > 500 && fracDiff > 0.001) {
+        const remainingFrac = 1 - last.fraction;
+        const timePerFrac = timeDiff / fracDiff;
+        setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
+      }
+    }
+  }, [downloadProgress]);
 
   // Reset transitional refs when stepping out of a step.
   useEffect(() => {
@@ -361,6 +394,7 @@ export function Tutorial({
   const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
 
   const percent = downloadProgress != null ? Math.round(downloadProgress * 100) : null;
+  const etaText = etaSeconds != null ? (etaSeconds > 60 ? `~${Math.ceil(etaSeconds/60)}m` : `${etaSeconds}s`) : '...';
 
   return (
     <>
@@ -389,7 +423,7 @@ export function Tutorial({
             </p>
             {percent != null && (
               <p className="move-confirm-body" style={{ fontWeight: 'bold', marginTop: '1rem' }}>
-                {percent}%
+                Progress: {percent}% (ETA: {etaText})
               </p>
             )}
             <div className="move-confirm-actions" style={{ justifyContent: 'flex-end' }}>
