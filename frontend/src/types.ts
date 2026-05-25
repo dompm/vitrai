@@ -44,6 +44,9 @@ export interface Piece {
   transform: TextureTransform;
   promptBox?: BoundingBox;
   promptPoints?: PromptPoint[];
+  tierIndex?: number;          // if present, this piece belongs to a lamp tier
+  facetIndex?: number;         // column index for symmetry mirroring
+  symmetryGroupId?: string;    // links symmetrical duplicates
 }
 
 export interface GlassSheet {
@@ -59,6 +62,21 @@ export interface GlassSheet {
 
 export type SolderColor = 'black' | 'silver' | 'copper';
 
+export interface LampProfilePoint {
+  r: number;
+  y: number;
+}
+
+export interface LampConfig {
+  facetCount: number;
+  profilePoints: LampProfilePoint[];
+  activeTierIndex: number;
+  // When true, the lamp surface is treated as continuous: each tier unrolls to
+  // its true smooth shape (rectangle for a cylinder, annular sector for a cone)
+  // instead of N flat facets. `facetCount` is ignored except for visualization.
+  smooth?: boolean;
+}
+
 export interface Project {
   name: string;
   patternImageUrl: string;
@@ -70,5 +88,7 @@ export interface Project {
   sheets: GlassSheet[];
   solderWidthMM?: number;
   solderColor?: SolderColor;
+  projectType?: 'flat' | 'lamp';
+  lampConfig?: LampConfig;
 }
 

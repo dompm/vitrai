@@ -5,6 +5,9 @@ import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
+
+import { Lamp3DPreview } from './components/Lamp3DPreview';
+import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -311,9 +314,11 @@ export function App() {
     loadProjectData,
     updatePatternImage,
     startBlankCanvas,
+    startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
+    updateLampConfig,
     availableProjects,
     setProjectName,
     createNewProject,
@@ -321,6 +326,8 @@ export function App() {
     deleteProject,
     saveStatus,
     retrySave,
+    isSymmetryEnabled,
+    setIsSymmetryEnabled,
   } = useProject();
 
   const [backendStatus, setBackendStatus] = useState('');
@@ -457,6 +464,27 @@ export function App() {
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
+
+  const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
+  const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
+  const isLamp = project.projectType === 'lamp';
+
+  function startLampPreviewResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = lampPreviewHeight;
+    function onMove(ev: PointerEvent) {
+      const next = Math.max(120, Math.min(800, startH + (ev.clientY - startY)));
+      setLampPreviewHeight(next);
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -531,8 +559,8 @@ export function App() {
     }
   }
 
-  async function handleAddPiece(box: BoundingBox) {
-    const pieceId = addPieceFromBox(box, activeSheetId);
+  async function handleAddPiece(box: BoundingBox, tierIndex?: number) {
+    const pieceId = addPieceFromBox(box, activeSheetId, tierIndex);
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
@@ -551,13 +579,13 @@ export function App() {
     }
   }
 
-  function handleAddManualPiece(polygon: [number, number][]) {
+  function handleAddManualPiece(polygon: [number, number][], tierIndex?: number) {
     const others = project.pieces;
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
     const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
     const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
-      addManualPiece(clipped, activeSheetId);
+      addManualPiece(clipped, activeSheetId, tierIndex);
     }
   }
 
@@ -711,18 +739,15 @@ export function App() {
 
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        updatePatternImage(dataUrl, img.width, img.height);
-      };
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    if (file) {
+      updatePatternImage(file);
+      setPatternTool('select');
+    }
+  };
+
+  const handleStartLampMode = () => {
+    startLampMode();
+    setLampProfileDialog({ isFirstTime: true });
   };
 
   const isPrintReady = !!project.patternScale && project.patternScale.pxPerUnit > 0 && project.pieces.length > 0;
@@ -1062,12 +1087,11 @@ export function App() {
           </div>
           <button
             className="btn-ghost"
-            onClick={() => {
-              const name = 'Project ' + (availableProjects.length + 1);
-              void createNewProject(name).then(() => {
-                projectNameInputRef.current?.focus();
-                projectNameInputRef.current?.select();
-              });
+            onClick={async () => {
+              const defaultName = `Project ${availableProjects.length + 1}`;
+              await createNewProject(defaultName, 'flat');
+              projectNameInputRef.current?.focus();
+              projectNameInputRef.current?.select();
             }}
             title="New project"
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
@@ -1163,48 +1187,81 @@ export function App() {
               </label>
             )}
           </div>
-        <ResultPanel
-          project={project}
-          selectedPieceIds={selectedPieceIds}
-          pendingPieceIds={pendingPieceIds}
-          onSelectPiece={selectPiece}
-          onSelectPieces={selectPieces}
-          onPatternCropChange={updatePatternCrop}
-          onPatternScaleChange={updatePatternScale}
-          onAddPiece={handleAddPiece}
-          onAddManualPiece={handleAddManualPiece}
-          onUpdatePieceLabel={updatePieceLabel}
-          onUpdatePieceSheet={updatePieceSheet}
-          onUpdatePiecesSheet={updatePiecesSheet}
-          onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-          onAddSheetAndAssignPieces={addSheetAndAssignPieces}
-          onDeletePiece={deletePiece}
-          onDeletePieces={deletePieces}
-          onSmoothPiece={handleSmoothPiece}
-          onSmoothPieces={handleSmoothPieces}
-          onUpdatePiecePolygon={handleUpdatePiecePolygon}
-          onUpdatePieceCurves={handleUpdatePieceCurves}
-          onUpdatePrompt={handleUpdatePrompt}
-          onUploadPattern={handleUploadPattern}
-          onStartBlankCanvas={startBlankCanvas}
-          onAutoSegment={handleAutoSegment}
-          isAutoSegmenting={isAutoSegmenting}
-          isEncoding={!!project.patternImageUrl && patternImageId === null}
-          downloadProgress={downloadProgress}
-          debugMask={debugMask}
-          activeTool={patternTool}
-          onChangeActiveTool={setPatternTool}
-          tutorialStep={tutorialStep}
-          refineMode={patternRefineMode}
-          onRefineModeChange={setPatternRefineMode}
-          onPenStatusChange={setPenStatus}
-          onUpdateSolderWidthMM={updateSolderWidthMM}
-          onUpdateSolderColor={updateSolderColor}
-        />
-      </div>
+          <ResultPanel
+            project={project}
+            selectedPieceIds={selectedPieceIds}
+            pendingPieceIds={pendingPieceIds}
+            onSelectPiece={selectPiece}
+            onSelectPieces={selectPieces}
+            onPatternCropChange={updatePatternCrop}
+            onPatternScaleChange={updatePatternScale}
+            onAddPiece={handleAddPiece}
+            onAddManualPiece={handleAddManualPiece}
+            onUpdatePieceLabel={updatePieceLabel}
+            onUpdatePieceSheet={updatePieceSheet}
+            onUpdatePiecesSheet={updatePiecesSheet}
+            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
+            onDeletePiece={deletePiece}
+            onDeletePieces={deletePieces}
+            onSmoothPiece={handleSmoothPiece}
+            onSmoothPieces={handleSmoothPieces}
+            onUpdatePiecePolygon={handleUpdatePiecePolygon}
+            onUpdatePieceCurves={handleUpdatePieceCurves}
+            onUpdatePrompt={handleUpdatePrompt}
+            onUploadPattern={handleUploadPattern}
+            onStartBlankCanvas={startBlankCanvas}
+            onStartLampMode={handleStartLampMode}
+            onAutoSegment={handleAutoSegment}
+            isAutoSegmenting={isAutoSegmenting}
+            isEncoding={!!project.patternImageUrl && patternImageId === null}
+            downloadProgress={downloadProgress}
+            debugMask={debugMask}
+            activeTool={patternTool}
+            onChangeActiveTool={setPatternTool}
+            tutorialStep={tutorialStep}
+            refineMode={patternRefineMode}
+            onRefineModeChange={setPatternRefineMode}
+            onPenStatusChange={setPenStatus}
+            onUpdateSolderWidthMM={updateSolderWidthMM}
+            onUpdateSolderColor={updateSolderColor}
+            onOpenLampProfile={isLamp ? (() => setLampProfileDialog({ isFirstTime: false })) : undefined}
+            isSymmetryEnabled={isSymmetryEnabled}
+            onToggleSymmetry={setIsSymmetryEnabled}
+          />
+        </div>
 
       {/* ── Right: glass sheet workspace ── */}
       <div className="panel panel-right">
+        {isLamp && (
+          <>
+            <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
+              <Lamp3DPreview
+                project={project}
+                selectedPieceIds={selectedPieceIds}
+                onSelectPiece={selectPiece}
+                onUpdateLampConfig={updateLampConfig}
+                activeSheetId={activeSheetId}
+                onSetFocusedPanelIdx={setFocusedPanelIdx}
+              />
+            </div>
+            <div
+              onPointerDown={startLampPreviewResize}
+              style={{
+                height: 6,
+                cursor: 'row-resize',
+                background: 'var(--chrome-700)',
+                flexShrink: 0,
+                position: 'relative',
+              }}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label="Resize 3D preview"
+            >
+              <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 2, background: 'var(--hairline-2)', borderRadius: 1 }} />
+            </div>
+          </>
+        )}
         <div className="panel-header">
           <div className="panel-title" style={{ flexShrink: 0 }}>
             <span className="panel-title-eyebrow">{t('glass')}</span>
@@ -1444,6 +1501,20 @@ export function App() {
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
           onClose={() => setAddSheetMenu(null)}
+        />
+      )}
+
+      {lampProfileDialog && project.lampConfig && (
+        <LampProfileDialog
+          project={project}
+          initialConfig={project.lampConfig}
+          isFirstTime={lampProfileDialog.isFirstTime}
+          onCancel={() => setLampProfileDialog(null)}
+          onUpdatePatternScale={(scale) => updateProject(p => ({ ...p, patternScale: scale }))}
+          onConfirm={config => {
+            updateLampConfig(config);
+            setLampProfileDialog(null);
+          }}
         />
       )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />

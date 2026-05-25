@@ -9,7 +9,7 @@ import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../ty
 import type { StepId } from './Tutorial/types';
 import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
-import { IconUpload } from './icons';
+import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
 import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
@@ -20,6 +20,8 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
+import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint, patternToSurfaceRobust } from '../utils/lampGeometry';
+import { getSnapFractions } from '../utils/snapping';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -176,6 +178,7 @@ interface ResultPanelProps {
   downloadProgress?: number | null;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStartBlankCanvas: () => void;
+  onStartLampMode?: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
@@ -188,6 +191,9 @@ interface ResultPanelProps {
   }) => void;
   onUpdateSolderWidthMM: (width: number) => void;
   onUpdateSolderColor: (color: import('../types').SolderColor) => void;
+  onOpenLampProfile?: () => void;
+  isSymmetryEnabled?: boolean;
+  onToggleSymmetry?: (enabled: boolean) => void;
 }
 
 function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
@@ -328,8 +334,9 @@ function findPenSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
-): [number, number] | null {
-  let best: [number, number] | null = null;
+  extraVertices?: LampSnapPoint[],
+): { pt: [number, number]; label?: string } | null {
+  let best: { pt: [number, number]; label?: string } | null = null;
   let bestPxDist = PEN_SNAP_PX;
   for (const piece of pieces) {
     const polygon = flattenCurves(piece.polygon, piece.curvePoints);
@@ -340,7 +347,17 @@ function findPenSnapTarget(
       const dist = Math.hypot(dx, dy) * effectiveScale;
       if (dist < bestPxDist) {
         bestPxDist = dist;
-        best = [polygon[i][0], polygon[i][1]];
+        best = { pt: [polygon[i][0], polygon[i][1]] };
+      }
+    }
+  }
+  if (extraVertices) {
+    for (const sv of extraVertices) {
+      const [vx, vy] = sv.pt;
+      const dist = Math.hypot(vx - cursor[0], vy - cursor[1]) * effectiveScale;
+      if (dist < bestPxDist) {
+        bestPxDist = dist;
+        best = { pt: [vx, vy], label: sv.label };
       }
     }
   }
@@ -355,6 +372,8 @@ function getCanvasSnapping(
   patternHeight: number,
   effectiveScale: number,
   t: (key: string) => string,
+  disableFractions = false,
+  customBounds?: { left: number; right: number; top: number; bottom: number },
   thresholdPx = PEN_SNAP_PX
 ): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
   const threshold = thresholdPx / effectiveScale;
@@ -363,10 +382,10 @@ function getCanvasSnapping(
   const guides: AlignmentGuide[] = [];
   const labels: string[] = [];
 
-  const left = crop.left;
-  const right = patternWidth - crop.right;
-  const top = crop.top;
-  const bottom = patternHeight - crop.bottom;
+  const left = customBounds ? customBounds.left : crop.left;
+  const right = customBounds ? customBounds.right : patternWidth - crop.right;
+  const top = customBounds ? customBounds.top : crop.top;
+  const bottom = customBounds ? customBounds.bottom : patternHeight - crop.bottom;
   const W = right - left;
   const H = bottom - top;
 
@@ -395,61 +414,45 @@ function getCanvasSnapping(
   }
 
   // 2. Fractional Snapping (Lower Priority)
-  const FRACTIONS: { value: number; label: string }[] = [];
-  const seen = new Set<string>();
-  const denominators = [2, 3, 4, 5, 6, 8, 10, 12, 16];
-  
-  for (const d of denominators) {
-    for (let n = 1; n < d; n++) {
-      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
-      const g = gcd(n, d);
-      const num = n / g;
-      const den = d / g;
-      const key = `${num}/${den}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        const val = num / den;
-        const label = den === 2 ? t('snapCenter') : key;
-        FRACTIONS.push({ value: val, label });
-      }
-    }
-  }
+  if (!disableFractions) {
+    const FRACTIONS = getSnapFractions(t);
 
-  const minGap = 32; // minimum screen pixels between active guides
+    const minGap = 32; // minimum screen pixels between active guides
 
-  // X fractional snapping
-  if (!snappedX && W > 0) {
-    const activeXValues = [left, right];
-    for (const frac of FRACTIONS) {
-      const posX = left + frac.value * W;
-      const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeXValues.push(posX);
-        if (Math.abs(x - posX) < threshold) {
-          targetX = posX;
-          snappedX = true;
-          guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
-          labels.push(frac.label);
-          break;
+    // X fractional snapping
+    if (!snappedX && W > 0) {
+      const activeXValues = [left, right];
+      for (const frac of FRACTIONS) {
+        const posX = left + frac.value * W;
+        const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
+        if (!tooClose) {
+          activeXValues.push(posX);
+          if (Math.abs(x - posX) < threshold) {
+            targetX = posX;
+            snappedX = true;
+            guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
+            labels.push(frac.label);
+            break;
+          }
         }
       }
     }
-  }
 
-  // Y fractional snapping
-  if (!snappedY && H > 0) {
-    const activeYValues = [top, bottom];
-    for (const frac of FRACTIONS) {
-      const posY = top + frac.value * H;
-      const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeYValues.push(posY);
-        if (Math.abs(y - posY) < threshold) {
-          targetY = posY;
-          snappedY = true;
-          guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
-          labels.push(frac.label);
-          break;
+    // Y fractional snapping
+    if (!snappedY && H > 0) {
+      const activeYValues = [top, bottom];
+      for (const frac of FRACTIONS) {
+        const posY = top + frac.value * H;
+        const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
+        if (!tooClose) {
+          activeYValues.push(posY);
+          if (Math.abs(y - posY) < threshold) {
+            targetY = posY;
+            snappedY = true;
+            guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
+            labels.push(frac.label);
+            break;
+          }
         }
       }
     }
@@ -649,9 +652,10 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, onStartLampMode, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
-  onUpdateSolderWidthMM, onUpdateSolderColor,
+  onUpdateSolderWidthMM, onUpdateSolderColor, onOpenLampProfile,
+  isSymmetryEnabled = false, onToggleSymmetry,
 }: ResultPanelProps) {
   const { t } = useTranslation();
   const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
@@ -700,14 +704,26 @@ export function ResultPanel({
     if (activeTool !== 'pen') return;
 
     // 1. Vertex snapping is highest priority
-    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current);
     if (snap) {
-      setHoverPoint(snap);
+      setHoverPoint(snap.pt);
       setHoverSnapped(true);
       setActiveAlignmentGuides([]);
       setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
+      setActiveSnapLabels(snap.label ? [snap.label] : []);
       return;
+    }
+
+    // 1b. Lamp seam edge snap — project onto nearest seam line.
+    if (unrolledLampRef.current) {
+      const edgeSnap = findLampEdgeSnap([imageX, imageY], unrolledLampRef.current, effectiveScaleRef.current, PEN_SNAP_PX);
+      if (edgeSnap) {
+        setHoverPoint(edgeSnap);
+        setHoverSnapped(true);
+        setActiveAlignmentGuides([]);
+        setActiveLengthGuide(null);
+        return;
+      }
     }
 
     let finalX = imageX;
@@ -784,6 +800,23 @@ export function ResultPanel({
       alignmentGuides = align.guides;
     }
 
+    let customBounds = undefined;
+    if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+      const N = project.lampConfig?.facetCount ?? 6;
+      const surf = patternToSurfaceRobust(finalX, finalY, unrolledLamp, N);
+      const strip = unrolledLamp.strips[surf.facetIdx];
+      const tier = strip?.tiers[surf.tierIdx];
+      if (strip && tier) {
+        const maxChord = Math.max(tier.topChord, tier.botChord);
+        customBounds = {
+          left: strip.centerX - maxChord / 2,
+          right: strip.centerX + maxChord / 2,
+          top: tier.topY,
+          bottom: tier.botY
+        };
+      }
+    }
+
     const edgeSnap = getCanvasSnapping(
       finalX,
       finalY,
@@ -791,7 +824,9 @@ export function ResultPanel({
       project.patternWidth,
       project.patternHeight,
       effectiveScaleRef.current,
-      t
+      t,
+      false, // Never disable fractions, we want them!
+      customBounds
     );
     finalX = edgeSnap.x;
     finalY = edgeSnap.y;
@@ -843,6 +878,13 @@ export function ResultPanel({
   };
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
+  const isLamp = project.projectType === 'lamp';
+  const unrolledLamp = useMemo(() => (isLamp ? computeUnrolledLamp(project.lampConfig) : null), [isLamp, project.lampConfig]);
+  const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp, vp.effectiveScale, t) : undefined), [unrolledLamp, vp.effectiveScale, t]);
+  const lampSnapPointsRef = useRef(lampSnapPoints);
+  lampSnapPointsRef.current = lampSnapPoints;
+  const unrolledLampRef = useRef(unrolledLamp);
+  unrolledLampRef.current = unrolledLamp;
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
@@ -994,10 +1036,19 @@ export function ResultPanel({
       const isShift = e.evt ? e.evt.shiftKey : false;
       let targetX = x;
       let targetY = y;
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale, lampSnapPoints);
+      const edgeSnap = !snap && unrolledLamp
+        ? findLampEdgeSnap([x, y], unrolledLamp, vp.effectiveScale, PEN_SNAP_PX)
+        : null;
       if (snap) {
-        targetX = snap[0];
-        targetY = snap[1];
+        targetX = snap.pt[0];
+        targetY = snap.pt[1];
+        if (snap.label) {
+          setActiveSnapLabels([snap.label]);
+        }
+      } else if (edgeSnap) {
+        targetX = edgeSnap[0];
+        targetY = edgeSnap[1];
       } else if (activePolygonPointsRef.current.length > 0) {
         const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
 
@@ -1053,6 +1104,23 @@ export function ResultPanel({
       }
 
       if (!snap) {
+        let customBounds = undefined;
+        if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+          const N = project.lampConfig?.facetCount ?? 6;
+          const surf = patternToSurfaceRobust(targetX, targetY, unrolledLamp, N);
+          const strip = unrolledLamp.strips[surf.facetIdx];
+          const tier = strip?.tiers[surf.tierIdx];
+          if (strip && tier) {
+            const maxChord = Math.max(tier.topChord, tier.botChord);
+            customBounds = {
+              left: strip.centerX - maxChord / 2,
+              right: strip.centerX + maxChord / 2,
+              top: tier.topY,
+              bottom: tier.botY
+            };
+          }
+        }
+
         const edgeSnap = getCanvasSnapping(
           targetX,
           targetY,
@@ -1060,10 +1128,55 @@ export function ResultPanel({
           project.patternWidth,
           project.patternHeight,
           vp.effectiveScale,
-          t
+          t,
+          false,
+          customBounds
         );
         targetX = edgeSnap.x;
         targetY = edgeSnap.y;
+      }
+
+      // ---- ABSOLUTE SHIFT CONSTRAINT ENFORCER ----
+      // If Shift is held, the angle constraint MUST win over all other snapping.
+      if (isShift && activePolygonPointsRef.current.length > 0) {
+        const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+        const theta = Math.round(Math.atan2(y - lastPt[1], x - lastPt[0]) / (Math.PI / 4)) * (Math.PI / 4);
+        const dx = Math.cos(theta);
+        const dy = Math.sin(theta);
+        
+        const snappedX = Math.abs(targetX - x) > 1e-3;
+        const snappedY = Math.abs(targetY - y) > 1e-3;
+        
+        let finalX = targetX;
+        let finalY = targetY;
+        
+        if (Math.abs(dx) < 1e-5) {
+          finalX = lastPt[0]; // must be purely vertical
+        } else if (Math.abs(dy) < 1e-5) {
+          finalY = lastPt[1]; // must be purely horizontal
+        } else if (snappedX || snappedY) {
+          // It snapped to an edge or point. We must intersect the constraint ray with the snapped coordinate.
+          if (snappedX && snappedY) {
+             const rx = (finalX - lastPt[0]) / dx;
+             const ry = (finalY - lastPt[1]) / dy;
+             if (Math.abs(rx) < Math.abs(ry)) finalY = lastPt[1] + rx * dy;
+             else finalX = lastPt[0] + ry * dx;
+          } else if (snappedX) {
+             const r = (finalX - lastPt[0]) / dx;
+             finalY = lastPt[1] + r * dy;
+          } else if (snappedY) {
+             const r = (finalY - lastPt[1]) / dy;
+             finalX = lastPt[0] + r * dx;
+          }
+        } else {
+          // No external snap applied, simply constrain point to the ray
+          const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
+          finalX = lastPt[0] + r * dx;
+          finalY = lastPt[1] + r * dy;
+        }
+        
+        targetX = finalX;
+        targetY = finalY;
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
@@ -1468,6 +1581,48 @@ export function ResultPanel({
             </div>
           )}
         </div>
+        {project.projectType === 'lamp' && onToggleSymmetry && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="tooltip-wrapper">
+              <button
+                className={`tool-btn ${isSymmetryEnabled ? 'active' : ''}`}
+                onClick={() => onToggleSymmetry(!isSymmetryEnabled)}
+                aria-label={t('lampSymmetryTooltip')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="9" strokeDasharray="2 2" />
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 3v6" />
+                  <path d="M12 15v6" />
+                  <path d="M3 12h6" />
+                  <path d="M15 12h6" />
+                </svg>
+              </button>
+              <span className="tooltip-tip">{t('lampSymmetryTooltip')}</span>
+            </div>
+          </>
+        )}
+        {onOpenLampProfile && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="tooltip-wrapper">
+              <button
+                className="tool-btn"
+                onClick={onOpenLampProfile}
+                aria-label={t('lampProfileButtonTooltip')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="5" rx="6" ry="2" />
+                  <path d="M6 5 L4 19" />
+                  <path d="M18 5 L20 19" />
+                  <ellipse cx="12" cy="19" rx="8" ry="2.5" />
+                </svg>
+              </button>
+              <span className="tooltip-tip">{t('lampProfileButtonTooltip')}</span>
+            </div>
+          </>
+        )}
       </Toolbar>
       <div
         ref={vp.containerRef}
@@ -1476,28 +1631,37 @@ export function ResultPanel({
       >
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
-            <div>
-              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
-                {t('noPatternDesc')}
-              </p>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <IconUpload size={16} />
-                  {t('uploadPatternButton')}
+            <div style={{ maxWidth: 800 }}>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '2rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 32 }}>What would you like to build?</p>
+              
+              <div className="onboarding-grid">
+                <label className="onboarding-card">
+                  <div className="onboarding-card-icon">
+                    <IconUpload size={28} />
+                  </div>
+                  <h3>Trace an Image</h3>
+                  <p>Upload a 2D pattern image to trace stained glass pieces over.</p>
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
                 </label>
-                <button
-                  className="btn-ghost"
-                  onClick={onStartBlankCanvas}
-                  style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}
-                >
-                  {t('startBlankCanvasButton')}
+
+                <button className="onboarding-card" onClick={onStartBlankCanvas}>
+                  <div className="onboarding-card-icon">
+                    <IconSquare size={28} />
+                  </div>
+                  <h3>Blank Flat Canvas</h3>
+                  <p>Start with a blank workspace to draw a flat window from scratch.</p>
                 </button>
+
+                {onStartLampMode && (
+                  <button className="onboarding-card" onClick={onStartLampMode}>
+                    <div className="onboarding-card-icon">
+                      <IconLamp size={28} />
+                    </div>
+                    <h3>3D Lamp Shade</h3>
+                    <p>Design a 3D lamp, draw patterns across its facets, and preview in real-time.</p>
+                  </button>
+                )}
               </div>
-              <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
-                {t('noPatternSecondary')}
-              </p>
             </div>
           </div>
         ) : (
@@ -1526,7 +1690,46 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {(() => {
+                  {isLamp && unrolledLamp && unrolledLamp.mode === 'faceted' && unrolledLamp.strips.length > 0 ? (
+                    <>
+                      {unrolledLamp.strips.map((strip, si) => (
+                        <Line
+                          key={`strip-poly-${si}`}
+                          points={strip.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5 / es}
+                          listening={false}
+                        />
+                      ))}
+                      {unrolledLamp.strips.map((strip, si) =>
+                        strip.tierSeams.map((s, i) => (
+                          <Line
+                            key={`tierseam-${si}-${i}`}
+                            points={[s.x1, s.y1, s.x2, s.y2]}
+                            stroke="rgba(40, 30, 15, 0.18)"
+                            strokeWidth={0.8 / es}
+                            listening={false}
+                          />
+                        ))
+                      )}
+                    </>
+                  ) : isLamp && unrolledLamp && unrolledLamp.mode === 'smooth' && unrolledLamp.tiers.length > 0 ? (
+                    <>
+                      {unrolledLamp.tiers.map((tier, ti) => (
+                        <Line
+                          key={`smooth-tier-${ti}`}
+                          points={tier.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5 / es}
+                          listening={false}
+                        />
+                      ))}
+                    </>
+                  ) : (() => {
                     const cL = project.patternCrop.left;
                     const cT = project.patternCrop.top;
                     const cR = project.patternCrop.right;
@@ -1544,7 +1747,7 @@ export function ResultPanel({
                       />
                     );
                   })()}
-                  {patternImg && (
+                  {!isLamp && patternImg && (
                     <KonvaImage
                       id="bg"
                       image={patternImg}

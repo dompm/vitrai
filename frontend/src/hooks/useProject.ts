@@ -4,6 +4,7 @@ import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassS
 import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
+import { computeUnrolledLamp, reflowLampPoints, replicatePointToFacet, patternToSurfaceRobust } from '../utils/lampGeometry';
 
 function toPxPerMm(s: Scale): number {
   if (s.unit === 'mm') return s.pxPerUnit;
@@ -65,6 +66,51 @@ function fitScaleForPiece(polygon: [number, number][], sheet: GlassSheet | undef
   return Math.min(sw / pw, sh / ph) * 0.95;
 }
 
+function syncSymmetricPieces(
+  pieces: Piece[],
+  targetPieceId: string,
+  newPolygon: [number, number][] | undefined,
+  newCurvePoints: import('../types').CurvePoint[] | undefined,
+  lampConfig: import('../types').LampConfig | undefined | null,
+  isSymmetryEnabled: boolean
+): Piece[] {
+  if (!lampConfig || !isSymmetryEnabled) return pieces;
+  const target = pieces.find(p => p.id === targetPieceId);
+  if (!target || !target.symmetryGroupId || target.facetIndex === undefined) return pieces;
+
+  const N = lampConfig.facetCount;
+  const unrolled = computeUnrolledLamp(lampConfig);
+  const k = target.facetIndex;
+
+  return pieces.map(p => {
+    if (p.symmetryGroupId !== target.symmetryGroupId || p.id === targetPieceId || p.facetIndex === undefined) {
+      return p;
+    }
+
+    const j = p.facetIndex;
+    let updatedPoly = p.polygon;
+    if (newPolygon) {
+      updatedPoly = newPolygon.map(([px, py]) =>
+        replicatePointToFacet(px, py, k, j, unrolled, N)
+      );
+    }
+
+    let updatedCurves = p.curvePoints;
+    if (newCurvePoints) {
+      updatedCurves = newCurvePoints.map(cp => {
+        const newCtrl = replicatePointToFacet(cp.ctrl[0], cp.ctrl[1], k, j, unrolled, N);
+        return { ...cp, ctrl: newCtrl };
+      });
+    }
+
+    return {
+      ...p,
+      polygon: updatedPoly,
+      curvePoints: updatedCurves,
+    };
+  });
+}
+
 export function useProject() {
   const { t } = useTranslation();
   const [project, setProject] = useState<Project>(EMPTY_PROJECT);
@@ -75,6 +121,7 @@ export function useProject() {
   const [undoStack, setUndoStack] = useState<Project[]>([]);
   const [redoStack, setRedoStack] = useState<Project[]>([]);
   const [availableProjects, setAvailableProjects] = useState<string[]>([]);
+  const [isSymmetryEnabled, setIsSymmetryEnabled] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -192,9 +239,30 @@ export function useProject() {
     localStorage.setItem('vitraux-last-project', name);
   }, [project.name, updateProject]);
 
-  const createNewProject = useCallback(async (name: string) => {
+  const createNewProject = useCallback(async (name: string, type: 'flat' | 'lamp' = 'flat') => {
     await flushSave();
-    const newProject = { ...EMPTY_PROJECT, name };
+    const newProject: Project = { ...EMPTY_PROJECT, name, projectType: type };
+    if (type === 'lamp') {
+      // Classic tapered lampshade: narrow top, widens to a short cylindrical skirt.
+      const lampConfig = {
+        facetCount: 6,
+        profilePoints: [
+          { r: 250, y: 0 },
+          { r: 700, y: 400 },
+          { r: 800, y: 700 },
+        ],
+        activeTierIndex: 0
+      };
+      const { width, height } = computeUnrolledLamp(lampConfig);
+      newProject.lampConfig = lampConfig;
+      newProject.patternWidth = width;
+      newProject.patternHeight = height;
+      newProject.patternScale = {
+        pxPerUnit: 10, // 10 px = 1 cm (profile points are in mm)
+        unit: 'cm',
+        line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
+      };
+    }
     setProject(newProject);
     setUndoStack([]);
     setRedoStack([]);
@@ -343,14 +411,47 @@ export function useProject() {
   }, []);
 
   const deletePiece = useCallback((pieceId: string) => {
-    updateProject(prev => ({ ...prev, pieces: prev.pieces.filter(p => p.id !== pieceId) }));
-    setSelectedPieceIds(ids => ids.filter(id => id !== pieceId));
-  }, [updateProject]);
+    updateProject(prev => {
+      const piece = prev.pieces.find(p => p.id === pieceId);
+      if (piece?.symmetryGroupId && isSymmetryEnabled) {
+        const deletedIds = prev.pieces.filter(p => p.symmetryGroupId === piece.symmetryGroupId).map(p => p.id);
+        setSelectedPieceIds(ids => ids.filter(id => !deletedIds.includes(id)));
+        return {
+          ...prev,
+          pieces: prev.pieces.filter(p => p.symmetryGroupId !== piece.symmetryGroupId)
+        };
+      }
+      setSelectedPieceIds(ids => ids.filter(id => id !== pieceId));
+      return { ...prev, pieces: prev.pieces.filter(p => p.id !== pieceId) };
+    });
+  }, [updateProject, isSymmetryEnabled]);
 
   const deletePieces = useCallback((pieceIds: string[]) => {
-    updateProject(prev => ({ ...prev, pieces: prev.pieces.filter(p => !pieceIds.includes(p.id)) }));
-    setSelectedPieceIds(ids => ids.filter(id => !pieceIds.includes(id)));
-  }, [updateProject]);
+    updateProject(prev => {
+      const finalIdsToDelete = [...pieceIds];
+      if (isSymmetryEnabled) {
+        const symmetryGroupIds = new Set<string>();
+        prev.pieces.forEach(p => {
+          if (pieceIds.includes(p.id) && p.symmetryGroupId) {
+            symmetryGroupIds.add(p.symmetryGroupId);
+          }
+        });
+        if (symmetryGroupIds.size > 0) {
+          prev.pieces.forEach(p => {
+            if (p.symmetryGroupId && symmetryGroupIds.has(p.symmetryGroupId)) {
+              finalIdsToDelete.push(p.id);
+            }
+          });
+        }
+      }
+      const toDeleteSet = new Set(finalIdsToDelete);
+      setSelectedPieceIds(ids => ids.filter(id => !toDeleteSet.has(id)));
+      return {
+        ...prev,
+        pieces: prev.pieces.filter(p => !toDeleteSet.has(p.id))
+      };
+    });
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePieceLabel = useCallback((pieceId: string, label: string) => {
     updateProject(prev => ({
@@ -368,6 +469,9 @@ export function useProject() {
 
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
     updateProject(prev => {
+      const targetPiece = prev.pieces.find(p => p.id === pieceId);
+      const targetSymmetryGroupId = targetPiece?.symmetryGroupId;
+
       const sheet = prev.sheets.find(s => s.id === sheetId);
       const sw = sheet?.naturalWidth ?? 800;
       const sh = sheet?.naturalHeight ?? 600;
@@ -377,14 +481,17 @@ export function useProject() {
 
       const next = {
         ...prev,
-        pieces: prev.pieces.map(p =>
-          p.id === pieceId ? { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } } : p
-        )
+        pieces: prev.pieces.map(p => {
+          if (p.id === pieceId || (isSymmetryEnabled && targetSymmetryGroupId && p.symmetryGroupId === targetSymmetryGroupId)) {
+            return { ...p, glassSheetId: sheetId, transform: { ...p.transform, x: cx, y: cy } };
+          }
+          return p;
+        })
       };
       return applyScales(next, sheetId);
     });
     setActiveSheetId(sheetId);
-  }, [updateProject]);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePiecesSheet = useCallback((pieceIds: string[], sheetId: string) => {
     updateProject(prev => {
@@ -489,7 +596,7 @@ export function useProject() {
     });
   }, [updateProject]);
 
-  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string): string => {
+  const addPieceFromBox = useCallback((box: BoundingBox, sheetId: string, tierIndex?: number): string => {
     const { x1, y1, x2, y2 } = box;
     const polygon: Piece['polygon'] = [
       [x1, y1], [x2, y1], [x2, y2], [x1, y2],
@@ -504,18 +611,83 @@ export function useProject() {
       const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
       const cx = (crop.left + sw - crop.right) / 2;
       const cy = (crop.top + sh - crop.bottom) / 2;
+
+      const isLamp = prev.projectType === 'lamp' && prev.lampConfig;
+      if (isLamp && isSymmetryEnabled) {
+        const lampConfig = prev.lampConfig!;
+        const N = lampConfig.facetCount;
+        const unrolled = computeUnrolledLamp(lampConfig);
+        
+        const xs = polygon.map(p => p[0]);
+        const ys = polygon.map(p => p[1]);
+        const cxCentroid = xs.reduce((sum, a) => sum + a, 0) / xs.length;
+        const cyCentroid = ys.reduce((sum, a) => sum + a, 0) / ys.length;
+        const norm = patternToSurfaceRobust(cxCentroid, cyCentroid, unrolled, N);
+        const k = norm.facetIdx;
+        
+        const symmetryGroupId = crypto.randomUUID();
+        const basePiece: Piece = {
+          id, label, polygon, glassSheetId: sheetId,
+          transform: { x: cx, y: cy, rotation: 0, scale: s },
+          promptBox: box, promptPoints: [],
+          tierIndex,
+          facetIndex: k,
+          symmetryGroupId,
+        };
+        
+        const copies: Piece[] = [];
+        for (let j = 0; j < N; j++) {
+          if (j === k) continue;
+          
+          const newPoly = polygon.map(([px, py]) =>
+            replicatePointToFacet(px, py, k, j, unrolled, N)
+          );
+          
+          let newPromptBox = box;
+          if (box) {
+            const [p1, p2] = [
+              replicatePointToFacet(box.x1, box.y1, k, j, unrolled, N),
+              replicatePointToFacet(box.x2, box.y2, k, j, unrolled, N)
+            ];
+            newPromptBox = {
+              x1: Math.min(p1[0], p2[0]),
+              y1: Math.min(p1[1], p2[1]),
+              x2: Math.max(p1[0], p2[0]),
+              y2: Math.max(p1[1], p2[1]),
+            };
+          }
+          
+          copies.push({
+            id: crypto.randomUUID(),
+            label: `${t('piece')} ${prev.pieces.length + copies.length + 2}`,
+            polygon: newPoly,
+            glassSheetId: sheetId,
+            transform: { x: cx, y: cy, rotation: 0, scale: s },
+            promptBox: newPromptBox,
+            promptPoints: [],
+            tierIndex,
+            facetIndex: j,
+            symmetryGroupId,
+          });
+        }
+        
+        setSelectedPieceIds([basePiece.id]);
+        return { ...prev, pieces: [...prev.pieces, basePiece, ...copies] };
+      }
+
       const newPiece: Piece = {
         id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
         promptBox: box, promptPoints: [],
+        tierIndex
       };
       setSelectedPieceIds([newPiece.id]);
       return { ...prev, pieces: [...prev.pieces, newPiece] };
     });
     return id;
-  }, [updateProject, t]);
+  }, [updateProject, t, isSymmetryEnabled]);
 
-  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string): string => {
+  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string, tierIndex?: number): string => {
     const id = crypto.randomUUID();
     updateProject(prev => {
       const label = `${t('piece')} ${prev.pieces.length + 1}`;
@@ -532,16 +704,79 @@ export function useProject() {
         x1: Math.min(...xs), y1: Math.min(...ys),
         x2: Math.max(...xs), y2: Math.max(...ys),
       };
+
+      const isLamp = prev.projectType === 'lamp' && prev.lampConfig;
+      if (isLamp && isSymmetryEnabled) {
+        const lampConfig = prev.lampConfig!;
+        const N = lampConfig.facetCount;
+        const unrolled = computeUnrolledLamp(lampConfig);
+        
+        const cxCentroid = xs.reduce((sum, a) => sum + a, 0) / xs.length;
+        const cyCentroid = ys.reduce((sum, a) => sum + a, 0) / ys.length;
+        const norm = patternToSurfaceRobust(cxCentroid, cyCentroid, unrolled, N);
+        const k = norm.facetIdx;
+        
+        const symmetryGroupId = crypto.randomUUID();
+        const basePiece: Piece = {
+          id, label, polygon, glassSheetId: sheetId,
+          transform: { x: cx, y: cy, rotation: 0, scale: s },
+          promptBox: box, promptPoints: [],
+          tierIndex,
+          facetIndex: k,
+          symmetryGroupId,
+        };
+        
+        const copies: Piece[] = [];
+        for (let j = 0; j < N; j++) {
+          if (j === k) continue;
+          
+          const newPoly = polygon.map(([px, py]) =>
+            replicatePointToFacet(px, py, k, j, unrolled, N)
+          );
+          
+          let newPromptBox = box;
+          if (box) {
+            const [p1, p2] = [
+              replicatePointToFacet(box.x1, box.y1, k, j, unrolled, N),
+              replicatePointToFacet(box.x2, box.y2, k, j, unrolled, N)
+            ];
+            newPromptBox = {
+              x1: Math.min(p1[0], p2[0]),
+              y1: Math.min(p1[1], p2[1]),
+              x2: Math.max(p1[0], p2[0]),
+              y2: Math.max(p1[1], p2[1]),
+            };
+          }
+          
+          copies.push({
+            id: crypto.randomUUID(),
+            label: `${t('piece')} ${prev.pieces.length + copies.length + 2}`,
+            polygon: newPoly,
+            glassSheetId: sheetId,
+            transform: { x: cx, y: cy, rotation: 0, scale: s },
+            promptBox: newPromptBox,
+            promptPoints: [],
+            tierIndex,
+            facetIndex: j,
+            symmetryGroupId,
+          });
+        }
+        
+        setSelectedPieceIds([basePiece.id]);
+        return { ...prev, pieces: [...prev.pieces, basePiece, ...copies] };
+      }
+
       const newPiece: Piece = {
         id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
         promptBox: box, promptPoints: [],
+        tierIndex
       };
       setSelectedPieceIds([newPiece.id]);
       return { ...prev, pieces: [...prev.pieces, newPiece] };
     });
     return id;
-  }, [updateProject, t]);
+  }, [updateProject, t, isSymmetryEnabled]);
 
   const updateSheetDimensions = useCallback((sheetId: string, w: number, h: number) => {
     updateProject(prev => {
@@ -580,25 +815,28 @@ export function useProject() {
   }, [updateProject, t]);
 
   const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][], skipHistory = false) => {
-    updateProject(prev => ({
-      ...prev,
-      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p)
-    }), skipHistory);
-  }, [updateProject]);
+    updateProject(prev => {
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, undefined, prev.lampConfig, isSymmetryEnabled);
+      return { ...prev, pieces: syncedPieces };
+    }, skipHistory);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
-    updateProject(prev => ({
-      ...prev,
-      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p)
-    }), skipHistory);
-  }, [updateProject]);
+    updateProject(prev => {
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, undefined, curvePoints, prev.lampConfig, isSymmetryEnabled);
+      return { ...prev, pieces: syncedPieces };
+    }, skipHistory);
+  }, [updateProject, isSymmetryEnabled]);
 
   const updatePiecePolygonAndCurves = useCallback((pieceId: string, polygon: [number, number][], curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
-    updateProject(prev => ({
-      ...prev,
-      pieces: prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p)
-    }), skipHistory);
-  }, [updateProject]);
+    updateProject(prev => {
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, curvePoints, prev.lampConfig, isSymmetryEnabled);
+      return { ...prev, pieces: syncedPieces };
+    }, skipHistory);
+  }, [updateProject, isSymmetryEnabled]);
 
   const markPiecePending = useCallback((pieceId: string) => {
     setPendingPieceIds(s => new Set(s).add(pieceId));
@@ -640,6 +878,7 @@ export function useProject() {
     const H = 1200;
     updateProject(prev => ({
       ...prev,
+      projectType: 'flat',
       patternImageUrl: '',
       patternWidth: W,
       patternHeight: H,
@@ -648,6 +887,33 @@ export function useProject() {
         pxPerUnit: 100,
         unit: 'in',
         line: { x1: 0, y1: H / 2, x2: W, y2: H / 2 },
+      },
+    }));
+  }, [updateProject]);
+
+  const startLampMode = useCallback(() => {
+    const lampConfig = {
+      facetCount: 6,
+      profilePoints: [
+        { r: 250, y: 0 },
+        { r: 700, y: 400 },
+        { r: 800, y: 700 },
+      ],
+      activeTierIndex: 0
+    };
+    const { width, height } = computeUnrolledLamp(lampConfig);
+    updateProject(prev => ({
+      ...prev,
+      projectType: 'lamp',
+      lampConfig,
+      patternImageUrl: '',
+      patternWidth: width,
+      patternHeight: height,
+      patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+      patternScale: {
+        pxPerUnit: 100,
+        unit: 'in',
+        line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
       },
     }));
   }, [updateProject]);
@@ -719,6 +985,72 @@ export function useProject() {
     setActiveSheetId(id);
   }, [updateProject]);
 
+  const updateLampConfig = useCallback((config: Partial<import('../types').LampConfig>) => {
+    updateProject(prev => {
+      if (!prev.lampConfig) return prev;
+      const merged = { ...prev.lampConfig, ...config };
+      // Reflow pattern dimensions whenever the lamp's footprint changes.
+      const geometryChanged =
+        config.facetCount !== undefined || config.profilePoints !== undefined || config.smooth !== undefined;
+      if (!geometryChanged) {
+        return { ...prev, lampConfig: merged };
+      }
+      const oldConfig = prev.lampConfig;
+      const oldN = oldConfig.facetCount;
+      const newN = merged.facetCount;
+      const oldUnrolled = computeUnrolledLamp(oldConfig);
+      const newUnrolled = computeUnrolledLamp(merged);
+
+      const reflowedPieces = prev.pieces.map(piece => {
+        const newPolygon = reflowLampPoints(piece.polygon, oldUnrolled, newUnrolled, oldN, newN);
+
+        const newCurvePoints = piece.curvePoints?.map(cp => {
+          const [newCtrl] = reflowLampPoints([cp.ctrl], oldUnrolled, newUnrolled, oldN, newN);
+          return { ...cp, ctrl: newCtrl };
+        });
+
+        const newPromptPoints = piece.promptPoints?.map(pt => {
+          const [newPt] = reflowLampPoints([[pt.x, pt.y]], oldUnrolled, newUnrolled, oldN, newN);
+          return { ...pt, x: newPt[0], y: newPt[1] };
+        });
+
+        let newPromptBox = piece.promptBox;
+        if (piece.promptBox) {
+          const [p1, p2] = reflowLampPoints(
+            [[piece.promptBox.x1, piece.promptBox.y1], [piece.promptBox.x2, piece.promptBox.y2]],
+            oldUnrolled,
+            newUnrolled,
+            oldN,
+            newN
+          );
+          newPromptBox = {
+            x1: Math.min(p1[0], p2[0]),
+            y1: Math.min(p1[1], p2[1]),
+            x2: Math.max(p1[0], p2[0]),
+            y2: Math.max(p1[1], p2[1]),
+          };
+        }
+
+        return {
+          ...piece,
+          polygon: newPolygon,
+          curvePoints: newCurvePoints,
+          promptPoints: newPromptPoints,
+          promptBox: newPromptBox,
+        };
+      });
+
+      const { width, height } = computeUnrolledLamp(merged);
+      return {
+        ...prev,
+        lampConfig: merged,
+        patternWidth: width,
+        patternHeight: height,
+        pieces: reflowedPieces,
+      };
+    });
+  }, [updateProject]);
+
   return {
     project,
     isLoaded,
@@ -772,8 +1104,12 @@ export function useProject() {
     loadProjectData,
     updatePatternImage,
     startBlankCanvas,
+    startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
+    updateLampConfig,
+    isSymmetryEnabled,
+    setIsSymmetryEnabled,
   };
 }

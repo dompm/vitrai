@@ -1688,4 +1688,66 @@ html, body, #root {
   font-weight: 600;
 }
 
+/* Onboarding Flow */
+.onboarding-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
+.onboarding-card {
+  background: var(--chrome-800);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 32px 24px;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-soft);
+}
+
+.onboarding-card:hover {
+  background: var(--chrome-700);
+  border-color: var(--accent);
+  color: var(--text-bright);
+  transform: translateY(-2px);
+}
+
+.onboarding-card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--chrome-900);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  color: var(--accent);
+  border: 1px solid var(--hairline);
+  transition: all 0.2s ease;
+}
+
+.onboarding-card:hover .onboarding-card-icon {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+.onboarding-card h3 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--text-bright);
+  margin: 0 0 12px 0;
+}
+
+.onboarding-card p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  opacity: 0.8;
+}

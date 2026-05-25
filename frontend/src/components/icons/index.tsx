@@ -170,3 +170,17 @@ export const IconSpark = (p: IconProps) => (
     <path d="M12 3v6M12 15v6M3 12h6M15 12h6" />
   </Svg>
 );
+
+export const IconSquare = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+  </Svg>
+);
+
+export const IconLamp = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M8 2h8l4 14H4L8 2z" />
+    <path d="M12 16v6" />
+    <path d="M8 22h8" />
+  </Svg>
+);

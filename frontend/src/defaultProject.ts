@@ -29,6 +29,7 @@ export const DEFAULT_PROJECT: Project = {
       naturalHeight: 1536,
     };
   }),
+  projectType: 'flat',
 };
 export const EMPTY_PROJECT: Project = {
   name: 'Untitled Project',
@@ -39,4 +40,5 @@ export const EMPTY_PROJECT: Project = {
   patternScale: null,
   pieces: [],
   sheets: [],
+  projectType: 'flat',
 };
