@@ -1273,12 +1273,10 @@ export function App() {
             onSmoothPieces={handleSmoothPieces}
             onAddSheetAndAssignPiece={addSheetAndAssignPiece}
             onAddSheetAndAssignPieces={addSheetAndAssignPieces}
-            showEmptyHint={
-              piecesOnActiveSheet.length === 0 &&
-              project.pieces.length > 0
-            }
+            showEmptyHint={activeSheet.id !== 'glass-none' && !project.pieces.some(p => p.glassId === activeSheet.id)}
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
+            isTutorial={project.name === 'Tutorial'}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>

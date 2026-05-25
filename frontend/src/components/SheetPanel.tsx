@@ -160,11 +160,12 @@ interface SheetPanelProps {
   showEmptyHint?: boolean;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
+  isTutorial?: boolean;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false, activeTool, onChangeActiveTool,
+  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -350,7 +351,6 @@ export function SheetPanel({
       const cropR = sheetW - sheet.crop.right;
       const cropB = sheetH - sheet.crop.bottom;
 
-      const isTutorial = project.name === 'Tutorial';
       const defaultX1 = isTutorial ? 764.712 : cropL + (cropR - cropL) * 0.25;
       const defaultX2 = isTutorial ? 2058.347 : cropL + (cropR - cropL) * 0.75;
       const defaultY = isTutorial ? 768 : cropT + (cropB - cropT) * 0.5;
