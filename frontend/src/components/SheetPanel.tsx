@@ -324,7 +324,6 @@ export function SheetPanel({
   }
 
   function handleMeasureDragEnd(nx1: number, ny1: number, nx2: number, ny2: number) {
-    console.log(`[Sheet Ruler Coordinates] x1: ${nx1}, y1: ${ny1}, x2: ${nx2}, y2: ${ny2}`);
     const existing = sheet.scale;
     const newPxLen = Math.hypot(nx2 - nx1, ny2 - ny1);
     if (existing) {
@@ -351,9 +350,10 @@ export function SheetPanel({
       const cropR = sheetW - sheet.crop.right;
       const cropB = sheetH - sheet.crop.bottom;
 
-      const defaultX1 = cropL + (cropR - cropL) * 0.25;
-      const defaultX2 = cropL + (cropR - cropL) * 0.75;
-      const defaultY = cropT + (cropB - cropT) * 0.5;
+      const isTutorial = project.name === 'Tutorial';
+      const defaultX1 = isTutorial ? 764.712 : cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = isTutorial ? 2058.347 : cropL + (cropR - cropL) * 0.75;
+      const defaultY = isTutorial ? 768 : cropT + (cropB - cropT) * 0.5;
 
       let x1 = saved?.x1 ?? defaultX1;
       let y1 = saved?.y1 ?? defaultY;
