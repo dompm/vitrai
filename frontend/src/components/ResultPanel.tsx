@@ -1658,7 +1658,7 @@ export function ResultPanel({
                       <IconLamp size={28} />
                     </div>
                     <h3>3D Lamp Shade</h3>
-                    <p>Design a 3D faceted lamp and use intelligent symmetry tools.</p>
+                    <p>Design a 3D lamp, draw patterns across its facets, and preview in real-time.</p>
                   </button>
                 )}
               </div>
