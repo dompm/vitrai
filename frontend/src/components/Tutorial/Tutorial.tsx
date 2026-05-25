@@ -409,7 +409,7 @@ export function Tutorial({
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
-          withBackdrop={step === 'refine-first-piece'}
+          withBackdrop={!['cut-second-piece', 'refine-second-piece', 'cut-remaining-pieces', 'refine-remaining-pieces'].includes(step)}
         />
       )}
       {showLoadingDialog && (
