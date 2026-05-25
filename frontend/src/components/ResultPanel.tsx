@@ -173,6 +173,7 @@ interface ResultPanelProps {
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
+  downloadProgress?: number | null;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStartBlankCanvas: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
@@ -648,7 +649,7 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
   onUpdateSolderWidthMM, onUpdateSolderColor,
 }: ResultPanelProps) {
@@ -1223,9 +1224,10 @@ export function ResultPanel({
       const cropR = pw - project.patternCrop.right;
       const cropB = ph - project.patternCrop.bottom;
       
-      const defaultX1 = cropL + (cropR - cropL) * 0.25;
-      const defaultX2 = cropL + (cropR - cropL) * 0.75;
-      const defaultY = cropT + (cropB - cropT) * 0.5;
+      const isTutorial = project.name === 'Tutorial';
+      const defaultX1 = isTutorial ? 142.774 : cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = isTutorial ? 2859.777 : cropL + (cropR - cropL) * 0.75;
+      const defaultY = isTutorial ? 2040 : cropT + (cropB - cropT) * 0.5;
 
       let x1 = saved?.x1 ?? defaultX1;
       let y1 = saved?.y1 ?? defaultY;
@@ -1391,8 +1393,8 @@ export function ResultPanel({
   const TOOLS = BASE_TOOLS
     .filter(tool => !IS_TOUCH || tool.id !== 'pan')
     .map(tool => {
-    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: !!isEncoding };
-    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: !!isAutoSegmenting || !!isEncoding };
+    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
+    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
     return tool;
   });
 

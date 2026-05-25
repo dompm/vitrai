@@ -37,6 +37,7 @@ export type WorkerOutMsg =
   | { type: 'ready';            device: string }
   | { type: 'init:error';       error: string }
   | { type: 'status';           text: string }
+  | { type: 'progress';         fraction: number }
   | { type: 'encode:done';      id: string; sessionId: string }
   | { type: 'encode:error';     id: string; error: string }
   | { type: 'segment:done';     id: string; polygon: [number, number][];
@@ -75,19 +76,79 @@ let initStarted = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
+const downloadProgress = new Map<string, { loaded: number; total: number }>();
+
+function reportProgress() {
+  let loaded = 0;
+  let total = 0;
+  for (const stats of downloadProgress.values()) {
+    loaded += stats.loaded;
+    total += stats.total;
+  }
+  if (total > 0) {
+    post({ type: 'progress', fraction: loaded / total });
+  }
+}
+
 async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> {
+  let guessTotal = 4000000; // default for .onnx
+  if (filename.endsWith('.onnx_data')) {
+    guessTotal = filename.includes('encoder') ? 305000000 : 21000000;
+  }
+  if (!downloadProgress.has(filename)) {
+    downloadProgress.set(filename, { loaded: 0, total: guessTotal });
+  }
+
   try {
     const root = await navigator.storage.getDirectory();
     try {
       const handle = await root.getFileHandle(filename);
       const file = await handle.getFile();
       console.log(`[SAM Worker] Loading ${filename} from OPFS cache...`);
-      return await file.arrayBuffer();
+      const buf = await file.arrayBuffer();
+      downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+      reportProgress();
+      return buf;
     } catch {
       console.log(`[SAM Worker] Fetching ${filename} from ${url}...`);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Fetch failed: ${res.statusText}`);
-      const buf = await res.arrayBuffer();
+      
+      const contentLength = res.headers.get('Content-Length');
+      // If we don't know the exact size, we can guess or use 0. But we know approximate sizes:
+      // decoder: 4MB + 15MB = 19MB, encoder: 4MB + 30MB = 34MB. Let's just use what's provided.
+      const total = contentLength ? parseInt(contentLength, 10) : (filename.includes('encoder') ? 30000000 : 15000000);
+      let loaded = 0;
+      
+      downloadProgress.set(filename, { loaded, total });
+      reportProgress();
+
+      if (!res.body) {
+        const buf = await res.arrayBuffer();
+        downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+        reportProgress();
+        return buf;
+      }
+
+      const reader = res.body.getReader();
+      const chunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          loaded += value.length;
+          downloadProgress.set(filename, { loaded, total });
+          reportProgress();
+        }
+      }
+
+      let position = 0;
+      const buf = new Uint8Array(loaded);
+      for (const chunk of chunks) {
+        buf.set(chunk, position);
+        position += chunk.length;
+      }
 
       // Save to cache for next time
       const handle = await root.getFileHandle(filename, { create: true });
@@ -95,12 +156,16 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
       await writable.write(buf);
       await writable.close();
       console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
-      return buf;
+      
+      return buf.buffer;
     }
   } catch (err) {
     console.warn(`[SAM Worker] Cache failed for ${filename}, falling back to network:`, err);
     const res = await fetch(url);
-    return await res.arrayBuffer();
+    const buf = await res.arrayBuffer();
+    downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+    reportProgress();
+    return buf;
   }
 }
 
