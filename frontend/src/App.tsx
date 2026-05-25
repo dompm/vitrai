@@ -1460,6 +1460,7 @@ export function App() {
         onSkip={skipTutorial}
         onComplete={completeTutorial}
         isEncoding={!!project.patternImageUrl && patternImageId === null}
+        downloadProgress={downloadProgress}
       />
   </div>
   );

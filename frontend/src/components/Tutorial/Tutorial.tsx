@@ -20,6 +20,7 @@ interface Props {
   sheetTool: ToolId;
   patternRefineMode: 'add' | 'remove' | null;
   isEncoding?: boolean;
+  downloadProgress?: number | null;
   onAdvance: () => void;
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
@@ -39,6 +40,7 @@ export function Tutorial({
   sheetTool,
   patternRefineMode,
   isEncoding,
+  downloadProgress,
   onAdvance,
   onSetStep,
   onSetTrackedPiece,
@@ -53,6 +55,32 @@ export function Tutorial({
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
+  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
+  const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
+
+  useEffect(() => {
+    if (downloadProgress == null || downloadProgress === 0) {
+      progressHistoryRef.current = [];
+      setEtaSeconds(null);
+      return;
+    }
+    const now = Date.now();
+    const history = progressHistoryRef.current;
+    history.push({ time: now, fraction: downloadProgress });
+    if (history.length > 20) history.shift();
+
+    if (history.length > 1) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const timeDiff = last.time - first.time;
+      const fracDiff = last.fraction - first.fraction;
+      if (timeDiff > 0 && fracDiff > 0.001) {
+        const remainingFrac = 1 - last.fraction;
+        const timePerFrac = timeDiff / fracDiff;
+        setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
+      }
+    }
+  }, [downloadProgress]);
 
   // Reset transitional refs when stepping out of a step.
   useEffect(() => {
@@ -358,6 +386,9 @@ export function Tutorial({
   // Show loading dialog if they are asked to cut the first piece but the model is still loading
   const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
 
+  const percent = downloadProgress != null ? Math.round(downloadProgress * 100) : null;
+  const etaText = etaSeconds != null ? (etaSeconds > 60 ? `~${Math.ceil(etaSeconds/60)}m` : `${etaSeconds}s`) : '...';
+
   return (
     <>
       <TutorialBar
@@ -383,6 +414,11 @@ export function Tutorial({
             <p className="move-confirm-body">
               {t('tutorialModelLoadingBody', 'The segmentation model is currently downloading to your browser. This may take a few moments depending on your connection, but it only happens the very first time you use the app!')}
             </p>
+            {percent != null && (
+              <p className="move-confirm-body" style={{ fontWeight: 'bold', marginTop: '1rem' }}>
+                Progress: {percent}% (ETA: {etaText})
+              </p>
+            )}
             <div className="move-confirm-actions" style={{ justifyContent: 'flex-end' }}>
               <button className="btn-primary" onClick={() => setHasSeenLoadingDialog(true)}>
                 {t('tutorialModelLoadingOk', 'Got it')}
