@@ -56,29 +56,29 @@ export function Tutorial({
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
-  const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
+  const startTrackerRef = useRef<{ time: number; fraction: number } | null>(null);
 
   useEffect(() => {
     if (downloadProgress == null || downloadProgress === 0) {
-      progressHistoryRef.current = [];
+      startTrackerRef.current = null;
       setEtaSeconds(null);
       return;
     }
     const now = Date.now();
-    const history = progressHistoryRef.current;
-    history.push({ time: now, fraction: downloadProgress });
-    if (history.length > 20) history.shift();
+    if (!startTrackerRef.current) {
+      startTrackerRef.current = { time: now, fraction: downloadProgress };
+      return;
+    }
 
-    if (history.length > 1) {
-      const first = history[0];
-      const last = history[history.length - 1];
-      const timeDiff = last.time - first.time;
-      const fracDiff = last.fraction - first.fraction;
-      if (timeDiff > 0 && fracDiff > 0.001) {
-        const remainingFrac = 1 - last.fraction;
-        const timePerFrac = timeDiff / fracDiff;
-        setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
-      }
+    const { time: startTime, fraction: startFraction } = startTrackerRef.current;
+    const timeDiff = now - startTime;
+    const fracDiff = downloadProgress - startFraction;
+
+    // Wait at least 500ms and 1% progress to compute a stable ETA
+    if (timeDiff > 500 && fracDiff > 0.01) {
+      const remainingFrac = 1 - downloadProgress;
+      const timePerFrac = timeDiff / fracDiff;
+      setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
     }
   }, [downloadProgress]);
 
