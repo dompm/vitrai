@@ -1485,6 +1485,18 @@ html, body, #root {
   justify-content: center;
 }
 
+/* Spotlight dim backdrop — a transparent rect at the target whose huge
+   box-shadow spread dims the rest of the viewport, creating a cutout. */
+.tutorial-spotlight-backdrop {
+  box-shadow: 0 0 0 9999px rgba(10, 8, 5, 0.4);
+  animation: spotlightBackdropFadeIn 0.35s ease-out forwards;
+}
+
+@keyframes spotlightBackdropFadeIn {
+  from { box-shadow: 0 0 0 9999px rgba(10, 8, 5, 0); }
+  to   { box-shadow: 0 0 0 9999px rgba(10, 8, 5, 0.4); }
+}
+
 /* Spotlight Pulse ring */
 .tutorial-spotlight-pulse {
   border: 2px solid var(--amber);

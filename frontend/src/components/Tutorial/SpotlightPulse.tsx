@@ -10,6 +10,7 @@ interface Anchor {
 
 interface SpotlightPulseProps {
   selector: string;
+  withBackdrop?: boolean;
 }
 
 function readAnchor(selector: string): Anchor | null {
@@ -20,7 +21,7 @@ function readAnchor(selector: string): Anchor | null {
   return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
 }
 
-export function SpotlightPulse({ selector }: SpotlightPulseProps) {
+export function SpotlightPulse({ selector, withBackdrop = false }: SpotlightPulseProps) {
   const [anchor, setAnchor] = useState<Anchor | null>(null);
 
   useEffect(() => {
@@ -51,20 +52,38 @@ export function SpotlightPulse({ selector }: SpotlightPulseProps) {
 
   if (!anchor) return null;
 
+  const commonRect = {
+    left: anchor.x - 4,
+    top: anchor.y - 4,
+    width: anchor.width + 8,
+    height: anchor.height + 8,
+  };
+
   return createPortal(
-    <div
-      className="tutorial-spotlight-pulse"
-      style={{
-        position: 'fixed',
-        left: anchor.x - 4,
-        top: anchor.y - 4,
-        width: anchor.width + 8,
-        height: anchor.height + 8,
-        pointerEvents: 'none',
-        zIndex: 2000,
-        borderRadius: 8,
-      }}
-    />,
+    <>
+      {withBackdrop && (
+        <div
+          className="tutorial-spotlight-backdrop"
+          style={{
+            position: 'fixed',
+            ...commonRect,
+            pointerEvents: 'none',
+            zIndex: 1040,
+            borderRadius: 8,
+          }}
+        />
+      )}
+      <div
+        className="tutorial-spotlight-pulse"
+        style={{
+          position: 'fixed',
+          ...commonRect,
+          pointerEvents: 'none',
+          zIndex: 2000,
+          borderRadius: 8,
+        }}
+      />
+    </>,
     document.body
   );
 }

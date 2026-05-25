@@ -11,6 +11,7 @@ export class SamWorkerBackend {
   private readyPromise: Promise<string>;
   private pending = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
   onDebugMask: (m: { bitmap: ImageBitmap; width: number; height: number }) => void = () => {};
+  onProgress: (fraction: number) => void = () => {};
 
   constructor(onStatusChange: (s: string) => void = () => {}) {
     this.worker = new Worker(new URL("./samWorker.ts", import.meta.url), { type: "module" });
@@ -33,6 +34,8 @@ export class SamWorkerBackend {
         rejectReady(new Error(msg.error));
       } else if (msg.type === "status") {
         onStatusChange(msg.text);
+      } else if (msg.type === "progress") {
+        this.onProgress(msg.fraction);
       } else {
         const p = this.pending.get(msg.id);
         if (!p) return;
