@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { LampConfig, LampProfilePoint, Project } from '../types';
+import type { LampConfig, LampProfilePoint, Project, Scale, ScaleUnit } from '../types';
 import { Lamp3DPreview } from './Lamp3DPreview';
 import { computeUnrolledLamp, reflowLampPoints } from '../utils/lampGeometry';
 
@@ -10,7 +10,7 @@ interface Props {
   isFirstTime?: boolean;
   onCancel: () => void;
   onConfirm: (config: Partial<LampConfig>) => void;
-  onUpdatePatternScale?: (scale: import('../types').Scale) => void;
+  onUpdatePatternScale?: (scale: Scale) => void;
 }
 
 type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid' | 'tulip';
@@ -186,25 +186,12 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
         style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-          <p
-            className="move-confirm-title"
-            style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-bright)', margin: 0 }}
-          >
-            {isFirstTime ? t('lampSetupTitle') : t('lampProfileTitle')}
-          </p>
-          {onUpdatePatternScale && project.patternScale && (
-            <select
-              value={project.patternScale.unit}
-              onChange={e => onUpdatePatternScale({ ...project.patternScale!, unit: e.target.value as import('../types').ScaleUnit })}
-              style={{ padding: '4px 8px', borderRadius: 4, background: 'var(--paper)', color: 'var(--text-bright)', border: '1px solid var(--hairline-2)', outline: 'none' }}
-            >
-              <option value="in">{t('unit_in')}</option>
-              <option value="cm">{t('unit_cm')}</option>
-              <option value="mm">{t('unit_mm')}</option>
-            </select>
-          )}
-        </div>
+        <p
+          className="move-confirm-title"
+          style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-bright)', margin: '0 0 4px' }}
+        >
+          {isFirstTime ? t('lampSetupTitle') : t('lampProfileTitle')}
+        </p>
         {isFirstTime && (
           <p style={{ fontSize: 12.5, color: 'var(--text-soft)', marginBottom: 12 }}>
             {t('lampSetupSubtitle')}
@@ -243,6 +230,11 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
             onLabel={t('lampProfileEditorLabel')}
             unit={scale.unit}
             pxPerUnit={scale.pxPerUnit}
+            onChangeUnit={
+              onUpdatePatternScale && project.patternScale
+                ? u => onUpdatePatternScale({ ...project.patternScale!, unit: u })
+                : undefined
+            }
           />
         </div>
 
@@ -327,8 +319,9 @@ interface ProfileEditorProps {
   onAddAfter: (idx: number) => void;
   onDelete: (idx: number) => void;
   onLabel: string;
-  unit: import('../types').ScaleUnit;
+  unit: ScaleUnit;
   pxPerUnit: number;
+  onChangeUnit?: (unit: ScaleUnit) => void;
 }
 
 function ProfileEditor({
@@ -341,7 +334,9 @@ function ProfileEditor({
   onLabel,
   unit,
   pxPerUnit,
+  onChangeUnit,
 }: ProfileEditorProps) {
+  const { t } = useTranslation();
   const W = 360;
   const H = 240;
   const PAD_LEFT = 32;
@@ -575,17 +570,43 @@ function ProfileEditor({
           <>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <NumberField
-              label={`r (${unit})`}
+              label="r"
               value={selected ? Number((selected.r / pxPerUnit).toFixed(3)) : 0}
               step={unit === 'in' ? 0.125 : (unit === 'cm' ? 0.5 : 1)}
               onChange={v => onUpdatePoint(selectedIdx, { r: Math.max(0, v * pxPerUnit), y: selected.y })}
             />
             <NumberField
-              label={`y (${unit})`}
+              label="y"
               value={selected ? Number((selected.y / pxPerUnit).toFixed(3)) : 0}
               step={unit === 'in' ? 0.125 : (unit === 'cm' ? 0.5 : 1)}
               onChange={v => onUpdatePoint(selectedIdx, { r: selected.r, y: v * pxPerUnit })}
             />
+            {onChangeUnit && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 12, color: 'var(--text-soft)', width: 56 }}>{t('lampProfileUnits')}</span>
+                <select
+                  value={unit}
+                  onChange={e => onChangeUnit(e.target.value as ScaleUnit)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    background: 'var(--paper)',
+                    border: '1px solid var(--hairline-2)',
+                    borderRadius: 5,
+                    padding: '4px 8px',
+                    fontSize: 12,
+                    color: 'var(--text-bright)',
+                    outline: 'none',
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <option value="in">{t('unit_in')}</option>
+                  <option value="cm">{t('unit_cm')}</option>
+                  <option value="mm">{t('unit_mm')}</option>
+                </select>
+              </label>
+            )}
           </div>
           </>
         )}
