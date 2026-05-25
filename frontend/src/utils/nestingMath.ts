@@ -1,5 +1,4 @@
-import pc from 'polygon-clipping';
-import type { Pair } from 'polygon-clipping';
+// Custom robust polygon intersection logic
 
 export type Point = { x: number; y: number };
 export type Polygon = Point[];
@@ -10,27 +9,49 @@ export interface NestingResult {
   rotation: number;
 }
 
-// Convert our simple polygons to polygon-clipping format (Ring)
-function toRing(poly: Polygon): Pair[] {
-  return poly.map(p => [p.x, p.y] as Pair);
+// Check if two line segments intersect
+function segmentsIntersect(p1: Point, p2: Point, p3: Point, p4: Point): boolean {
+  const ccw = (A: Point, B: Point, C: Point) => (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+  return ccw(p1, p3, p4) !== ccw(p2, p3, p4) && ccw(p1, p2, p3) !== ccw(p1, p2, p4);
 }
 
-// Check if poly1 and poly2 intersect
+// Ray-casting algorithm for point in polygon
+function pointInPolygon(point: Point, vs: Polygon): boolean {
+  let inside = false;
+  for (let i = 0, j = vs.length - 1; i < vs.length; j = i++) {
+    const xi = vs[i].x, yi = vs[i].y;
+    const xj = vs[j].x, yj = vs[j].y;
+    const intersect = ((yi > point.y) !== (yj > point.y)) && 
+                      (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+// Check if poly1 and poly2 intersect without crashing on degenerate shapes
 function polygonsIntersect(poly1: Polygon, poly2: Polygon): boolean {
-  const r1 = toRing(poly1);
-  const r2 = toRing(poly2);
-  const intersection = pc.intersection([[r1]], [[r2]]);
-  return intersection.length > 0;
+  // 1. Edge intersections
+  for (let i = 0; i < poly1.length; i++) {
+    const p1 = poly1[i];
+    const p2 = poly1[(i + 1) % poly1.length];
+    for (let j = 0; j < poly2.length; j++) {
+      const p3 = poly2[j];
+      const p4 = poly2[(j + 1) % poly2.length];
+      if (segmentsIntersect(p1, p2, p3, p4)) return true;
+    }
+  }
+
+  // 2. Poly1 inside Poly2 (test first vertex)
+  if (poly1.length > 0 && pointInPolygon(poly1[0], poly2)) return true;
+
+  // 3. Poly2 inside Poly1 (test first vertex)
+  if (poly2.length > 0 && pointInPolygon(poly2[0], poly1)) return true;
+
+  return false;
 }
 
 // Check if poly is completely inside the bin
-function polygonInsideBin(poly: Polygon, bin: Polygon): boolean {
-  const rp = toRing(poly);
-  const rb = toRing(bin);
-  // If the difference between poly and bin is empty, poly is fully inside bin
-  const diff = pc.difference([[rp]], [[rb]]);
-  return diff.length === 0;
-}
+// (Removed polygonInsideBin as it's redundant for rectangular bins when bounding box is clamped)
 
 // Rotate a polygon around the origin (0,0)
 function rotatePolygon(poly: Polygon, angleRad: number): Polygon {
@@ -88,52 +109,40 @@ export function findBestPlacement(
     const bounds = getBoundingBox(rotatedBase);
     
     // Scan possible translation vectors
-    // To keep it top-left gravity (like shelf packing), we start from minY
-    for (let ty = binBounds.minY; ty <= binBounds.maxY - bounds.h; ty += step) {
-      for (let tx = binBounds.minX; tx <= binBounds.maxX - bounds.w; tx += step) {
+    // Ensure the piece's bounding box stays strictly within the bin
+    const startY = binBounds.minY - bounds.minY + gapPx;
+    const endY = binBounds.maxY - bounds.maxY - gapPx;
+    const startX = binBounds.minX - bounds.minX + gapPx;
+    const endX = binBounds.maxX - bounds.maxX - gapPx;
+
+    for (let ty = startY; ty <= endY; ty += step) {
+      for (let tx = startX; tx <= endX; tx += step) {
         // Fast bounding box rejection against placed pieces
+        // For flush packing between pieces, we do not inflate the BB by gapPx
         const translatedBB = {
-          minX: tx + bounds.minX - gapPx,
-          minY: ty + bounds.minY - gapPx,
-          maxX: tx + bounds.maxX + gapPx,
-          maxY: ty + bounds.maxY + gapPx
+          minX: tx + bounds.minX,
+          minY: ty + bounds.minY,
+          maxX: tx + bounds.maxX,
+          maxY: ty + bounds.maxY
         };
         
-        let bbConflict = false;
+        let exactConflict = false;
+        
         for (const placed of placedPolys) {
           const pBB = getBoundingBox(placed);
+          // If bounding boxes overlap, test exact polygon intersection
           if (
             translatedBB.minX < pBB.maxX &&
             translatedBB.maxX > pBB.minX &&
             translatedBB.minY < pBB.maxY &&
             translatedBB.maxY > pBB.minY
           ) {
-            bbConflict = true;
-            break;
+            const testPoly = translatePolygon(rotatedBase, tx, ty);
+            if (polygonsIntersect(testPoly, placed)) {
+              exactConflict = true;
+              break;
+            }
           }
-        }
-        
-        if (bbConflict) continue;
-        
-        // Exact polygon intersection tests
-        const candidatePoly = translatePolygon(rotatedBase, tx, ty);
-        
-        // 1. Must be inside bin
-        if (!polygonInsideBin(candidatePoly, bin)) {
-          continue;
-        }
-        
-        // 2. Must not intersect placed pieces (with gap)
-        let exactConflict = false;
-        // Expand candidate slightly for gap testing
-        // For simplicity with polygon-clipping, we just translate the gap logic via bounding box, 
-        // but for exact gap we would offset the polygon. Here we do an exact intersection on the 
-        // actual polygons if BB passed. If we want cutting gap, we can just enforce the BB check we did.
-        for (const placed of placedPolys) {
-           if (polygonsIntersect(candidatePoly, placed)) {
-             exactConflict = true;
-             break;
-           }
         }
         
         if (exactConflict) continue;

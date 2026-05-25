@@ -97,7 +97,7 @@ export function packPiecesOnSheet(
   return placements;
 }
 
-const DEFAULT_CUTTING_GAP_MM = 5;
+const DEFAULT_CUTTING_GAP_MM = 2;
 
 /** Cutting gap in glass-px. Uses the sheet's scale when known, else a sane fallback. */
 export function defaultCuttingGapPx(sheet: GlassSheet): number {
