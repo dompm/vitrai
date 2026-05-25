@@ -7,7 +7,8 @@ import { CANVAS } from '../theme';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
-import { computeCentroid } from '../utils/geometry';
+import { computeCentroid, flattenCurves } from '../utils/geometry';
+import { packPiecesSmart, defaultCuttingGapPx } from '../utils/packing';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
@@ -45,15 +46,16 @@ function PieceOutline({
   fillOnly, strokeOnly, handleOnly, listening = true
 }: PieceOutlineProps) {
   const { x, y, rotation, scale } = piece.transform;
-  const centroid = computeCentroid(piece.polygon);
-  const relPts = piece.polygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
+  const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+  const centroid = computeCentroid(displayPoly);
+  const relPts = displayPoly.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
 
   // Combined divisor so sizes stay fixed in display pixels
   const es = effectiveScale * scale;
 
   // Bounding radius in display px, converted to local coords for the handle stem
   const radiusPx = Math.max(
-    ...piece.polygon.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
+    ...displayPoly.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
   ) * es;
   const handleOffset = (radiusPx + HANDLE_GAP + HANDLE_RADIUS) / es;
 
@@ -148,12 +150,23 @@ function PieceOutline({
   );
 }
 
+const PackIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="1.5" />
+    <rect x="5.5" y="5.5" width="6" height="6" rx="0.6" />
+    <rect x="13" y="5.5" width="5.5" height="4" rx="0.6" />
+    <rect x="5.5" y="13" width="4.5" height="5.5" rx="0.6" />
+    <rect x="11.5" y="11" width="7" height="7.5" rx="0.6" />
+  </svg>
+);
+
 interface SheetPanelProps {
   sheet: GlassSheet;
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
-  onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onUpdatePieceTransform: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onBatchTransformChange?: (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -163,12 +176,19 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform, onBatchTransformChange,
+  onCropChange, onScaleChange, onImageLoad,
   activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
+  const [isPacking, setIsPacking] = useState(false);
+  const [allowRotations, setAllowRotations] = useState(false);
+  const [isPackPopoverOpen, setIsPackPopoverOpen] = useState(false);
+  const packPopoverRef = useRef<HTMLDivElement>(null);
+  const isPackPopoverOpenRef = useRef(isPackPopoverOpen);
+  isPackPopoverOpenRef.current = isPackPopoverOpen;
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
@@ -198,6 +218,17 @@ export function SheetPanel({
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTool]);
+
+  useEffect(() => {
+    if (!isPackPopoverOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (packPopoverRef.current && !packPopoverRef.current.contains(e.target as Node)) {
+        setIsPackPopoverOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', handleClickOutside);
+    return () => document.removeEventListener('pointerdown', handleClickOutside);
+  }, [isPackPopoverOpen]);
 
   useEffect(() => {
     if (sheetImg && onImageLoad) onImageLoad(sheetImg.width, sheetImg.height);
@@ -277,7 +308,7 @@ export function SheetPanel({
     if (rotatingPiece) {
       const newRotation =
         Math.atan2(y - rotatingPiece.transform.y, x - rotatingPiece.transform.x) + Math.PI / 2;
-      onTransformChange(rotatingPieceId!, { rotation: newRotation }, true);
+      onUpdatePieceTransform(rotatingPieceId!, { rotation: newRotation }, true);
       return;
     }
 
@@ -307,7 +338,7 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
-      onTransformChange(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+      onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
     }
     setRotatingPieceId(null);
     vp.endPan();
@@ -431,9 +462,85 @@ export function SheetPanel({
     },
   ].filter(tool => !IS_TOUCH || tool.id !== 'pan'), [t]);
 
+  async function handleSmartPack() {
+    if (pieces.length === 0 || isPacking) return;
+    setIsPackPopoverOpen(false);
+    setIsPacking(true);
+    // Clear selection so handles don't follow jumping pieces
+    onSelectPiece(null);
+
+    const gapPx = defaultCuttingGapPx(sheet);
+    try {
+      await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
+        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
+      });
+    } finally {
+      setIsPacking(false);
+    }
+  }
+
+  const packDisabled = pieces.length === 0 || isPacking;
+
   return (
     <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange} />
+      <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div className="toolbar-divider" />
+        <div className="tooltip-wrapper" ref={packPopoverRef}>
+          <button
+            type="button"
+            className={`tool-btn ${isPackPopoverOpen ? 'active' : ''}`}
+            onClick={() => setIsPackPopoverOpen(o => !o)}
+            disabled={packDisabled && !isPacking}
+            aria-label={t('toolPack')}
+          >
+            {isPacking ? (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+              </svg>
+            ) : <PackIcon />}
+            <span className="tool-label">{isPacking ? t('packing', 'Packing...') : t('toolPack')}</span>
+          </button>
+          
+          {!isPackPopoverOpen && <span className="tooltip-tip">{t('tooltipPackDesc')}</span>}
+          
+          {isPackPopoverOpen && (
+            <div className="solder-popover">
+              <div className="solder-popover-section">
+                <span className="solder-popover-title" style={{ marginBottom: '12px', display: 'block' }}>{t('smartPack', 'Smart Pack')}</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: CANVAS.fg, cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={allowRotations} 
+                    onChange={e => setAllowRotations(e.target.checked)} 
+                    disabled={isPacking}
+                    style={{ accentColor: CANVAS.amber, width: '16px', height: '16px' }}
+                  />
+                  {t('allowRotations', 'Allow Rotations')}
+                </label>
+                <button
+                  type="button"
+                  onClick={handleSmartPack}
+                  disabled={isPacking || pieces.length === 0}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    background: CANVAS.amber,
+                    color: CANVAS.paper,
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontWeight: 600,
+                    cursor: (isPacking || pieces.length === 0) ? 'not-allowed' : 'pointer',
+                    opacity: (isPacking || pieces.length === 0) ? 0.5 : 1
+                  }}
+                >
+                  {t('startPacking', 'Start Packing')}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </Toolbar>
       <div
         ref={vp.containerRef}
         className="canvas-well"
@@ -479,7 +586,7 @@ export function SheetPanel({
                   effectiveScale={es}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  onTransformChange={(t, skip) => onTransformChange(piece.id, t, skip)}
+                  onTransformChange={(t, skip) => onUpdatePieceTransform(piece.id, t, skip)}
                 />
               ))}
 

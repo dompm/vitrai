@@ -331,6 +331,22 @@ export function useProject() {
     [updateProject]
   );
 
+  const batchUpdatePieceTransforms = useCallback(
+    (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => {
+      if (updates.length === 0) return;
+      const map = new Map(updates.map(u => [u.pieceId, u.transform]));
+      updateProject(prev => ({
+        ...prev,
+        pieces: prev.pieces.map(p => {
+          const t = map.get(p.id);
+          if (!t) return p;
+          return { ...p, transform: { ...p.transform, ...t } };
+        }),
+      }));
+    },
+    [updateProject]
+  );
+
   const updatePiecePrompt = useCallback(
     (pieceId: string, promptBox: BoundingBox | undefined, promptPoints: Piece['promptPoints']) => {
       updateProject(prev => ({
@@ -1028,6 +1044,7 @@ export function useProject() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
+    batchUpdatePieceTransforms,
     updatePatternCrop,
     updateSheetCrop,
     deletePiece,
