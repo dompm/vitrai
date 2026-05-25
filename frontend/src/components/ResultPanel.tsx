@@ -2209,7 +2209,11 @@ export function ResultPanel({
 
               const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
               const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
-              const isDrawing = drawingBox !== null;
+              const isDrawing = drawingBox !== null
+                || pencilPoints.length > 0
+                || (activeTool === 'pen' && activePolygonPoints.length > 0)
+                || draggedCorner !== null
+                || draggedMidpoint !== null;
               const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
 
               return (
@@ -2221,7 +2225,7 @@ export function ResultPanel({
                   padding: anchor.margin,
                   zIndex: 10,
                   pointerEvents: isInteracting ? 'none' : 'auto',
-                  opacity: isDrawing ? 0 : 0.95,
+                  opacity: isInteracting ? 0 : 0.95,
                   transition: 'opacity 0.2s ease, transform 0.3s ease-out',
                 }}>
                   <div style={{ pointerEvents: isInteracting ? 'none' : 'auto' }}>
