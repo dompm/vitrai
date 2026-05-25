@@ -157,7 +157,6 @@ interface SheetPanelProps {
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
-  showEmptyHint?: boolean;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
   isTutorial?: boolean;
@@ -165,7 +164,7 @@ interface SheetPanelProps {
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false
+  activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -531,11 +530,6 @@ export function SheetPanel({
             )}
           </Layer>
         </Stage>
-        {showEmptyHint && (
-          <div className="empty-sheet-hint" role="status">
-            {t('emptySheetHint')}
-          </div>
-        )}
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;
