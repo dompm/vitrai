@@ -247,9 +247,9 @@ export function useProject() {
       const lampConfig = {
         facetCount: 6,
         profilePoints: [
-          { r: 50, y: 0 },
-          { r: 100, y: 80 },
-          { r: 100, y: 140 },
+          { r: 250, y: 0 },
+          { r: 700, y: 400 },
+          { r: 800, y: 700 },
         ],
         activeTierIndex: 0
       };
@@ -840,6 +840,7 @@ export function useProject() {
     const H = 1200;
     updateProject(prev => ({
       ...prev,
+      projectType: 'flat',
       patternImageUrl: '',
       patternWidth: W,
       patternHeight: H,
@@ -848,6 +849,33 @@ export function useProject() {
         pxPerUnit: 100,
         unit: 'in',
         line: { x1: 0, y1: H / 2, x2: W, y2: H / 2 },
+      },
+    }));
+  }, [updateProject]);
+
+  const startLampMode = useCallback(() => {
+    const lampConfig = {
+      facetCount: 6,
+      profilePoints: [
+        { r: 250, y: 0 },
+        { r: 700, y: 400 },
+        { r: 800, y: 700 },
+      ],
+      activeTierIndex: 0
+    };
+    const { width, height } = computeUnrolledLamp(lampConfig);
+    updateProject(prev => ({
+      ...prev,
+      projectType: 'lamp',
+      lampConfig,
+      patternImageUrl: '',
+      patternWidth: width,
+      patternHeight: height,
+      patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+      patternScale: {
+        pxPerUnit: 100,
+        unit: 'in',
+        line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
       },
     }));
   }, [updateProject]);
@@ -1037,6 +1065,7 @@ export function useProject() {
     loadProjectData,
     updatePatternImage,
     startBlankCanvas,
+    startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,

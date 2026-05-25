@@ -10,6 +10,7 @@ interface Props {
   isFirstTime?: boolean;
   onCancel: () => void;
   onConfirm: (config: Partial<LampConfig>) => void;
+  onUpdatePatternScale?: (scale: import('../types').Scale) => void;
 }
 
 type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid' | 'tulip';
@@ -19,50 +20,51 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
     facetCount: 6,
     smooth: true,
     profilePoints: [
-      { r: 80, y: 0 },
-      { r: 80, y: 200 },
+      { r: 800, y: 0 },
+      { r: 800, y: 2000 },
     ],
   },
   cone: {
     facetCount: 12,
     smooth: true,
     profilePoints: [
-      { r: 40, y: 0 },
-      { r: 120, y: 200 },
+      { r: 400, y: 0 },
+      { r: 1200, y: 2000 },
     ],
   },
   dome: {
     facetCount: 12,
     smooth: false,
     profilePoints: [
-      { r: 40, y: 0 },
-      { r: 80, y: 40 },
-      { r: 110, y: 100 },
-      { r: 120, y: 160 },
+      { r: 400, y: 0 },
+      { r: 800, y: 400 },
+      { r: 1100, y: 1000 },
+      { r: 1200, y: 1600 },
     ],
   },
   pyramid: {
     facetCount: 4,
     smooth: false,
     profilePoints: [
-      { r: 20, y: 0 },
-      { r: 120, y: 200 },
+      { r: 200, y: 0 },
+      { r: 1200, y: 2000 },
     ],
   },
   tulip: {
     facetCount: 12,
     smooth: false,
     profilePoints: [
-      { r: 30, y: 0 },
-      { r: 25, y: 30 },
-      { r: 70, y: 100 },
-      { r: 110, y: 160 },
-      { r: 120, y: 180 },
+      { r: 300, y: 0 },
+      { r: 250, y: 300 },
+      { r: 700, y: 1000 },
+      { r: 1100, y: 1600 },
+      { r: 1200, y: 1800 },
+      { r: 1000, y: 2000 },
     ],
   },
 };
 
-export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm }: Props) {
+export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm, onUpdatePatternScale }: Props) {
   const { t } = useTranslation();
   const [facetCount, setFacetCount] = useState(initialConfig.facetCount);
   const [smooth, setSmooth] = useState<boolean>(!!initialConfig.smooth);
@@ -175,6 +177,8 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
     onConfirm({ facetCount, profilePoints: sorted, smooth });
   }
 
+  const scale = project.patternScale || { pxPerUnit: 100, unit: 'in' as const };
+
   return (
     <div className="move-confirm-backdrop" onClick={onCancel}>
       <div
@@ -182,12 +186,25 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
         style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        <p
-          className="move-confirm-title"
-          style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 4 }}
-        >
-          {isFirstTime ? t('lampSetupTitle') : t('lampProfileTitle')}
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+          <p
+            className="move-confirm-title"
+            style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.8rem', fontWeight: 400, color: 'var(--text-bright)', margin: 0 }}
+          >
+            {isFirstTime ? t('lampSetupTitle') : t('lampProfileTitle')}
+          </p>
+          {onUpdatePatternScale && project.patternScale && (
+            <select
+              value={project.patternScale.unit}
+              onChange={e => onUpdatePatternScale({ ...project.patternScale!, unit: e.target.value as import('../types').ScaleUnit })}
+              style={{ padding: '4px 8px', borderRadius: 4, background: 'var(--paper)', color: 'var(--text-bright)', border: '1px solid var(--hairline-2)', outline: 'none' }}
+            >
+              <option value="in">{t('unit_in')}</option>
+              <option value="cm">{t('unit_cm')}</option>
+              <option value="mm">{t('unit_mm')}</option>
+            </select>
+          )}
+        </div>
         {isFirstTime && (
           <p style={{ fontSize: 12.5, color: 'var(--text-soft)', marginBottom: 12 }}>
             {t('lampSetupSubtitle')}
@@ -224,6 +241,8 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
             onAddAfter={addPointAfter}
             onDelete={deletePoint}
             onLabel={t('lampProfileEditorLabel')}
+            unit={scale.unit}
+            pxPerUnit={scale.pxPerUnit}
           />
         </div>
 
@@ -308,6 +327,8 @@ interface ProfileEditorProps {
   onAddAfter: (idx: number) => void;
   onDelete: (idx: number) => void;
   onLabel: string;
+  unit: import('../types').ScaleUnit;
+  pxPerUnit: number;
 }
 
 function ProfileEditor({
@@ -318,6 +339,8 @@ function ProfileEditor({
   onAddAfter,
   onDelete,
   onLabel,
+  unit,
+  pxPerUnit,
 }: ProfileEditorProps) {
   const W = 360;
   const H = 240;
@@ -325,8 +348,10 @@ function ProfileEditor({
   const PAD_RIGHT = 16;
   const PAD_TOP = 12;
   const PAD_BOTTOM = 22;
-  const GRID_MM = 50;       // single grid step (mm) — coarse, no minor grid
-  const SNAP_GRID_MM = 10;  // grid snap resolution (mm)
+  
+  const gridStepPhys = unit === 'mm' ? 10 : (unit === 'cm' ? 2 : 1);
+  const GRID_RAW = gridStepPhys * pxPerUnit;
+  const SNAP_RAW = unit === 'in' ? (pxPerUnit / 8) : (unit === 'cm' ? (pxPerUnit / 4) : pxPerUnit);
   const SNAP_PX = 8;        // align-to-other-handle threshold (screen px)
 
   // Data bounds with a comfortable margin so the canvas accommodates dragging
@@ -336,9 +361,9 @@ function ProfileEditor({
   const dataMaxY = profilePoints.length ? Math.max(...profilePoints.map(p => p.y)) : 200;
   // Round bounds up to the next major-grid step so axis ticks land cleanly.
   const round = (v: number, step: number) => Math.ceil(v / step) * step;
-  const viewMaxR = Math.max(GRID_MM * 3, round(dataMaxR + 20, GRID_MM));
+  const viewMaxR = Math.max(GRID_RAW * 3, round(dataMaxR + (GRID_RAW / 2), GRID_RAW));
   const viewMinY = Math.min(0, dataMinY);
-  const viewMaxY = Math.max(viewMinY + GRID_MM * 3, round(dataMaxY + 20, GRID_MM));
+  const viewMaxY = Math.max(viewMinY + GRID_RAW * 3, round(dataMaxY + (GRID_RAW / 2), GRID_RAW));
 
   const sx = (W - PAD_LEFT - PAD_RIGHT) / viewMaxR;
   const sy = (H - PAD_TOP - PAD_BOTTOM) / (viewMaxY - viewMinY);
@@ -396,8 +421,8 @@ function ProfileEditor({
       }
 
       // Grid snap on any axis that hasn't already been alignment-snapped.
-      if (!snappedR) r = Math.round(r / SNAP_GRID_MM) * SNAP_GRID_MM;
-      if (!snappedY) y = Math.round(y / SNAP_GRID_MM) * SNAP_GRID_MM;
+      if (!snappedR) r = Math.round(r / SNAP_RAW) * SNAP_RAW;
+      if (!snappedY) y = Math.round(y / SNAP_RAW) * SNAP_RAW;
 
       r = Math.max(0, r);
 
@@ -420,11 +445,11 @@ function ProfileEditor({
 
   const selected = profilePoints[selectedIdx];
 
-  // Single coarse grid (~50 mm steps).
+  // Major grid lines
   const rTicks: number[] = [];
-  for (let r = 0; r <= viewMaxR; r += GRID_MM) rTicks.push(r);
+  for (let r = 0; r <= viewMaxR; r += GRID_RAW) rTicks.push(r);
   const yTicks: number[] = [];
-  for (let y = Math.ceil(viewMinY / GRID_MM) * GRID_MM; y <= viewMaxY; y += GRID_MM) yTicks.push(y);
+  for (let y = Math.ceil(viewMinY / GRID_RAW) * GRID_RAW; y <= viewMaxY; y += GRID_RAW) yTicks.push(y);
 
   return (
     <>
@@ -548,16 +573,20 @@ function ProfileEditor({
         </label>
         {selected && (
           <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <NumberField
-              label="r (mm)"
-              value={selected.r}
-              onChange={v => onUpdatePoint(selectedIdx, { r: Math.max(0, v) })}
+              label={`r (${unit})`}
+              value={selected ? Number((selected.r / pxPerUnit).toFixed(3)) : 0}
+              step={unit === 'in' ? 0.125 : (unit === 'cm' ? 0.5 : 1)}
+              onChange={v => onUpdatePoint(selectedIdx, { r: Math.max(0, v * pxPerUnit), y: selected.y })}
             />
             <NumberField
-              label="y (mm)"
-              value={selected.y}
-              onChange={v => onUpdatePoint(selectedIdx, { y: v })}
+              label={`y (${unit})`}
+              value={selected ? Number((selected.y / pxPerUnit).toFixed(3)) : 0}
+              step={unit === 'in' ? 0.125 : (unit === 'cm' ? 0.5 : 1)}
+              onChange={v => onUpdatePoint(selectedIdx, { r: selected.r, y: v * pxPerUnit })}
             />
+          </div>
           </>
         )}
         <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
@@ -590,9 +619,10 @@ interface NumberFieldProps {
   value: number;
   onChange: (value: number) => void;
   disabled?: boolean;
+  step?: number;
 }
 
-function NumberField({ label, value, onChange, disabled }: NumberFieldProps) {
+function NumberField({ label, value, onChange, disabled, step }: NumberFieldProps) {
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: disabled ? 0.5 : 1 }}>
       <span style={{ fontSize: 12, color: 'var(--text-soft)', width: 56 }}>{label}</span>
@@ -600,6 +630,7 @@ function NumberField({ label, value, onChange, disabled }: NumberFieldProps) {
         type="number"
         value={value}
         disabled={disabled}
+        step={step ?? 'any'}
         onChange={e => {
           const n = parseFloat(e.target.value);
           if (!Number.isNaN(n)) onChange(n);

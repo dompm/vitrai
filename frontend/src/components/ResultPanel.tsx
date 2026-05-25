@@ -9,7 +9,7 @@ import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../ty
 import type { StepId } from './Tutorial/types';
 import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
-import { IconUpload } from './icons';
+import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
 import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
 import { CropOverlay } from './CropOverlay';
@@ -177,6 +177,7 @@ interface ResultPanelProps {
   isEncoding?: boolean;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStartBlankCanvas: () => void;
+  onStartLampMode?: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
@@ -370,6 +371,7 @@ function getCanvasSnapping(
   patternHeight: number,
   effectiveScale: number,
   t: (key: string) => string,
+  disableFractions = false,
   thresholdPx = PEN_SNAP_PX
 ): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
   const threshold = thresholdPx / effectiveScale;
@@ -410,43 +412,45 @@ function getCanvasSnapping(
   }
 
   // 2. Fractional Snapping (Lower Priority)
-  const FRACTIONS = getSnapFractions(t);
+  if (!disableFractions) {
+    const FRACTIONS = getSnapFractions(t);
 
-  const minGap = 32; // minimum screen pixels between active guides
+    const minGap = 32; // minimum screen pixels between active guides
 
-  // X fractional snapping
-  if (!snappedX && W > 0) {
-    const activeXValues = [left, right];
-    for (const frac of FRACTIONS) {
-      const posX = left + frac.value * W;
-      const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeXValues.push(posX);
-        if (Math.abs(x - posX) < threshold) {
-          targetX = posX;
-          snappedX = true;
-          guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
-          labels.push(frac.label);
-          break;
+    // X fractional snapping
+    if (!snappedX && W > 0) {
+      const activeXValues = [left, right];
+      for (const frac of FRACTIONS) {
+        const posX = left + frac.value * W;
+        const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
+        if (!tooClose) {
+          activeXValues.push(posX);
+          if (Math.abs(x - posX) < threshold) {
+            targetX = posX;
+            snappedX = true;
+            guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
+            labels.push(frac.label);
+            break;
+          }
         }
       }
     }
-  }
 
-  // Y fractional snapping
-  if (!snappedY && H > 0) {
-    const activeYValues = [top, bottom];
-    for (const frac of FRACTIONS) {
-      const posY = top + frac.value * H;
-      const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeYValues.push(posY);
-        if (Math.abs(y - posY) < threshold) {
-          targetY = posY;
-          snappedY = true;
-          guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
-          labels.push(frac.label);
-          break;
+    // Y fractional snapping
+    if (!snappedY && H > 0) {
+      const activeYValues = [top, bottom];
+      for (const frac of FRACTIONS) {
+        const posY = top + frac.value * H;
+        const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
+        if (!tooClose) {
+          activeYValues.push(posY);
+          if (Math.abs(y - posY) < threshold) {
+            targetY = posY;
+            snappedY = true;
+            guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
+            labels.push(frac.label);
+            break;
+          }
         }
       }
     }
@@ -646,7 +650,7 @@ export function ResultPanel({
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
+  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, onStartLampMode, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
   onUpdateSolderWidthMM, onUpdateSolderColor, onOpenLampProfile,
   isSymmetryEnabled = false, onToggleSymmetry,
@@ -801,7 +805,8 @@ export function ResultPanel({
       project.patternWidth,
       project.patternHeight,
       effectiveScaleRef.current,
-      t
+      t,
+      project.projectType === 'lamp'
     );
     finalX = edgeSnap.x;
     finalY = edgeSnap.y;
@@ -1086,7 +1091,8 @@ export function ResultPanel({
           project.patternWidth,
           project.patternHeight,
           vp.effectiveScale,
-          t
+          t,
+          project.projectType === 'lamp'
         );
         targetX = edgeSnap.x;
         targetY = edgeSnap.y;
@@ -1543,28 +1549,37 @@ export function ResultPanel({
       >
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
-            <div>
-              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
-                {t('noPatternDesc')}
-              </p>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <IconUpload size={16} />
-                  {t('uploadPatternButton')}
+            <div style={{ maxWidth: 800 }}>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '2rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 32 }}>What would you like to build?</p>
+              
+              <div className="onboarding-grid">
+                <label className="onboarding-card">
+                  <div className="onboarding-card-icon">
+                    <IconUpload size={28} />
+                  </div>
+                  <h3>Trace an Image</h3>
+                  <p>Upload a 2D pattern image to trace stained glass pieces over.</p>
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
                 </label>
-                <button
-                  className="btn-ghost"
-                  onClick={onStartBlankCanvas}
-                  style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}
-                >
-                  {t('startBlankCanvasButton')}
+
+                <button className="onboarding-card" onClick={onStartBlankCanvas}>
+                  <div className="onboarding-card-icon">
+                    <IconSquare size={28} />
+                  </div>
+                  <h3>Blank Flat Canvas</h3>
+                  <p>Start with a blank workspace to draw a flat window from scratch.</p>
                 </button>
+
+                {onStartLampMode && (
+                  <button className="onboarding-card" onClick={onStartLampMode}>
+                    <div className="onboarding-card-icon">
+                      <IconLamp size={28} />
+                    </div>
+                    <h3>3D Lamp Shade</h3>
+                    <p>Design a 3D faceted lamp and use intelligent symmetry tools.</p>
+                  </button>
+                )}
               </div>
-              <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
-                {t('noPatternSecondary')}
-              </p>
             </div>
           </div>
         ) : (

@@ -72,7 +72,8 @@ export function Lamp3DPreview({ project }: Props) {
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(35, 1, 1, 5000);
+    // Use a massive far plane (100000) so large pixel-scale coordinates never clip
+    const camera = new THREE.PerspectiveCamera(35, 1, 1, 100000);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -227,6 +228,9 @@ export function Lamp3DPreview({ project }: Props) {
       return [radius * Math.cos(theta), yLamp, radius * Math.sin(theta)];
     };
 
+    const allVertices: THREE.Vector3[] = [];
+    const allEdges: { p1: THREE.Vector3, p2: THREE.Vector3 }[] = [];
+
     for (const piece of project.pieces) {
       const flat = flattenCurves(piece.polygon, piece.curvePoints);
       if (flat.length < 3) continue;
@@ -284,6 +288,72 @@ export function Lamp3DPreview({ project }: Props) {
       // Render after the shell so the glass pixels show through cleanly.
       mesh.renderOrder = 1;
       group.add(mesh);
+
+      // Collect piece perimeter segments for 3D solder lines
+      for (let i = 0; i < positions.length; i += 3) {
+        const p1 = new THREE.Vector3(positions[i], positions[i + 1], positions[i + 2]);
+        allVertices.push(p1);
+        const nextI = (i + 3) % positions.length;
+        const p2 = new THREE.Vector3(positions[nextI], positions[nextI + 1], positions[nextI + 2]);
+        allEdges.push({ p1, p2 });
+      }
+    }
+
+    // Render true 3D solder thickness
+    if (allEdges.length > 0) {
+      let solderRawRadius = 1;
+      const solderWidthMM = project.solderWidthMM || 2;
+      if (project.patternScale) {
+        const { pxPerUnit, unit } = project.patternScale;
+        if (unit === 'in') {
+          solderRawRadius = (solderWidthMM / 25.4) * pxPerUnit / 2;
+        } else if (unit === 'cm') {
+          solderRawRadius = (solderWidthMM / 10) * pxPerUnit / 2;
+        } else {
+          solderRawRadius = solderWidthMM * pxPerUnit / 2;
+        }
+      } else {
+        solderRawRadius = solderWidthMM; // fallback
+      }
+
+      const solderColorStr = project.solderColor || 'black';
+      const colorHex = solderColorStr === 'silver' ? 0xbbbbbb : (solderColorStr === 'copper' ? 0xc87333 : 0x222222);
+      const metalness = solderColorStr === 'black' ? 0.4 : 0.8;
+      const roughness = solderColorStr === 'black' ? 0.7 : 0.3;
+
+      const solderMat = new THREE.MeshStandardMaterial({ 
+        color: colorHex, 
+        metalness, 
+        roughness,
+      });
+
+      const cylGeom = new THREE.CylinderGeometry(1, 1, 1, 6);
+      cylGeom.rotateX(Math.PI / 2); // align with Z axis for lookAt
+      const cylMesh = new THREE.InstancedMesh(cylGeom, solderMat, allEdges.length);
+      const dummy = new THREE.Object3D();
+
+      allEdges.forEach((edge, i) => {
+        const dist = edge.p1.distanceTo(edge.p2);
+        dummy.position.copy(edge.p1).lerp(edge.p2, 0.5);
+        dummy.scale.set(solderRawRadius, solderRawRadius, dist);
+        dummy.lookAt(edge.p2);
+        dummy.updateMatrix();
+        cylMesh.setMatrixAt(i, dummy.matrix);
+      });
+      cylMesh.renderOrder = 2;
+      group.add(cylMesh);
+
+      const sphGeom = new THREE.SphereGeometry(1, 6, 6);
+      const sphMesh = new THREE.InstancedMesh(sphGeom, solderMat, allVertices.length);
+      allVertices.forEach((v, i) => {
+        dummy.position.copy(v);
+        dummy.quaternion.identity();
+        dummy.scale.setScalar(solderRawRadius);
+        dummy.updateMatrix();
+        sphMesh.setMatrixAt(i, dummy.matrix);
+      });
+      sphMesh.renderOrder = 2;
+      group.add(sphMesh);
     }
 
     requestRender();
