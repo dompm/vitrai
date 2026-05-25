@@ -197,10 +197,56 @@ export function Lamp3DPreview({ project }: Props) {
       group.add(new THREE.LineSegments(edges, wireMat));
     }
 
-    // ── Pieces, textured with their glass sheet ────────────────────────
     // Map a piece vertex (in pattern coords) to its 3D position on the lamp.
-    const vertexTo3D = (px: number, py: number): [number, number, number] | null => {
-      const surf = patternToSurface(px, py, unrolledLamp);
+    const vertexTo3D = (
+      px: number,
+      py: number,
+      preferredFacetIdx?: number,
+      preferredTierIdx?: number
+    ): [number, number, number] | null => {
+      let surf: any = null;
+
+      if (preferredFacetIdx !== undefined && unrolledLamp && unrolledLamp.mode === 'faceted') {
+        const strip = unrolledLamp.strips[preferredFacetIdx];
+        if (strip) {
+          const cx = strip.centerX;
+          const tiers = preferredTierIdx !== undefined ? [strip.tiers[preferredTierIdx]] : strip.tiers;
+          for (const tier of tiers) {
+            if (!tier) continue;
+            const tierH = Math.max(1e-6, tier.botY - tier.topY);
+            const vy = Math.max(0, Math.min(1, (py - tier.topY) / tierH));
+            const widthAtV = tier.topChord * (1 - vy) + tier.botChord * vy;
+            const leftAtV = cx - widthAtV / 2;
+            const u = (px - leftAtV) / Math.max(1e-6, widthAtV);
+            const uClamped = Math.max(0, Math.min(1, u));
+            surf = { mode: 'faceted', tierIdx: tier.tierIdx, facetIdx: strip.facetIdx, u: uClamped, v: vy };
+            break;
+          }
+        }
+      } else if (preferredTierIdx !== undefined && unrolledLamp && unrolledLamp.mode === 'smooth') {
+        const tier = unrolledLamp.tiers[preferredTierIdx];
+        if (tier) {
+          const m = tier.meta;
+          if (m.type === 'cylinder') {
+            const theta01 = Math.max(0, Math.min(1, (px - m.leftX) / m.width));
+            const v = Math.max(0, Math.min(1, (py - m.topY) / m.height));
+            surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
+          } else {
+            const dx = px - m.apexX;
+            const dy = py - m.apexY;
+            const d = Math.hypot(dx, dy);
+            const v = Math.max(0, Math.min(1, (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top)));
+            const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+            const theta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
+            surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
+          }
+        }
+      }
+
+      if (!surf) {
+        surf = patternToSurface(px, py, unrolledLamp);
+      }
+
       if (!surf) return null;
       if (surf.tierIdx >= profilePoints.length - 1) return null;
       const Rt = profilePoints[surf.tierIdx].r;
@@ -249,7 +295,7 @@ export function Lamp3DPreview({ project }: Props) {
       const uvs: number[] = [];
       let skip = false;
       for (const [px, py] of flat) {
-        const pos = vertexTo3D(px, py);
+        const pos = vertexTo3D(px, py, piece.facetIndex, piece.tierIndex);
         if (!pos) { skip = true; break; }
         positions.push(...pos);
 
