@@ -55,32 +55,6 @@ export function Tutorial({
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
-  const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
-  const startTrackerRef = useRef<{ time: number; fraction: number } | null>(null);
-
-  useEffect(() => {
-    if (downloadProgress == null || downloadProgress === 0) {
-      startTrackerRef.current = null;
-      setEtaSeconds(null);
-      return;
-    }
-    const now = Date.now();
-    if (!startTrackerRef.current) {
-      startTrackerRef.current = { time: now, fraction: downloadProgress };
-      return;
-    }
-
-    const { time: startTime, fraction: startFraction } = startTrackerRef.current;
-    const timeDiff = now - startTime;
-    const fracDiff = downloadProgress - startFraction;
-
-    // Wait at least 500ms and 1% progress to compute a stable ETA
-    if (timeDiff > 500 && fracDiff > 0.01) {
-      const remainingFrac = 1 - downloadProgress;
-      const timePerFrac = timeDiff / fracDiff;
-      setEtaSeconds(Math.ceil((remainingFrac * timePerFrac) / 1000));
-    }
-  }, [downloadProgress]);
 
   // Reset transitional refs when stepping out of a step.
   useEffect(() => {
@@ -387,7 +361,6 @@ export function Tutorial({
   const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
 
   const percent = downloadProgress != null ? Math.round(downloadProgress * 100) : null;
-  const etaText = etaSeconds != null ? (etaSeconds > 60 ? `~${Math.ceil(etaSeconds/60)}m` : `${etaSeconds}s`) : '...';
 
   return (
     <>
@@ -416,7 +389,7 @@ export function Tutorial({
             </p>
             {percent != null && (
               <p className="move-confirm-body" style={{ fontWeight: 'bold', marginTop: '1rem' }}>
-                Progress: {percent}% (ETA: {etaText})
+                {percent}%
               </p>
             )}
             <div className="move-confirm-actions" style={{ justifyContent: 'flex-end' }}>

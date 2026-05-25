@@ -326,11 +326,16 @@ export function App() {
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
   useEffect(() => {
+    let lastUpdate = 0;
     const backend = getSamBackend(setBackendStatus);
     backend.onProgress = (fraction) => {
-      setDownloadProgress(fraction);
-      if (fraction >= 1) {
-        setTimeout(() => setDownloadProgress(null), 500);
+      const now = Date.now();
+      if (fraction >= 1 || now - lastUpdate > 250) {
+        lastUpdate = now;
+        setDownloadProgress(fraction);
+        if (fraction >= 1) {
+          setTimeout(() => setDownloadProgress(null), 500);
+        }
       }
     };
   }, []);
