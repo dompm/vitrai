@@ -1253,6 +1253,7 @@ export function ResultPanel({
   }
 
   function handleMeasureDragEnd(nx1: number, ny1: number, nx2: number, ny2: number) {
+    console.log(`[Pattern Ruler Coordinates] x1: ${nx1}, y1: ${ny1}, x2: ${nx2}, y2: ${ny2}`);
     if (!project.patternScale) return;
     const oldLine = project.patternScale.line;
     const oldPx = Math.hypot(oldLine.x2 - oldLine.x1, oldLine.y2 - oldLine.y1);

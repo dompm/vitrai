@@ -1447,6 +1447,7 @@ export function App() {
         onStartTour={startTutorialTour}
         onSkip={skipTutorial}
         onComplete={completeTutorial}
+        isEncoding={!!project.patternImageUrl && patternImageId === null}
       />
   </div>
   );

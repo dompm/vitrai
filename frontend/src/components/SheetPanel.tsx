@@ -324,6 +324,7 @@ export function SheetPanel({
   }
 
   function handleMeasureDragEnd(nx1: number, ny1: number, nx2: number, ny2: number) {
+    console.log(`[Sheet Ruler Coordinates] x1: ${nx1}, y1: ${ny1}, x2: ${nx2}, y2: ${ny2}`);
     const existing = sheet.scale;
     const newPxLen = Math.hypot(nx2 - nx1, ny2 - ny1);
     if (existing) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
@@ -19,6 +19,7 @@ interface Props {
   patternTool: ToolId;
   sheetTool: ToolId;
   patternRefineMode: 'add' | 'remove' | null;
+  isEncoding?: boolean;
   onAdvance: () => void;
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
@@ -37,6 +38,7 @@ export function Tutorial({
   patternTool,
   sheetTool,
   patternRefineMode,
+  isEncoding,
   onAdvance,
   onSetStep,
   onSetTrackedPiece,
@@ -50,6 +52,7 @@ export function Tutorial({
   // Initial glass sheet at the start of step 4, to detect "changed".
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
 
   // Reset transitional refs when stepping out of a step.
   useEffect(() => {
@@ -352,6 +355,9 @@ export function Tutorial({
     currentSpotlightTarget = undefined;
   }
 
+  // Show loading dialog if they are asked to cut the first piece but the model is still loading
+  const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
+
   return (
     <>
       <TutorialBar
@@ -362,11 +368,28 @@ export function Tutorial({
         customTitle={customTitle}
         customBody={customBody}
       />
-      {currentSpotlightTarget && (
+      {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
           withBackdrop={step === 'refine-first-piece'}
         />
+      )}
+      {showLoadingDialog && (
+        <div className="move-confirm-backdrop" style={{ zIndex: 3000 }}>
+          <div className="move-confirm-dialog">
+            <p className="move-confirm-title">
+              {t('tutorialModelLoadingTitle', 'Downloading AI Model')}
+            </p>
+            <p className="move-confirm-body">
+              {t('tutorialModelLoadingBody', 'The segmentation model is currently downloading to your browser. This may take a few moments depending on your connection, but it only happens the very first time you use the app!')}
+            </p>
+            <div className="move-confirm-actions" style={{ justifyContent: 'flex-end' }}>
+              <button className="btn-primary" onClick={() => setHasSeenLoadingDialog(true)}>
+                {t('tutorialModelLoadingOk', 'Got it')}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
