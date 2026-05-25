@@ -22,9 +22,22 @@ export function MeasureLineOverlay({
 
   const dragStart = useRef<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
 
-  function clampedDrag(e: KonvaEventObject<DragEvent>, onUpdate: (x: number, y: number) => void) {
-    const x = Math.max(0, Math.min(W, e.target.x()));
-    const y = Math.max(0, Math.min(H, e.target.y()));
+  function clampedDrag(
+    e: KonvaEventObject<DragEvent>,
+    onUpdate: (x: number, y: number) => void,
+    anchor: { x: number; y: number },
+  ) {
+    let x = Math.max(0, Math.min(W, e.target.x()));
+    let y = Math.max(0, Math.min(H, e.target.y()));
+    if (e.evt.shiftKey) {
+      const dx = x - anchor.x;
+      const dy = y - anchor.y;
+      const r = Math.hypot(dx, dy);
+      const theta = Math.atan2(dy, dx);
+      const snappedTheta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+      x = Math.max(0, Math.min(W, anchor.x + r * Math.cos(snappedTheta)));
+      y = Math.max(0, Math.min(H, anchor.y + r * Math.sin(snappedTheta)));
+    }
     e.target.x(x);
     e.target.y(y);
     onUpdate(x, y);
@@ -73,7 +86,7 @@ export function MeasureLineOverlay({
         onMouseLeave={() => onCursorChange('default')}
         onDragMove={e => {
           e.cancelBubble = true;
-          clampedDrag(e, onUpdateP1);
+          clampedDrag(e, onUpdateP1, { x: x2, y: y2 });
         }}
         onDragEnd={e => {
           e.cancelBubble = true;
@@ -90,7 +103,7 @@ export function MeasureLineOverlay({
         onMouseLeave={() => onCursorChange('default')}
         onDragMove={e => {
           e.cancelBubble = true;
-          clampedDrag(e, onUpdateP2);
+          clampedDrag(e, onUpdateP2, { x: x1, y: y1 });
         }}
         onDragEnd={e => {
           e.cancelBubble = true;
