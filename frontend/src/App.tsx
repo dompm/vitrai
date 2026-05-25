@@ -5,7 +5,7 @@ import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
-import { CreateProjectDialog } from './components/CreateProjectDialog';
+
 import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
@@ -313,6 +313,7 @@ export function App() {
     loadProjectData,
     updatePatternImage,
     startBlankCanvas,
+    startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
@@ -446,7 +447,7 @@ export function App() {
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+
   const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
@@ -721,18 +722,15 @@ export function App() {
 
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      const img = new Image();
-      img.onload = () => {
-        updatePatternImage(dataUrl, img.width, img.height);
-      };
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    if (file) {
+      updatePatternImage(file);
+      setPatternTool('select');
+    }
+  };
+
+  const handleStartLampMode = () => {
+    startLampMode();
+    setLampProfileDialog({ isFirstTime: true });
   };
 
   const isPrintReady = !!project.patternScale && project.patternScale.pxPerUnit > 0 && project.pieces.length > 0;
@@ -1072,7 +1070,12 @@ export function App() {
           </div>
           <button
             className="btn-ghost"
-            onClick={() => setIsCreateDialogOpen(true)}
+            onClick={async () => {
+              const defaultName = `Project ${availableProjects.length + 1}`;
+              await createNewProject(defaultName, 'flat');
+              projectNameInputRef.current?.focus();
+              projectNameInputRef.current?.select();
+            }}
             title="New project"
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
           >
@@ -1191,6 +1194,7 @@ export function App() {
             onUpdatePrompt={handleUpdatePrompt}
             onUploadPattern={handleUploadPattern}
             onStartBlankCanvas={startBlankCanvas}
+            onStartLampMode={handleStartLampMode}
             onAutoSegment={handleAutoSegment}
             isAutoSegmenting={isAutoSegmenting}
             isEncoding={!!project.patternImageUrl && patternImageId === null}
@@ -1483,28 +1487,14 @@ export function App() {
           onClose={() => setAddSheetMenu(null)}
         />
       )}
-      {isCreateDialogOpen && (
-        <CreateProjectDialog
-          defaultProjectName={`Project ${availableProjects.length + 1}`}
-          onCancel={() => setIsCreateDialogOpen(false)}
-          onConfirm={(name, type) => {
-            setIsCreateDialogOpen(false);
-            void createNewProject(name, type).then(() => {
-              projectNameInputRef.current?.focus();
-              projectNameInputRef.current?.select();
-              if (type === 'lamp') {
-                setLampProfileDialog({ isFirstTime: true });
-              }
-            });
-          }}
-        />
-      )}
+
       {lampProfileDialog && project.lampConfig && (
         <LampProfileDialog
           project={project}
           initialConfig={project.lampConfig}
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
+          onUpdatePatternScale={(scale) => updateProject(p => ({ ...p, patternScale: scale }))}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);
