@@ -213,6 +213,9 @@ export function Lamp3DPreview({ project }: Props) {
           const tiers = preferredTierIdx !== undefined ? [strip.tiers[preferredTierIdx]] : strip.tiers;
           for (const tier of tiers) {
             if (!tier) continue;
+            if (preferredTierIdx === undefined) {
+              if (py < tier.topY - 1.0 || py > tier.botY + 1.0) continue;
+            }
             const tierH = Math.max(1e-6, tier.botY - tier.topY);
             const vy = Math.max(0, Math.min(1, (py - tier.topY) / tierH));
             const widthAtV = tier.topChord * (1 - vy) + tier.botChord * vy;
