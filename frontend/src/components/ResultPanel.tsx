@@ -20,7 +20,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
 import { CANVAS } from '../theme';
-import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint } from '../utils/lampGeometry';
+import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint, patternToSurfaceRobust } from '../utils/lampGeometry';
 import { getSnapFractions } from '../utils/snapping';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
@@ -373,6 +373,7 @@ function getCanvasSnapping(
   effectiveScale: number,
   t: (key: string) => string,
   disableFractions = false,
+  customBounds?: { left: number; right: number; top: number; bottom: number },
   thresholdPx = PEN_SNAP_PX
 ): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
   const threshold = thresholdPx / effectiveScale;
@@ -381,10 +382,10 @@ function getCanvasSnapping(
   const guides: AlignmentGuide[] = [];
   const labels: string[] = [];
 
-  const left = crop.left;
-  const right = patternWidth - crop.right;
-  const top = crop.top;
-  const bottom = patternHeight - crop.bottom;
+  const left = customBounds ? customBounds.left : crop.left;
+  const right = customBounds ? customBounds.right : patternWidth - crop.right;
+  const top = customBounds ? customBounds.top : crop.top;
+  const bottom = customBounds ? customBounds.bottom : patternHeight - crop.bottom;
   const W = right - left;
   const H = bottom - top;
 
@@ -799,6 +800,23 @@ export function ResultPanel({
       alignmentGuides = align.guides;
     }
 
+    let customBounds = undefined;
+    if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+      const N = project.lampConfig?.facetCount ?? 6;
+      const surf = patternToSurfaceRobust(finalX, finalY, unrolledLamp, N);
+      const strip = unrolledLamp.strips[surf.facetIdx];
+      const tier = strip?.tiers[surf.tierIdx];
+      if (strip && tier) {
+        const maxChord = Math.max(tier.topChord, tier.botChord);
+        customBounds = {
+          left: strip.centerX - maxChord / 2,
+          right: strip.centerX + maxChord / 2,
+          top: tier.topY,
+          bottom: tier.botY
+        };
+      }
+    }
+
     const edgeSnap = getCanvasSnapping(
       finalX,
       finalY,
@@ -807,7 +825,8 @@ export function ResultPanel({
       project.patternHeight,
       effectiveScaleRef.current,
       t,
-      project.projectType === 'lamp'
+      false, // Never disable fractions, we want them!
+      customBounds
     );
     finalX = edgeSnap.x;
     finalY = edgeSnap.y;
@@ -1085,6 +1104,23 @@ export function ResultPanel({
       }
 
       if (!snap) {
+        let customBounds = undefined;
+        if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+          const N = project.lampConfig?.facetCount ?? 6;
+          const surf = patternToSurfaceRobust(targetX, targetY, unrolledLamp, N);
+          const strip = unrolledLamp.strips[surf.facetIdx];
+          const tier = strip?.tiers[surf.tierIdx];
+          if (strip && tier) {
+            const maxChord = Math.max(tier.topChord, tier.botChord);
+            customBounds = {
+              left: strip.centerX - maxChord / 2,
+              right: strip.centerX + maxChord / 2,
+              top: tier.topY,
+              bottom: tier.botY
+            };
+          }
+        }
+
         const edgeSnap = getCanvasSnapping(
           targetX,
           targetY,
@@ -1093,10 +1129,54 @@ export function ResultPanel({
           project.patternHeight,
           vp.effectiveScale,
           t,
-          project.projectType === 'lamp'
+          false,
+          customBounds
         );
         targetX = edgeSnap.x;
         targetY = edgeSnap.y;
+      }
+
+      // ---- ABSOLUTE SHIFT CONSTRAINT ENFORCER ----
+      // If Shift is held, the angle constraint MUST win over all other snapping.
+      if (isShift && activePolygonPointsRef.current.length > 0) {
+        const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
+        const theta = Math.round(Math.atan2(y - lastPt[1], x - lastPt[0]) / (Math.PI / 4)) * (Math.PI / 4);
+        const dx = Math.cos(theta);
+        const dy = Math.sin(theta);
+        
+        const snappedX = Math.abs(targetX - x) > 1e-3;
+        const snappedY = Math.abs(targetY - y) > 1e-3;
+        
+        let finalX = targetX;
+        let finalY = targetY;
+        
+        if (Math.abs(dx) < 1e-5) {
+          finalX = lastPt[0]; // must be purely vertical
+        } else if (Math.abs(dy) < 1e-5) {
+          finalY = lastPt[1]; // must be purely horizontal
+        } else if (snappedX || snappedY) {
+          // It snapped to an edge or point. We must intersect the constraint ray with the snapped coordinate.
+          if (snappedX && snappedY) {
+             const rx = (finalX - lastPt[0]) / dx;
+             const ry = (finalY - lastPt[1]) / dy;
+             if (Math.abs(rx) < Math.abs(ry)) finalY = lastPt[1] + rx * dy;
+             else finalX = lastPt[0] + ry * dx;
+          } else if (snappedX) {
+             const r = (finalX - lastPt[0]) / dx;
+             finalY = lastPt[1] + r * dy;
+          } else if (snappedY) {
+             const r = (finalY - lastPt[1]) / dy;
+             finalX = lastPt[0] + r * dx;
+          }
+        } else {
+          // No external snap applied, simply constrain point to the ray
+          const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
+          finalX = lastPt[0] + r * dx;
+          finalY = lastPt[1] + r * dy;
+        }
+        
+        targetX = finalX;
+        targetY = finalY;
       }
 
       if (activePolygonPointsRef.current.length >= 3) {
