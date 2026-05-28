@@ -739,10 +739,18 @@ export function App() {
 
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      updatePatternImage(file);
-      setPatternTool('select');
-    }
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.width, img.height);
+        setPatternTool('select');
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleStartLampMode = () => {
