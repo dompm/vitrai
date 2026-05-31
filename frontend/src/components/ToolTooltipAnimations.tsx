@@ -761,13 +761,15 @@ export function ProfileAnimation() {
       <ellipse cx="110" cy="26" rx="18" ry="4.5" fill="rgba(59,130,246,0.3)" stroke="#2563eb" strokeWidth="1.6" />
       <ellipse cx="110" cy="86" rx="30" ry="6"   fill="rgba(59,130,246,0.3)" stroke="#2563eb" strokeWidth="1.6" />
 
-      {/* Right control handle (dragged) + left mirror */}
-      <circle cy="57" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
-        <animate attributeName="cx" values="132;154;132" keyTimes={KT} dur={dur}
+      {/* Right control handle (dragged) + left mirror — placed on the curve
+          midpoint: B(0.5) = 0.25·P0 + 0.5·ctrl + 0.25·P2, not on the Bézier
+          control point itself */}
+      <circle cy="56.5" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
+        <animate attributeName="cx" values="133;144;133" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
-      <circle cy="57" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
-        <animate attributeName="cx" values="88;66;88" keyTimes={KT} dur={dur}
+      <circle cy="56.5" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
+        <animate attributeName="cx" values="87;76;87" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
     </svg>
