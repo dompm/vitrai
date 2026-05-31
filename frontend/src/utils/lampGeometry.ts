@@ -347,6 +347,7 @@ export function findLampEdgeSnap(
 export interface LampSnapPoint {
   pt: [number, number];
   label?: string;
+  facetIdx?: number;
 }
 
 // All snap-worthy points — strip/tier outline vertices and (faceted) tier seam endpoints, plus fractional edge points.
@@ -356,14 +357,14 @@ export function getLampSnapPoints(unrolled: UnrolledLamp, effectiveScale: number
 
   const FRACTIONS = getSnapFractions(t);
 
-  const pushCorner = (x: number, y: number) => {
+  const pushCorner = (x: number, y: number, facetIdx?: number) => {
     const key = `${x.toFixed(2)},${y.toFixed(2)}`;
     if (seen.has(key)) return;
     seen.add(key);
-    out.push({ pt: [x, y] });
+    out.push({ pt: [x, y], facetIdx });
   };
 
-  const pushEdgeFractions = (ax: number, ay: number, bx: number, by: number) => {
+  const pushEdgeFractions = (ax: number, ay: number, bx: number, by: number, facetIdx?: number) => {
     const lineLen = Math.hypot(bx - ax, by - ay);
     const pixelLen = lineLen * effectiveScale;
     
@@ -379,7 +380,7 @@ export function getLampSnapPoints(unrolled: UnrolledLamp, effectiveScale: number
         const key = `${x.toFixed(2)},${y.toFixed(2)}`;
         if (seen.has(key)) continue;
         seen.add(key);
-        out.push({ pt: [x, y], label: frac.label });
+        out.push({ pt: [x, y], label: frac.label, facetIdx });
       }
     }
   };
@@ -390,13 +391,13 @@ export function getLampSnapPoints(unrolled: UnrolledLamp, effectiveScale: number
       for (let i = 0; i < o.length; i++) {
         const a = o[i];
         const b = o[(i + 1) % o.length];
-        pushCorner(a[0], a[1]);
-        pushEdgeFractions(a[0], a[1], b[0], b[1]);
+        pushCorner(a[0], a[1], strip.facetIdx);
+        pushEdgeFractions(a[0], a[1], b[0], b[1], strip.facetIdx);
       }
       for (const s of strip.tierSeams) {
-        pushCorner(s.x1, s.y1);
-        pushCorner(s.x2, s.y2);
-        pushEdgeFractions(s.x1, s.y1, s.x2, s.y2);
+        pushCorner(s.x1, s.y1, strip.facetIdx);
+        pushCorner(s.x2, s.y2, strip.facetIdx);
+        pushEdgeFractions(s.x1, s.y1, s.x2, s.y2, strip.facetIdx);
       }
     }
   } else {

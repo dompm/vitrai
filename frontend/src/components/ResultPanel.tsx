@@ -335,10 +335,14 @@ function findPenSnapTarget(
   pieces: Piece[],
   effectiveScale: number,
   extraVertices?: LampSnapPoint[],
+  activeFacetIdx?: number,
 ): { pt: [number, number]; label?: string } | null {
   let best: { pt: [number, number]; label?: string } | null = null;
   let bestPxDist = PEN_SNAP_PX;
   for (const piece of pieces) {
+    if (activeFacetIdx !== undefined && piece.facetIndex !== undefined && piece.facetIndex !== activeFacetIdx) {
+      continue;
+    }
     const polygon = flattenCurves(piece.polygon, piece.curvePoints);
     for (let i = 0; i < polygon.length; i++) {
       if (!isStructuralCorner(polygon, i, effectiveScale)) continue;
@@ -353,6 +357,9 @@ function findPenSnapTarget(
   }
   if (extraVertices) {
     for (const sv of extraVertices) {
+      if (activeFacetIdx !== undefined && sv.facetIdx !== undefined && sv.facetIdx !== activeFacetIdx) {
+        continue;
+      }
       const [vx, vy] = sv.pt;
       const dist = Math.hypot(vx - cursor[0], vy - cursor[1]) * effectiveScale;
       if (dist < bestPxDist) {
@@ -704,7 +711,12 @@ export function ResultPanel({
     if (activeTool !== 'pen') return;
 
     // 1. Vertex snapping is highest priority
-    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current);
+    let activeFacetIdx = undefined;
+    if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+      const N = project.lampConfig?.facetCount ?? 6;
+      activeFacetIdx = patternToSurfaceRobust(imageX, imageY, unrolledLamp, N).facetIdx;
+    }
+    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current, activeFacetIdx);
     if (snap) {
       setHoverPoint(snap.pt);
       setHoverSnapped(true);
@@ -731,6 +743,13 @@ export function ResultPanel({
     let alignmentGuides: AlignmentGuide[] = [];
     let lengthGuide: LengthGuide | null = null;
 
+    let eligiblePieces = piecesRef.current;
+    if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+      const N = project.lampConfig?.facetCount ?? 6;
+      const activeFacetIdx = patternToSurfaceRobust(imageX, imageY, unrolledLamp, N).facetIdx;
+      eligiblePieces = piecesRef.current.filter(p => p.facetIndex === undefined || p.facetIndex === activeFacetIdx);
+    }
+
     if (activePolygonPointsRef.current.length > 0) {
       const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
 
@@ -743,7 +762,7 @@ export function ResultPanel({
       const lenSnap = findLengthSnap(
         [imageX, imageY],
         lastPt,
-        piecesRef.current,
+        eligiblePieces,
         activePolygonPointsRef.current,
         effectiveScaleRef.current
       );
@@ -764,7 +783,7 @@ export function ResultPanel({
             [imageX, imageY],
             lastPt,
             theta,
-            piecesRef.current,
+            eligiblePieces,
             effectiveScaleRef.current
           );
           if (align.guides.length > 0) {
@@ -780,7 +799,7 @@ export function ResultPanel({
           // 3. Horizontal/Vertical Alignment Snapping
           const align = findAlignmentGuides(
             [imageX, imageY],
-            piecesRef.current,
+            eligiblePieces,
             effectiveScaleRef.current
           );
           finalX = align.snapped[0];
@@ -792,7 +811,7 @@ export function ResultPanel({
       // 3. Horizontal/Vertical Alignment Snapping
       const align = findAlignmentGuides(
         [imageX, imageY],
-        piecesRef.current,
+        eligiblePieces,
         effectiveScaleRef.current
       );
       finalX = align.snapped[0];
@@ -1036,7 +1055,16 @@ export function ResultPanel({
       const isShift = e.evt ? e.evt.shiftKey : false;
       let targetX = x;
       let targetY = y;
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale, lampSnapPoints);
+
+      let activeFacetIdx = undefined;
+      let eligiblePieces = project.pieces;
+      if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+        const N = project.lampConfig?.facetCount ?? 6;
+        activeFacetIdx = patternToSurfaceRobust(x, y, unrolledLamp, N).facetIdx;
+        eligiblePieces = project.pieces.filter(p => p.facetIndex === undefined || p.facetIndex === activeFacetIdx);
+      }
+
+      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale, lampSnapPoints, activeFacetIdx);
       const edgeSnap = !snap && unrolledLamp
         ? findLampEdgeSnap([x, y], unrolledLamp, vp.effectiveScale, PEN_SNAP_PX)
         : null;
@@ -1060,7 +1088,7 @@ export function ResultPanel({
         const lenSnap = findLengthSnap(
           [x, y],
           lastPt,
-          project.pieces,
+          eligiblePieces,
           activePolygonPointsRef.current,
           vp.effectiveScale
         );
@@ -1073,12 +1101,13 @@ export function ResultPanel({
             [x, y],
             lastPt,
             theta,
-            project.pieces,
+            eligiblePieces,
             vp.effectiveScale
           );
           if (align.guides.length > 0) {
             targetX = align.snapped[0];
             targetY = align.snapped[1];
+            alignmentGuides = align.guides;
           } else {
             const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
             targetX = lastPt[0] + r * Math.cos(theta);
@@ -1087,7 +1116,7 @@ export function ResultPanel({
         } else {
           const align = findAlignmentGuides(
             [x, y],
-            project.pieces,
+            eligiblePieces,
             vp.effectiveScale
           );
           targetX = align.snapped[0];
@@ -1096,7 +1125,7 @@ export function ResultPanel({
       } else {
         const align = findAlignmentGuides(
           [x, y],
-          project.pieces,
+          eligiblePieces,
           vp.effectiveScale
         );
         targetX = align.snapped[0];
