@@ -786,9 +786,9 @@ export function PackAnimation() {
   const SPL = '0,0,1,1; 0.4,0,0.2,1; 0,0,1,1; 0.45,0,0.55,1';
 
   const pieces = [
-    { w: 40, h: 34, fill: 'rgba(59,130,246,0.32)', stroke: '#2563eb', sx: 150, sy: 30, sr: 18,  px: 40, py: 33 },
-    { w: 30, h: 34, fill: 'rgba(16,185,129,0.30)', stroke: '#059669', sx: 58,  sy: 82, sr: -22, px: 79, py: 33 },
-    { w: 72, h: 22, fill: 'rgba(139,92,246,0.28)', stroke: '#7c3aed', sx: 150, sy: 84, sr: 12,  px: 53, py: 62 },
+    { w: 40, h: 34, sx: 150, sy: 30, sr: 18,  px: 40, py: 33 },
+    { w: 30, h: 34, sx: 58,  sy: 82, sr: -22, px: 79, py: 33 },
+    { w: 72, h: 22, sx: 150, sy: 84, sr: 12,  px: 53, py: 62 },
   ];
 
   return (
@@ -809,7 +809,7 @@ export function PackAnimation() {
               values={`${p.sr};${p.sr};0;0;${p.sr}`}
               keyTimes={KT} dur={dur} repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
             <rect x={-p.w / 2} y={-p.h / 2} width={p.w} height={p.h} rx="2"
-              fill={p.fill} stroke={p.stroke} strokeWidth="1.8" strokeLinejoin="round" />
+              fill={IF} stroke={IS} strokeWidth="1.5" strokeLinejoin="round" />
           </g>
         </g>
       ))}
