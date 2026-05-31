@@ -14,7 +14,7 @@ export function ToolTooltip({ name, shortcut, description, animation }: ToolTool
       <div className="tool-tooltip-body">
         <div className="tool-tooltip-header">
           <span className="tool-tooltip-name">{name}</span>
-          <kbd className="tool-tooltip-kbd">{shortcut}</kbd>
+          {shortcut && <kbd className="tool-tooltip-kbd">{shortcut}</kbd>}
         </div>
         <p className="tool-tooltip-desc">{description}</p>
       </div>

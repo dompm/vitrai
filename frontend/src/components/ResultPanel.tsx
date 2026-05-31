@@ -11,7 +11,8 @@ import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../u
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -1532,7 +1533,14 @@ export function ResultPanel({
             </span>
           </button>
           
-          {!isSolderPopoverOpen && <span className="tooltip-tip">{t('solderThicknessTooltip')}</span>}
+          {!isSolderPopoverOpen && (
+            <ToolTooltip
+              name={t('tooltipSolderName')}
+              shortcut=""
+              description={t('solderThicknessTooltip')}
+              animation={<SolderAnimation />}
+            />
+          )}
           
           {isSolderPopoverOpen && (
             <div className="solder-popover">
@@ -1599,7 +1607,12 @@ export function ResultPanel({
                   <path d="M15 12h6" />
                 </svg>
               </button>
-              <span className="tooltip-tip">{t('lampSymmetryTooltip')}</span>
+              <ToolTooltip
+                name={t('tooltipSymmetryName')}
+                shortcut=""
+                description={t('lampSymmetryTooltip')}
+                animation={<SymmetryAnimation />}
+              />
             </div>
           </>
         )}
@@ -1619,7 +1632,12 @@ export function ResultPanel({
                   <ellipse cx="12" cy="19" rx="8" ry="2.5" />
                 </svg>
               </button>
-              <span className="tooltip-tip">{t('lampProfileButtonTooltip')}</span>
+              <ToolTooltip
+                name={t('tooltipProfileName')}
+                shortcut=""
+                description={t('lampProfileButtonTooltip')}
+                animation={<ProfileAnimation />}
+              />
             </div>
           </>
         )}

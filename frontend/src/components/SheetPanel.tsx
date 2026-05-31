@@ -12,7 +12,8 @@ import { packPiecesSmart, defaultCuttingGapPx } from '../utils/packing';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, HandIcon } from './Toolbar';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, CropAnimation, MeasureAnimation, PanAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, CropAnimation, MeasureAnimation, PanAnimation, PackAnimation } from './ToolTooltipAnimations';
+import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -502,7 +503,14 @@ export function SheetPanel({
             <span className="tool-label">{isPacking ? t('packing', 'Packing...') : t('toolPack')}</span>
           </button>
           
-          {!isPackPopoverOpen && <span className="tooltip-tip">{t('tooltipPackDesc')}</span>}
+          {!isPackPopoverOpen && (
+            <ToolTooltip
+              name={t('tooltipPackName')}
+              shortcut=""
+              description={t('tooltipPackDesc')}
+              animation={<PackAnimation />}
+            />
+          )}
           
           {isPackPopoverOpen && (
             <div className="solder-popover">
