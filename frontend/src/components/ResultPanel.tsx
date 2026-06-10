@@ -933,6 +933,16 @@ export function ResultPanel({
           }
         }
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+        // window listener from also firing project undo on the same event.
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        setActivePolygonPoints(prev => prev.slice(0, -1));
+        return;
+      }
+      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'b' && !isEncoding) handleToolChange('box');
@@ -947,13 +957,6 @@ export function ResultPanel({
         if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
           commitActivePolygon();
         }
-      }
-      else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
-        // window listener from also firing project undo on the same event.
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setActivePolygonPoints(prev => prev.slice(0, -1));
       }
       else if (e.key === 'Escape') {
         if (isSolderPopoverOpenRef.current) {

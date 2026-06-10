@@ -200,6 +200,8 @@ export function SheetPanel({
         setIsSpaceDown(true);
         return;
       }
+      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'c') handleToolChange('crop');
@@ -235,6 +237,7 @@ export function SheetPanel({
   const vp = useViewport(sheetW, sheetH);
   const measure = useMeasure();
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const marqueeJustEndedRef = useRef(false);
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
   useEffect(() => {
@@ -332,6 +335,10 @@ export function SheetPanel({
       } else if (Math.abs(marqueeBox.x2 - marqueeBox.x1) < 2 && Math.abs(marqueeBox.y2 - marqueeBox.y1) < 2) {
         onSelectPiece(null);
       }
+      // Konva synthesizes a `click` after this pointerup (it has no movement
+      // threshold); suppress it so it can't clear the selection we just made.
+      marqueeJustEndedRef.current = true;
+      setTimeout(() => { marqueeJustEndedRef.current = false; }, 0);
       setMarqueeBox(null);
       return;
     }
@@ -344,6 +351,7 @@ export function SheetPanel({
   }
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
+    if (marqueeJustEndedRef.current) return;
     if (!rotatingPieceId && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
   }
 
