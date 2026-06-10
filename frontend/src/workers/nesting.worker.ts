@@ -24,8 +24,13 @@ export interface NestingCompleteMessage {
   type: 'COMPLETE';
 }
 
+export interface NestingErrorMessage {
+  type: 'ERROR';
+  payload: { message: string };
+}
+
 export type NestingWorkerMessage = NestingStartMessage;
-export type NestingWorkerResponse = NestingProgressMessage | NestingCompleteMessage;
+export type NestingWorkerResponse = NestingProgressMessage | NestingCompleteMessage | NestingErrorMessage;
 
 self.onmessage = (e: MessageEvent<NestingWorkerMessage>) => {
   if (e.data.type === 'START') {
@@ -59,9 +64,12 @@ self.onmessage = (e: MessageEvent<NestingWorkerMessage>) => {
         }
       }
     } catch (err) {
-      console.error("Worker error during packing:", err);
-    } finally {
-      self.postMessage({ type: 'COMPLETE' });
+      self.postMessage({
+        type: 'ERROR',
+        payload: { message: err instanceof Error ? err.message : String(err) },
+      });
+      return;
     }
+    self.postMessage({ type: 'COMPLETE' });
   }
 };

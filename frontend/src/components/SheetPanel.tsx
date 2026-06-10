@@ -481,6 +481,8 @@ export function SheetPanel({
       await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
         onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
       });
+    } catch (err) {
+      console.error('[SheetPanel] smart pack failed', err);
     } finally {
       setIsPacking(false);
     }

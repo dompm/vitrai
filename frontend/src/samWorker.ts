@@ -1,4 +1,10 @@
 import * as ort from "onnxruntime-web/webgpu";
+// Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
+// bundle). Vite emits the file as a same-origin asset, so segmentation no
+// longer depends on a third-party CDN being reachable, and the JS/wasm
+// versions can never drift apart. The relative node_modules path is needed
+// because the package's exports map doesn't expose ./dist/*.
+import ortWasmUrl from "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm?url";
 
 // onnxruntime-web's WASM backend can spawn Emscripten pthread workers using
 // this module's own URL when its preferred worker script isn't reachable.
@@ -10,7 +16,7 @@ if (!isPthread) {
   // Disable WASM threading entirely — WebGPU EP doesn't need threads, and
   // this keeps ORT from spawning pthread workers in the first place.
   ort.env.wasm.numThreads = 1;
-  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+  ort.env.wasm.wasmPaths = { wasm: new URL(ortWasmUrl, self.location.href).href };
 }
 
 const HF = 'https://huggingface.co/onnx-community/sam2.1-hiera-base-plus-ONNX/resolve/main/onnx';
@@ -150,18 +156,24 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
         position += chunk.length;
       }
 
-      // Save to cache for next time
-      const handle = await root.getFileHandle(filename, { create: true });
-      const writable = await (handle as any).createWritable();
-      await writable.write(buf);
-      await writable.close();
-      console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
-      
+      // Save to cache for next time — best-effort: a failed cache write must
+      // not throw away the bytes we just downloaded.
+      try {
+        const handle = await root.getFileHandle(filename, { create: true });
+        const writable = await (handle as any).createWritable();
+        await writable.write(buf);
+        await writable.close();
+        console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
+      } catch (cacheErr) {
+        console.warn(`[SAM Worker] Could not cache ${filename} in OPFS:`, cacheErr);
+      }
+
       return buf.buffer;
     }
   } catch (err) {
     console.warn(`[SAM Worker] Cache failed for ${filename}, falling back to network:`, err);
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`Fetch failed for ${filename}: ${res.status} ${res.statusText}`);
     const buf = await res.arrayBuffer();
     downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
     reportProgress();
