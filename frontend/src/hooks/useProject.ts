@@ -31,7 +31,7 @@ function applyScales(project: Project, sheetId?: string): Project {
 function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
   const glass = DEFAULT_GLASS_ASSETS[prev.sheets.length % DEFAULT_GLASS_ASSETS.length];
   return {
-    id: `sheet-${Date.now()}`,
+    id: `sheet-${crypto.randomUUID()}`,
     label: `${t('sheet')} ${prev.sheets.length + 1}`,
     imageUrl: glass.url,
     crop: { top: 0, left: 0, bottom: 0, right: 0 },
@@ -989,7 +989,7 @@ export function useProject() {
   }, [updateProject]);
 
   const addSheetFromImage = useCallback((url: string, label: string, scale: Scale | null = null) => {
-    const id = `sheet-${Date.now()}`;
+    const id = `sheet-${crypto.randomUUID()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
@@ -1026,7 +1026,7 @@ export function useProject() {
   }, [updateProject]);
 
   const addSheetFromImageAndMovePieces = useCallback((url: string, label: string, srcSheetId: string) => {
-    const id = `sheet-${Date.now()}`;
+    const id = `sheet-${crypto.randomUUID()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {

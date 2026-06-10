@@ -273,6 +273,7 @@ export function App() {
   const { t, i18n } = useTranslation();
   const {
     project,
+    isLoaded,
     selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
@@ -329,6 +330,10 @@ export function App() {
     setIsSymmetryEnabled,
   } = useProject();
 
+  // Always-current project, for async handlers that resolve after re-renders.
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
   const [backendStatus, setBackendStatus] = useState('');
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
@@ -360,6 +365,11 @@ export function App() {
   const preTutorialProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Wait for the OPFS project load before deciding whether to show the
+    // welcome tutorial — at mount `project` is still the empty placeholder,
+    // so a returning user with saved work (but cleared localStorage) would
+    // be dumped into the tutorial on top of their project.
+    if (!isLoaded || tutorialLoadedRef.current) return;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -379,7 +389,8 @@ export function App() {
     } finally {
       tutorialLoadedRef.current = true;
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   const startTutorialTour = () => {
     preTutorialProjectRef.current = project.name;
@@ -454,8 +465,16 @@ export function App() {
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
-  const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
+  const [debugMask, setDebugMaskState] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
   const [debugMaskPieceId, setDebugMaskPieceId] = useState<string | null>(null);
+  // Close the previous ImageBitmap when replacing it — they pin large
+  // buffers and repeated refine clicks accumulate tens of MB otherwise.
+  const setDebugMask = (m: { bitmap: ImageBitmap; width: number; height: number } | null) => {
+    setDebugMaskState(prev => {
+      if (prev && prev.bitmap !== m?.bitmap) prev.bitmap.close();
+      return m;
+    });
+  };
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -563,11 +582,16 @@ export function App() {
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      // Read neighbors through the ref, not the render-time snapshot: another
+      // segmentation may have finished while this one was awaiting, and
+      // clipping against its pre-segment polygon would leave the two pieces
+      // overlapping.
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
@@ -600,9 +624,10 @@ export function App() {
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const others = project.pieces.filter(p => p.id !== pieceId);
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
