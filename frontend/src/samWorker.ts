@@ -332,6 +332,23 @@ async function initDecoder() {
   }
 }
 
+// Shared fetch of the encoder model files. Deduplicated so the post-init
+// background warm-up and the first encode can't download the ~309 MB twice
+// concurrently.
+let encoderFetchPromise: Promise<[ArrayBuffer, ArrayBuffer]> | null = null;
+function fetchEncoderModels(): Promise<[ArrayBuffer, ArrayBuffer]> {
+  if (!encoderFetchPromise) {
+    const p = Promise.all([
+      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
+      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
+    ]);
+    // On failure allow a later retry, but never clobber a newer attempt.
+    p.catch(() => { if (encoderFetchPromise === p) encoderFetchPromise = null; });
+    encoderFetchPromise = p;
+  }
+  return encoderFetchPromise;
+}
+
 async function initEncoder() {
   if (encoderSession) return;
   if (initEncoderStarted) {
@@ -348,10 +365,7 @@ async function initEncoder() {
 
   try {
     post({ type: 'status', text: 'Loading SAM2 encoder model…' });
-    const [encModel, encData] = await Promise.all([
-      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
-      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
-    ]);
+    const [encModel, encData] = await fetchEncoderModels();
 
     post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
     const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
@@ -362,6 +376,8 @@ async function initEncoder() {
         path: 'vision_encoder.onnx_data'
       }]
     });
+    // Session owns its copies now; release the raw buffers.
+    encoderFetchPromise = null;
     resolveReady();
   } catch (err) {
     console.error("[SAM Worker] Encoder initialization failed:", err);
@@ -370,13 +386,56 @@ async function initEncoder() {
   }
 }
 
+async function fileExistsInCache(filename: string): Promise<boolean> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    await root.getFileHandle(filename);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Background warm-up of the encoder download right after init. Without this,
+// the first encode triggered a second ~309 MB download after the progress UI
+// had already reported 100% for the (much smaller) decoder — looking like the
+// model was downloading twice.
+async function warmEncoderCache() {
+  try {
+    await fetchEncoderModels();
+    // If no encode has claimed the buffers yet, drop them — they're in the
+    // OPFS cache now and the first encode will read them from disk instead
+    // of pinning ~300 MB in worker memory indefinitely.
+    if (!initEncoderStarted) encoderFetchPromise = null;
+  } catch (err) {
+    console.warn('[SAM Worker] Encoder warm-up failed (will retry on first segment):', err);
+    // Don't leave unfinished entries stalling the progress bar below 100%.
+    downloadProgress.delete('sam2_base_encoder.onnx');
+    downloadProgress.delete('sam2_base_encoder.onnx_data');
+    reportProgress();
+  }
+}
+
 async function init() {
   if (initStarted) return;
   initStarted = true;
   try {
     post({ type: 'status', text: 'Initializing SAM2 models…' });
+    // On a first run, register the encoder files in the progress accounting
+    // before the decoder downloads, so the reported fraction covers the full
+    // first-run download instead of completing after the decoder and
+    // restarting for the encoder.
+    if (!(await fileExistsInCache('sam2_base_encoder.onnx_data'))) {
+      if (!downloadProgress.has('sam2_base_encoder.onnx')) {
+        downloadProgress.set('sam2_base_encoder.onnx', { loaded: 0, total: 4000000 });
+      }
+      if (!downloadProgress.has('sam2_base_encoder.onnx_data')) {
+        downloadProgress.set('sam2_base_encoder.onnx_data', { loaded: 0, total: 305000000 });
+      }
+    }
     await initDecoder();
     post({ type: 'ready', device: 'webgpu' });
+    void warmEncoderCache();
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);
     const error = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err);
