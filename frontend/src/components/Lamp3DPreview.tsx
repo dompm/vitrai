@@ -231,14 +231,17 @@ export function Lamp3DPreview({ project }: Props) {
         if (tier) {
           const m = tier.meta;
           if (m.type === 'cylinder') {
-            const theta01 = Math.max(0, Math.min(1, (px - m.leftX) / m.width));
-            const v = Math.max(0, Math.min(1, (py - m.topY) / m.height));
+            const theta01 = Math.max(0, Math.min(1, (px - m.leftX) / Math.max(1e-6, m.width)));
+            const v = Math.max(0, Math.min(1, (py - m.topY) / Math.max(1e-6, m.height)));
             surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
           } else {
             const dx = px - m.apexX;
             const dy = py - m.apexY;
             const d = Math.hypot(dx, dy);
-            const v = Math.max(0, Math.min(1, (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top)));
+            // Denominator is negative for contracting tiers (L_top > L_bot);
+            // clamping it positive collapsed those tiers onto the top ring.
+            const dDenom = m.L_bot - m.L_top;
+            const v = Math.abs(dDenom) < 1e-6 ? 0.5 : Math.max(0, Math.min(1, (d - m.L_top) / dDenom));
             const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
             const theta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
             surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
