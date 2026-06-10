@@ -13,27 +13,30 @@ export async function listProjects(): Promise<string[]> {
   }
 }
 
+/**
+ * Load a project. Returns null only when the file genuinely doesn't exist;
+ * any other failure (corrupt JSON, transient OPFS error) throws so callers
+ * never mistake a broken-but-present project for a fresh start.
+ */
 export async function loadProjectFromOPFS(name: string = 'default'): Promise<Project | null> {
+  const root = await navigator.storage.getDirectory();
+  let handle: FileSystemFileHandle;
   try {
-    const root = await navigator.storage.getDirectory();
-    const handle = await root.getFileHandle(`${name}.json`);
-    const file = await handle.getFile();
-    return JSON.parse(await file.text()) as Project;
-  } catch {
-    return null;
+    handle = await root.getFileHandle(`${name}.json`);
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'NotFoundError') return null;
+    throw e;
   }
+  const file = await handle.getFile();
+  return JSON.parse(await file.text()) as Project;
 }
 
 export async function saveToOPFS(project: Project, name: string = 'default'): Promise<void> {
-  try {
-    const root = await navigator.storage.getDirectory();
-    const handle = await root.getFileHandle(`${name}.json`, { create: true });
-    const writable = await (handle as any).createWritable();
-    await writable.write(JSON.stringify(project));
-    await writable.close();
-  } catch (e) {
-    console.error('[OPFS] save failed', e);
-  }
+  const root = await navigator.storage.getDirectory();
+  const handle = await root.getFileHandle(`${name}.json`, { create: true });
+  const writable = await (handle as any).createWritable();
+  await writable.write(JSON.stringify(project));
+  await writable.close();
 }
 
 export async function deleteFromOPFS(name: string): Promise<void> {
@@ -61,7 +64,12 @@ export async function listAllSheetsAcrossProjects(excludeProjectName?: string): 
   const out: RecentSheet[] = [];
   for (const name of names) {
     if (name === excludeProjectName) continue;
-    const project = await loadProjectFromOPFS(name);
+    let project: Project | null = null;
+    try {
+      project = await loadProjectFromOPFS(name);
+    } catch {
+      // skip unreadable projects; this list is best-effort
+    }
     if (!project) continue;
     for (const sheet of project.sheets) {
       if (!sheet.imageUrl || seen.has(sheet.imageUrl)) continue;

@@ -727,13 +727,17 @@ export function App() {
   };
 
   const handleSaveProject = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    // Blob instead of a data: URI — projects embed base64 images and easily
+    // exceed browser URL length limits.
+    const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataStr;
+    a.href = url;
     a.download = `${project.name}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
   const loadPatternImageFile = (file: File) => {
