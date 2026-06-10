@@ -16,7 +16,7 @@ import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
-import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
+import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
@@ -273,6 +273,7 @@ export function App() {
   const { t, i18n } = useTranslation();
   const {
     project,
+    isLoaded,
     selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
@@ -280,7 +281,6 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    batchUpdatePieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -330,6 +330,10 @@ export function App() {
     setIsSymmetryEnabled,
   } = useProject();
 
+  // Always-current project, for async handlers that resolve after re-renders.
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
   const [backendStatus, setBackendStatus] = useState('');
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
@@ -361,6 +365,11 @@ export function App() {
   const preTutorialProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Wait for the OPFS project load before deciding whether to show the
+    // welcome tutorial — at mount `project` is still the empty placeholder,
+    // so a returning user with saved work (but cleared localStorage) would
+    // be dumped into the tutorial on top of their project.
+    if (!isLoaded || tutorialLoadedRef.current) return;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -380,7 +389,8 @@ export function App() {
     } finally {
       tutorialLoadedRef.current = true;
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   const startTutorialTour = () => {
     preTutorialProjectRef.current = project.name;
@@ -455,8 +465,16 @@ export function App() {
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
-  const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
+  const [debugMask, setDebugMaskState] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
   const [debugMaskPieceId, setDebugMaskPieceId] = useState<string | null>(null);
+  // Close the previous ImageBitmap when replacing it — they pin large
+  // buffers and repeated refine clicks accumulate tens of MB otherwise.
+  const setDebugMask = (m: { bitmap: ImageBitmap; width: number; height: number } | null) => {
+    setDebugMaskState(prev => {
+      if (prev && prev.bitmap !== m?.bitmap) prev.bitmap.close();
+      return m;
+    });
+  };
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -465,7 +483,7 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
-  const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const [, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
   const isLamp = project.projectType === 'lamp';
@@ -564,11 +582,16 @@ export function App() {
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      // Read neighbors through the ref, not the render-time snapshot: another
+      // segmentation may have finished while this one was awaiting, and
+      // clipping against its pre-segment polygon would leave the two pieces
+      // overlapping.
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
@@ -601,9 +624,10 @@ export function App() {
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const others = project.pieces.filter(p => p.id !== pieceId);
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
@@ -675,7 +699,7 @@ export function App() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
@@ -728,19 +752,36 @@ export function App() {
   };
 
   const handleSaveProject = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    // Blob instead of a data: URI — projects embed base64 images and easily
+    // exceed browser URL length limits.
+    const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataStr;
+    a.href = url;
     a.download = `${project.name}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  };
+
+  const loadPatternImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.width, img.height);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      updatePatternImage(file);
+      loadPatternImageFile(file);
       setPatternTool('select');
     }
   };
@@ -990,16 +1031,7 @@ export function App() {
       };
       reader.readAsText(file);
     } else if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        const img = new Image();
-        img.onload = () => {
-          updatePatternImage(dataUrl, img.width, img.height);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+      loadPatternImageFile(file);
     }
   };
 
@@ -1315,23 +1347,11 @@ export function App() {
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
-            pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
-            onSelectPieces={selectPieces}
             onUpdatePieceTransform={updatePieceTransform}
-            onBatchTransformChange={batchUpdatePieceTransforms}
-            onUpdatePieceLabel={updatePieceLabel}
-            onUpdatePieceSheet={updatePieceSheet}
-            onUpdatePiecesSheet={updatePiecesSheet}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
-            onDeletePiece={deletePiece}
-            onDeletePieces={deletePieces}
-            onSmoothPiece={handleSmoothPiece}
-            onSmoothPieces={handleSmoothPieces}
-            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
@@ -1510,7 +1530,7 @@ export function App() {
           initialConfig={project.lampConfig}
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
-          onUpdatePatternScale={(scale) => updateProject(p => ({ ...p, patternScale: scale }))}
+          onUpdatePatternScale={updatePatternScale}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);

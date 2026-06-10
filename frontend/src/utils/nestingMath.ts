@@ -28,9 +28,24 @@ function pointInPolygon(point: Point, vs: Polygon): boolean {
   return inside;
 }
 
-// Check if poly1 and poly2 intersect without crashing on degenerate shapes
-function polygonsIntersect(poly1: Polygon, poly2: Polygon): boolean {
-  // 1. Edge intersections
+// Squared distance from point p to segment ab
+function pointSegDist2(p: Point, a: Point, b: Point): number {
+  const abx = b.x - a.x, aby = b.y - a.y;
+  const apx = p.x - a.x, apy = p.y - a.y;
+  const len2 = abx * abx + aby * aby;
+  const t = len2 > 0 ? Math.max(0, Math.min(1, (apx * abx + apy * aby) / len2)) : 0;
+  const dx = apx - t * abx, dy = apy - t * aby;
+  return dx * dx + dy * dy;
+}
+
+// True if the polygons overlap, one contains the other, or (gapPx > 0) any
+// pair of edges comes closer than gapPx — the cutting clearance the glass
+// cutter needs between pieces.
+function polygonsConflict(poly1: Polygon, poly2: Polygon, gapPx: number): boolean {
+  const gap2 = gapPx > 0 ? gapPx * gapPx : 0;
+  // 1. Edge intersections / proximity. Checking each vertex of one polygon
+  // against each edge of the other (both directions) covers the minimum
+  // distance between non-crossing segments.
   for (let i = 0; i < poly1.length; i++) {
     const p1 = poly1[i];
     const p2 = poly1[(i + 1) % poly1.length];
@@ -38,6 +53,7 @@ function polygonsIntersect(poly1: Polygon, poly2: Polygon): boolean {
       const p3 = poly2[j];
       const p4 = poly2[(j + 1) % poly2.length];
       if (segmentsIntersect(p1, p2, p3, p4)) return true;
+      if (gap2 > 0 && (pointSegDist2(p1, p3, p4) < gap2 || pointSegDist2(p3, p1, p2) < gap2)) return true;
     }
   }
 
@@ -117,20 +133,21 @@ export function findBestPlacement(
 
     for (let ty = startY; ty <= endY; ty += step) {
       for (let tx = startX; tx <= endX; tx += step) {
-        // Fast bounding box rejection against placed pieces
-        // For flush packing between pieces, we do not inflate the BB by gapPx
+        // Fast bounding box rejection against placed pieces, inflated by
+        // gapPx so the exact check also sees near-misses within the gap.
         const translatedBB = {
-          minX: tx + bounds.minX,
-          minY: ty + bounds.minY,
-          maxX: tx + bounds.maxX,
-          maxY: ty + bounds.maxY
+          minX: tx + bounds.minX - gapPx,
+          minY: ty + bounds.minY - gapPx,
+          maxX: tx + bounds.maxX + gapPx,
+          maxY: ty + bounds.maxY + gapPx
         };
-        
+
         let exactConflict = false;
-        
+
         for (const placed of placedPolys) {
           const pBB = getBoundingBox(placed);
-          // If bounding boxes overlap, test exact polygon intersection
+          // If (inflated) bounding boxes overlap, test exact polygon
+          // intersection plus the cutting-gap clearance
           if (
             translatedBB.minX < pBB.maxX &&
             translatedBB.maxX > pBB.minX &&
@@ -138,7 +155,7 @@ export function findBestPlacement(
             translatedBB.maxY > pBB.minY
           ) {
             const testPoly = translatePolygon(rotatedBase, tx, ty);
-            if (polygonsIntersect(testPoly, placed)) {
+            if (polygonsConflict(testPoly, placed, gapPx)) {
               exactConflict = true;
               break;
             }

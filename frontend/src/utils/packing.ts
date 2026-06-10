@@ -121,7 +121,7 @@ export function packPiecesSmart(
   allowRotations: boolean,
   onProgress: (placement: PiecePlacement) => void
 ): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     if (pieces.length === 0) {
       resolve();
       return;
@@ -156,7 +156,21 @@ export function packPiecesSmart(
       } else if (msg.type === 'COMPLETE') {
         worker.terminate();
         resolve();
+      } else if (msg.type === 'ERROR') {
+        worker.terminate();
+        reject(new Error(msg.payload.message));
       }
+    };
+
+    // Without these, a worker that fails to load or crashes leaves the
+    // promise unsettled forever (and the caller's spinner stuck).
+    worker.onerror = (e) => {
+      worker.terminate();
+      reject(new Error(e.message || 'Nesting worker failed to start'));
+    };
+    worker.onmessageerror = () => {
+      worker.terminate();
+      reject(new Error('Nesting worker message could not be deserialized'));
     };
 
     const payloadPieces = pieces.map(p => {

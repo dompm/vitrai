@@ -166,7 +166,6 @@ interface SheetPanelProps {
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onUpdatePieceTransform: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onBatchTransformChange?: (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -176,7 +175,7 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform, onBatchTransformChange,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform,
   onCropChange, onScaleChange, onImageLoad,
   activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
@@ -201,6 +200,8 @@ export function SheetPanel({
         setIsSpaceDown(true);
         return;
       }
+      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'c') handleToolChange('crop');
@@ -236,6 +237,7 @@ export function SheetPanel({
   const vp = useViewport(sheetW, sheetH);
   const measure = useMeasure();
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const marqueeJustEndedRef = useRef(false);
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
   useEffect(() => {
@@ -254,7 +256,7 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale && !forceTool) {
+      if (!sheet.scale) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
@@ -333,6 +335,10 @@ export function SheetPanel({
       } else if (Math.abs(marqueeBox.x2 - marqueeBox.x1) < 2 && Math.abs(marqueeBox.y2 - marqueeBox.y1) < 2) {
         onSelectPiece(null);
       }
+      // Konva synthesizes a `click` after this pointerup (it has no movement
+      // threshold); suppress it so it can't clear the selection we just made.
+      marqueeJustEndedRef.current = true;
+      setTimeout(() => { marqueeJustEndedRef.current = false; }, 0);
       setMarqueeBox(null);
       return;
     }
@@ -345,6 +351,7 @@ export function SheetPanel({
   }
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
+    if (marqueeJustEndedRef.current) return;
     if (!rotatingPieceId && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
   }
 
@@ -474,6 +481,8 @@ export function SheetPanel({
       await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
         onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
       });
+    } catch (err) {
+      console.error('[SheetPanel] smart pack failed', err);
     } finally {
       setIsPacking(false);
     }
@@ -508,7 +517,7 @@ export function SheetPanel({
             <div className="solder-popover">
               <div className="solder-popover-section">
                 <span className="solder-popover-title" style={{ marginBottom: '12px', display: 'block' }}>{t('smartPack', 'Smart Pack')}</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: CANVAS.fg, cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-soft)', cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
                   <input 
                     type="checkbox" 
                     checked={allowRotations} 

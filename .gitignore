@@ -22,3 +22,6 @@ data/
 # Worktrees
 .worktrees/
 
+
+# TypeScript incremental build state
+*.tsbuildinfo

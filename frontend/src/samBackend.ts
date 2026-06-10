@@ -53,8 +53,21 @@ export class SamWorkerBackend {
     };
 
     this.worker.onerror = (e) => {
-      rejectReady(new Error(e.message));
+      const err = new Error(e.message || 'SAM worker crashed');
+      rejectReady(err);
+      this.failAllPending(err);
+      // Drop the singleton so the next getSamBackend() call spawns a fresh
+      // worker instead of posting into a dead one.
+      if (window.__samBackend === this) window.__samBackend = undefined;
     };
+    this.worker.onmessageerror = () => {
+      this.failAllPending(new Error('SAM worker message could not be deserialized'));
+    };
+  }
+
+  private failAllPending(err: Error) {
+    for (const p of this.pending.values()) p.reject(err);
+    this.pending.clear();
   }
 
   private send<T>(msg: WorkerInMsg): Promise<T> {
