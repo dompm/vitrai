@@ -166,7 +166,6 @@ interface SheetPanelProps {
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onUpdatePieceTransform: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onBatchTransformChange?: (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -176,7 +175,7 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform, onBatchTransformChange,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform,
   onCropChange, onScaleChange, onImageLoad,
   activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
@@ -254,7 +253,7 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale && !forceTool) {
+      if (!sheet.scale) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
@@ -508,7 +507,7 @@ export function SheetPanel({
             <div className="solder-popover">
               <div className="solder-popover-section">
                 <span className="solder-popover-title" style={{ marginBottom: '12px', display: 'block' }}>{t('smartPack', 'Smart Pack')}</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: CANVAS.fg, cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-soft)', cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
                   <input 
                     type="checkbox" 
                     checked={allowRotations} 

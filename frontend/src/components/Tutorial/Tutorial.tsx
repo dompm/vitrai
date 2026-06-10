@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
-import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, IS_PLACEHOLDER_GROUND_TRUTH, GT_PIECE_1, GT_PIECE_3 } from './types';
-import type { StepId } from './types';
+import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, GT_PIECE_1, GT_PIECE_3 } from './types';
+import type { AnchoredStepId, StepId } from './types';
 import type { ToolId } from '../Toolbar';
 import { computeBleedRatio, findMatchedGroundTruth } from '../../utils/geometry';
 
@@ -305,7 +305,7 @@ export function Tutorial({
 
   if (step === null) return null;
 
-  const activeConfig = ANCHORED_STEPS.includes(step) ? STEPS[step] : null;
+  const activeConfig = ANCHORED_STEPS.includes(step) ? STEPS[step as AnchoredStepId] : null;
 
   // Build dynamic text overrides for refinement steps depending on the tracked piece's state.
   let customTitle: string | undefined = undefined;

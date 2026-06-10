@@ -16,7 +16,7 @@ import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
-import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
+import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
@@ -280,7 +280,6 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    batchUpdatePieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -465,7 +464,7 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
-  const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const [, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
   const isLamp = project.projectType === 'lamp';
@@ -737,10 +736,23 @@ export function App() {
     a.remove();
   };
 
+  const loadPatternImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.width, img.height);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      updatePatternImage(file);
+      loadPatternImageFile(file);
       setPatternTool('select');
     }
   };
@@ -990,16 +1002,7 @@ export function App() {
       };
       reader.readAsText(file);
     } else if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        const img = new Image();
-        img.onload = () => {
-          updatePatternImage(dataUrl, img.width, img.height);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+      loadPatternImageFile(file);
     }
   };
 
@@ -1315,23 +1318,11 @@ export function App() {
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
-            pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
-            onSelectPieces={selectPieces}
             onUpdatePieceTransform={updatePieceTransform}
-            onBatchTransformChange={batchUpdatePieceTransforms}
-            onUpdatePieceLabel={updatePieceLabel}
-            onUpdatePieceSheet={updatePieceSheet}
-            onUpdatePiecesSheet={updatePiecesSheet}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
-            onDeletePiece={deletePiece}
-            onDeletePieces={deletePieces}
-            onSmoothPiece={handleSmoothPiece}
-            onSmoothPieces={handleSmoothPieces}
-            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
@@ -1510,7 +1501,7 @@ export function App() {
           initialConfig={project.lampConfig}
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
-          onUpdatePatternScale={(scale) => updateProject(p => ({ ...p, patternScale: scale }))}
+          onUpdatePatternScale={updatePatternScale}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);

@@ -102,7 +102,7 @@ export function Lamp3DPreview({ project }: Props) {
     };
     (renderer as unknown as { _render: () => void })._render = render;
 
-    function resize() {
+    const resize = () => {
       const w = container.clientWidth;
       const h = container.clientHeight;
       if (w === 0 || h === 0) return;
@@ -110,7 +110,7 @@ export function Lamp3DPreview({ project }: Props) {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       render();
-    }
+    };
     const ro = new ResizeObserver(resize);
     ro.observe(container);
     resize();

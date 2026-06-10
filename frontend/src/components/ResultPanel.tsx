@@ -627,7 +627,6 @@ function findLengthSnap(
 
   let bestMatch: typeof segments[0] | null = null;
   let bestDistPx = tolerancePx;
-  const tolerance = tolerancePx / effectiveScale;
 
   for (const seg of segments) {
     const dist = Math.abs(currentLen - seg.length);
@@ -688,7 +687,7 @@ export function ResultPanel({
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
 
-  const [isShiftDown, setIsShiftDown] = useState(false);
+  const [, setIsShiftDown] = useState(false);
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
 
   const piecesRef = useRef(project.pieces);
