@@ -49,6 +49,18 @@ export interface Piece {
   symmetryGroupId?: string;    // links symmetrical duplicates
 }
 
+export type GlassCategory = 'transparent' | 'wispy' | 'opalescent' | 'opaque';
+export type GlassSurface = 'smooth' | 'seedy' | 'hammered' | 'rippled';
+
+export interface GlassMaterialParams {
+  category: GlassCategory;
+  surface: GlassSurface;
+  translucency: number;  // 0..1 — drives both transmission and lit-from-within glow
+  roughness: number;     // 0..1
+  glowTint?: string;     // hex, default '#ffffff'
+  source: 'default' | 'estimated' | 'user';
+}
+
 export interface GlassSheet {
   id: string;
   label: string;
@@ -58,6 +70,7 @@ export interface GlassSheet {
   naturalWidth?: number;
   naturalHeight?: number;
   swatch?: string; // dominant color, e.g. "#3a6da8"
+  material?: GlassMaterialParams;
 }
 
 export type SolderColor = 'black' | 'silver' | 'copper';
@@ -75,6 +88,7 @@ export interface LampConfig {
   // its true smooth shape (rectangle for a cylinder, annular sector for a cone)
   // instead of N flat facets. `facetCount` is ignored except for visualization.
   smooth?: boolean;
+  bulbIntensity?: number; // 0..2, brightness of the bulb inside the lamp (default 1)
 }
 
 export interface Project {

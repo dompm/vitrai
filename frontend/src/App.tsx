@@ -293,6 +293,7 @@ export function App() {
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
+    updateSheetMaterial,
     addSheetAndAssignPiece,
     addSheetAndAssignPieces,
     addPieceFromBox,
@@ -1326,6 +1327,7 @@ export function App() {
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            onUpdateSheetMaterial={(m, skipHistory) => updateSheetMaterial(activeSheetId, m, skipHistory)}
             onDeletePiece={deletePiece}
             onDeletePieces={deletePieces}
             onSmoothPiece={handleSmoothPiece}

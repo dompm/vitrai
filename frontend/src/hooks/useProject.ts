@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor } from '../types';
+import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, GlassMaterialParams, SolderColor } from '../types';
 import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
+import { getSheetMaterial } from '../utils/glassMaterial';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 import { computeUnrolledLamp, reflowLampPoints, replicatePointToFacet, patternToSurfaceRobust } from '../utils/lampGeometry';
 
@@ -465,6 +466,15 @@ export function useProject() {
       ...prev,
       sheets: prev.sheets.map(s => s.id === sheetId ? { ...s, swatch } : s)
     }), true);
+  }, [updateProject]);
+
+  const updateSheetMaterial = useCallback((sheetId: string, material: Partial<GlassMaterialParams>, skipHistory = false) => {
+    updateProject(prev => ({
+      ...prev,
+      sheets: prev.sheets.map(s =>
+        s.id === sheetId ? { ...s, material: { ...getSheetMaterial(s), ...material } } : s
+      )
+    }), skipHistory);
   }, [updateProject]);
 
   const updatePieceSheet = useCallback((pieceId: string, sheetId: string) => {
@@ -985,7 +995,7 @@ export function useProject() {
     setActiveSheetId(id);
   }, [updateProject]);
 
-  const updateLampConfig = useCallback((config: Partial<import('../types').LampConfig>) => {
+  const updateLampConfig = useCallback((config: Partial<import('../types').LampConfig>, skipHistory = false) => {
     updateProject(prev => {
       if (!prev.lampConfig) return prev;
       const merged = { ...prev.lampConfig, ...config };
@@ -1048,7 +1058,7 @@ export function useProject() {
         patternHeight: height,
         pieces: reflowedPieces,
       };
-    });
+    }, skipHistory);
   }, [updateProject]);
 
   return {
@@ -1077,6 +1087,7 @@ export function useProject() {
     deleteSheet,
     renameSheet,
     updateSheetSwatch,
+    updateSheetMaterial,
     addSheet,
     addSheetAndAssignPiece,
     addSheetAndAssignPieces,

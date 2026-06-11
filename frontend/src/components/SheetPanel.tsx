@@ -6,7 +6,8 @@ import { Stage, Layer, Image as KonvaImage, Line, Group, Circle, Rect } from 're
 import { CANVAS } from '../theme';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Piece, GlassSheet, TextureTransform, Crop, Scale } from '../types';
+import type { Piece, GlassSheet, GlassMaterialParams, TextureTransform, Crop, Scale } from '../types';
+import { GlassMaterialPopover } from './GlassMaterialPopover';
 import { computeCentroid, flattenCurves } from '../utils/geometry';
 import { packPiecesSmart, defaultCuttingGapPx } from '../utils/packing';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
@@ -170,6 +171,7 @@ interface SheetPanelProps {
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
+  onUpdateSheetMaterial?: (m: Partial<GlassMaterialParams>, skipHistory?: boolean) => void;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
   isTutorial?: boolean;
@@ -177,7 +179,7 @@ interface SheetPanelProps {
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform, onBatchTransformChange,
-  onCropChange, onScaleChange, onImageLoad,
+  onCropChange, onScaleChange, onImageLoad, onUpdateSheetMaterial,
   activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
   const { t } = useTranslation();
@@ -540,6 +542,9 @@ export function SheetPanel({
             </div>
           )}
         </div>
+        {onUpdateSheetMaterial && (
+          <GlassMaterialPopover sheet={sheet} onUpdateMaterial={onUpdateSheetMaterial} />
+        )}
       </Toolbar>
       <div
         ref={vp.containerRef}

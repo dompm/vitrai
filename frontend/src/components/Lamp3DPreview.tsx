@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import type { Project, LampConfig, GlassSheet } from '../types';
 import { computeUnrolledLamp, patternToSurface } from '../utils/lampGeometry';
 import { computeCentroid, flattenCurves } from '../utils/geometry';
+import { getSheetMaterial, toRenderParams } from '../utils/glassMaterial';
 
 interface Props {
   project: Project;
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null) => void;
-  onUpdateLampConfig: (config: Partial<LampConfig>) => void;
+  onUpdateLampConfig: (config: Partial<LampConfig>, skipHistory?: boolean) => void;
   activeSheetId: string;
   onSetFocusedPanelIdx: (idx: number | null) => void;
 }
@@ -44,7 +47,12 @@ function loadSheetTexture(sheet: GlassSheet, onLoad: () => void): THREE.Texture 
   return tx;
 }
 
-export function Lamp3DPreview({ project }: Props) {
+// Bulb uses physical (decay-2) falloff over pattern-pixel distances, so its
+// intensity is scaled by the lamp radius squared to stay stable across sizes.
+const BULB_SCALE = 2.5;
+
+export function Lamp3DPreview({ project, onUpdateLampConfig }: Props) {
+  const { t } = useTranslation();
   const config = project.lampConfig ?? DEFAULT_CONFIG;
   const unrolledLamp = useMemo(() => computeUnrolledLamp(config), [config]);
 
@@ -53,6 +61,7 @@ export function Lamp3DPreview({ project }: Props) {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const lampGroupRef = useRef<THREE.Group | null>(null);
+  const bulbRef = useRef<THREE.PointLight | null>(null);
 
   const [yaw, setYaw] = useState(0.6);
   const [pitch, setPitch] = useState(0.3);
@@ -77,9 +86,11 @@ export function Lamp3DPreview({ project }: Props) {
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     rendererRef.current = renderer;
     container.appendChild(renderer.domElement);
     renderer.domElement.style.display = 'block';
@@ -92,10 +103,22 @@ export function Lamp3DPreview({ project }: Props) {
     scene.add(group);
     lampGroupRef.current = group;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.85));
+    // Soft studio environment for PBR reflections (no HDRI asset needed).
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envRT = pmrem.fromScene(new RoomEnvironment());
+    pmrem.dispose();
+    scene.environment = envRT.texture;
+
+    // Ambient stays low — the environment map carries most of the fill light.
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
     const dir = new THREE.DirectionalLight(0xffffff, 0.35);
     dir.position.set(-1, 1.5, 1.2);
     scene.add(dir);
+
+    // The bulb inside the lamp; position/intensity follow the lamp profile.
+    const bulb = new THREE.PointLight(0xfff1d6, 0, 0, 2);
+    scene.add(bulb);
+    bulbRef.current = bulb;
 
     const render = () => {
       renderer.render(scene, camera);
@@ -117,6 +140,7 @@ export function Lamp3DPreview({ project }: Props) {
 
     return () => {
       ro.disconnect();
+      envRT.dispose();
       renderer.dispose();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
@@ -124,6 +148,21 @@ export function Lamp3DPreview({ project }: Props) {
       // Cached textures stay alive across mounts.
     };
   }, []);
+
+  // ── Bulb light follows the lamp profile and brightness setting ────────
+  useEffect(() => {
+    const bulb = bulbRef.current;
+    const renderer = rendererRef.current;
+    if (!bulb || !renderer) return;
+    const { profilePoints } = config;
+    if (profilePoints.length === 0) return;
+    const maxR = Math.max(...profilePoints.map(p => p.r));
+    const minY = Math.min(...profilePoints.map(p => p.y));
+    const maxY = Math.max(...profilePoints.map(p => p.y));
+    bulb.position.set(0, (minY + maxY) / 2, 0);
+    bulb.intensity = (config.bulbIntensity ?? 1) * maxR * maxR * BULB_SCALE;
+    (renderer as unknown as { _render?: () => void })._render?.();
+  }, [config]);
 
   // ── Rebuild lamp meshes when config / pieces / sheets change ──────────
   useEffect(() => {
@@ -327,11 +366,20 @@ export function Lamp3DPreview({ project }: Props) {
       geom.computeVertexNormals();
 
       const texture = loadSheetTexture(sheet, requestRender);
-      const material = new THREE.MeshBasicMaterial({
+      const matParams = getSheetMaterial(sheet);
+      const rp = toRenderParams(matParams, config.bulbIntensity ?? 1, project.patternScale);
+      const material = new THREE.MeshPhysicalMaterial({
         map: texture,
         side: THREE.DoubleSide,
-        transparent: true,
-        opacity: 1,
+        transmission: rp.transmission,
+        roughness: rp.roughness,
+        thickness: rp.thickness,
+        ior: rp.ior,
+        // The glass glows with its own texture colors when the bulb is on —
+        // a cheap stand-in for light transmitted through the sheet.
+        emissive: new THREE.Color(matParams.glowTint ?? '#ffffff'),
+        emissiveMap: texture,
+        emissiveIntensity: rp.emissiveIntensity,
       });
       const mesh = new THREE.Mesh(geom, material);
       // Render after the shell so the glass pixels show through cleanly.
@@ -406,7 +454,7 @@ export function Lamp3DPreview({ project }: Props) {
     }
 
     requestRender();
-  }, [config, project.pieces, project.sheets, unrolledLamp]);
+  }, [config, project.pieces, project.sheets, project.patternScale, unrolledLamp]);
 
   // ── Camera from yaw / pitch + auto-frame ─────────────────────────────
   useEffect(() => {
@@ -471,6 +519,26 @@ export function Lamp3DPreview({ project }: Props) {
         <div className="panel-title">
           <span className="panel-title-eyebrow">3D PREVIEW (DRAG TO SPIN)</span>
         </div>
+        <label
+          title={t('bulbBrightness', 'Bulb brightness')}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto', cursor: 'pointer' }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M9 18h6" /><path d="M10 22h4" />
+            <path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" />
+          </svg>
+          <input
+            type="range"
+            min={0}
+            max={2}
+            step={0.05}
+            value={config.bulbIntensity ?? 1}
+            onChange={e => onUpdateLampConfig({ bulbIntensity: Number(e.target.value) }, true)}
+            onPointerUp={e => onUpdateLampConfig({ bulbIntensity: Number((e.target as HTMLInputElement).value) })}
+            style={{ width: 90 }}
+            aria-label={t('bulbBrightness', 'Bulb brightness')}
+          />
+        </label>
       </div>
       <div
         className="canvas-well"
