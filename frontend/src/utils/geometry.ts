@@ -42,13 +42,20 @@ export function handleToCtrl(A: [number, number], B: [number, number], H: [numbe
 }
 
 export function computeCentroid(polygon: [number, number][]): { x: number; y: number } {
+  if (polygon.length === 0) return { x: 0, y: 0 };
   const x = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
   const y = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
   return { x, y };
 }
 
+// Each pass doubles the vertex count; cap it so repeated Smooth clicks can't
+// inflate a piece into tens of thousands of vertices and blow up clipping,
+// snapping, and packing downstream.
+const SMOOTH_MAX_VERTICES = 512;
+
 export function smoothPolygon(pts: [number, number][]): [number, number][] {
   if (pts.length < 3) return pts;
+  if (pts.length * 2 > SMOOTH_MAX_VERTICES) return pts;
   const n = pts.length;
   const out: [number, number][] = [];
   for (let i = 0; i < n; i++) {
