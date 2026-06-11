@@ -119,7 +119,18 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
         largestRing = ring as [number, number][];
       }
     }
-    
+
+    // polygon-clipping returns closed rings (first vertex repeated at the
+    // end); piece polygons are stored open everywhere else, and the stray
+    // duplicate vertex corrupts flattenCurves/centroid/snapping downstream.
+    if (largestRing.length > 1) {
+      const first = largestRing[0];
+      const last = largestRing[largestRing.length - 1];
+      if (first[0] === last[0] && first[1] === last[1]) {
+        largestRing = largestRing.slice(0, -1);
+      }
+    }
+
     return largestRing;
   } catch (e) {
     console.warn("Clipping failed", e);
@@ -127,14 +138,41 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
   }
 }
 
+/**
+ * Cyclic polygon equality: the same ring may come back from clipping
+ * re-anchored at a different start vertex, closed (duplicate end vertex),
+ * or with reversed winding — all of which still describe an unchanged
+ * polygon. A naive index-by-index compare treated those as "changed" and
+ * made every curve edit near a neighbor discard its Bezier metadata.
+ */
 export function arePolygonsEqual(p1: [number, number][], p2: [number, number][], epsilon = 0.1): boolean {
-  if (p1.length !== p2.length) return false;
-  for (let i = 0; i < p1.length; i++) {
-    if (Math.abs(p1[i][0] - p2[i][0]) > epsilon || Math.abs(p1[i][1] - p2[i][1]) > epsilon) {
-      return false;
+  const stripClosed = (p: [number, number][]) =>
+    p.length > 1 && p[0][0] === p[p.length - 1][0] && p[0][1] === p[p.length - 1][1]
+      ? p.slice(0, -1)
+      : p;
+  const a = stripClosed(p1);
+  const b = stripClosed(p2);
+  if (a.length !== b.length) return false;
+  const n = a.length;
+  if (n === 0) return true;
+
+  const matches = (i: number, j: number) =>
+    Math.abs(a[i][0] - b[j][0]) <= epsilon && Math.abs(a[i][1] - b[j][1]) <= epsilon;
+
+  // Only offsets where b matches a's first vertex can align — typically 0-1
+  // candidates, so this stays near-linear for the common "not equal" case.
+  for (let off = 0; off < n; off++) {
+    if (!matches(0, off)) continue;
+    for (const dir of [1, -1]) {
+      let ok = true;
+      for (let i = 1; i < n; i++) {
+        const j = (((off + dir * i) % n) + n) % n;
+        if (!matches(i, j)) { ok = false; break; }
+      }
+      if (ok) return true;
     }
   }
-  return true;
+  return false;
 }
 
 export function computePolygonArea(polygon: [number, number][]): number {
