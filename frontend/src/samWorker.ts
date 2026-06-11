@@ -13,8 +13,9 @@ import ortWasmUrl from "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threa
 const isPthread = (self as { name?: string }).name === 'em-pthread';
 
 if (!isPthread) {
-  // Disable WASM threading entirely — WebGPU EP doesn't need threads, and
-  // this keeps ORT from spawning pthread workers in the first place.
+  // numThreads stays 1 on the WebGPU path (the EP doesn't need threads, and
+  // this keeps ORT from spawning pthread workers needlessly); the wasm
+  // fallback raises it in detectExecutionProviders().
   ort.env.wasm.numThreads = 1;
   ort.env.wasm.wasmPaths = { wasm: new URL(ortWasmUrl, self.location.href).href };
 }
@@ -291,6 +292,35 @@ async function saveEmbedToDB(imageUrl: string, embed: CachedEmbed): Promise<void
 
 let initDecoderStarted = false;
 let initEncoderStarted = false;
+
+// Probe for a usable WebGPU adapter (in this worker — page-level support is
+// not enough) instead of assuming it. Previously the worker always reported
+// device 'webgpu' even when ORT silently fell back to single-threaded wasm.
+let detectedDevice: 'webgpu' | 'wasm' = 'wasm';
+let epPromise: Promise<ort.InferenceSession.ExecutionProviderConfig[]> | null = null;
+function detectExecutionProviders(): Promise<ort.InferenceSession.ExecutionProviderConfig[]> {
+  if (!epPromise) {
+    epPromise = (async () => {
+      try {
+        const gpu = (navigator as { gpu?: { requestAdapter(): Promise<unknown | null> } }).gpu;
+        const adapter = gpu ? await gpu.requestAdapter() : null;
+        if (adapter) {
+          detectedDevice = 'webgpu';
+          return ['webgpu', 'wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+        }
+      } catch {
+        // No usable adapter — fall through to wasm.
+      }
+      detectedDevice = 'wasm';
+      // Single-threaded CPU inference of the ~300 MB encoder is unusably
+      // slow, and the site is cross-origin isolated precisely so threaded
+      // wasm works — use it. (em-pthread workers are guarded at module top.)
+      ort.env.wasm.numThreads = Math.max(1, Math.min(navigator.hardwareConcurrency || 1, 8));
+      return ['wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+    })();
+  }
+  return epPromise;
+}
 let decoderReadyPromise: Promise<void> | null = null;
 let encoderReadyPromise: Promise<void> | null = null;
 
@@ -316,7 +346,7 @@ async function initDecoder() {
     ]);
 
     post({ type: 'status', text: 'Compiling SAM2 decoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    const ep = await detectExecutionProviders();
     decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
       executionProviders: ep,
       externalData: [{
@@ -368,7 +398,7 @@ async function initEncoder() {
     const [encModel, encData] = await fetchEncoderModels();
 
     post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    const ep = await detectExecutionProviders();
     encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
       executionProviders: ep,
       externalData: [{
@@ -434,7 +464,7 @@ async function init() {
       }
     }
     await initDecoder();
-    post({ type: 'ready', device: 'webgpu' });
+    post({ type: 'ready', device: detectedDevice });
     void warmEncoderCache();
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);

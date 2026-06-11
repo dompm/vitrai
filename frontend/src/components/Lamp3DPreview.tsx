@@ -25,6 +25,10 @@ const DEFAULT_CONFIG: LampConfig = {
 
 // Module-level texture cache shared across instances — sheet image URLs rarely change.
 const textureCache = new Map<string, THREE.Texture>();
+// Sheet images are multi-MB data URLs; without a cap the GPU memory held by
+// stale entries (replaced uploads, deleted sheets) grows for the app's
+// lifetime. Map preserves insertion order, so evict oldest first.
+const TEXTURE_CACHE_MAX = 24;
 
 function loadSheetTexture(sheet: GlassSheet, onLoad: () => void): THREE.Texture {
   const key = sheet.imageUrl;
@@ -41,7 +45,35 @@ function loadSheetTexture(sheet: GlassSheet, onLoad: () => void): THREE.Texture 
   tx.wrapS = THREE.ClampToEdgeWrapping;
   tx.wrapT = THREE.ClampToEdgeWrapping;
   textureCache.set(key, tx);
+  while (textureCache.size > TEXTURE_CACHE_MAX) {
+    const [oldestKey, oldest] = textureCache.entries().next().value as [string, THREE.Texture];
+    oldest.dispose();
+    textureCache.delete(oldestKey);
+  }
   return tx;
+}
+
+// Dispose every child of the lamp group (meshes, instanced solder geometry,
+// seam lines). InstancedMesh.dispose() releases the instanceMatrix GPU
+// buffer that geometry/material disposal alone leaves behind — and the
+// rebuild runs on every pointer-move while dragging the profile editor.
+function disposeGroupChildren(group: THREE.Group) {
+  for (let i = group.children.length - 1; i >= 0; i--) {
+    const obj = group.children[i];
+    group.remove(obj);
+    if (obj instanceof THREE.Mesh) {
+      obj.geometry?.dispose();
+      const mat = obj.material;
+      if (Array.isArray(mat)) mat.forEach(m => m.dispose());
+      else (mat as THREE.Material).dispose();
+      if ((obj as THREE.InstancedMesh).isInstancedMesh) {
+        (obj as THREE.InstancedMesh).dispose();
+      }
+    } else if (obj instanceof THREE.LineSegments) {
+      obj.geometry?.dispose();
+      (obj.material as THREE.Material).dispose();
+    }
+  }
 }
 
 export function Lamp3DPreview({ project }: Props) {
@@ -117,7 +149,11 @@ export function Lamp3DPreview({ project }: Props) {
 
     return () => {
       ro.disconnect();
+      if (lampGroupRef.current) disposeGroupChildren(lampGroupRef.current);
       renderer.dispose();
+      // Each mount creates a fresh WebGL context and browsers cap those
+      // (~16); release this one eagerly instead of waiting for GC.
+      renderer.forceContextLoss();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
@@ -131,19 +167,7 @@ export function Lamp3DPreview({ project }: Props) {
     const renderer = rendererRef.current;
     if (!group || !renderer) return;
 
-    for (let i = group.children.length - 1; i >= 0; i--) {
-      const obj = group.children[i];
-      group.remove(obj);
-      if (obj instanceof THREE.Mesh) {
-        obj.geometry?.dispose();
-        const mat = obj.material;
-        if (Array.isArray(mat)) mat.forEach(m => m.dispose());
-        else (mat as THREE.Material).dispose();
-      } else if (obj instanceof THREE.LineSegments) {
-        obj.geometry?.dispose();
-        (obj.material as THREE.Material).dispose();
-      }
-    }
+    disposeGroupChildren(group);
 
     const { profilePoints } = config;
     // Use a high segment count when smooth so the lamp reads as curved.

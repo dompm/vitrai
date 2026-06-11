@@ -26,7 +26,9 @@ export class SamWorkerBackend {
     this.worker.onmessage = (e: MessageEvent<WorkerOutMsg>) => {
       const msg = e.data;
       if (msg.type === "ready") {
-        onStatusChange(`WebGPU ready (${msg.device})`);
+        onStatusChange(msg.device === 'webgpu'
+          ? 'WebGPU ready'
+          : 'Ready — no WebGPU available, running on CPU (segmentation will be slower)');
         resolveReady(msg.device);
       } else if (msg.type === "init:error") {
         console.error("[SAM Backend] Worker init failed:", msg.error);
