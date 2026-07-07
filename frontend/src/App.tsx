@@ -615,7 +615,10 @@ export function App() {
   async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
     addPiecePromptPoint(pieceId, point);
 
-    const piece = project.pieces.find(p => p.id === pieceId);
+    // Read through the ref so rapid refine clicks build on the freshest
+    // prompt-point list — a stale render snapshot here would silently drop
+    // the previous click's point from the request.
+    const piece = projectRef.current.pieces.find(p => p.id === pieceId);
     if (!piece || !patternImageId) return;
 
     const newPoints = [...(piece.promptPoints || []), point];
