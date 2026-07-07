@@ -133,21 +133,22 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   // vector-drawing
   'vector-blank-canvas': {
     id: 'vector-blank-canvas',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="pen"]',
     panel: 'pattern',
   },
   'vector-draw-shape': {
     id: 'vector-draw-shape',
-    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="pen"]',
+    spotlightTarget: '.canvas-well',
     panel: 'pattern',
   },
   'vector-snap-angles': {
     id: 'vector-snap-angles',
-    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="pen"]',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="select"]',
     panel: 'pattern',
   },
   'vector-curve-edge': {
     id: 'vector-curve-edge',
-    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="select"]',
+    spotlightTarget: '.canvas-well',
     panel: 'pattern',
   },
 
