@@ -126,7 +126,14 @@ export function useProject() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestProjectRef = useRef(project);
-  latestProjectRef.current = project;
+
+  // Single entry point for replacing the project wholesale (load/switch/
+  // delete/import). Keeps latestProjectRef in sync immediately so a
+  // subsequent updateProject in the same tick can't work from a stale base.
+  const replaceProject = useCallback((p: Project) => {
+    latestProjectRef.current = p;
+    setProject(p);
+  }, []);
 
   const persist = useCallback(async (p: Project, name: string) => {
     if (savingIndicatorTimerRef.current) clearTimeout(savingIndicatorTimerRef.current);
@@ -170,12 +177,12 @@ export function useProject() {
     loadProjectFromOPFS(last)
       .then(async p => {
         if (p) {
-          setProject(p);
+          replaceProject(p);
           setActiveSheetId(p.sheets[0]?.id ?? '');
         } else {
           // Genuinely no file — first visit under this name.
           const fresh = { ...EMPTY_PROJECT, name: last };
-          setProject(fresh);
+          replaceProject(fresh);
           await saveToOPFS(fresh, last).catch(err => {
             console.error('[useProject] initial save failed', err);
             setSaveStatus('error');
@@ -188,7 +195,7 @@ export function useProject() {
         // overwrite the original file.
         console.error('[useProject] failed to load project', err);
         const fallback = { ...EMPTY_PROJECT, name: `${last} (recovered)` };
-        setProject(fallback);
+        replaceProject(fallback);
         localStorage.setItem('vitraux-last-project', fallback.name);
       })
       .finally(() => {
@@ -219,56 +226,61 @@ export function useProject() {
     }
   }, [project.sheets, activeSheetId]);
 
+  // NOTE: state updaters passed to setProject/setUndoStack/setRedoStack must
+  // stay pure — React StrictMode double-invokes them, so any side effect
+  // inside an updater (pushing history, scheduling timers, other setState
+  // calls) runs twice and corrupts the undo/redo stacks. All side effects
+  // below happen at call time, outside the updaters.
   const updateProject = useCallback((updater: (p: Project) => Project, skipHistory = false) => {
-    setProject(prev => {
-      const next = updater(prev);
-      if (!skipHistory) {
-        setUndoStack(u => [...u.slice(-49), prev]);
-        setRedoStack([]);
-      }
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => {
-        void persist(next, next.name);
-        refreshProjectList();
-      }, 500);
-      return next;
-    });
+    const prev = latestProjectRef.current;
+    const next = updater(prev);
+    if (next === prev) return;
+    latestProjectRef.current = next;
+    if (!skipHistory) {
+      setUndoStack(u => [...u.slice(-49), prev]);
+      setRedoStack([]);
+    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void persist(next, next.name);
+      refreshProjectList();
+    }, 500);
+    setProject(next);
   }, [refreshProjectList, persist]);
 
   const undo = useCallback(() => {
-    setUndoStack(u => {
-      if (u.length === 0) return u;
-      const prev = u[u.length - 1];
-      const newStack = u.slice(0, -1);
-      setProject(current => {
-        setRedoStack(r => [...r, current]);
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { void persist(prev, prev.name); }, 500);
-        return prev;
-      });
-      return newStack;
-    });
-  }, [persist]);
+    if (undoStack.length === 0) return;
+    const current = latestProjectRef.current;
+    // The name is non-historied state: snapshots recorded before a rename
+    // still carry the old name, and restoring it would point autosave at a
+    // deleted OPFS file (see #111).
+    const prev = { ...undoStack[undoStack.length - 1], name: current.name };
+    setUndoStack(undoStack.slice(0, -1));
+    setRedoStack(r => [...r, current]);
+    latestProjectRef.current = prev;
+    setProject(prev);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { void persist(prev, prev.name); }, 500);
+  }, [undoStack, persist]);
 
   const redo = useCallback(() => {
-    setRedoStack(r => {
-      if (r.length === 0) return r;
-      const next = r[r.length - 1];
-      const newStack = r.slice(0, -1);
-      setProject(current => {
-        setUndoStack(u => [...u, current]);
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { void persist(next, next.name); }, 500);
-        return next;
-      });
-      return newStack;
-    });
-  }, [persist]);
+    if (redoStack.length === 0) return;
+    const current = latestProjectRef.current;
+    const next = { ...redoStack[redoStack.length - 1], name: current.name };
+    setRedoStack(redoStack.slice(0, -1));
+    setUndoStack(u => [...u, current]);
+    latestProjectRef.current = next;
+    setProject(next);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { void persist(next, next.name); }, 500);
+  }, [redoStack, persist]);
 
   const setProjectName = useCallback((name: string) => {
     const oldName = project.name;
     if (name === oldName) return;
-    updateProject(prev => ({ ...prev, name }));
+    // skipHistory: the rename is applied outside undo/redo (undo/redo also
+    // preserve the current name), so no stack entry is needed.
+    updateProject(prev => ({ ...prev, name }), true);
     // Write under the new name first and only delete the old file once that
     // write has succeeded, so there is never a moment with no copy on disk.
     void (async () => {
@@ -308,7 +320,7 @@ export function useProject() {
         line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
       };
     }
-    setProject(newProject);
+    replaceProject(newProject);
     setUndoStack([]);
     setRedoStack([]);
     setActiveSheetId('');
@@ -334,7 +346,7 @@ export function useProject() {
       return;
     }
     if (p) {
-      setProject(p);
+      replaceProject(p);
       setUndoStack([]);
       setRedoStack([]);
       setActiveSheetId(p.sheets[0]?.id ?? '');
@@ -358,7 +370,7 @@ export function useProject() {
           return null;
         });
         if (p) {
-          setProject(p);
+          replaceProject(p);
           setUndoStack([]);
           setRedoStack([]);
           setActiveSheetId(p.sheets[0]?.id ?? '');
@@ -367,7 +379,7 @@ export function useProject() {
         }
       } else {
         const fresh = { ...EMPTY_PROJECT, name: 'default' };
-        setProject(fresh);
+        replaceProject(fresh);
         setUndoStack([]);
         setRedoStack([]);
         setActiveSheetId(fresh.sheets[0]?.id ?? '');
@@ -456,22 +468,16 @@ export function useProject() {
       return [id];
     });
     if (id) {
-      setProject(prev => {
-        const piece = prev.pieces.find(p => p.id === id);
-        if (piece) setActiveSheetId(piece.glassSheetId);
-        return prev;
-      });
+      const piece = latestProjectRef.current.pieces.find(p => p.id === id);
+      if (piece) setActiveSheetId(piece.glassSheetId);
     }
   }, []);
 
   const selectPieces = useCallback((ids: string[]) => {
     setSelectedPieceIds(ids);
     if (ids.length > 0) {
-      setProject(prev => {
-        const last = prev.pieces.find(p => p.id === ids[ids.length - 1]);
-        if (last) setActiveSheetId(last.glassSheetId);
-        return prev;
-      });
+      const last = latestProjectRef.current.pieces.find(p => p.id === ids[ids.length - 1]);
+      if (last) setActiveSheetId(last.glassSheetId);
     }
   }, []);
 
@@ -912,7 +918,7 @@ export function useProject() {
   }, []);
 
   const loadProjectData = useCallback((newProject: Project) => {
-    setProject(newProject);
+    replaceProject(newProject);
     setUndoStack([]);
     setRedoStack([]);
     void saveToOPFS(newProject, newProject.name).catch(err => {

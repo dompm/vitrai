@@ -40,10 +40,20 @@ export type WorkerInMsg =
       points?: [number, number, number][] }
   | { type: 'autoSegment'; id: string; sessionId: string };
 
+export type SamDevice = 'webgpu' | 'wasm';
+
+/** i18n keys (resolved on the main thread — workers can't use i18next). */
+export type SamStatusKey =
+  | 'samStatusInit'
+  | 'samStatusLoadingDecoder'
+  | 'samStatusCompilingDecoder'
+  | 'samStatusLoadingEncoder'
+  | 'samStatusCompilingEncoder';
+
 export type WorkerOutMsg =
-  | { type: 'ready';            device: string }
+  | { type: 'ready';            device: SamDevice }
   | { type: 'init:error';       error: string }
-  | { type: 'status';           text: string }
+  | { type: 'status';           key: SamStatusKey }
   | { type: 'progress';         fraction: number }
   | { type: 'encode:done';      id: string; sessionId: string }
   | { type: 'encode:error';     id: string; error: string }
@@ -145,10 +155,16 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
         if (value) {
           chunks.push(value);
           loaded += value.length;
-          downloadProgress.set(filename, { loaded, total });
+          // `total` is a guess when Content-Length is missing; never let the
+          // reported fraction hit/exceed 1 while bytes are still streaming.
+          downloadProgress.set(filename, { loaded, total: Math.max(total, loaded + 1) });
           reportProgress();
         }
       }
+      // The true size is known now — replace the guessed total so the
+      // aggregate fraction can actually reach 1 (and never overshoots it).
+      downloadProgress.set(filename, { loaded, total: loaded });
+      reportProgress();
 
       let position = 0;
       const buf = new Uint8Array(loaded);
@@ -339,13 +355,13 @@ async function initDecoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 decoder model…' });
+    post({ type: 'status', key: 'samStatusLoadingDecoder' });
     const [decModel, decData] = await Promise.all([
       fetchCached(DECODER_URL, 'sam2_base_decoder.onnx'),
       fetchCached(DECODER_DATA_URL, 'sam2_base_decoder.onnx_data'),
     ]);
 
-    post({ type: 'status', text: 'Compiling SAM2 decoder model…' });
+    post({ type: 'status', key: 'samStatusCompilingDecoder' });
     const ep = await detectExecutionProviders();
     decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
       executionProviders: ep,
@@ -394,10 +410,10 @@ async function initEncoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 encoder model…' });
+    post({ type: 'status', key: 'samStatusLoadingEncoder' });
     const [encModel, encData] = await fetchEncoderModels();
 
-    post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
+    post({ type: 'status', key: 'samStatusCompilingEncoder' });
     const ep = await detectExecutionProviders();
     encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
       executionProviders: ep,
@@ -450,7 +466,7 @@ async function init() {
   if (initStarted) return;
   initStarted = true;
   try {
-    post({ type: 'status', text: 'Initializing SAM2 models…' });
+    post({ type: 'status', key: 'samStatusInit' });
     // On a first run, register the encoder files in the progress accounting
     // before the decoder downloads, so the reported fraction covers the full
     // first-run download instead of completing after the decoder and

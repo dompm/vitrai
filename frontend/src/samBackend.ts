@@ -1,5 +1,6 @@
 import type { BoundingBox } from "./types";
 import type { WorkerInMsg, WorkerOutMsg } from "./samWorker";
+import i18n from "./i18n";
 
 export type SegmentResult = {
   polygon: [number, number][];
@@ -26,16 +27,14 @@ export class SamWorkerBackend {
     this.worker.onmessage = (e: MessageEvent<WorkerOutMsg>) => {
       const msg = e.data;
       if (msg.type === "ready") {
-        onStatusChange(msg.device === 'webgpu'
-          ? 'WebGPU ready'
-          : 'Ready — no WebGPU available, running on CPU (segmentation will be slower)');
+        onStatusChange(i18n.t(msg.device === 'webgpu' ? 'samReadyWebgpu' : 'samReadyWasm'));
         resolveReady(msg.device);
       } else if (msg.type === "init:error") {
         console.error("[SAM Backend] Worker init failed:", msg.error);
-        onStatusChange(`SAM init failed: ${msg.error.split('\n')[0]}`);
+        onStatusChange(i18n.t('samInitFailed', { error: msg.error.split('\n')[0] }));
         rejectReady(new Error(msg.error));
       } else if (msg.type === "status") {
-        onStatusChange(msg.text);
+        onStatusChange(i18n.t(msg.key));
       } else if (msg.type === "progress") {
         this.onProgress(msg.fraction);
       } else {

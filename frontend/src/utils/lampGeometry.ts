@@ -194,11 +194,16 @@ function computeSmoothLayout(config: LampConfig): Extract<UnrolledLamp, { mode: 
       const apexY = cumTop - bisectorSign * L_top;
 
       // Approximate the sector outline with SECTOR_STEPS points along each arc.
+      // dx deliberately has no bisectorSign: the sector is symmetric about its
+      // vertical bisector, so the shape is identical, but this keeps the angle
+      // parameter a (and thus theta01) increasing with pattern-x for BOTH
+      // expanding and contracting tiers — otherwise contracting tiers render
+      // horizontally mirrored relative to the rest of the lamp.
       const topArc: [number, number][] = [];
       const botArc: [number, number][] = [];
       for (let k = 0; k <= SECTOR_STEPS; k++) {
         const a = -theta / 2 + (k / SECTOR_STEPS) * theta;
-        const dx = bisectorSign * Math.sin(a);
+        const dx = Math.sin(a);
         const dy = bisectorSign * Math.cos(a);
         topArc.push([L_top * dx, apexY + L_top * dy]);
         botArc.push([L_bot * dx, apexY + L_bot * dy]);
@@ -291,7 +296,8 @@ export function patternToSurface(
     const dLo = Math.min(m.L_top, m.L_bot);
     const dHi = Math.max(m.L_top, m.L_bot);
     if (d < dLo - 0.5 || d > dHi + 0.5) continue;
-    const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+    // Inverse of the layout parameterization: dx = sin(a), dy = sign*cos(a).
+    const angleRel = Math.atan2(dx, m.bisectorSign * dy);
     if (angleRel < -m.theta / 2 || angleRel > m.theta / 2) continue;
     const theta01 = (angleRel + m.theta / 2) / m.theta;
     const dDenom = m.L_bot - m.L_top;
@@ -511,7 +517,7 @@ export function patternToSurfaceRobust(
           // (see patternToSurface) or reflow collapses points onto v=0.
           const dDenom = m.L_bot - m.L_top;
           bestV = Math.abs(dDenom) < 1e-6 ? 0.5 : Math.max(0, Math.min(1, (d - m.L_top) / dDenom));
-          const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+          const angleRel = Math.atan2(dx, m.bisectorSign * dy);
           bestTheta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
         }
       }
@@ -566,7 +572,7 @@ export function surfaceToPatternRobust(
     } else {
       const d = m.L_top + v * (m.L_bot - m.L_top);
       const angleRel = -m.theta / 2 + theta01 * m.theta;
-      const dx = m.bisectorSign * Math.sin(angleRel);
+      const dx = Math.sin(angleRel);
       const dy = m.bisectorSign * Math.cos(angleRel);
       const x = m.apexX + d * dx;
       const y = m.apexY + d * dy;
