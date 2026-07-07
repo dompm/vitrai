@@ -917,6 +917,23 @@ export function ResultPanel({
     }
   }, [hoverPoint, lastPoint, activeTool]);
 
+  // Capture phase — the ONLY thing that belongs here is the pen Cmd+Z
+  // vertex-pop, which must beat App.tsx's bubble-phase undo regardless of
+  // registration order. Everything else (tool shortcuts, Escape, …) lives in
+  // the bubble-phase handler below so that an open modal's capture-phase
+  // Escape handler (which stops propagation, see #115) suppresses it — this
+  // panel doesn't need to know a modal is open.
+  function handleKeyDownCapture(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+      // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+      // window listener from also firing project undo on the same event.
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setActivePolygonPoints(prev => prev.slice(0, -1));
+    }
+  }
+
   function handleKeyDown(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
     if (e.code === 'Space' && !e.repeat) {
@@ -931,14 +948,6 @@ export function ResultPanel({
           updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
         }
       }
-    }
-    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-      // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
-      // window listener from also firing project undo on the same event.
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setActivePolygonPoints(prev => prev.slice(0, -1));
-      return;
     }
     // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
     if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -986,20 +995,23 @@ export function ResultPanel({
   // closures. The previous [activeTool]-dep effect kept stale captures of
   // isEncoding, project and measure alive between tool changes ('b' stayed
   // dead after encoding finished; 'm' calibrated against an old crop).
-  const keyHandlersRef = useRef({ down: handleKeyDown, up: handleKeyUp });
-  keyHandlersRef.current = { down: handleKeyDown, up: handleKeyUp };
+  const keyHandlersRef = useRef({ downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp });
+  keyHandlersRef.current = { downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp };
 
   useEffect(() => {
+    const downCapture = (e: KeyboardEvent) => keyHandlersRef.current.downCapture(e);
     const down = (e: KeyboardEvent) => keyHandlersRef.current.down(e);
     const up = (e: KeyboardEvent) => keyHandlersRef.current.up(e);
-    // Capture phase: guarantees this runs before App.tsx's bubble-phase undo
-    // listener regardless of mount/re-registration order, so the pen tool's
-    // Cmd+Z vertex-pop can reliably block project undo on the same keystroke.
-    window.addEventListener('keydown', down, true);
-    window.addEventListener('keyup', up, true);
+    // Capture phase only for the pen Cmd+Z vertex-pop, which must run before
+    // App.tsx's bubble-phase undo listener regardless of registration order.
+    // The rest stay bubble-phase so an open modal can stop them (see above).
+    window.addEventListener('keydown', downCapture, true);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
     return () => {
-      window.removeEventListener('keydown', down, true);
-      window.removeEventListener('keyup', up, true);
+      window.removeEventListener('keydown', downCapture, true);
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
     };
   }, []);
 
