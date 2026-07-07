@@ -1,4 +1,5 @@
 import type { Project } from '../types';
+import { parseProject } from './projectSchema';
 
 export async function listProjects(): Promise<string[]> {
   try {
@@ -15,8 +16,14 @@ export async function listProjects(): Promise<string[]> {
 
 /**
  * Load a project. Returns null only when the file genuinely doesn't exist;
- * any other failure (corrupt JSON, transient OPFS error) throws so callers
- * never mistake a broken-but-present project for a fresh start.
+ * any other failure (corrupt JSON, failed validation, transient OPFS error)
+ * throws so callers never mistake a broken-but-present project for a fresh
+ * start.
+ *
+ * Runs the file through `parseProject`, so legacy unversioned files are
+ * migrated and a file with a newer-than-supported `version` is rejected.
+ * Any pieces/sheets dropped during repair are logged but not surfaced —
+ * auto-loads stay lenient; explicit imports (App.tsx) show the warning.
  */
 export async function loadProjectFromOPFS(name: string = 'default'): Promise<Project | null> {
   const root = await navigator.storage.getDirectory();
@@ -28,7 +35,15 @@ export async function loadProjectFromOPFS(name: string = 'default'): Promise<Pro
     throw e;
   }
   const file = await handle.getFile();
-  return JSON.parse(await file.text()) as Project;
+  const raw = JSON.parse(await file.text());
+  const result = parseProject(raw);
+  if (!result.ok) {
+    throw new Error(`Project "${name}" failed validation: ${result.reasonKey}`);
+  }
+  if (result.repairs.length > 0) {
+    console.warn(`[opfs] repaired project "${name}" on load:`, result.repairs);
+  }
+  return result.project;
 }
 
 export async function saveToOPFS(project: Project, name: string = 'default'): Promise<void> {
