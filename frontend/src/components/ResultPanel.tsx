@@ -1016,12 +1016,24 @@ export function ResultPanel({
     return e.target.getType() === 'Stage' || (e.target as { attrs?: { id?: string } }).attrs?.id === 'bg';
   }
 
+  // Capture the pointer for the duration of a drag gesture so pointermove/
+  // pointerup keep arriving even when the pointer leaves the canvas before
+  // release — otherwise the gesture (pan, box, marquee, pencil) sticks "on"
+  // and keeps following the bare cursor when it re-enters.
+  function capturePointer(e: KonvaEventObject<PointerEvent>) {
+    const evt = e.evt;
+    if (evt && evt.target instanceof Element && evt.pointerId !== undefined) {
+      try { evt.target.setPointerCapture(evt.pointerId); } catch { /* pointer already gone */ }
+    }
+  }
+
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
     if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
+      capturePointer(e);
       vp.startPan(ptr);
       return;
     }
@@ -1194,18 +1206,21 @@ export function ResultPanel({
     }
 
     if (activeTool === 'pencil') {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setPencilPoints([[x, y]]);
       return;
     }
 
     if (activeTool === 'box' && !isEncoding) {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
       return;
     }
 
     if (activeTool === 'select' && isBackground(e)) {
+      capturePointer(e);
       if (IS_TOUCH) {
         vp.startPan(ptr);
       } else {
@@ -1292,6 +1307,15 @@ export function ResultPanel({
       setPencilPoints([]);
       return;
     }
+    vp.endPan();
+  }
+
+  // The browser cancelled the gesture (OS gesture, tab switch, capture lost):
+  // abort in-progress drags without committing anything.
+  function handlePointerCancel() {
+    setDrawingBox(null);
+    setMarqueeBox(null);
+    setPencilPoints([]);
     vp.endPan();
   }
 
@@ -1679,6 +1703,7 @@ export function ResultPanel({
                   setActiveSnapLabels([]);
                 }
               }}
+              onPointerCancel={handlePointerCancel}
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer>
