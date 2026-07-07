@@ -5,6 +5,10 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 const resources = {
   en: {
     translation: {
+      packing: "Packing...",
+      smartPack: "Smart Pack",
+      allowRotations: "Allow Rotations",
+      startPacking: "Start Packing",
       result: "Result",
       pattern: "Pattern",
       load: "Import",
@@ -263,6 +267,10 @@ const resources = {
   },
   fr: {
     translation: {
+      packing: "Tassage en cours...",
+      smartPack: "Placement intelligent",
+      allowRotations: "Autoriser les rotations",
+      startPacking: "Lancer le placement",
       result: "Résultat",
       pattern: "Patron",
       load: "Importer",
