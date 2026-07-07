@@ -416,6 +416,7 @@ export function App() {
     } else if (trackId === 'vector-drawing') {
       // Blank canvas project
       await loadProjectData({
+        version: DEFAULT_PROJECT.version,
         name: 'Tutorial',
         patternImageUrl: '',
         patternWidth: 1000,
@@ -442,6 +443,7 @@ export function App() {
     } else if (trackId === 'lamp-creator') {
       // 3D Lamp Creator template
       await loadProjectData({
+        version: DEFAULT_PROJECT.version,
         name: 'Tutorial',
         projectType: 'lamp',
         lampConfig: {
@@ -478,6 +480,7 @@ export function App() {
     } else if (trackId === 'fabrication') {
       // Fabrication layout and nesting template
       await loadProjectData({
+        version: DEFAULT_PROJECT.version,
         name: 'Tutorial',
         patternImageUrl: '',
         patternWidth: 1000,
