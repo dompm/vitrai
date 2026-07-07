@@ -689,6 +689,9 @@ export function ResultPanel({
 
   const [, setIsShiftDown] = useState(false);
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  // Tracks whether the pointer is over this panel, so single-key tool
+  // shortcuts only apply here instead of firing into both panels at once.
+  const isPointerInsideRef = useRef(false);
 
   const piecesRef = useRef(project.pieces);
   piecesRef.current = project.pieces;
@@ -951,16 +954,21 @@ export function ResultPanel({
     }
     // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key === 'v') handleToolChange('select');
-    else if (e.key === 'h') handleToolChange('pan');
-    else if (e.key === 'b' && !isEncoding) handleToolChange('box');
-    else if (e.key === 'p') handleToolChange('pen');
-    else if (e.key === 'n') handleToolChange('pencil');
-    else if (e.key === 'c') handleToolChange('crop');
-    else if (e.key === 'm') handleToolChange('measure');
-    else if (e.key === 'i') handleToolChange('inspect');
-    else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
-    else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
+    // Scope single-key shortcuts to the hovered panel (matching SheetPanel);
+    // without this, one keystroke switches tools on both panels at once.
+    if (!isPointerInsideRef.current) return;
+    // Compare case-insensitively so the shortcuts survive Caps Lock.
+    const key = e.key.toLowerCase();
+    if (key === 'v') handleToolChange('select');
+    else if (key === 'h') handleToolChange('pan');
+    else if (key === 'b' && !isEncoding) handleToolChange('box');
+    else if (key === 'p') handleToolChange('pen');
+    else if (key === 'n') handleToolChange('pencil');
+    else if (key === 'c') handleToolChange('crop');
+    else if (key === 'm') handleToolChange('measure');
+    else if (key === 'i') handleToolChange('inspect');
+    else if (key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+    else if (key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
     else if (e.key === 'Enter') {
       if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
         commitActivePolygon();
@@ -1562,7 +1570,13 @@ export function ResultPanel({
   });
 
   return (
-    <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div
+      className="result-panel-inner"
+      data-tutorial-panel="pattern"
+      style={{ display: 'flex', flex: 1, minHeight: 0 }}
+      onPointerEnter={() => { isPointerInsideRef.current = true; }}
+      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+    >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
         <div className="tooltip-wrapper" ref={solderPopoverRef}>
