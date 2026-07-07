@@ -716,13 +716,15 @@ export function App() {
         if (printRef.current.ready) printRef.current.fn();
         return;
       }
-      if (isMod && e.key === 'z') {
+      // Compare lowercase: Shift (Cmd+Shift+Z) and Caps Lock both make
+      // e.key uppercase, which used to leave the redo branch unreachable.
+      if (isMod && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
         return;
       }
-      if (isMod && e.key === 'y') {
+      if (isMod && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
         return;
