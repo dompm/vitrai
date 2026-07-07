@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
-import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, GT_PIECE_1, GT_PIECE_3 } from './types';
+import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, GT_PIECE_1, TrackId } from './types';
 import type { AnchoredStepId, StepId } from './types';
 import type { ToolId } from '../Toolbar';
 import { computeBleedRatio, findMatchedGroundTruth } from '../../utils/geometry';
@@ -11,6 +11,7 @@ import { computeBleedRatio, findMatchedGroundTruth } from '../../utils/geometry'
 interface Props {
   /** Current step (null = inactive). */
   step: StepId | null;
+  activeTrackId: TrackId | null;
   /** Tracked piece ID, set after the user cuts the first piece in step 2. */
   pieceId: string | null;
   project: Project;
@@ -21,17 +22,21 @@ interface Props {
   patternRefineMode: 'add' | 'remove' | null;
   isEncoding?: boolean;
   downloadProgress?: number | null;
+  isLampProfileOpen?: boolean;
+  isSymmetryEnabled?: boolean;
+  isPacking?: boolean;
   onAdvance: () => void;
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
-  onStartTour: () => void;
+  onStartTour: (trackId: TrackId) => void;
   onSkip: () => void;
   onComplete: () => void;
 }
 
 export function Tutorial({
   step,
+  activeTrackId,
   pieceId,
   project,
   selectedPieceIds,
@@ -41,6 +46,9 @@ export function Tutorial({
   patternRefineMode,
   isEncoding,
   downloadProgress,
+  isLampProfileOpen = false,
+  isSymmetryEnabled = false,
+  isPacking = false,
   onAdvance,
   onSetStep,
   onSetTrackedPiece,
@@ -53,6 +61,7 @@ export function Tutorial({
   const positionStartRef = useRef<{ x: number; y: number; rotation: number; scale: number } | null>(null);
   // Initial glass sheet at the start of step 4, to detect "changed".
   const initialSheetRef = useRef<string | null>(null);
+  const initialSolderWidthRef = useRef<number | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
@@ -99,9 +108,19 @@ export function Tutorial({
         debounceTimeoutRef.current = null;
       }
     }
+    if (step !== 'fab-solder-thickness') {
+      initialSolderWidthRef.current = null;
+    }
   }, [step]);
 
-  // Step 1 → 2: pattern scale set & scale tool closed.
+  // Track initial solder width
+  useEffect(() => {
+    if (step === 'fab-solder-thickness' && initialSolderWidthRef.current === null) {
+      initialSolderWidthRef.current = project.solderWidthMM ?? 4.5;
+    }
+  }, [step, project.solderWidthMM]);
+
+  // AI-Tracing Step 1: Calibrate pattern
   useEffect(() => {
     if (step !== 'calibrate-pattern') return;
     if (project.patternScale && project.patternScale.pxPerUnit > 0 && patternTool !== 'measure') {
@@ -109,7 +128,7 @@ export function Tutorial({
     }
   }, [step, project.patternScale, patternTool, onAdvance]);
 
-  // Step 2 → 3: active sheet has a scale & scale tool closed.
+  // AI-Tracing Step 2: Calibrate sheet
   useEffect(() => {
     if (step !== 'calibrate-sheet') return;
     const sheet = project.sheets.find(s => s.id === activeSheetId);
@@ -119,8 +138,7 @@ export function Tutorial({
     }
   }, [step, project.sheets, activeSheetId, pieceId, selectedPieceIds, sheetTool, onSelectPiece, onAdvance]);
 
-  // Step 3 (cut-first-piece) → 4 (refine-first-piece) or 5 (assign-first-glass)
-  // Triggered when a piece is created.
+  // AI-Tracing Step 3: Cut first piece
   useEffect(() => {
     if (step !== 'cut-first-piece') return;
     if (project.pieces.length > 0) {
@@ -140,7 +158,7 @@ export function Tutorial({
     }
   }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onSetStep]);
 
-  // Step 4 (refine-first-piece) → 3 (cut-first-piece) or 5 (assign-first-glass)
+  // AI-Tracing Step 4: Refine first piece
   useEffect(() => {
     if (step !== 'refine-first-piece') return;
     const piece = project.pieces.find(p => p.id === pieceId);
@@ -159,7 +177,7 @@ export function Tutorial({
     }
   }, [step, project.pieces, pieceId, patternRefineMode, onSetStep]);
 
-  // Step 5 (assign-first-glass) → 6 (position-first-texture)
+  // AI-Tracing Step 5: Assign first glass
   useEffect(() => {
     if (step !== 'assign-first-glass') return;
     const piece = project.pieces.find(p => p.id === pieceId);
@@ -170,11 +188,11 @@ export function Tutorial({
     }
     if (piece.glassSheetId !== initialSheetRef.current) {
       positionStartRef.current = { ...piece.transform };
-      onSetStep('position-first-texture');
+      onAdvance(); // Goes to 'position-first-texture'
     }
-  }, [step, project.pieces, pieceId, onSetStep]);
+  }, [step, project.pieces, pieceId, onAdvance]);
 
-  // Step 6 (position-first-texture) → 7 (cut-second-piece)
+  // AI-Tracing Step 6: Position texture
   useEffect(() => {
     if (step !== 'position-first-texture') return;
     const piece = project.pieces.find(p => p.id === pieceId);
@@ -196,110 +214,95 @@ export function Tutorial({
 
     if (dist > 40 || rotDiff > 0.15 || scaleDiff > 0.1) {
       debounceTimeoutRef.current = setTimeout(() => {
-        onSetStep('cut-second-piece');
+        onAdvance(); // Goes to 'done'
       }, 2000);
     }
-  }, [step, project.pieces, pieceId, onSetStep]);
+  }, [step, project.pieces, pieceId, onAdvance]);
 
-  // Step 7 (cut-second-piece) → 8 (refine-second-piece) or 9 (cut-remaining-pieces)
+  // Vector CAD Step 1: Blank canvas intro
   useEffect(() => {
-    if (step !== 'cut-second-piece') return;
-    if (project.pieces.length > 1) {
-      const secondPiece = project.pieces.find(p => p.id !== pieceId);
-      if (secondPiece) {
-        onSetTrackedPiece(secondPiece.id);
-        onSelectPiece(secondPiece.id);
-
-        const matchedGt = findMatchedGroundTruth(secondPiece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-        const isLeaf3 = matchedGt === GT_PIECE_3;
-        const bleed = isLeaf3 ? computeBleedRatio(secondPiece.polygon, GT_PIECE_3) : 1.0;
-
-        if (!isLeaf3 || bleed > 0.05) {
-          onSetStep('refine-second-piece');
-        } else {
-          onSetStep('cut-remaining-pieces');
-        }
-      }
+    if (step !== 'vector-blank-canvas') return;
+    if (patternTool === 'pen') {
+      onAdvance();
     }
-  }, [step, project.pieces, pieceId, onSetTrackedPiece, onSelectPiece, onSetStep]);
+  }, [step, patternTool, onAdvance]);
 
-  // Step 8 (refine-second-piece) → 7 (cut-second-piece) or 9 (cut-remaining-pieces)
+  // Vector CAD Step 2: Draw pen shape
   useEffect(() => {
-    if (step !== 'refine-second-piece') return;
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (!piece) {
-      onSetStep('cut-second-piece');
-      return;
-    }
-
-    const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-    const isLeaf3 = matchedGt === GT_PIECE_3;
-    const bleed = isLeaf3 ? computeBleedRatio(piece.polygon, GT_PIECE_3) : 1.0;
-    const isClean = isLeaf3 && bleed <= 0.05;
-
-    if (isClean && patternRefineMode === null) {
-      onSetStep('cut-remaining-pieces');
-    }
-  }, [step, project.pieces, pieceId, patternRefineMode, onSetStep]);
-
-  // Step 9 (cut-remaining-pieces) → 10 (refine-remaining-pieces) or done
-  useEffect(() => {
-    if (step !== 'cut-remaining-pieces') return;
+    if (step !== 'vector-draw-shape') return;
     if (project.pieces.length > 0) {
-      // Find if any leaf piece is bad (bleed > 5% or matches nothing)
-      const badPiece = project.pieces.find(p => {
-        const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-        if (!matchedGt) return true; // matches nothing = bad
-        const bleed = computeBleedRatio(p.polygon, matchedGt);
-        return bleed > 0.05;
-      });
-
-      if (badPiece) {
-        onSetTrackedPiece(badPiece.id);
-        onSelectPiece(badPiece.id);
-        onSetStep('refine-remaining-pieces');
-      } else if (project.pieces.length >= 4) {
-        onAdvance(); // Move to 'done' (next after refine-remaining-pieces)
-      }
+      const piece = project.pieces[project.pieces.length - 1];
+      onSetTrackedPiece(piece.id);
+      onSelectPiece(piece.id);
+      onAdvance();
     }
-  }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onSetStep, onAdvance]);
+  }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onAdvance]);
 
-  // Step 10 (refine-remaining-pieces) → 9 (cut-remaining-pieces) or done
+  // Vector CAD Step 3: Snap angles
   useEffect(() => {
-    if (step !== 'refine-remaining-pieces') return;
+    if (step !== 'vector-snap-angles') return;
+    if (patternTool === 'select' || selectedPieceIds.length > 0) {
+      onAdvance();
+    }
+  }, [step, patternTool, selectedPieceIds, onAdvance]);
+
+  // Vector CAD Step 4: Curve edge
+  useEffect(() => {
+    if (step !== 'vector-curve-edge') return;
     const piece = project.pieces.find(p => p.id === pieceId);
+    if (piece?.curvePoints && piece.curvePoints.length > 0) {
+      onAdvance(); // Goes to 'done'
+    }
+  }, [step, project.pieces, pieceId, onAdvance]);
 
-    let isTrackedPieceClean = false;
-    if (!piece) {
-      isTrackedPieceClean = true;
-    } else {
-      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-      if (matchedGt) {
-        const bleed = computeBleedRatio(piece.polygon, matchedGt);
-        isTrackedPieceClean = bleed <= 0.05;
-      } else {
-        isTrackedPieceClean = false; // wildly out of place, must delete
+  // Lamp Creator Step 1: Profile dialog intro
+  useEffect(() => {
+    if (step !== 'lamp-profile-intro') return;
+    if (isLampProfileOpen) {
+      onAdvance();
+    }
+  }, [step, isLampProfileOpen, onAdvance]);
+
+  // Lamp Creator Step 2: Edit profile points
+  useEffect(() => {
+    if (step !== 'lamp-edit-profile') return;
+    if (!isLampProfileOpen) {
+      onAdvance();
+    }
+  }, [step, isLampProfileOpen, onAdvance]);
+
+  // Lamp Creator Step 3: Symmetrical pieces
+  useEffect(() => {
+    if (step !== 'lamp-symmetry') return;
+    if (isSymmetryEnabled) {
+      onAdvance();
+    }
+  }, [step, isSymmetryEnabled, onAdvance]);
+
+  // Lamp Creator Step 4: Preview 3D lamp
+  // User completes it manually via "Complete" button
+
+  // Fabrication Step 1: Solder Settings
+  useEffect(() => {
+    if (step !== 'fab-solder-thickness') return;
+    if (initialSolderWidthRef.current !== null && project.solderWidthMM !== undefined) {
+      if (Math.abs(project.solderWidthMM - initialSolderWidthRef.current) > 0.1) {
+        onAdvance();
       }
     }
+  }, [step, project.solderWidthMM, onAdvance]);
 
-    if (isTrackedPieceClean) {
-      const otherBad = project.pieces.find(p => {
-        const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-        if (!matchedGt) return true;
-        const bleed = computeBleedRatio(p.polygon, matchedGt);
-        return bleed > 0.05;
-      });
-
-      if (otherBad) {
-        onSetTrackedPiece(otherBad.id);
-        onSelectPiece(otherBad.id);
-      } else if (project.pieces.length >= 4) {
-        onAdvance(); // Move to 'done'
-      } else {
-        onSetStep('cut-remaining-pieces');
-      }
+  // Fabrication Step 2: Smart Pack
+  const wasPackingRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (step !== 'fab-smart-pack') return;
+    if (isPacking) {
+      wasPackingRef.current = true;
+    } else if (wasPackingRef.current && !isPacking) {
+      wasPackingRef.current = false;
+      onAdvance();
     }
-  }, [step, project.pieces, pieceId, onSetTrackedPiece, onSelectPiece, onSetStep, onAdvance]);
+  }, [step, isPacking, onAdvance]);
 
   const { t } = useTranslation();
 
@@ -336,46 +339,6 @@ export function Tutorial({
           : undefined;
       }
     }
-  } else if (step === 'refine-second-piece' && pieceId) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (piece) {
-      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-      const isLeaf3 = matchedGt === GT_PIECE_3;
-      const bleed = isLeaf3 ? computeBleedRatio(piece.polygon, GT_PIECE_3) : 1.0;
-      const isClean = isLeaf3 && bleed <= 0.05;
-
-      if (isClean && patternRefineMode !== null) {
-        customTitle = t('tutorialExitRefineTitle');
-        customBody = t('tutorialExitRefineBody');
-        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
-      } else if (matchedGt !== GT_PIECE_3) {
-        customTitle = t('tutorialStep8TitleOutOfPlace');
-        customBody = t('tutorialStep8BodyOutOfPlace');
-        currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
-      } else {
-        customTitle = t('tutorialStep8Title');
-        customBody = t('tutorialStep8Body');
-        currentSpotlightTarget = patternRefineMode === null
-          ? '[data-tutorial-target="piece-refine-remove"]'
-          : undefined;
-      }
-    }
-  } else if (step === 'refine-remaining-pieces' && pieceId) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (piece) {
-      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
-      if (!matchedGt) {
-        customTitle = t('tutorialStep10TitleOutOfPlace');
-        customBody = t('tutorialStep10BodyOutOfPlace');
-        currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
-      } else {
-        customTitle = t('tutorialStep10Title');
-        customBody = t('tutorialStep10Body');
-        currentSpotlightTarget = patternRefineMode === null
-          ? '[data-tutorial-target="piece-refine-remove"]'
-          : undefined;
-      }
-    }
   }
 
   // Remove the spotlight on the tool icons if they are already in the requested mode
@@ -384,7 +347,7 @@ export function Tutorial({
   } else if (step === 'calibrate-sheet' && sheetTool === 'measure') {
     currentSpotlightTarget = undefined;
   } else if (
-    (step === 'cut-first-piece' || step === 'cut-second-piece' || step === 'cut-remaining-pieces') &&
+    step === 'cut-first-piece' &&
     patternTool === 'box'
   ) {
     currentSpotlightTarget = undefined;
@@ -405,11 +368,12 @@ export function Tutorial({
         onComplete={onComplete}
         customTitle={customTitle}
         customBody={customBody}
+        activeTrackId={activeTrackId}
       />
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
-          withBackdrop={!['cut-remaining-pieces', 'refine-remaining-pieces'].includes(step)}
+          withBackdrop={true}
         />
       )}
       {showLoadingDialog && (

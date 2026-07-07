@@ -997,8 +997,7 @@ export function ResultPanel({
 
   useEffect(() => {
     const isFirstPending = tutorialStep === 'cut-first-piece' && project.pieces.length === 0;
-    const isSecondPending = tutorialStep === 'cut-second-piece' && project.pieces.length <= 1;
-    if (!isFirstPending && !isSecondPending) return;
+    if (!isFirstPending) return;
     let animId: number;
     const tick = () => {
       setDashOffset(prev => (prev + 1.5) % 40);
@@ -1988,20 +1987,7 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
-                  {tutorialStep === 'cut-second-piece' && project.pieces.length <= 1 && (
-                    <Rect
-                      x={364.7371555449281}
-                      y={1249.5130966562972}
-                      width={1264.3137687154938 - 364.7371555449281}
-                      height={2725.2637575643917 - 1249.5130966562972}
-                      stroke="#fbbf24"
-                      strokeWidth={3 / es}
-                      dash={[10 / es, 6 / es]}
-                      dashOffset={dashOffset}
-                      fill="rgba(251, 191, 36, 0.05)"
-                      listening={false}
-                    />
-                  )}
+
                   {(() => {
                     const lastId = selectedPieceIds[selectedPieceIds.length - 1];
                     const piece = project.pieces.find(p => p.id === lastId);
