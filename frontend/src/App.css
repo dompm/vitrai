@@ -1892,3 +1892,68 @@ html, body, #root {
   opacity: 0.45;
   cursor: default;
 }
+
+/* Redesigned welcome grid card */
+.tutorial-modal-card--welcome-grid {
+  width: min(720px, 100%) !important;
+}
+
+/* Grid layout for tracks */
+.tutorial-track-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+  margin-top: 16px;
+}
+
+@media (max-width: 600px) {
+  .tutorial-track-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Individual track card */
+.tutorial-track-card {
+  background: var(--chrome-800);
+  border: 1px solid var(--hairline-2);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.tutorial-track-card:hover {
+  border-color: var(--amber);
+  background: var(--chrome-700);
+  transform: translateY(-2px);
+}
+
+.tutorial-track-card.active {
+  border-color: var(--amber);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.25);
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.tutorial-track-icon {
+  font-size: 24px;
+  margin-bottom: 8px;
+}
+
+.tutorial-track-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin: 0 0 6px 0;
+}
+
+.tutorial-track-card-desc {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-soft);
+  margin: 0;
+}

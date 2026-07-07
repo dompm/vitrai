@@ -298,11 +298,12 @@ interface SheetPanelProps {
   onChangeActiveTool: (tool: ToolId) => void;
   showEmptyHint?: boolean;
   isTutorial?: boolean;
+  onPackingChange?: (isPacking: boolean) => void;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onTransformsChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false,
+  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false, onPackingChange,
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -730,6 +731,7 @@ export function SheetPanel({
     if (pieces.length === 0 || isPacking) return;
     setIsPackPopoverOpen(false);
     setIsPacking(true);
+    onPackingChange?.(true);
     // Clear selection so handles don't follow jumping pieces
     onSelectPiece(null);
 
@@ -752,6 +754,7 @@ export function SheetPanel({
       console.error('[SheetPanel] smart pack failed', err);
     } finally {
       setIsPacking(false);
+      onPackingChange?.(false);
     }
   }
 
@@ -777,6 +780,7 @@ export function SheetPanel({
             onClick={() => setIsPackPopoverOpen(o => !o)}
             disabled={packDisabled && !isPacking}
             aria-label={t('toolPack')}
+            data-tutorial-target="smart-pack-button"
           >
             {isPacking ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'spin 1s linear infinite' }}>
