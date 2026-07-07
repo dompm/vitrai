@@ -28,6 +28,10 @@ export function useViewport(imageW: number, imageH: number) {
   const imageHRef = useRef(imageH);
 
   const isPanning = useRef(false);
+  // State mirror of isPanning: reading a mutated ref at render time left the
+  // UI stale (cursor stuck on "grabbing", piece popover stuck pointer-events:
+  // none) because endPan() never triggered a re-render.
+  const [isPanningState, setIsPanningState] = useState(false);
   const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
   const isPinchingRef = useRef(false);
 
@@ -134,6 +138,7 @@ export function useViewport(imageW: number, imageH: number) {
       isPinchingRef.current = true;
       // Cancel any active single-finger pan
       isPanning.current = false;
+      setIsPanningState(false);
       lastPanPtr.current = null;
       const rect = el!.getBoundingClientRect();
       lastDist = pinchDist(e.touches);
@@ -195,6 +200,7 @@ export function useViewport(imageW: number, imageH: number) {
   function startPan(pos: { x: number; y: number }) {
     if (isPinchingRef.current) return;
     isPanning.current = true;
+    setIsPanningState(true);
     lastPanPtr.current = pos;
   }
 
@@ -208,6 +214,7 @@ export function useViewport(imageW: number, imageH: number) {
 
   function endPan() {
     isPanning.current = false;
+    setIsPanningState(false);
     lastPanPtr.current = null;
   }
 
@@ -221,7 +228,7 @@ export function useViewport(imageW: number, imageH: number) {
     zoomRef,
     panRef,
     displayScaleRef,
-    isPanning: isPanning.current,
+    isPanning: isPanningState,
     startPan,
     movePan,
     endPan,

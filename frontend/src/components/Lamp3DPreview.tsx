@@ -268,7 +268,9 @@ export function Lamp3DPreview({ project }: Props) {
             // clamping it positive collapsed those tiers onto the top ring.
             const dDenom = m.L_bot - m.L_top;
             const v = Math.abs(dDenom) < 1e-6 ? 0.5 : Math.max(0, Math.min(1, (d - m.L_top) / dDenom));
-            const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+            // Inverse of the layout parameterization (dx = sin(a), dy = sign*cos(a));
+            // keeps theta01 increasing with pattern-x on contracting tiers too.
+            const angleRel = Math.atan2(dx, m.bisectorSign * dy);
             const theta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
             surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
           }

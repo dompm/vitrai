@@ -105,37 +105,47 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
   try {
     const subjPoly = [subject];
     const clipPolys = clipPolygons.map(p => [p]);
-    
+
     const diff = polygonClipping.difference(subjPoly, ...clipPolys);
-    
+
     if (diff.length === 0) return [];
-    
+
+    // polygon-clipping returns rings closed (first vertex repeated at the
+    // end) and re-anchored at an arbitrary vertex; piece polygons are stored
+    // open everywhere else. Strip the closing duplicate so downstream code
+    // (flattenCurves/centroid/snapping) never sees a zero-length edge.
+    const openRing = (ring: [number, number][]): [number, number][] => {
+      if (ring.length > 1) {
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first[0] === last[0] && first[1] === last[1]) return ring.slice(0, -1);
+      }
+      return ring;
+    };
+
     let largestRing: [number, number][] = [];
     let maxArea = -1;
-    
+
     for (const multi of diff) {
-      const ring = multi[0];
-      let area = 0;
-      for (let i = 0; i < ring.length - 1; i++) {
-        area += ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
-      }
-      area = Math.abs(area) / 2;
-      
+      const ring = openRing(multi[0] as [number, number][]);
+      const area = computePolygonArea(ring);
+
       if (area > maxArea) {
         maxArea = area;
-        largestRing = ring as [number, number][];
+        largestRing = ring;
       }
     }
 
-    // polygon-clipping returns closed rings (first vertex repeated at the
-    // end); piece polygons are stored open everywhere else, and the stray
-    // duplicate vertex corrupts flattenCurves/centroid/snapping downstream.
-    if (largestRing.length > 1) {
-      const first = largestRing[0];
-      const last = largestRing[largestRing.length - 1];
-      if (first[0] === last[0] && first[1] === last[1]) {
-        largestRing = largestRing.slice(0, -1);
-      }
+    // Nothing was actually subtracted: hand back the subject untouched so
+    // callers keep its exact vertex order/anchoring (and any curve metadata
+    // indexed against it). The difference is a subset of the subject, so
+    // equal area means an identical region.
+    const subjectArea = computePolygonArea(subject);
+    if (
+      diff.length === 1 && diff[0].length === 1 &&
+      Math.abs(maxArea - subjectArea) <= subjectArea * 1e-9
+    ) {
+      return subject;
     }
 
     return largestRing;

@@ -478,9 +478,14 @@ export function SheetPanel({
 
     const gapPx = defaultCuttingGapPx(sheet);
     try {
-      await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
+      const skippedPieceIds = await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
         onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
       });
+      // Pieces too big for the sheet stay where they were — the packer just
+      // leaves them out, so tell the user rather than silently dropping them.
+      if (skippedPieceIds.length > 0) {
+        alert(t('smartPackSkipped', { count: skippedPieceIds.length }));
+      }
     } catch (err) {
       console.error('[SheetPanel] smart pack failed', err);
     } finally {
