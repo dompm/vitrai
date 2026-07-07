@@ -1521,6 +1521,7 @@ export function ResultPanel({
             className={`tool-btn solder-tool-btn ${isSolderPopoverOpen ? 'active' : ''}`}
             onClick={() => setIsSolderPopoverOpen(o => !o)}
             aria-label={t('solderThicknessTooltip')}
+            data-tutorial-target="solder-settings"
           >
             {/* Custom line thickness stack icon */}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1590,6 +1591,7 @@ export function ResultPanel({
                 className={`tool-btn ${isSymmetryEnabled ? 'active' : ''}`}
                 onClick={() => onToggleSymmetry(!isSymmetryEnabled)}
                 aria-label={t('lampSymmetryTooltip')}
+                data-tutorial-target="lamp-symmetry-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="9" strokeDasharray="2 2" />
@@ -1612,6 +1614,7 @@ export function ResultPanel({
                 className="tool-btn"
                 onClick={onOpenLampProfile}
                 aria-label={t('lampProfileButtonTooltip')}
+                data-tutorial-target="lamp-profile-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <ellipse cx="12" cy="5" rx="6" ry="2" />

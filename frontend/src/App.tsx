@@ -419,13 +419,17 @@ export function App() {
         patternWidth: 1000,
         patternHeight: 1000,
         patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
-        patternScale: null,
+        patternScale: {
+          pxPerUnit: 100,
+          unit: 'in',
+          line: { x1: 0, y1: 500, x2: 1000, y2: 500 },
+        },
         pieces: [],
         sheets: [
           {
             id: 'default-sheet-1',
             label: 'Default Glass',
-            imageUrl: '',
+            imageUrl: '/assets/glass/green.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: null,
             swatch: '#a5d6a7'
@@ -460,8 +464,8 @@ export function App() {
         sheets: [
           {
             id: 'default-sheet-1',
-            label: 'Amber Swatch',
-            imageUrl: '',
+            label: 'Amber Glass Sheet',
+            imageUrl: '/assets/glass/amber.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: null,
             swatch: '#ffb74d'
@@ -502,7 +506,7 @@ export function App() {
           {
             id: 'sheet-1',
             label: 'Amber Glass Sheet',
-            imageUrl: '',
+            imageUrl: '/assets/glass/amber.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: {
               pxPerUnit: 10,
