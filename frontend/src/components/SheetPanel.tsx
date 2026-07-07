@@ -212,10 +212,13 @@ export function SheetPanel({
       // switches tools on BOTH panels, and 'm' silently fabricates a default
       // scale for the sheet even when the user meant the pattern panel.
       if (!isPointerInsideRef.current) return;
-      if (e.key === 'v') handleToolChange('select');
-      else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'c') handleToolChange('crop');
-      else if (e.key === 'm') handleToolChange('measure');
+      // Compare case-insensitively so the shortcuts still work with Caps Lock
+      // on (matching the undo/redo fix), which otherwise sends 'V'/'H'/… .
+      const key = e.key.toLowerCase();
+      if (key === 'v') handleToolChange('select');
+      else if (key === 'h') handleToolChange('pan');
+      else if (key === 'c') handleToolChange('crop');
+      else if (key === 'm') handleToolChange('measure');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -358,6 +361,19 @@ export function SheetPanel({
       return;
     }
 
+    if (rotatingPiece) {
+      onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+    }
+    setRotatingPieceId(null);
+    vp.endPan();
+  }
+
+  function handlePointerCancel() {
+    // A browser/system pointer-cancel (focus loss, touch-scroll takeover, OS
+    // popup) means no pointerup will arrive, so the captured gesture would
+    // otherwise stick "on". Abort the in-flight marquee without selecting,
+    // land any rotation-so-far in history like pointerup does, and end panning.
+    setMarqueeBox(null);
     if (rotatingPiece) {
       onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
     }
@@ -586,6 +602,7 @@ export function SheetPanel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           onClick={handleStageClick}
         >
           <Layer>
