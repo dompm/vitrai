@@ -1,5 +1,6 @@
 import type { Project, Scale } from './types';
 import { TUTORIAL_GLASS_ASSETS } from './assets';
+import { PROJECT_SCHEMA_VERSION } from './storage/projectSchema';
 
 const NO_CROP = { top: 0, left: 0, bottom: 0, right: 0 };
 
@@ -10,6 +11,7 @@ const ORANGE_SCALE: Scale = {
 };
 
 export const DEFAULT_PROJECT: Project = {
+  version: PROJECT_SCHEMA_VERSION,
   name: 'Orange Pattern',
   patternImageUrl: '/assets/orange-pattern.jpg',
   patternWidth: 3072,
@@ -32,6 +34,7 @@ export const DEFAULT_PROJECT: Project = {
   projectType: 'flat',
 };
 export const EMPTY_PROJECT: Project = {
+  version: PROJECT_SCHEMA_VERSION,
   name: 'Untitled Project',
   patternImageUrl: '',
   patternWidth: 800,

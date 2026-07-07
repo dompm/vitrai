@@ -133,10 +133,17 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') {
+        // Capture phase + stopPropagation, like the other modals: the Esc that
+        // dismisses this dialog must not also reach the panels' (bubble-phase)
+        // window handlers, which would reset tools / discard a pen polygon.
+        e.preventDefault();
+        e.stopPropagation();
+        onCancel();
+      }
     }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
   }, [onCancel]);
 
   function applyPreset(p: Preset) {
