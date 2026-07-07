@@ -101,6 +101,9 @@ function PieceOutline({
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
     e.cancelBubble = true;
+    // Capture the pointer so the rotation keeps tracking (and properly
+    // commits on pointerup) even if the pointer leaves the canvas.
+    if (e.evt.pointerId !== undefined) e.target.getStage()?.content.setPointerCapture(e.evt.pointerId);
     dragStartedFromHandle.current = true;
     onRotateStart?.();
   }
@@ -281,8 +284,13 @@ export function SheetPanel({
   }
 
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
-    const ptr = e.target.getStage()?.getPointerPosition();
+    const stage = e.target.getStage();
+    const ptr = stage?.getPointerPosition();
     if (!ptr) return;
+    // Capture the pointer so pan/marquee gestures still receive pointermove/
+    // pointerup when the button is released outside the canvas; otherwise the
+    // gesture sticks "on" until the next click.
+    if (e.evt.pointerId !== undefined) stage?.content.setPointerCapture(e.evt.pointerId);
     const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
