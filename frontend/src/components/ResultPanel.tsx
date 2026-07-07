@@ -2238,7 +2238,7 @@ export function ResultPanel({
               const displayPiece = isMultiple ? {
                 ...piece,
                 id: '__multiple__',
-                label: `${selectedPieceIds.length} pieces`,
+                label: t('pieces', { count: selectedPieceIds.length }),
                 // If all selected pieces share the same sheet, show it; otherwise, use a special value
                 glassSheetId: project.pieces.filter(p => selectedPieceIds.includes(p.id))
                   .every((p, _, arr) => p.glassSheetId === arr[0].glassSheetId) 
