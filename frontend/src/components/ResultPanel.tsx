@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText, Arrow } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
@@ -2425,6 +2425,27 @@ export function ResultPanel({
                       
                       <Circle x={575} y={650} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
                       <KonvaText x={571} y={644} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                    </>
+                  )}
+                  {tutorialStep === 'vector-curve-edge' && (
+                    <>
+                      <Line
+                        points={[400, 350, 575, 250, 750, 350]}
+                        stroke="#fbbf24"
+                        strokeWidth={2 / es}
+                        dash={[6 / es, 4 / es]}
+                        tension={0.5}
+                        listening={false}
+                      />
+                      <Arrow
+                        points={[575, 350, 575, 275]}
+                        stroke="#10b981"
+                        strokeWidth={3 / es}
+                        fill="#10b981"
+                        pointerLength={10 / es}
+                        pointerWidth={10 / es}
+                        listening={false}
+                      />
                     </>
                   )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
