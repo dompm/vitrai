@@ -350,8 +350,11 @@ function ProfileEditor({
   const PAD_BOTTOM = 22;
   
   const gridStepPhys = unit === 'mm' ? 10 : (unit === 'cm' ? 2 : 1);
-  const GRID_RAW = gridStepPhys * pxPerUnit;
-  const SNAP_RAW = unit === 'in' ? (pxPerUnit / 8) : (unit === 'cm' ? (pxPerUnit / 4) : pxPerUnit);
+  // Guard against a zero/invalid pattern scale: GRID_RAW = 0 turns the tick
+  // loops below into infinite loops and NaNs the view bounds.
+  const safePxPerUnit = Number.isFinite(pxPerUnit) && pxPerUnit > 0 ? pxPerUnit : 1;
+  const GRID_RAW = gridStepPhys * safePxPerUnit;
+  const SNAP_RAW = unit === 'in' ? (safePxPerUnit / 8) : (unit === 'cm' ? (safePxPerUnit / 4) : safePxPerUnit);
   const SNAP_PX = 8;        // align-to-other-handle threshold (screen px)
 
   // Data bounds with a comfortable margin so the canvas accommodates dragging
