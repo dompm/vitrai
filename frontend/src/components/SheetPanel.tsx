@@ -493,8 +493,13 @@ export function SheetPanel({
 
     const gapPx = defaultCuttingGapPx(sheet);
     try {
+      // Record exactly one history entry (the pre-pack snapshot) on the first
+      // placement so a single Cmd+Z reverts the whole pack; the remaining
+      // streamed placements skip history.
+      let historyRecorded = false;
       await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
-        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
+        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, historyRecorded);
+        historyRecorded = true;
       });
     } catch (err) {
       console.error('[SheetPanel] smart pack failed', err);
