@@ -191,6 +191,9 @@ export function SheetPanel({
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
+  // Tracks whether the pointer is over this panel, so single-key tool
+  // shortcuts only apply here instead of firing into both panels at once.
+  const isPointerInsideRef = useRef(false);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -202,6 +205,10 @@ export function SheetPanel({
       }
       // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
       if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // Scope tool shortcuts to the hovered panel: without this, one keystroke
+      // switches tools on BOTH panels, and 'm' silently fabricates a default
+      // scale for the sheet even when the user meant the pattern panel.
+      if (!isPointerInsideRef.current) return;
       if (e.key === 'v') handleToolChange('select');
       else if (e.key === 'h') handleToolChange('pan');
       else if (e.key === 'c') handleToolChange('crop');
@@ -491,7 +498,13 @@ export function SheetPanel({
   const packDisabled = pieces.length === 0 || isPacking;
 
   return (
-    <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div
+      className="result-panel-inner"
+      data-tutorial-panel="glass"
+      style={{ display: 'flex', flex: 1, minHeight: 0 }}
+      onPointerEnter={() => { isPointerInsideRef.current = true; }}
+      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+    >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
         <div className="tooltip-wrapper" ref={packPopoverRef}>

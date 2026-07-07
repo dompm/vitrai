@@ -732,7 +732,7 @@ export function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPieceIds, deletePiece, undo, redo]);
+  }, [selectedPieceIds, deletePieces, undo, redo]);
 
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
