@@ -155,10 +155,16 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
         if (value) {
           chunks.push(value);
           loaded += value.length;
-          downloadProgress.set(filename, { loaded, total });
+          // `total` is a guess when Content-Length is missing; never let the
+          // reported fraction hit/exceed 1 while bytes are still streaming.
+          downloadProgress.set(filename, { loaded, total: Math.max(total, loaded + 1) });
           reportProgress();
         }
       }
+      // The true size is known now — replace the guessed total so the
+      // aggregate fraction can actually reach 1 (and never overshoots it).
+      downloadProgress.set(filename, { loaded, total: loaded });
+      reportProgress();
 
       let position = 0;
       const buf = new Uint8Array(loaded);
