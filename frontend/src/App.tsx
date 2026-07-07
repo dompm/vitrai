@@ -553,7 +553,7 @@ export function App() {
   useEffect(() => {
     setPatternImageId(null);
     if (!project.patternImageUrl) {
-      setBackendStatus("No pattern image uploaded");
+      setBackendStatus(t('statusNoPatternImage', 'No pattern image uploaded'));
       return;
     }
     const backend = getSamBackend(setBackendStatus);
@@ -1080,12 +1080,12 @@ export function App() {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                 if (e.key === 'Escape') { setNameDraft(project.name); (e.target as HTMLInputElement).blur(); }
               }}
-              title="Click to rename"
+              title={t('clickToRename')}
             />
             <button
               className="project-chevron-btn"
               onClick={() => setIsProjectDropdownOpen(o => !o)}
-              title="Switch project"
+              title={t('switchProjectTooltip', 'Switch project')}
             >
               ▾
             </button>
@@ -1105,12 +1105,12 @@ export function App() {
                         className="project-delete-btn"
                         onClick={e => {
                           e.stopPropagation();
-                          if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
+                          if (window.confirm(t('confirmDeleteProject', { defaultValue: 'Delete "{{name}}"? This cannot be undone.', name }))) {
                             void deleteProject(name);
                             setIsProjectDropdownOpen(false);
                           }
                         }}
-                        title="Delete project"
+                        title={t('deleteProjectTooltip', 'Delete project')}
                       >
                         ×
                       </button>
@@ -1123,12 +1123,12 @@ export function App() {
           <button
             className="btn-ghost"
             onClick={async () => {
-              const defaultName = `Project ${availableProjects.length + 1}`;
+              const defaultName = t('defaultProjectName', { defaultValue: 'Project {{num}}', num: availableProjects.length + 1 });
               await createNewProject(defaultName, 'flat');
               projectNameInputRef.current?.focus();
               projectNameInputRef.current?.select();
             }}
-            title="New project"
+            title={t('newProjectTooltip', 'New project')}
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
           >
             +
@@ -1137,10 +1137,10 @@ export function App() {
           <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
           {/* Undo / Redo */}
-          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title={t('undoTooltip', 'Undo (Ctrl+Z)')} style={{ padding: '4px 8px' }}>
             <IconUndo size={14} />
           </button>
-          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title={t('redoTooltip', 'Redo (Ctrl+Y)')} style={{ padding: '4px 8px' }}>
             <IconRedo size={14} />
           </button>
 
@@ -1195,7 +1195,7 @@ export function App() {
           <button
             className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(true)}
-            title="Menu"
+            title={t('menuTitle', 'Menu')}
           >
             ···
           </button>
@@ -1291,7 +1291,7 @@ export function App() {
               }}
               role="separator"
               aria-orientation="horizontal"
-              aria-label="Resize 3D preview"
+              aria-label={t('resizePreviewLabel', 'Resize 3D preview')}
             >
               <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 2, background: 'var(--hairline-2)', borderRadius: 1 }} />
             </div>
@@ -1453,7 +1453,7 @@ export function App() {
         <div className="mobile-drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
         <div className="mobile-drawer-panel">
           <div className="mobile-drawer-header">
-            <span className="mobile-drawer-title">Menu</span>
+            <span className="mobile-drawer-title">{t('menuTitle', 'Menu')}</span>
             <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
           </div>
 
