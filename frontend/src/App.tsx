@@ -431,11 +431,19 @@ export function App() {
         sheets: [
           {
             id: 'default-sheet-1',
-            label: 'Default Glass',
+            label: 'Default Glass (Green)',
             imageUrl: '/assets/glass/green.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: null,
             swatch: '#a5d6a7'
+          },
+          {
+            id: 'default-sheet-2',
+            label: 'Amber Glass',
+            imageUrl: '/assets/glass/amber.jpg',
+            crop: { top: 0, left: 0, bottom: 0, right: 0 },
+            scale: null,
+            swatch: '#ffb74d'
           }
         ]
       });
