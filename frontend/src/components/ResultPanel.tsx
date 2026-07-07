@@ -917,79 +917,91 @@ export function ResultPanel({
     }
   }, [hoverPoint, lastPoint, activeTool]);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.code === 'Space' && !e.repeat) {
-        e.preventDefault();
-        setIsSpaceDown(true);
-        return;
-      }
-      if (e.key === 'Shift') {
-        if (!e.repeat) {
-          setIsShiftDown(true);
-          if (lastMousePosRef.current) {
-            updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
-          }
-        }
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
-        // window listener from also firing project undo on the same event.
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setActivePolygonPoints(prev => prev.slice(0, -1));
-        return;
-      }
-      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      if (e.key === 'v') handleToolChange('select');
-      else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'b' && !isEncoding) handleToolChange('box');
-      else if (e.key === 'p') handleToolChange('pen');
-      else if (e.key === 'n') handleToolChange('pencil');
-      else if (e.key === 'c') handleToolChange('crop');
-      else if (e.key === 'm') handleToolChange('measure');
-      else if (e.key === 'i') handleToolChange('inspect');
-      else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
-      else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
-      else if (e.key === 'Enter') {
-        if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
-          commitActivePolygon();
-        }
-      }
-      else if (e.key === 'Escape') {
-        if (isSolderPopoverOpenRef.current) {
-          setIsSolderPopoverOpen(false);
-        } else if (refineModeRef.current) {
-          onRefineModeChange(null);
-        } else if (activePolygonPointsRef.current.length > 0) {
-          setActivePolygonPoints([]);
-          setHoverPoint(null);
-          setHoverSnapped(false);
-          setActiveSnapLabels([]);
-        } else {
-          handleToolChange('select');
-        }
-      }
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if (e.code === 'Space' && !e.repeat) {
+      e.preventDefault();
+      setIsSpaceDown(true);
+      return;
     }
-    function handleKeyUp(e: KeyboardEvent) {
-      if (e.code === 'Space') setIsSpaceDown(false);
-      if (e.key === 'Shift') {
-        setIsShiftDown(false);
+    if (e.key === 'Shift') {
+      if (!e.repeat) {
+        setIsShiftDown(true);
         if (lastMousePosRef.current) {
-          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
+          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
         }
       }
     }
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+      // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+      // window listener from also firing project undo on the same event.
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setActivePolygonPoints(prev => prev.slice(0, -1));
+      return;
+    }
+    // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'v') handleToolChange('select');
+    else if (e.key === 'h') handleToolChange('pan');
+    else if (e.key === 'b' && !isEncoding) handleToolChange('box');
+    else if (e.key === 'p') handleToolChange('pen');
+    else if (e.key === 'n') handleToolChange('pencil');
+    else if (e.key === 'c') handleToolChange('crop');
+    else if (e.key === 'm') handleToolChange('measure');
+    else if (e.key === 'i') handleToolChange('inspect');
+    else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+    else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
+    else if (e.key === 'Enter') {
+      if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
+        commitActivePolygon();
+      }
+    }
+    else if (e.key === 'Escape') {
+      if (isSolderPopoverOpenRef.current) {
+        setIsSolderPopoverOpen(false);
+      } else if (refineModeRef.current) {
+        onRefineModeChange(null);
+      } else if (activePolygonPointsRef.current.length > 0) {
+        setActivePolygonPoints([]);
+        setHoverPoint(null);
+        setHoverSnapped(false);
+        setActiveSnapLabels([]);
+      } else {
+        handleToolChange('select');
+      }
+    }
+  }
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.code === 'Space') setIsSpaceDown(false);
+    if (e.key === 'Shift') {
+      setIsShiftDown(false);
+      if (lastMousePosRef.current) {
+        updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
+      }
+    }
+  }
+
+  // Dispatch through a ref so the listeners always see the latest render's
+  // closures. The previous [activeTool]-dep effect kept stale captures of
+  // isEncoding, project and measure alive between tool changes ('b' stayed
+  // dead after encoding finished; 'm' calibrated against an old crop).
+  const keyHandlersRef = useRef({ down: handleKeyDown, up: handleKeyUp });
+  keyHandlersRef.current = { down: handleKeyDown, up: handleKeyUp };
+
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => keyHandlersRef.current.down(e);
+    const up = (e: KeyboardEvent) => keyHandlersRef.current.up(e);
+    // Capture phase: guarantees this runs before App.tsx's bubble-phase undo
+    // listener regardless of mount/re-registration order, so the pen tool's
+    // Cmd+Z vertex-pop can reliably block project undo on the same keystroke.
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', down, true);
+      window.removeEventListener('keyup', up, true);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTool]);
+  }, []);
 
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
