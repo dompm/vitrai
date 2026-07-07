@@ -20,6 +20,7 @@ import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
+import { parseProject } from './storage/projectSchema';
 import type { ToolId } from './components/Toolbar';
 import './App.css';
 
@@ -734,6 +735,22 @@ export function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedPieceIds, deletePiece, undo, redo]);
 
+  // Validates/migrates/repairs a just-parsed project file (see
+  // storage/projectSchema.ts) and either loads it — surfacing a warning if
+  // anything had to be dropped — or refuses it with an explanatory alert.
+  const handleProjectFileData = (data: unknown) => {
+    const result = parseProject(data);
+    if (!result.ok) {
+      alert(t(result.reasonKey));
+      return;
+    }
+    loadProjectData(result.project);
+    if (result.repairs.length > 0) {
+      const details = result.repairs.map(r => t(r.reasonKey, { path: r.path })).join('\n');
+      alert(t('schemaRepairWarning', { details }));
+    }
+  };
+
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -741,7 +758,7 @@ export function App() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        loadProjectData(data);
+        handleProjectFileData(data);
       } catch (err) {
         console.error(err);
         alert(t('invalidProject'));
@@ -1023,7 +1040,7 @@ export function App() {
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target?.result as string);
-          loadProjectData(data);
+          handleProjectFileData(data);
         } catch (err) {
           console.error(err);
           alert(t('invalidProject'));
