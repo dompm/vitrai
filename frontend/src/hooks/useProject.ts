@@ -250,8 +250,11 @@ export function useProject() {
 
   const undo = useCallback(() => {
     if (undoStack.length === 0) return;
-    const prev = undoStack[undoStack.length - 1];
     const current = latestProjectRef.current;
+    // The name is non-historied state: snapshots recorded before a rename
+    // still carry the old name, and restoring it would point autosave at a
+    // deleted OPFS file (see #111).
+    const prev = { ...undoStack[undoStack.length - 1], name: current.name };
     setUndoStack(undoStack.slice(0, -1));
     setRedoStack(r => [...r, current]);
     latestProjectRef.current = prev;
@@ -262,8 +265,8 @@ export function useProject() {
 
   const redo = useCallback(() => {
     if (redoStack.length === 0) return;
-    const next = redoStack[redoStack.length - 1];
     const current = latestProjectRef.current;
+    const next = { ...redoStack[redoStack.length - 1], name: current.name };
     setRedoStack(redoStack.slice(0, -1));
     setUndoStack(u => [...u, current]);
     latestProjectRef.current = next;
@@ -275,7 +278,9 @@ export function useProject() {
   const setProjectName = useCallback((name: string) => {
     const oldName = project.name;
     if (name === oldName) return;
-    updateProject(prev => ({ ...prev, name }));
+    // skipHistory: the rename is applied outside undo/redo (undo/redo also
+    // preserve the current name), so no stack entry is needed.
+    updateProject(prev => ({ ...prev, name }), true);
     // Write under the new name first and only delete the old file once that
     // write has succeeded, so there is never a moment with no copy on disk.
     void (async () => {
