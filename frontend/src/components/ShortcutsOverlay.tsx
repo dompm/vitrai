@@ -69,11 +69,15 @@ export function ShortcutsOverlay({ open, onClose, onStartTutorial }: Props) {
     function handleKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         e.preventDefault();
+        // Capture phase + stopPropagation: the Esc that closes this overlay
+        // must not also reach the panels' window handlers (which would reset
+        // tools / discard an in-progress pen polygon — see #94).
+        e.stopPropagation();
         onClose();
       }
     }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
   }, [open, onClose]);
 
   if (!open) return null;
