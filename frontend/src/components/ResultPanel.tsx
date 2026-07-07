@@ -2039,6 +2039,25 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
+                  {tutorialStep === 'vector-draw-shape' && (
+                    <>
+                      <Line
+                        points={[400, 350, 750, 350, 575, 650, 400, 350]}
+                        stroke="#fbbf24"
+                        strokeWidth={2 / es}
+                        dash={[6 / es, 4 / es]}
+                        listening={false}
+                      />
+                      <Circle x={400} y={350} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={396} y={344} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={750} y={350} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={746} y={344} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={575} y={650} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={571} y={644} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                    </>
+                  )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
                     <Rect
                       x={924.124254866509}

@@ -16,6 +16,8 @@ export type StepId =
   | 'vector-draw-shape'
   | 'vector-snap-angles'
   | 'vector-curve-edge'
+  | 'vector-assign-glass'
+  | 'vector-position-texture'
   // lamp-creator steps
   | 'lamp-profile-intro'
   | 'lamp-edit-profile'
@@ -44,6 +46,8 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
     'vector-draw-shape',
     'vector-snap-angles',
     'vector-curve-edge',
+    'vector-assign-glass',
+    'vector-position-texture',
     'done',
   ],
   'lamp-creator': [
@@ -89,6 +93,8 @@ export const ANCHORED_STEPS: StepId[] = [
   'vector-draw-shape',
   'vector-snap-angles',
   'vector-curve-edge',
+  'vector-assign-glass',
+  'vector-position-texture',
   'lamp-profile-intro',
   'lamp-edit-profile',
   'lamp-symmetry',
@@ -150,6 +156,15 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
     id: 'vector-curve-edge',
     spotlightTarget: '.canvas-well',
     panel: 'pattern',
+  },
+  'vector-assign-glass': {
+    id: 'vector-assign-glass',
+    spotlightTarget: '[data-tutorial-target="piece-glass-select"]',
+    panel: 'pattern',
+  },
+  'vector-position-texture': {
+    id: 'vector-position-texture',
+    panel: 'glass',
   },
 
   // lamp-creator

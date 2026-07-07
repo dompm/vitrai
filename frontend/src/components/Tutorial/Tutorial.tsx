@@ -251,7 +251,47 @@ export function Tutorial({
     if (step !== 'vector-curve-edge') return;
     const piece = project.pieces.find(p => p.id === pieceId);
     if (piece?.curvePoints && piece.curvePoints.length > 0) {
-      onAdvance(); // Goes to 'done'
+      onAdvance(); // Goes to 'vector-assign-glass'
+    }
+  }, [step, project.pieces, pieceId, onAdvance]);
+
+  // Vector CAD Step 5: Assign glass
+  useEffect(() => {
+    if (step !== 'vector-assign-glass') return;
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (piece && piece.glassSheetId && piece.glassSheetId !== 'default-sheet-1') {
+      onAdvance(); // Goes to 'vector-position-texture'
+    }
+  }, [step, project.pieces, pieceId, onAdvance]);
+
+  // Vector CAD Step 6: Position texture
+  const vectorPositionStartRef = useRef<{ x: number; y: number; rotation: number; scale: number } | null>(null);
+  useEffect(() => {
+    if (step !== 'vector-position-texture') {
+      vectorPositionStartRef.current = null;
+      return;
+    }
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) return;
+    if (vectorPositionStartRef.current === null) {
+      vectorPositionStartRef.current = { ...piece.transform };
+      return;
+    }
+    const start = vectorPositionStartRef.current;
+    const { x, y, rotation, scale } = piece.transform;
+    const dist = Math.hypot(x - start.x, y - start.y);
+    const rotDiff = Math.abs(rotation - start.rotation);
+    const scaleDiff = Math.abs(scale - start.scale);
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+      debounceTimeoutRef.current = null;
+    }
+
+    if (dist > 40 || rotDiff > 0.15 || scaleDiff > 0.1) {
+      debounceTimeoutRef.current = setTimeout(() => {
+        onAdvance(); // Goes to 'done'
+      }, 2000);
     }
   }, [step, project.pieces, pieceId, onAdvance]);
 
@@ -373,7 +413,7 @@ export function Tutorial({
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
-          withBackdrop={true}
+          withBackdrop={currentSpotlightTarget !== '.canvas-well'}
         />
       )}
       {showLoadingDialog && (
