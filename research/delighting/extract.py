@@ -38,8 +38,9 @@ Usage
   extract.py PHOTO [--glass-class C] [--corners x0,y0,x1,y1] [--out DIR] [--size N]
   extract.py FOLDER --out DIR            # batch mode; per-file options may come from
                                          # a manifest.json in the folder:
-                                         # {"file.jpg": {"glass_class": "wispy", "corners": [..]}}
-  add --vlm to ask the `claude` CLI for the class (multiple choice; see vlm_classify.py)
+                                         # {"file.jpg": {"class_override": "wispy", "corners": [..]}}
+  Class defaults to the `claude` CLI classifier (multiple choice; see vlm_classify.py);
+  a manifest `class_override` or --class beats it, --no-vlm disables it.
 """
 import argparse
 import json
@@ -199,9 +200,18 @@ def estimate_illumination(lin, glass_class, W):
     # p95/0.35 chosen by sweep (report 002): higher percentile pushes glass
     # structure out of the envelope into T (+21% T contrast on the wispy case)
     # at negligible cost in residual illumination on the easy case
-    win = max(5, int(0.35 * max(small.shape)))
-    env = percentile_filter(small, 95, size=win, mode='nearest')
-    env = gauss(env, 0.15 * max(small.shape))
+    d = max(small.shape)
+    win = max(5, int(0.35 * d))
+    base = gauss(percentile_filter(small, 95, size=win, mode='nearest'), 0.15 * d)
+    # hotspot recovery (report 004): the broad envelope smooths a compact backlight
+    # hotspot down, so R = I/L runs hot there and the hotspot leaks into T (blue's
+    # cyan patch, red's milder one). A tighter-window, higher-percentile envelope
+    # tracks the compact peak; taking the max lifts L only where the tight peak
+    # exceeds the broad one -- i.e. on a compact bright blob. Over broad uniform
+    # glass the two agree, so glass color is untouched (median L unchanged).
+    pw = max(3, int(0.15 * d))
+    peak = gauss(percentile_filter(small, 98, size=pw, mode='nearest'), 0.05 * d)
+    env = np.maximum(base, peak)
     env = cv2.resize(env.astype(np.float32), (W_, H_), interpolation=cv2.INTER_CUBIC).astype(np.float64)
     env = np.maximum(env, 1e-3)
 
@@ -421,11 +431,17 @@ def extract_maps(lin, glass_class, mark_region="unknown"):
     # by the inverse so L*T (and thus the self-recon) is exactly invariant -- the
     # scale is a gauge, only T's numeric level changes. See T_ANCHOR.
     pct, target = T_ANCHOR[glass_class]
+    # raw_p99: p99 of the un-clipped transmittance before assemble_T's [0,1] clip
+    # saturates it. This is the per-sheet scale diagnostic -- how far the brightest
+    # transmitting pixels sit above the envelope's clear level (residual
+    # hotspot / specular). k itself is ~class-constant because the envelope already
+    # normalizes each sheet's clear level to ~1, so raw_p99 is what actually varies.
+    raw_p99 = float(np.percentile(np.clip(R, 0, None), 99))
     k = target / max(np.percentile(T, pct), 1e-3)
     T = np.clip(T * k, 0, 1)
     L, R = L / k, R * k
-    return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R,
-            "mark_mask": mark_mask, "h": h, "T": T, "conf": conf}
+    return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R, "mark_mask": mark_mask,
+            "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99}
 
 
 def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown"):
@@ -452,6 +468,12 @@ def process(path, glass_class, corners, out_dir, size, debug=False, mark_region=
         "mark_pixels_pct": float(mark_mask.mean() * 100),
         "h_mean": float(h.mean()),
         "T_mean_rgb": [float(v) for v in T.reshape(-1, 3).mean(0)],
+        # absolute-scale anchor (report 004 DECISION 2): k = the gain applied to
+        # hit the class target (class-constant while >=1% of T clips to the
+        # ceiling); T_raw_p99 = pre-clip transmittance spread, the per-sheet signal
+        # -- an outlier there flags a residual hotspot or a possible misclass.
+        "T_anchor_k": m["k"],
+        "T_raw_p99": m["raw_p99"],
     }
 
     # 6. outputs
@@ -496,33 +518,40 @@ def main():
     ap.add_argument("--corners", help="x0,y0,x1,y1 crop of the glass region (original pixels)")
     ap.add_argument("--out", default="results")
     ap.add_argument("--size", type=int, default=700, help="working resolution (max dim)")
-    ap.add_argument("--vlm", action="store_true",
-                    help="use `claude` CLI (multiple choice) for glass class AND mark localization")
+    ap.add_argument("--no-vlm", action="store_true",
+                    help="skip the default VLM class call (use --class / manifest override, else 'wispy')")
     ap.add_argument("--mark-region", default=None,
-                    help="'none', 'unknown', or a 3x3 cell (e.g. bottom-right); overrides VLM")
+                    help="'none', 'unknown', or a 3x3 cell (e.g. bottom-right)")
     ap.add_argument("--debug", action="store_true", help="save intermediate masks/fields")
     args = ap.parse_args()
 
-    def classify(p):
+    def classify(p, entry=None):
+        # Precedence (report 004 DECISION 1): --class (whole run) > manifest
+        # `class_override` (per-file, explicit human choice) > VLM (the DEFAULT) >
+        # 'wispy' fallback. The class is never a silent hard-coded default: a
+        # value in the manifest is an explicit override, and everything else is
+        # asked of the VLM -- a stale default can no longer beat the classifier
+        # (that is what misclassified white.jpg in 002).
         if args.glass_class:
             return args.glass_class
-        if args.vlm:
-            from vlm_classify import classify_glass
-            c = classify_glass(p)
-            print(f"  VLM class for {os.path.basename(p)}: {c}")
-            return c
+        override = (entry or {}).get("class_override")
+        if override:
+            return override
+        if not args.no_vlm:
+            try:
+                from vlm_classify import classify_glass
+                c = classify_glass(p)
+                print(f"  VLM class for {os.path.basename(p)}: {c}")
+                return c
+            except Exception as e:
+                print(f"  VLM class failed ({e}); falling back to 'wispy'")
         return "wispy"
 
     def marks(p, entry=None):
-        v = (entry or {}).get("mark_region") or args.mark_region
-        if v:
-            return v
-        if args.vlm:
-            from vlm_classify import locate_mark
-            v = locate_mark(p)
-            print(f"  VLM mark region for {os.path.basename(p)}: {v}")
-            return v
-        return "unknown"
+        # Mark region is human-only (report 003/004): the VLM hallucinates marks
+        # on clean sheets, so it does NOT drive removal. Manifest / CLI, else the
+        # conservative global detector ('unknown').
+        return (entry or {}).get("mark_region") or args.mark_region or "unknown"
 
     if os.path.isdir(args.input):
         manifest = {}
@@ -534,7 +563,7 @@ def main():
                 continue
             entry = manifest.get(f, {})
             p = os.path.join(args.input, f)
-            process(p, entry.get("glass_class") or classify(p), entry.get("corners"),
+            process(p, classify(p, entry), entry.get("corners"),
                     args.out, args.size, args.debug, mark_region=marks(p, entry))
     else:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None

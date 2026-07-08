@@ -11,7 +11,8 @@ rendering in Vitraux:
 A ship/no-ship decision is made on the reports in `reports/`. Current state:
 `001-classical-baseline.md` (baseline), `002-iteration.md` (mark-inpaint fix,
 contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
-(class-prior absolute-transmittance anchor so dark glass renders dark).
+(class-prior absolute-transmittance anchor so dark glass renders dark),
+`004-hotspot.md` (backlight-hotspot recovery; VLM class default + anchor logging).
 
 ## Layout
 
@@ -34,9 +35,10 @@ python3 extract.py photo.jpg --glass-class wispy --out results --debug
 # crop the glass region first (original-pixel corners)
 python3 extract.py photo.jpg --corners 122,980,2938,3876 --glass-class wispy
 
-# batch: run a whole folder; per-file class/corners/mark_region from folder/manifest.json,
-# missing values resolved by --vlm (claude CLI) or defaults
-python3 extract.py ~/Downloads/new-eval-photos --vlm --out results
+# batch: run a whole folder; per-file corners/mark_region/class_override from
+# folder/manifest.json. Class DEFAULTS to the claude-CLI classifier; a manifest
+# class_override or --class beats it. Add --no-vlm to skip the classifier.
+python3 extract.py ~/Downloads/new-eval-photos --out results
 
 # handwriting removal: --mark-region is 'none', 'unknown' (global conservative
 # detector, default), or a 3x3 grid cell where a SKU/price mark sits
@@ -54,9 +56,13 @@ python3 register_pair.py A.jpg B.jpg --class wispy \
 manifest.json format (keys are filenames inside the folder):
 
 ```json
-{ "sheet1.jpg": { "glass_class": "wispy", "corners": [122, 980, 2938, 3876],
+{ "sheet1.jpg": { "class_override": "wispy", "corners": [122, 980, 2938, 3876],
                   "mark_region": "bottom-right" } }
 ```
+
+`class_override` is an explicit human class choice (only present when a human set
+it); omit it to let the VLM classify. `mark_region` is human-only (the VLM
+hallucinates marks); omit for the conservative global detector.
 
 Outputs per photo: `<name>_T.png`, `<name>_h.png`, `<name>_panel.png`
 (original | T | h | self-recon | error x5 | relit warm | relit cool),
@@ -64,8 +70,8 @@ Outputs per photo: `<name>_T.png`, `<name>_h.png`, `<name>_panel.png`
 intermediate masks/fields.
 
 Requires: `/usr/bin/python3` with numpy, pillow, scipy, opencv-python-headless.
-`--vlm` additionally shells out to the `claude` CLI (results cached in
-`.vlm_cache.json`, not committed).
+Class classification shells out to the `claude` CLI by default (results cached in
+`.vlm_cache.json`, not committed); `--no-vlm` disables it for offline runs.
 
 ## Benchmark
 

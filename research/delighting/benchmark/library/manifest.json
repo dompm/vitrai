@@ -1,6 +1,6 @@
 {
   "amber.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -10,7 +10,7 @@
     "mark_region": "none"
   },
   "orange.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -20,7 +20,7 @@
     "mark_region": "none"
   },
   "pink.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -30,7 +30,7 @@
     "mark_region": "none"
   },
   "red.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -40,7 +40,7 @@
     "mark_region": "none"
   },
   "green.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -50,7 +50,7 @@
     "mark_region": "none"
   },
   "blue.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -60,7 +60,7 @@
     "mark_region": "none"
   },
   "turquoise.jpg": {
-    "glass_class": "cathedral-clear",
+    "class_override": "cathedral-clear",
     "corners": [
       0,
       0,
@@ -70,7 +70,7 @@
     "mark_region": "none"
   },
   "white.jpg": {
-    "glass_class": "opalescent",
+    "class_override": "opalescent",
     "corners": [
       0,
       0,
@@ -80,7 +80,7 @@
     "mark_region": "none"
   },
   "black.jpg": {
-    "glass_class": "dark-opaque",
+    "class_override": "dark-opaque",
     "corners": [
       0,
       0,
