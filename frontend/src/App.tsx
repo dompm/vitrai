@@ -1700,6 +1700,7 @@ export function App() {
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
           onUpdatePatternScale={updatePatternScale}
+          hasTutorialBar={!!tutorialStep}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);

@@ -11,6 +11,7 @@ interface Props {
   onCancel: () => void;
   onConfirm: (config: Partial<LampConfig>) => void;
   onUpdatePatternScale?: (scale: import('../types').Scale) => void;
+  hasTutorialBar?: boolean;
 }
 
 type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid' | 'tulip';
@@ -64,7 +65,7 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
   },
 };
 
-export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm, onUpdatePatternScale }: Props) {
+export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm, onUpdatePatternScale, hasTutorialBar }: Props) {
   const { t } = useTranslation();
   const [facetCount, setFacetCount] = useState(initialConfig.facetCount);
   const [smooth, setSmooth] = useState<boolean>(!!initialConfig.smooth);
@@ -190,7 +191,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
     <div className="move-confirm-backdrop" onClick={onCancel}>
       <div
         className="move-confirm-dialog"
-        style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto' }}
+        style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto', paddingBottom: hasTutorialBar ? 90 : 20 }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
