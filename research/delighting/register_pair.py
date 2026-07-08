@@ -50,8 +50,7 @@ import numpy as np
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from extract import (extract_maps, lin_to_srgb, reconstruct, srgb_to_lin,  # noqa: E402
-                     estimate_illumination, tile)
+from extract import (extract_maps, lin_to_srgb, reconstruct, srgb_to_lin, tile)  # noqa: E402
 
 
 def _corners(s):
@@ -158,9 +157,10 @@ def main():
     T_b = mb["T"]
 
     # --- forward-render A's material under B's illumination, compare to photo B ---
-    L_b = estimate_illumination(mb["lin_ns"], args.glass_class, b_lin.shape[1])
-    R_b = mb["lin_ns"] / np.maximum(L_b, 1e-4)
-    pred_b, _ = reconstruct(L_b, T_a, h_a, R_b)  # A's T,h crossed with B's light+background
+    # mb["L"], mb["R"] are already anchored on the same absolute scale as T_a
+    # (both use the class T_ANCHOR), so crossing A's T,h with B's light+background
+    # is scale-consistent.
+    pred_b, _ = reconstruct(mb["L"], T_a, h_a, mb["R"])
     err = np.abs(lin_to_srgb(np.clip(pred_b, 0, 1)) - lin_to_srgb(np.clip(mb["lin_ns"], 0, 1)))
     valid = ~(mb["mark_mask"] | mb["spec_mask"])
 

@@ -53,6 +53,20 @@ from PIL import Image, ImageDraw
 CLASSES = ("opalescent", "wispy", "cathedral-clear", "dark-opaque")
 LUM = np.array([0.2126, 0.7152, 0.0722])
 
+# Absolute-transmittance anchor (report 003). Per-image exposure is unknown, so
+# the split between the illumination scale L and the transmittance scale T is a
+# gauge the photo does not fix -- and the self-recon metric is blind to it (L
+# absorbs whatever T gives up). We pin the gauge with a class prior: (percentile,
+# target) = "the clearest glass of this class transmits about `target`". Chosen
+# so dark-opaque comes out near-black (its p99->0.97 stretch was the visible bug)
+# while the near-clear classes are essentially unchanged (target ~= old 0.97).
+T_ANCHOR = {
+    "cathedral-clear": (99, 0.95),
+    "wispy": (99, 0.95),
+    "opalescent": (99, 0.80),   # milky: brightest is translucent, not clear
+    "dark-opaque": (99, 0.10),  # brightest fleck transmits ~10%; median ends near-black
+}
+
 
 # ---------------------------------------------------------------- basic ops
 def srgb_to_lin(a):
@@ -403,8 +417,13 @@ def extract_maps(lin, glass_class, mark_region="unknown"):
     # 4. haze + transmittance (R is mark-free here; no post-hoc healing)
     h = estimate_haze(R, glass_class, W)
     T, conf = assemble_T(R, h, glass_class, mark_mask)
-    # normalize T: lightest real glass transmits ~97%
-    T = np.clip(T * (0.97 / max(np.percentile(T, 99), 1e-3)), 0, 1)
+    # anchor T to absolute transmittance via the class prior, then move L and R
+    # by the inverse so L*T (and thus the self-recon) is exactly invariant -- the
+    # scale is a gauge, only T's numeric level changes. See T_ANCHOR.
+    pct, target = T_ANCHOR[glass_class]
+    k = target / max(np.percentile(T, pct), 1e-3)
+    T = np.clip(T * k, 0, 1)
+    L, R = L / k, R * k
     return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R,
             "mark_mask": mark_mask, "h": h, "T": T, "conf": conf}
 

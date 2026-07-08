@@ -9,8 +9,9 @@ rendering in Vitraux:
   the background)
 
 A ship/no-ship decision is made on the reports in `reports/`. Current state:
-`reports/001-classical-baseline.md` (baseline) and `reports/002-iteration.md`
-(mark-inpaint fix, contrast recovery, 9-sheet library batch, pair harness).
+`001-classical-baseline.md` (baseline), `002-iteration.md` (mark-inpaint fix,
+contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
+(class-prior absolute-transmittance anchor so dark glass renders dark).
 
 ## Layout
 
