@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StepId, ANCHORED_STEPS, TrackId, TRACK_STEPS } from './types';
+import { IconSpark, IconSquare, IconLamp, IconRuler } from '../icons';
 
 interface TutorialBarProps {
   step: StepId;
@@ -30,7 +31,7 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
               className={`tutorial-track-card ${selectedTrack === 'ai-tracing' ? 'active' : ''}`}
               onClick={() => setSelectedTrack('ai-tracing')}
             >
-              <div className="tutorial-track-icon">🪄</div>
+              <div className="tutorial-track-icon"><IconSpark size={24} /></div>
               <h3 className="tutorial-track-card-title">{t('tutorialTrackAiTracingTitle')}</h3>
               <p className="tutorial-track-card-desc">{t('tutorialTrackAiTracingDesc')}</p>
             </button>
@@ -39,7 +40,7 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
               className={`tutorial-track-card ${selectedTrack === 'vector-drawing' ? 'active' : ''}`}
               onClick={() => setSelectedTrack('vector-drawing')}
             >
-              <div className="tutorial-track-icon">✒️</div>
+              <div className="tutorial-track-icon"><IconSquare size={24} /></div>
               <h3 className="tutorial-track-card-title">{t('tutorialTrackVectorDrawingTitle')}</h3>
               <p className="tutorial-track-card-desc">{t('tutorialTrackVectorDrawingDesc')}</p>
             </button>
@@ -48,7 +49,7 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
               className={`tutorial-track-card ${selectedTrack === 'lamp-creator' ? 'active' : ''}`}
               onClick={() => setSelectedTrack('lamp-creator')}
             >
-              <div className="tutorial-track-icon">🏮</div>
+              <div className="tutorial-track-icon"><IconLamp size={24} /></div>
               <h3 className="tutorial-track-card-title">{t('tutorialTrackLampCreatorTitle')}</h3>
               <p className="tutorial-track-card-desc">{t('tutorialTrackLampCreatorDesc')}</p>
             </button>
@@ -57,7 +58,7 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
               className={`tutorial-track-card ${selectedTrack === 'fabrication' ? 'active' : ''}`}
               onClick={() => setSelectedTrack('fabrication')}
             >
-              <div className="tutorial-track-icon">📐</div>
+              <div className="tutorial-track-icon"><IconRuler size={24} /></div>
               <h3 className="tutorial-track-card-title">{t('tutorialTrackFabricationTitle')}</h3>
               <p className="tutorial-track-card-desc">{t('tutorialTrackFabricationDesc')}</p>
             </button>
