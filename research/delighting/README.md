@@ -9,16 +9,18 @@ rendering in Vitraux:
   the background)
 
 A ship/no-ship decision is made on the reports in `reports/`. Current state:
-`reports/001-classical-baseline.md` (Track A classical pipeline + Track C VLM
-class prior).
+`reports/001-classical-baseline.md` (baseline) and `reports/002-iteration.md`
+(mark-inpaint fix, contrast recovery, 9-sheet library batch, pair harness).
 
 ## Layout
 
 ```
 extract.py        pipeline + CLI (single file and batch/folder mode)
-vlm_classify.py   Track C: glass-class prior via `claude` CLI (multiple-choice)
-benchmark/        fixed eval inputs (easy + difficult case, manifest.json)
-results/          committed panels, T/h maps, metrics for the benchmark
+vlm_classify.py   Track C: glass-class prior + mark localization via `claude` CLI
+contact_sheet.py  build one grid image over a batch (original|T|h|relit warm|cool)
+register_pair.py  cross-lighting validation (M3): register two photos, compare maps
+benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
+results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
 reports/          numbered experiment reports (honest; decision documents)
 ```
 
@@ -31,15 +33,28 @@ python3 extract.py photo.jpg --glass-class wispy --out results --debug
 # crop the glass region first (original-pixel corners)
 python3 extract.py photo.jpg --corners 122,980,2938,3876 --glass-class wispy
 
-# batch: run a whole folder; per-file class/corners from folder/manifest.json,
-# missing classes resolved by --vlm (claude CLI) or default
+# batch: run a whole folder; per-file class/corners/mark_region from folder/manifest.json,
+# missing values resolved by --vlm (claude CLI) or defaults
 python3 extract.py ~/Downloads/new-eval-photos --vlm --out results
+
+# handwriting removal: --mark-region is 'none', 'unknown' (global conservative
+# detector, default), or a 3x3 grid cell where a SKU/price mark sits
+python3 extract.py photo.jpg --glass-class wispy --mark-region bottom-right
+
+# contact sheet over a whole batch (one grid image, MAE label per row)
+python3 contact_sheet.py benchmark/library results/library results/library/contact_sheet.jpg
+
+# cross-lighting validation (M3): two photos of the SAME sheet, different light
+python3 register_pair.py A.jpg B.jpg --class wispy \
+    --corners-a TL_x,TL_y,TR_x,TR_y,BR_x,BR_y,BL_x,BL_y --corners-b ...
+# omit corners to auto-register via ORB (needs similar framing)
 ```
 
 manifest.json format (keys are filenames inside the folder):
 
 ```json
-{ "sheet1.jpg": { "glass_class": "wispy", "corners": [122, 980, 2938, 3876] } }
+{ "sheet1.jpg": { "glass_class": "wispy", "corners": [122, 980, 2938, 3876],
+                  "mark_region": "bottom-right" } }
 ```
 
 Outputs per photo: `<name>_T.png`, `<name>_h.png`, `<name>_panel.png`

@@ -1,8 +1,10 @@
 {
   "easy_amber.jpg": {
-    "glass_class": "cathedral-clear"
+    "glass_class": "cathedral-clear",
+    "mark_region": "none"
   },
   "difficult_wispy.jpg": {
-    "glass_class": "wispy"
+    "glass_class": "wispy",
+    "mark_region": "bottom-right"
   }
 }

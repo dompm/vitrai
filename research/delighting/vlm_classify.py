@@ -32,7 +32,24 @@ D) dark-opaque - very dark glass, transmits little light
 Reply with ONLY the single letter (A, B, C or D)."""
 
 
-def classify_glass(image_path, model="haiku", timeout=120):
+LETTER_TO_REGION = {
+    "A": "none",
+    "B": "top-left", "C": "top-center", "D": "top-right",
+    "E": "middle-left", "F": "center", "G": "middle-right",
+    "H": "bottom-left", "I": "bottom-center", "J": "bottom-right",
+}
+
+MARK_PROMPT = """Read the image file at {path} and look at it. It is a photo of \
+a glass sheet. Sheets often carry a handwritten grease-pencil marking (a SKU or \
+price). Where is the handwritten marking in this image, if any? Answer with ONLY \
+one letter:
+A) no marking visible
+B) top-left  C) top-center  D) top-right
+E) middle-left  F) center  G) middle-right
+H) bottom-left  I) bottom-center  J) bottom-right"""
+
+
+def _ask(image_path, prompt, mapping, kind, model, timeout):
     image_path = os.path.abspath(image_path)
     cache = {}
     if os.path.exists(CACHE):
@@ -40,26 +57,36 @@ def classify_glass(image_path, model="haiku", timeout=120):
             cache = json.load(open(CACHE))
         except Exception:
             cache = {}
-    key = f"{image_path}:{os.path.getmtime(image_path):.0f}"
+    key = f"{kind}:{image_path}:{os.path.getmtime(image_path):.0f}"
     if key in cache:
         return cache[key]
 
     out = subprocess.run(
-        ["claude", "-p", PROMPT.format(path=image_path),
+        ["claude", "-p", prompt.format(path=image_path),
          "--allowedTools", "Read", "--model", model],
         capture_output=True, text=True, timeout=timeout,
     )
     ans = out.stdout.strip().rstrip(".").upper()[-1:]  # tolerate "Answer: B"
-    cls = LETTER_TO_CLASS.get(ans)
-    if cls is None:
+    val = mapping.get(ans)
+    if val is None:
         raise RuntimeError(f"VLM gave unparseable answer {out.stdout!r} for {image_path}")
-    cache[key] = cls
+    cache[key] = val
     with open(CACHE, "w") as f:
         json.dump(cache, f, indent=1)
-    return cls
+    return val
+
+
+def classify_glass(image_path, model="haiku", timeout=120):
+    return _ask(image_path, PROMPT, LETTER_TO_CLASS, "class", model, timeout)
+
+
+def locate_mark(image_path, model="haiku", timeout=120):
+    """'none' or a 3x3 grid cell name. Validated: wispy sheet -> bottom-right,
+    amber swatch -> none (both correct)."""
+    return _ask(image_path, MARK_PROMPT, LETTER_TO_REGION, "mark", model, timeout)
 
 
 if __name__ == "__main__":
     import sys
     for p in sys.argv[1:]:
-        print(p, "->", classify_glass(p))
+        print(p, "->", classify_glass(p), "/ mark:", locate_mark(p))

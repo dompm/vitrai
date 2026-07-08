@@ -110,18 +110,24 @@ def inpaint_lin(lin, mask, radius=5):
 
 def diffusion_fill(img, conf, iters=6):
     """Fill low-confidence pixels from high-confidence neighbours (multi-scale
-    normalized convolution)."""
+    normalized convolution). Accepts HxW or HxWx3."""
+    squeeze = img.ndim == 2
+    if squeeze:
+        img = img[..., None]
     filled = img * conf[..., None]
     w = conf.copy()
     sigma = 2.0
     out = None
     for _ in range(iters):
         fw = gauss(filled, sigma)
+        if fw.ndim == 2:  # cv2 squeezes HxWx1
+            fw = fw[..., None]
         ww = gauss(w, sigma)
         cand = fw / np.maximum(ww[..., None], 1e-6)
         out = cand if out is None else np.where((w > 0.05)[..., None], out, cand)
         sigma *= 2.0
-    return conf[..., None] * img + (1 - conf[..., None]) * out
+    res = conf[..., None] * img + (1 - conf[..., None]) * out
+    return res[..., 0] if squeeze else res
 
 
 # ------------------------------------------------------------ pipeline steps
@@ -176,8 +182,11 @@ def estimate_illumination(lin, glass_class, W):
     s = 8
     small = cv2.resize(Y.astype(np.float32), (max(W_ // s, 8), max(H_ // s, 8)),
                        interpolation=cv2.INTER_AREA).astype(np.float64)
+    # p95/0.35 chosen by sweep (report 002): higher percentile pushes glass
+    # structure out of the envelope into T (+21% T contrast on the wispy case)
+    # at negligible cost in residual illumination on the easy case
     win = max(5, int(0.35 * max(small.shape)))
-    env = percentile_filter(small, 88, size=win, mode='nearest')
+    env = percentile_filter(small, 95, size=win, mode='nearest')
     env = gauss(env, 0.15 * max(small.shape))
     env = cv2.resize(env.astype(np.float32), (W_, H_), interpolation=cv2.INTER_CUBIC).astype(np.float64)
     env = np.maximum(env, 1e-3)
@@ -207,16 +216,32 @@ def estimate_illumination(lin, glass_class, W):
     return env[..., None] * chroma
 
 
-def detect_marks(R, W):
-    """Grease-pencil markings: thin dark strokes whose COLOR is anomalous.
+REGION_GRID = {
+    "top-left": (0, 0), "top-center": (1, 0), "top-right": (2, 0),
+    "middle-left": (0, 1), "center": (1, 1), "middle-right": (2, 1),
+    "bottom-left": (0, 2), "bottom-center": (1, 2), "bottom-right": (2, 2),
+}
 
-    Local stats (black-hat depth, sharpness) barely separate pencil from wispy
-    glass veining, and shape filtering fails because strokes merge with veins
-    into one connected component. What does separate them on the test photo:
-    a marking is a foreign pigment, so its chroma deviates from the local glass
-    chroma, while veins are the same material family (chroma anomaly ~0.12 for
-    pencil vs ~0.03 for veins). Detector = stroke-scale darkness (black-hat)
-    x chroma anomaly vs a large local window."""
+
+def region_box_mask(region, shape, margin=0.10):
+    """3x3 grid cell (+margin) as a boolean mask."""
+    H_, W_ = shape
+    cx, cy = REGION_GRID[region]
+    m = np.zeros(shape, bool)
+    x0, x1 = max(0.0, cx / 3 - margin), min(1.0, (cx + 1) / 3 + margin)
+    y0, y1 = max(0.0, cy / 3 - margin), min(1.0, (cy + 1) / 3 + margin)
+    m[int(y0 * H_):int(y1 * H_), int(x0 * W_):int(x1 * W_)] = True
+    return m
+
+
+def detect_marks(R, W):
+    """Global (region-unknown) mark detector: thin dark strokes whose COLOR is
+    anomalous. Marking = foreign pigment: chroma deviates from the local glass
+    chroma (~0.12 L2 for pencil vs ~0.03 for veins) x stroke-scale black-hat
+    darkness. Conservative thresholds: partial stroke coverage and some vein
+    false positives (report 002 quantifies); when the mark REGION is known
+    (VLM localization / manifest), remove_marks_in_region() is used instead.
+    """
     Y = np.clip(lum(R), 0.05, 1.5)
     r = max(3, int(0.014 * W))
     blackhat = cv2.morphologyEx(Y.astype(np.float32), cv2.MORPH_BLACKHAT, ellipse(r)).astype(np.float64)
@@ -232,6 +257,27 @@ def detect_marks(R, W):
     if mask.mean() > 0.10:  # sanity valve
         mask &= score > np.percentile(score[mask], 60)
     return mask
+
+
+def remove_marks_in_region(R, region, W):
+    """Region-targeted mark removal (region from VLM localization / manifest).
+
+    Detect-then-fill proved fragile: score thresholds always leave stroke
+    fringes and the fill reconstructs a legible ghost from them. Instead, lift
+    EVERY small-scale dark feature inside the region to its morphological
+    closing (disk ~2.2% of width): strokes, including their wide faint smudge,
+    are removed wholesale; structures larger than the disk (streaks, veins)
+    are untouched. Cost: small dark glass flecks inside that one grid cell are
+    also lifted -- confined, and preferable to a readable SKU.
+    Returns (R_fixed, soft_alpha)."""
+    reg = region_box_mask(region, R.shape[:2])
+    k = ellipse(max(6, int(0.022 * W)))
+    closed = np.stack([cv2.morphologyEx(R[..., c].astype(np.float32), cv2.MORPH_CLOSE, k)
+                       for c in range(3)], -1).astype(np.float64)
+    Yc, Yr = lum(closed), lum(R)
+    gain = np.clip((Yc - Yr) / np.maximum(Yc, 0.05), 0, 1)
+    alpha = gauss(smoothstep(gain, 0.05, 0.15) * reg, 2)
+    return R + alpha[..., None] * (closed - R), alpha
 
 
 def estimate_haze(R, glass_class, W):
@@ -276,8 +322,11 @@ def assemble_T(R, h, glass_class, mark_mask=None):
     sat = (mx - mn) / (mx + 1e-6)
     desat = np.exp(-((sat / 0.35) ** 2))
     conf = np.clip(np.maximum(h, smoothstep(Y, 0.70, 0.92) * desat), 0, 1)
+    # sharpen: mid-confidence pixels (wispy structure, h~0.5) used to be
+    # blended 50/50 with the smooth fill, washing out contrast (report 001
+    # failure 4); trust them fully and only fill real background
+    conf = smoothstep(conf, 0.08, 0.50)
     if mark_mask is not None and mark_mask.any():
-        # belt & braces: inpainting may leave stroke fringes; fill them too
         conf = np.where(mark_mask, 0.0, conf)
     T = diffusion_fill(Rc, conf)
     return np.clip(T, 0, 1), conf
@@ -315,36 +364,59 @@ def tile(img_lin_or_srgb, label, is_linear=True, height=None):
     return np.asarray(im)
 
 
-def process(path, glass_class, corners, out_dir, size, debug=False):
-    name = os.path.splitext(os.path.basename(path))[0]
+def load_linear(path, corners, size):
+    """Load a photo, optionally crop to the glass region, downscale to `size`
+    (max dim), and return its linear-RGB array. Shared by process() and the
+    pair-registration harness so both see identical pixels."""
     img = Image.open(path).convert("RGB")
     if corners:
         img = img.crop(tuple(corners))
     w0, h0 = img.size
     scale = size / max(w0, h0)
     img = img.resize((int(w0 * scale), int(h0 * scale)), Image.LANCZOS)
-    rgb = np.asarray(img).astype(np.float64) / 255.0
-    lin = srgb_to_lin(rgb)
-    W = lin.shape[1]
+    return srgb_to_lin(np.asarray(img).astype(np.float64) / 255.0)
 
+
+def extract_maps(lin, glass_class, mark_region="unknown"):
+    """Core map computation (pipeline steps 1-4) on a linear-RGB image.
+    Returns a dict of the intermediate/output arrays. process() adds metrics
+    and file output on top; the harness reuses the maps directly."""
+    W = lin.shape[1]
     # 1. speculars
     lin_ns, spec_mask = suppress_speculars(lin, glass_class, W)
     # 2. illumination + ratio
     L = estimate_illumination(lin_ns, glass_class, W)
     R = lin_ns / np.maximum(L, 1e-4)
-    # 3. markings
-    mark_mask = detect_marks(R, W)
-    if mark_mask.any():
-        R = inpaint_lin(np.clip(R, 0, 1), mark_mask, radius=max(4, int(0.01 * W)))
-    # 4. haze + transmittance
+    # 3. markings. Repair by diffusion fill, NOT Telea: Telea leaves a tinted
+    # smudge that the saturation/chroma cues downstream re-detect as content
+    # (report 001 shipped an h map with legible SKU strokes because h was
+    # computed from Telea residue and then healed with too small a halo)
+    if mark_region == "none":
+        mark_mask = np.zeros(R.shape[:2], bool)
+    elif mark_region == "unknown":
+        mark_mask = detect_marks(R, W)
+        if mark_mask.any():
+            R = diffusion_fill(np.clip(R, 0, 1.5), 1.0 - mark_mask.astype(np.float64))
+    else:
+        R, alpha = remove_marks_in_region(R, mark_region, W)
+        mark_mask = alpha > 0.25
+    # 4. haze + transmittance (R is mark-free here; no post-hoc healing)
     h = estimate_haze(R, glass_class, W)
-    if mark_mask.any():  # stroke fringes also dent h; heal them
-        h8 = (np.clip(h, 0, 1) * 255).astype(np.uint8)
-        m8 = cv2.dilate(mark_mask.astype(np.uint8), ellipse(2)) * 255
-        h = cv2.inpaint(h8, m8, 5, cv2.INPAINT_TELEA).astype(np.float64) / 255
     T, conf = assemble_T(R, h, glass_class, mark_mask)
     # normalize T: lightest real glass transmits ~97%
     T = np.clip(T * (0.97 / max(np.percentile(T, 99), 1e-3)), 0, 1)
+    return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R,
+            "mark_mask": mark_mask, "h": h, "T": T, "conf": conf}
+
+
+def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown"):
+    """mark_region: 'unknown' (global conservative detector), 'none' (skip
+    mark handling), or a 3x3 grid cell name (targeted aggressive detector)."""
+    name = os.path.splitext(os.path.basename(path))[0]
+    lin = load_linear(path, corners, size)
+    m = extract_maps(lin, glass_class, mark_region)
+    lin_ns, spec_mask, L, R = m["lin_ns"], m["spec_mask"], m["L"], m["R"]
+    mark_mask, h, T, conf = m["mark_mask"], m["h"], m["T"], m["conf"]
 
     # 5. metrics
     I_hat, Bq = reconstruct(L, T, h, R)
@@ -405,7 +477,10 @@ def main():
     ap.add_argument("--corners", help="x0,y0,x1,y1 crop of the glass region (original pixels)")
     ap.add_argument("--out", default="results")
     ap.add_argument("--size", type=int, default=700, help="working resolution (max dim)")
-    ap.add_argument("--vlm", action="store_true", help="classify glass via `claude` CLI (multiple choice)")
+    ap.add_argument("--vlm", action="store_true",
+                    help="use `claude` CLI (multiple choice) for glass class AND mark localization")
+    ap.add_argument("--mark-region", default=None,
+                    help="'none', 'unknown', or a 3x3 cell (e.g. bottom-right); overrides VLM")
     ap.add_argument("--debug", action="store_true", help="save intermediate masks/fields")
     args = ap.parse_args()
 
@@ -419,6 +494,17 @@ def main():
             return c
         return "wispy"
 
+    def marks(p, entry=None):
+        v = (entry or {}).get("mark_region") or args.mark_region
+        if v:
+            return v
+        if args.vlm:
+            from vlm_classify import locate_mark
+            v = locate_mark(p)
+            print(f"  VLM mark region for {os.path.basename(p)}: {v}")
+            return v
+        return "unknown"
+
     if os.path.isdir(args.input):
         manifest = {}
         mpath = os.path.join(args.input, "manifest.json")
@@ -430,10 +516,11 @@ def main():
             entry = manifest.get(f, {})
             p = os.path.join(args.input, f)
             process(p, entry.get("glass_class") or classify(p), entry.get("corners"),
-                    args.out, args.size, args.debug)
+                    args.out, args.size, args.debug, mark_region=marks(p, entry))
     else:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None
-        process(args.input, classify(args.input), corners, args.out, args.size, args.debug)
+        process(args.input, classify(args.input), corners, args.out, args.size, args.debug,
+                mark_region=marks(args.input))
 
 
 if __name__ == "__main__":
