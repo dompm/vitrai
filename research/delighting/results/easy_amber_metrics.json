@@ -1,0 +1,14 @@
+{
+  "glass_class": "cathedral-clear",
+  "recon_mae_srgb255": 2.6676598401141205,
+  "recon_p95_srgb255": 13.849628081890264,
+  "recon_mae_all_srgb255": 2.6676598401141205,
+  "spec_pixels_pct": 0.0,
+  "mark_pixels_pct": 0.0,
+  "h_mean": 0.0600119348629251,
+  "T_mean_rgb": [
+    0.8004587917787241,
+    0.4759536924056295,
+    0.022533830890400196
+  ]
+}
