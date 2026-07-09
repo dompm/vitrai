@@ -133,6 +133,10 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   Catalog false positives are still too high at a 0.50 threshold (15-21% by category), but 0.70 is a
   useful conservative "offer/try prior assistance" signal and creates the provenance hook the artist
   feedback asked for.
+- 016 learned prior gate: catalog negatives + synthetic leak positives train to test AUC 0.844, but
+  under-call the real green suncatcher sheet (green raw 0.51, fixed `T/h` 0.33). Decision: useful
+  negative result; do not sink time into catalog classifiers until positives look more like real
+  cathedral see-through/background leakage.
 
 
 ## Open problems / next
@@ -153,6 +157,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
 - Replace the hand-built catalog prior gate with a learned contamination/prior-strength head trained
   on catalog negatives plus synthetic background-leak positives.
+- For learned prior-strength, first build better positives from real cross-lighting/capture pairs or
+  synthetic renders that reproduce garden/window leakage through hammered cathedral glass.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

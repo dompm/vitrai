@@ -23,7 +23,9 @@ turns the first artist readout into the "make it beautiful, but keep it honest"
 research rule. `014-catalog-constrained-sheet-prior.md` uses manufacturer catalog
 images to sanity-check a sheet-level prior for the right-side glass panel.
 `015-catalog-prior-gate.md` adds a first catalog-statistics gate so prior cleanup
-is provenance-aware rather than automatic.
+is provenance-aware rather than automatic. `016-learned-prior-gate-negative.md`
+records that a first synthetic-positive learned gate under-calls the real
+suncatcher failure and should not distract from inverse rendering.
 
 ## Layout
 
@@ -38,6 +40,7 @@ generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Mate
 sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppressing sheet-photo contamination
 catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
 catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
+learned_prior_gate.py  negative/limited learned gate probe using catalog negatives + synthetic leaks
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -88,6 +91,9 @@ python3 catalog_texture_audit.py \
 
 # first-pass gate: should the sheet-prior be offered/applied?
 python3 catalog_prior_gate.py
+
+# learned gate probe; useful negative result, not a product model
+python3 learned_prior_gate.py
 ```
 
 manifest.json format (keys are filenames inside the folder):
