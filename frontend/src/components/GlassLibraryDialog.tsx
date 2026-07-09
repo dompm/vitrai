@@ -27,6 +27,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
   const [search, setSearch] = useState('');
   const [mfgFilter, setMfgFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('All');
+  const [sortBy, setSortBy] = useState<'common' | 'sku' | 'name'>('common');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
   // Fetch the registry database
@@ -94,14 +95,63 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
     return result;
   }, [library, search, mfgFilter, catFilter]);
 
+  // Sort items
+  const sortedItems = useMemo(() => {
+    let result = [...filteredItems];
+    
+    if (sortBy === 'sku') {
+      result.sort((a, b) => a.base_sku.localeCompare(b.base_sku));
+    } else if (sortBy === 'name') {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === 'common') {
+      const getCommonScore = (item: SwatchItem) => {
+        const name = item.name.toLowerCase();
+        let score = 0;
+        
+        // Core baseline colors
+        const coreColors = ['white', 'black', 'clear', 'red', 'blue', 'green', 'yellow', 'orange', 'amber', 'pink', 'cobalt blue', 'turquoise'];
+        for (const color of coreColors) {
+          if (name === color || name === `${color} opal` || name === `${color} cathedral` || name === `solid ${color} opal`) {
+            score += 100;
+          }
+        }
+        
+        if (name.includes('white') || name.includes('black') || name.includes('clear')) score += 30;
+        if (name.includes('red') || name.includes('blue') || name.includes('green') || name.includes('yellow') || name.includes('orange') || name.includes('amber')) score += 20;
+        if (name.includes('solid')) score += 15;
+        if (name.includes('opal') && !name.includes('opal-art') && !name.includes('fusers reserve')) score += 10;
+        
+        if (name.includes('stipple') || name.includes('ripple') || name.includes('granite') || name.includes('mottle') || name.includes('streaky') || name.includes('mix') || name.includes('blend')) {
+          score -= 40;
+        }
+        if (name.includes('fusers reserve') || name.includes('opal-art') || name.includes('baroque') || name.includes('artique')) {
+          score -= 30;
+        }
+        
+        return score;
+      };
+      
+      result.sort((a, b) => {
+        const scoreA = getCommonScore(a);
+        const scoreB = getCommonScore(b);
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA;
+        }
+        return a.base_sku.localeCompare(b.base_sku);
+      });
+    }
+    
+    return result;
+  }, [filteredItems, sortBy]);
+
   // Reset page size when filter changes
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [search, mfgFilter, catFilter]);
+  }, [search, mfgFilter, catFilter, sortBy]);
 
   const paginatedItems = useMemo(() => {
-    return filteredItems.slice(0, visibleCount);
-  }, [filteredItems, visibleCount]);
+    return sortedItems.slice(0, visibleCount);
+  }, [sortedItems, visibleCount]);
 
   const handleSelect = (item: SwatchItem) => {
     const widthPx = item.original_width_px || 800;
@@ -131,20 +181,46 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
 
         {/* Search & Quick Filters */}
         <div className="glass-library-controls">
-          <div className="glass-library-search-wrapper">
-            <input
-              type="text"
-              placeholder="Search glass name, SKU, or manufacturer..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="glass-library-search"
-              autoFocus
-            />
-            {search && (
-              <button className="glass-library-search-clear" onClick={() => setSearch('')}>
-                &times;
-              </button>
-            )}
+          <div className="glass-library-search-row" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div className="glass-library-search-wrapper" style={{ flex: 1 }}>
+              <input
+                type="text"
+                placeholder="Search glass name, SKU, or manufacturer..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="glass-library-search"
+                autoFocus
+              />
+              {search && (
+                <button className="glass-library-search-clear" onClick={() => setSearch('')}>
+                  &times;
+                </button>
+              )}
+            </div>
+            
+            <div className="glass-library-sort-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span className="glass-library-filter-label" style={{ width: 'auto', marginBottom: 0 }}>Sort:</span>
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value as any)}
+                className="glass-library-sort-select"
+                style={{
+                  padding: '10px 14px',
+                  border: '1px solid var(--hairline-2)',
+                  borderRadius: '8px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  color: 'var(--text-bright)',
+                  fontSize: '13px',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="common">Common Colors</option>
+                <option value="sku">SKU (A-Z)</option>
+                <option value="name">Name (A-Z)</option>
+              </select>
+            </div>
           </div>
 
           {/* Manufacturer Filter Pills */}
