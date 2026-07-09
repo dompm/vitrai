@@ -17,7 +17,8 @@ contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
 recipes), and `008-preview-invariance.md` (product-shaped raw-copy vs material
 relight benchmark). `009-glassnet-zero.md` starts the high-risk neural
 inverse-rendering track. `010-material-v2-representation.md` starts a bolder
-representation reset for surface relief / normals.
+representation reset for surface relief / normals. `011-artist-material-review-prototype.md`
+adds a standalone artist-facing comparison prototype.
 
 ## Layout
 
@@ -29,6 +30,7 @@ register_pair.py  cross-lighting validation (M3): register two photos, compare m
 eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
 train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
 generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
+prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
 reports/          numbered experiment reports (honest; decision documents)
@@ -68,6 +70,9 @@ python3 eval_preview_invariance.py --data synthetic_data --out results/preview_i
 
 # synthetic Material-v2 data (requires Blender on PATH)
 blender -b --python generate_synthetic.py -- --out synthetic_data_v2 --count 100 --light-variations 3
+
+# artist-facing Material-v2 comparison demo; open the file in a browser
+open prototypes/material-v2-artist-demo.html
 ```
 
 manifest.json format (keys are filenames inside the folder):

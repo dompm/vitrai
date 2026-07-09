@@ -85,6 +85,10 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   it has no place for surface relief/lensing/glints. `generate_synthetic.py` now exports
   Material-v2 `gt_height`/`gt_normal` and uses the same height texture for Blender bump. Syntax
   verified; Blender sample render still pending because Blender is not on this environment's path.
+- 011 artist-facing prototype: `prototypes/material-v2-artist-demo.html` shows copied pixels vs
+  `T,h` relight vs relief/normal relight with controls for glass class, background, relief, haze,
+  glints, and light angle. Purpose is qualitative artist readout before the research over-optimizes
+  for clean maps and loses the feel of glass.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -95,6 +99,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   current neural result only proves held-out-lighting consistency.
 - Render a v2 synthetic batch and add a Material-v2 preview metric that scores background
   displacement/highlight realism, not only color/haze.
+- Run the Material-v2 artist prototype with at least one stained-glass maker and turn feedback into
+  renderer acceptance criteria: how much relief, what kind of glint, what backgrounds matter, and
+  whether the preview helps choose glass.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

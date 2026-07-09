@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vitrai Material V2 Artist Review</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #24211f;
+      --muted: #6d6862;
+      --line: #d7d0c5;
+      --paper: #fbfaf7;
+      --panel: #ffffff;
+      --control: #f1eee8;
+      --accent: #0f766e;
+      --amber: #b86b19;
+      --blue: #34699a;
+      --shadow: rgba(36, 33, 31, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--paper);
+      color: var(--ink);
+      font: 15px/1.4 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 18px 24px 12px;
+      border-bottom: 1px solid var(--line);
+      background: #fffdfa;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 720;
+    }
+
+    .session {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.13);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(130px, 1fr)) auto;
+      gap: 12px;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--line);
+      background: var(--control);
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 690;
+    }
+
+    select,
+    input[type="range"],
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+    }
+
+    select {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 6px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    button {
+      align-self: end;
+      min-height: 36px;
+      border: 1px solid #9a8f81;
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    button:hover {
+      border-color: var(--accent);
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 18px;
+      padding: 18px 24px 24px;
+    }
+
+    .compare {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-content: start;
+    }
+
+    .view {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px var(--shadow);
+      overflow: hidden;
+    }
+
+    .view-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .view-title {
+      font-weight: 720;
+      font-size: 14px;
+    }
+
+    .score {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background: #ddd;
+    }
+
+    aside {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px var(--shadow);
+      align-self: start;
+      overflow: hidden;
+    }
+
+    .aside-section {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .aside-section:last-child {
+      border-bottom: 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-weight: 720;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+    }
+
+    .checkline {
+      display: flex;
+      gap: 8px;
+      align-items: start;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 520;
+    }
+
+    .checkline input {
+      margin-top: 3px;
+      accent-color: var(--accent);
+    }
+
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .summary {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .swatch {
+      height: 26px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.18);
+    }
+
+    @media (max-width: 1120px) {
+      .toolbar {
+        grid-template-columns: repeat(3, minmax(130px, 1fr));
+      }
+
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      aside {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 760px) {
+      header {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .compare {
+        grid-template-columns: 1fr;
+      }
+
+      main {
+        padding: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <h1>Material V2 Artist Review</h1>
+      <div class="session"><span class="dot"></span><span>Lunch prototype</span></div>
+    </header>
+
+    <section class="toolbar" aria-label="render controls">
+      <label>
+        Glass
+        <select id="material">
+          <option value="amber">Amber cathedral</option>
+          <option value="green">Green cathedral</option>
+          <option value="wispy">Wispy white</option>
+          <option value="streaky">Blue streaky</option>
+          <option value="black">Dark opaque</option>
+        </select>
+      </label>
+      <label>
+        Preview
+        <select id="background">
+          <option value="studio">Studio leading</option>
+          <option value="window">Shop window</option>
+          <option value="bench">Work bench</option>
+          <option value="lamp">Warm lamp</option>
+        </select>
+      </label>
+      <label>
+        Relief <span id="reliefValue">64</span>
+        <input id="relief" type="range" min="0" max="100" value="64">
+      </label>
+      <label>
+        Haze <span id="hazeValue">100</span>
+        <input id="haze" type="range" min="45" max="150" value="100">
+      </label>
+      <label>
+        Glints <span id="glintValue">42</span>
+        <input id="glint" type="range" min="0" max="100" value="42">
+      </label>
+      <label>
+        Light <span id="lightValue">36</span>
+        <input id="light" type="range" min="-80" max="80" value="36">
+      </label>
+      <button id="shuffle" type="button">Shuffle</button>
+    </section>
+
+    <main>
+      <section class="compare" aria-label="preview comparison">
+        <article class="view">
+          <div class="view-head">
+            <span class="view-title">Copied Pixels</span>
+            <span class="score" id="copyScore">shadow baked</span>
+          </div>
+          <canvas id="copy" width="420" height="420"></canvas>
+        </article>
+        <article class="view">
+          <div class="view-head">
+            <span class="view-title">T/h Relight</span>
+            <span class="score" id="v1Score">flat material</span>
+          </div>
+          <canvas id="v1" width="420" height="420"></canvas>
+        </article>
+        <article class="view">
+          <div class="view-head">
+            <span class="view-title">Relief Relight</span>
+            <span class="score" id="v2Score">height + normals</span>
+          </div>
+          <canvas id="v2" width="420" height="420"></canvas>
+        </article>
+      </section>
+
+      <aside aria-label="artist feedback">
+        <section class="aside-section">
+          <h2>Artist Read</h2>
+          <div class="checklist">
+            <label class="checkline"><input type="checkbox" value="glasslike">Looks like real glass</label>
+            <label class="checkline"><input type="checkbox" value="flat">Still feels flat</label>
+            <label class="checkline"><input type="checkbox" value="plastic">Too plastic / glossy</label>
+            <label class="checkline"><input type="checkbox" value="busy">Texture is too busy</label>
+            <label class="checkline"><input type="checkbox" value="useful">Would help choose a sheet</label>
+          </div>
+        </section>
+        <section class="aside-section">
+          <h2>Notes</h2>
+          <textarea id="notes" placeholder="What changed her mind? What looked fake?"></textarea>
+          <button id="copyNotes" type="button">Copy notes</button>
+          <div class="summary" id="copyStatus">Session notes stay in this browser.</div>
+        </section>
+        <section class="aside-section">
+          <h2>Palette</h2>
+          <div class="swatches" id="swatches"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const N = 420;
+    const controls = {
+      material: document.getElementById("material"),
+      background: document.getElementById("background"),
+      relief: document.getElementById("relief"),
+      haze: document.getElementById("haze"),
+      glint: document.getElementById("glint"),
+      light: document.getElementById("light")
+    };
+    const labels = {
+      relief: document.getElementById("reliefValue"),
+      haze: document.getElementById("hazeValue"),
+      glint: document.getElementById("glintValue"),
+      light: document.getElementById("lightValue")
+    };
+    const canvases = {
+      copy: document.getElementById("copy"),
+      v1: document.getElementById("v1"),
+      v2: document.getElementById("v2")
+    };
+
+    const MATERIALS = {
+      amber: { name: "Amber cathedral", base: [0.86, 0.47, 0.10], haze: 0.05, relief: 1.0, style: "hammered", seed: 7 },
+      green: { name: "Green cathedral", base: [0.18, 0.58, 0.26], haze: 0.04, relief: 1.0, style: "hammered", seed: 11 },
+      wispy: { name: "Wispy white", base: [0.88, 0.89, 0.92], haze: 0.66, relief: 0.55, style: "wispy", seed: 17 },
+      streaky: { name: "Blue streaky", base: [0.48, 0.68, 0.92], haze: 0.34, relief: 0.35, style: "streaky", seed: 23 },
+      black: { name: "Dark opaque", base: [0.055, 0.052, 0.047], haze: 0.42, relief: 0.75, style: "dense", seed: 31 }
+    };
+
+    let seedOffset = 0;
+    let cacheKey = "";
+    let maps = null;
+
+    function mulberry32(seed) {
+      return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function clamp(x, lo = 0, hi = 1) {
+      return Math.max(lo, Math.min(hi, x));
+    }
+
+    function smoothstep(lo, hi, x) {
+      const t = clamp((x - lo) / Math.max(hi - lo, 1e-6));
+      return t * t * (3 - 2 * t);
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function valueNoise(width, height, cells, seed) {
+      const rng = mulberry32(seed);
+      const grid = cells + 2;
+      const values = new Float32Array(grid * grid);
+      for (let i = 0; i < values.length; i++) values[i] = rng();
+
+      const out = new Float32Array(width * height);
+      for (let y = 0; y < height; y++) {
+        const gy = y / Math.max(height - 1, 1) * cells;
+        const y0 = Math.floor(gy);
+        const fy = smoothstep(0, 1, gy - y0);
+        for (let x = 0; x < width; x++) {
+          const gx = x / Math.max(width - 1, 1) * cells;
+          const x0 = Math.floor(gx);
+          const fx = smoothstep(0, 1, gx - x0);
+          const a = values[y0 * grid + x0];
+          const b = values[y0 * grid + x0 + 1];
+          const c = values[(y0 + 1) * grid + x0];
+          const d = values[(y0 + 1) * grid + x0 + 1];
+          out[y * width + x] = lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
+        }
+      }
+      return out;
+    }
+
+    function makeMaps(materialKey) {
+      const mat = MATERIALS[materialKey];
+      const key = `${materialKey}:${seedOffset}`;
+      if (key === cacheKey && maps) return maps;
+
+      const fine = valueNoise(N, N, 38, mat.seed + seedOffset * 101);
+      const mid = valueNoise(N, N, 13, mat.seed + seedOffset * 103);
+      const broad = valueNoise(N, N, 5, mat.seed + seedOffset * 107);
+      const T = new Float32Array(N * N * 3);
+      const h = new Float32Array(N * N);
+      const height = new Float32Array(N * N);
+
+      for (let y = 0; y < N; y++) {
+        const v = y / (N - 1);
+        for (let x = 0; x < N; x++) {
+          const u = x / (N - 1);
+          const i = y * N + x;
+          const band = Math.sin((u * 4.2 + broad[i] * 1.3) * Math.PI * 2);
+          const wisps = smoothstep(0.18, 0.92, 0.52 * mid[i] + 0.30 * broad[i] + 0.18 * fine[i]);
+          const sparkleCells = Math.pow(clamp(fine[i] * 1.25 - 0.08), 1.8);
+
+          let tint = 0.84 + 0.22 * (mid[i] - 0.5);
+          let haze = mat.haze;
+          let relief = 0.50 * fine[i] + 0.34 * mid[i] + 0.16 * broad[i];
+
+          if (mat.style === "wispy") {
+            const cloud = smoothstep(0.15, 0.92, wisps);
+            tint = 0.92 - 0.34 * cloud;
+            haze = lerp(0.34, 0.92, cloud);
+            relief = 0.50 * relief + 0.50 * cloud;
+          } else if (mat.style === "streaky") {
+            const streak = smoothstep(-0.25, 0.85, band + 0.65 * broad[i]);
+            tint = lerp(0.64, 1.12, streak);
+            haze = lerp(0.08, 0.72, streak);
+            relief = 0.35 * relief + 0.65 * (0.5 + 0.5 * Math.sin((u * 2.1 + broad[i]) * Math.PI * 2));
+          } else if (mat.style === "dense") {
+            tint = 0.72 + 0.18 * fine[i];
+            haze = 0.50 + 0.16 * mid[i];
+            relief = 0.70 * fine[i] + 0.30 * sparkleCells;
+          }
+
+          const k = i * 3;
+          T[k] = clamp(mat.base[0] * tint);
+          T[k + 1] = clamp(mat.base[1] * tint);
+          T[k + 2] = clamp(mat.base[2] * tint);
+          h[i] = clamp(haze);
+          height[i] = clamp(relief * mat.relief);
+        }
+      }
+
+      maps = { T, h, height };
+      cacheKey = key;
+      paintSwatches(mat);
+      return maps;
+    }
+
+    function background(type, u, v) {
+      if (type === "window") {
+        const sky = [0.58 + 0.18 * (1 - v), 0.71 + 0.10 * (1 - v), 0.88];
+        const lawn = [0.20, 0.42 + 0.15 * Math.sin(u * 15), 0.20];
+        let c = v < 0.58 ? sky : lawn;
+        const mullion = Math.min(Math.abs(u - 0.32), Math.abs(u - 0.67)) < 0.012 || Math.abs(v - 0.58) < 0.014;
+        if (mullion) c = [0.08, 0.075, 0.07];
+        return c;
+      }
+      if (type === "bench") {
+        const grain = 0.58 + 0.05 * Math.sin(u * 70 + Math.sin(v * 9)) + 0.04 * Math.sin((u + v) * 32);
+        const lead = Math.abs((u * 5.0 + 0.04 * Math.sin(v * 8)) % 1 - 0.5) < 0.035;
+        const c = [grain * 1.02, grain * 0.90, grain * 0.72];
+        return lead ? [0.12, 0.12, 0.12] : c;
+      }
+      if (type === "lamp") {
+        const r = Math.hypot(u - 0.52, v - 0.42);
+        const glow = clamp(1.05 - r * 1.65, 0.28, 1);
+        const shade = Math.abs((u * 3.2 + v * 1.4) % 1 - 0.5) < 0.05;
+        return shade ? [0.16, 0.13, 0.10] : [glow, glow * 0.78, glow * 0.46];
+      }
+
+      const base = 0.78 + 0.13 * (1 - v) + 0.04 * Math.sin(u * Math.PI * 2);
+      const leadA = Math.abs((u * 4.0 + 0.04 * Math.sin(v * 7)) % 1 - 0.5) < 0.035;
+      const leadB = Math.abs((v * 3.4 + 0.04 * Math.sin(u * 8)) % 1 - 0.5) < 0.038;
+      return leadA || leadB ? [0.13, 0.13, 0.13] : [base, base * 0.96, base * 0.88];
+    }
+
+    function sourceShadow(u, v) {
+      const hand = Math.exp(-((u - 0.18) ** 2 / 0.06 + (v - 0.72) ** 2 / 0.02));
+      const top = smoothstep(0.38, 0.0, v) * 0.24;
+      const diagonal = Math.exp(-((v - (0.18 + 0.58 * u)) ** 2) / 0.006) * 0.20;
+      return clamp(1 - 0.48 * hand - top - diagonal, 0.35, 1);
+    }
+
+    function sampleAt(arr, channels, u, v) {
+      const x = clamp(u) * (N - 1);
+      const y = clamp(v) * (N - 1);
+      const x0 = Math.floor(x);
+      const y0 = Math.floor(y);
+      const x1 = Math.min(N - 1, x0 + 1);
+      const y1 = Math.min(N - 1, y0 + 1);
+      const fx = x - x0;
+      const fy = y - y0;
+      const out = [];
+      for (let ch = 0; ch < channels; ch++) {
+        const a = arr[(y0 * N + x0) * channels + ch];
+        const b = arr[(y0 * N + x1) * channels + ch];
+        const c = arr[(y1 * N + x0) * channels + ch];
+        const d = arr[(y1 * N + x1) * channels + ch];
+        out[ch] = lerp(lerp(a, b, fx), lerp(c, d, fx), fy);
+      }
+      return out;
+    }
+
+    function heightAt(height, x, y) {
+      const xx = Math.max(0, Math.min(N - 1, x));
+      const yy = Math.max(0, Math.min(N - 1, y));
+      return height[yy * N + xx];
+    }
+
+    function normalAt(height, x, y, strength) {
+      const hx = heightAt(height, x + 1, y) - heightAt(height, x - 1, y);
+      const hy = heightAt(height, x, y + 1) - heightAt(height, x, y - 1);
+      let nx = -hx * strength;
+      let ny = -hy * strength;
+      let nz = 1;
+      const inv = 1 / Math.hypot(nx, ny, nz);
+      return [nx * inv, ny * inv, nz * inv];
+    }
+
+    function render(kind) {
+      const mat = MATERIALS[controls.material.value];
+      const data = makeMaps(controls.material.value);
+      const image = new ImageData(N, N);
+      const relief = Number(controls.relief.value) / 100;
+      const hazeMul = Number(controls.haze.value) / 100;
+      const glint = Number(controls.glint.value) / 100;
+      const lightAngle = Number(controls.light.value) / 80 * Math.PI * 0.5;
+      const light = [Math.sin(lightAngle) * 0.55, -0.48, 0.72];
+      const lightLen = Math.hypot(...light);
+      light[0] /= lightLen;
+      light[1] /= lightLen;
+      light[2] /= lightLen;
+      const bgType = kind === "copy" ? "window" : controls.background.value;
+
+      for (let y = 0; y < N; y++) {
+        const v = y / (N - 1);
+        for (let x = 0; x < N; x++) {
+          const u = x / (N - 1);
+          const i = y * N + x;
+          const k = i * 3;
+          const normal = normalAt(data.height, x, y, 36 * relief + 2);
+          const haze = clamp(data.h[i] * hazeMul);
+          const clear = 1 - haze;
+          const bend = kind === "v2" || kind === "copy" ? relief * clear * 0.055 : 0;
+          const bu = u + normal[0] * bend;
+          const bv = v + normal[1] * bend;
+          const bg = background(bgType, bu, bv);
+          const T = [data.T[k], data.T[k + 1], data.T[k + 2]];
+          const illum = kind === "copy"
+            ? [1.08 + 0.20 * (1 - v), 0.93 + 0.08 * u, 0.76 + 0.06 * v]
+            : [1.0, 0.91, 0.78];
+
+          const ndotl = clamp(normal[0] * light[0] + normal[1] * light[1] + normal[2] * light[2]);
+          const rim = Math.pow(clamp(1 - normal[2] * 0.92), 2.0);
+          const spark = kind === "v2" || kind === "copy"
+            ? Math.pow(ndotl, 46) * glint * (0.16 + 0.70 * clear) + rim * glint * 0.035
+            : 0;
+
+          let shadow = 1;
+          if (kind === "copy") shadow = sourceShadow(u, v);
+
+          for (let ch = 0; ch < 3; ch++) {
+            const diffuse = illum[ch] * T[ch] * (haze + clear * bg[ch]);
+            const surface = spark * (ch === 0 ? 1.0 : ch === 1 ? 0.92 : 0.76);
+            const value = clamp((diffuse + surface) * shadow);
+            image.data[i * 4 + ch] = Math.round(Math.pow(value, 1 / 2.2) * 255);
+          }
+          image.data[i * 4 + 3] = 255;
+        }
+      }
+      canvases[kind].getContext("2d").putImageData(image, 0, 0);
+    }
+
+    function paintSwatches(mat) {
+      const node = document.getElementById("swatches");
+      node.innerHTML = "";
+      for (let i = 0; i < 5; i++) {
+        const tint = 0.72 + i * 0.10;
+        const chip = document.createElement("span");
+        chip.className = "swatch";
+        chip.style.background = `rgb(${Math.round(clamp(mat.base[0] * tint) * 255)}, ${Math.round(clamp(mat.base[1] * tint) * 255)}, ${Math.round(clamp(mat.base[2] * tint) * 255)})`;
+        node.appendChild(chip);
+      }
+    }
+
+    function updateLabels() {
+      for (const key of Object.keys(labels)) labels[key].textContent = controls[key].value;
+      const mat = MATERIALS[controls.material.value];
+      document.getElementById("copyScore").textContent = "capture lighting";
+      document.getElementById("v1Score").textContent = `${Math.round(mat.haze * Number(controls.haze.value))}% haze`;
+      document.getElementById("v2Score").textContent = `${controls.relief.value}% relief`;
+    }
+
+    function drawAll() {
+      updateLabels();
+      render("copy");
+      render("v1");
+      render("v2");
+    }
+
+    for (const control of Object.values(controls)) control.addEventListener("input", drawAll);
+    document.getElementById("shuffle").addEventListener("click", () => {
+      seedOffset += 1;
+      cacheKey = "";
+      drawAll();
+    });
+
+    document.getElementById("copyNotes").addEventListener("click", async () => {
+      const checks = [...document.querySelectorAll(".checkline input:checked")].map(item => item.value);
+      const payload = {
+        material: controls.material.options[controls.material.selectedIndex].text,
+        preview: controls.background.options[controls.background.selectedIndex].text,
+        relief: controls.relief.value,
+        haze: controls.haze.value,
+        glints: controls.glint.value,
+        light: controls.light.value,
+        read: checks,
+        notes: document.getElementById("notes").value.trim()
+      };
+      const text = JSON.stringify(payload, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        document.getElementById("copyStatus").textContent = "Copied session notes.";
+      } catch {
+        document.getElementById("notes").value = `${document.getElementById("notes").value}\n\n${text}`;
+        document.getElementById("copyStatus").textContent = "Added session JSON to notes.";
+      }
+    });
+
+    drawAll();
+  </script>
+</body>
+</html>
