@@ -1,5 +1,12 @@
 .vlm_cache.json
 venv/
+.venv/
+synthetic_data/
+validate_data/
+validate_data_check/
+debug_*.py
+test_save_render.py
 test*.png
 test*.exr
-synthetic_data/
+*.tsbuildinfo
+.DS_Store

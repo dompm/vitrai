@@ -74,19 +74,18 @@ def save_numpy_to_image(array, filepath, is_color=True):
         
     pixels = rgba.flatten()
     
-    name = os.path.basename(filepath)
-    if name in bpy.data.images:
-        img = bpy.data.images[name]
-    else:
-        img = bpy.data.images.new(name, width=W, height=H, alpha=False, float_buffer=True)
+    name = f"{os.path.basename(filepath)}_{random.randint(0, 99999999)}"
+    
+    # Always create a new image to prevent Blender caching across variations
+    img = bpy.data.images.new(name, width=W, height=H, alpha=False, float_buffer=True)
         
     img.pixels.foreach_set(pixels)
     
+    # To avoid Blender's sRGB view transform on PNGs, ALWAYS save as EXR
+    if filepath.endswith('.png'):
+        filepath = filepath[:-4] + '.exr'
     img.filepath_raw = filepath
-    if filepath.endswith('.exr'):
-        img.file_format = 'OPEN_EXR'
-    else:
-        img.file_format = 'PNG'
+    img.file_format = 'OPEN_EXR'
         
     img.save()
     
@@ -165,7 +164,7 @@ def download_polyhaven_hdri(out_dir):
         r = requests.get(url)
         with open(hdri_path, 'wb') as f:
             f.write(r.content)
-    return hdri_path
+    return os.path.abspath(hdri_path)
 
 def setup_scene(hdri_path, has_frame=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -203,14 +202,30 @@ def setup_scene(hdri_path, has_frame=False):
     wnodes.clear()
     
     if hdri_path is None:
-        # Validate mode: uniform white background
+        # Validate mode: clean transmission target. World is perfectly black.
         wout = wnodes.new('ShaderNodeOutputWorld')
         wbg = wnodes.new('ShaderNodeBackground')
-        wbg.inputs['Color'].default_value = (1.0, 1.0, 1.0, 1.0)
+        wbg.inputs['Color'].default_value = (0.0, 0.0, 0.0, 1.0)
         wbg.inputs['Strength'].default_value = 1.0
         wlinks.new(wbg.outputs['Background'], wout.inputs['Surface'])
         ev = 0.0
         z_rot = 0.0
+        
+        # Dedicated white emissive backlight behind the glass (+Y direction)
+        bpy.ops.mesh.primitive_plane_add(size=50.0, location=(0, 2.0, 0), rotation=(math.radians(90), 0, 0))
+        backlight = bpy.context.active_object
+        backlight.name = "WhiteBacklight"
+        mat_bl = bpy.data.materials.new(name="BacklightMat")
+        mat_bl.use_nodes = True
+        nodes_bl = mat_bl.node_tree.nodes
+        links_bl = mat_bl.node_tree.links
+        for n in nodes_bl: nodes_bl.remove(n)
+        emission = nodes_bl.new('ShaderNodeEmission')
+        emission.inputs['Color'].default_value = (1.0, 1.0, 1.0, 1.0)
+        emission.inputs['Strength'].default_value = 1.0
+        out_bl = nodes_bl.new('ShaderNodeOutputMaterial')
+        links_bl.new(emission.outputs['Emission'], out_bl.inputs['Surface'])
+        backlight.data.materials.append(mat_bl)
     else:
         wout = wnodes.new('ShaderNodeOutputWorld')
         wbg = wnodes.new('ShaderNodeBackground')
@@ -268,7 +283,12 @@ def setup_scene(hdri_path, has_frame=False):
     wall.name = "DarkWall"
     mat_wall = bpy.data.materials.new(name="WallMat")
     mat_wall.use_nodes = True
-    mat_wall.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.02, 0.02, 0.02, 1)
+    bsdf = mat_wall.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.00, 0.00, 0.00, 1)
+    if "Specular IOR Level" in bsdf.inputs:
+        bsdf.inputs["Specular IOR Level"].default_value = 0.0
+    elif "Specular" in bsdf.inputs:
+        bsdf.inputs["Specular"].default_value = 0.0
     wall.data.materials.append(mat_wall)
     
     return glass_obj, cam, ev, z_rot
@@ -302,8 +322,15 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
     elif 'Transmission' in principled.inputs:
         principled.inputs['Transmission'].default_value = 1.0
         
+    # Square the input texture so that Principled BSDF's internal sqrt (for thin glass) cancels out!
+    # This ensures the transmitted physical light perfectly matches the gt_T map.
+    math_node = nodes.new('ShaderNodeVectorMath')
+    math_node.operation = 'MULTIPLY'
+    links.new(tex_T.outputs['Color'], math_node.inputs[0])
+    links.new(tex_T.outputs['Color'], math_node.inputs[1])
+    
     # The transmittance color drives the Base Color
-    links.new(tex_T.outputs['Color'], principled.inputs['Base Color'])
+    links.new(math_node.outputs['Vector'], principled.inputs['Base Color'])
     
     # Haze drives the roughness of the transmission
     links.new(tex_h.outputs['Color'], principled.inputs['Roughness'])
@@ -452,25 +479,47 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     orig_mat = glass_obj.data.materials[0]
     glass_obj.data.materials[0] = mat_gt
     
-    scene.render.image_settings.file_format = 'PNG'
-    scene.render.image_settings.color_depth = '16'
-    
-    # Ground truth maps should be linear data without sRGB view transforms
+    scene.render.image_settings.file_format = 'OPEN_EXR'
+    scene.render.image_settings.color_depth = '32'
     scene.view_settings.view_transform = 'Raw'
     
-    # Render T
+    # Emission shaders don't need many samples
+    orig_samples = scene.cycles.samples
+    scene.cycles.samples = 1
+    
+    # Render T (EXR)
+    tex_node.image = img_T
+    scene.render.image_settings.color_mode = 'RGB'
+    scene.render.filepath = os.path.join(sample_dir, "gt_T.exr")
+    bpy.ops.render.render(write_still=True)
+    
+    # Render h (EXR)
+    tex_node.image = img_h
+    scene.render.image_settings.color_mode = 'BW'
+    scene.render.filepath = os.path.join(sample_dir, "gt_h.exr")
+    bpy.ops.render.render(write_still=True)
+    
+    # Render mark (EXR)
+    tex_node.image = img_mark
+    scene.render.image_settings.color_mode = 'BW'
+    scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.exr")
+    bpy.ops.render.render(write_still=True)
+    
+    # Render T (PNG for viz)
+    scene.render.image_settings.file_format = 'PNG'
+    scene.render.image_settings.color_depth = '16'
     tex_node.image = img_T
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.filepath = os.path.join(sample_dir, "gt_T.png")
     bpy.ops.render.render(write_still=True)
     
-    # Render h
+    # Render h (PNG for viz)
     tex_node.image = img_h
     scene.render.image_settings.color_mode = 'BW'
     scene.render.filepath = os.path.join(sample_dir, "gt_h.png")
     bpy.ops.render.render(write_still=True)
     
-    # Render mark
+    # Render mark (PNG for viz)
     tex_node.image = img_mark
     scene.render.image_settings.color_mode = 'BW'
     scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.png")
@@ -479,6 +528,7 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     # Restore
     glass_obj.data.materials[0] = orig_mat
     scene.view_settings.view_transform = 'Standard'
+    scene.cycles.samples = orig_samples
     if bg_node:
         bg_node.inputs['Strength'].default_value = orig_strength
     if wall:
@@ -487,19 +537,21 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
 def render_sample(out_dir, prefix):
     scene = bpy.context.scene
     
-    # Render sRGB
+    # Render once
+    bpy.ops.render.render(write_still=False)
+    img = bpy.data.images['Render Result']
+    
+    # Save sRGB PNG
     scene.render.image_settings.file_format = 'PNG'
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.image_settings.color_depth = '8'
-    scene.render.filepath = os.path.join(out_dir, f"{prefix}photo.png")
-    bpy.ops.render.render(write_still=True)
+    img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo.png")))
     
-    # Render EXR
+    # Save Linear EXR
     scene.render.image_settings.file_format = 'OPEN_EXR'
     scene.render.image_settings.color_mode = 'RGB'
     scene.render.image_settings.color_depth = '32'
-    scene.render.filepath = os.path.join(out_dir, f"{prefix}photo_linear.exr")
-    bpy.ops.render.render(write_still=True)
+    img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo_linear.exr")))
 
 def parse_args():
     # Because blender consumes some arguments when run via `blender -b -P`, 
@@ -538,6 +590,9 @@ def main():
         for v in range(args.light_variations):
             has_shadow = True # Always generate pairs (with and without shadow)
             has_frame = random.random() < 0.33
+            if args.validate:
+                has_frame = False # No window mullions blocking transmission during math evaluation
+                has_shadow = False # Skip shadow pass entirely during validation
             lighting_id = f"light{random.randint(0, 9999):04d}"
             
             # Name directory with seed so identical glass pieces are grouped together, but have different lighting IDs
@@ -588,7 +643,7 @@ def main():
                 
             else:
                 metadata["shadow_mode"] = "none"
-                render_sample(sample_dir, "")
+                render_sample(sample_dir, "without_shadow_")
                 
             # Render aligned ground truths
             render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark)
