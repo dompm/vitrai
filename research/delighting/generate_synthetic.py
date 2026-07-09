@@ -167,7 +167,7 @@ def download_polyhaven_hdri(out_dir):
             f.write(r.content)
     return hdri_path
 
-def setup_scene(hdri_path):
+def setup_scene(hdri_path, has_frame=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     
     scene = bpy.context.scene
@@ -202,32 +202,54 @@ def setup_scene(hdri_path):
     wlinks = world.node_tree.links
     wnodes.clear()
     
-    wout = wnodes.new('ShaderNodeOutputWorld')
-    wbg = wnodes.new('ShaderNodeBackground')
-    wtex = wnodes.new('ShaderNodeTexEnvironment')
-    
-    wtex.image = bpy.data.images.load(hdri_path)
-    
-    wmapping = wnodes.new('ShaderNodeMapping')
-    wcoord = wnodes.new('ShaderNodeTexCoord')
-    
-    wlinks.new(wcoord.outputs['Generated'], wmapping.inputs['Vector'])
-    wlinks.new(wmapping.outputs['Vector'], wtex.inputs['Vector'])
-    wlinks.new(wtex.outputs['Color'], wbg.inputs['Color'])
-    wlinks.new(wbg.outputs['Background'], wout.inputs['Surface'])
-    
-    # Randomize rotation and EV, tilt slightly so sky is visible
-    wmapping.inputs['Rotation'].default_value[0] = random.uniform(math.radians(-5), math.radians(15))
-    wmapping.inputs['Rotation'].default_value[2] = random.uniform(0, math.pi * 2)
-    ev = random.uniform(-1.5, 0.5) # Reduced max EV to prevent overexposure
-    wbg.inputs['Strength'].default_value = 2.0 ** ev
+    if hdri_path is None:
+        # Validate mode: uniform white background
+        wout = wnodes.new('ShaderNodeOutputWorld')
+        wbg = wnodes.new('ShaderNodeBackground')
+        wbg.inputs['Color'].default_value = (1.0, 1.0, 1.0, 1.0)
+        wbg.inputs['Strength'].default_value = 1.0
+        wlinks.new(wbg.outputs['Background'], wout.inputs['Surface'])
+        ev = 0.0
+        z_rot = 0.0
+    else:
+        wout = wnodes.new('ShaderNodeOutputWorld')
+        wbg = wnodes.new('ShaderNodeBackground')
+        wtex = wnodes.new('ShaderNodeTexEnvironment')
+        
+        wtex.image = bpy.data.images.load(hdri_path)
+        
+        wmapping = wnodes.new('ShaderNodeMapping')
+        wcoord = wnodes.new('ShaderNodeTexCoord')
+        
+        wlinks.new(wcoord.outputs['Generated'], wmapping.inputs['Vector'])
+        wlinks.new(wmapping.outputs['Vector'], wtex.inputs['Vector'])
+        wlinks.new(wtex.outputs['Color'], wbg.inputs['Color'])
+        wlinks.new(wbg.outputs['Background'], wout.inputs['Surface'])
+        
+        # Randomize rotation and EV, tilt slightly so sky is visible
+        wmapping.inputs['Rotation'].default_value[0] = random.uniform(math.radians(-5), math.radians(15))
+        z_rot = random.uniform(0, math.pi * 2)
+        wmapping.inputs['Rotation'].default_value[2] = z_rot
+        ev = random.uniform(-1.5, 0.5) # Reduced max EV to prevent overexposure
+        wbg.inputs['Strength'].default_value = 2.0 ** ev
     
     # Glass plane - size 0.5 ensures it completely fills the camera view (no borders)
     bpy.ops.mesh.primitive_plane_add(size=0.5, align='WORLD', location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
     glass_obj = bpy.context.active_object
     glass_obj.name = "GlassSheet"
     
-    # No window frame - just a raw sheet of glass
+    if has_frame:
+        # Window Frame (mullions/crossbars)
+        bpy.ops.mesh.primitive_grid_add(x_subdivisions=2, y_subdivisions=2, size=0.6, location=(0, 0.01, 0), rotation=(math.radians(90), 0, 0))
+        frame_obj = bpy.context.active_object
+        frame_obj.name = "WindowFrame"
+        wire = frame_obj.modifiers.new(name="Wireframe", type='WIREFRAME')
+        wire.thickness = 0.01
+        
+        mat_frame = bpy.data.materials.new(name="FrameMat")
+        mat_frame.use_nodes = True
+        mat_frame.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.01, 0.01, 0.01, 1)
+        frame_obj.data.materials.append(mat_frame)
     
     # Camera - zoomed in so the glass perfectly fills the frame
     bpy.ops.object.camera_add(location=(0, -0.4, 0), rotation=(math.radians(90), 0, 0))
@@ -249,7 +271,7 @@ def setup_scene(hdri_path):
     mat_wall.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.02, 0.02, 0.02, 1)
     wall.data.materials.append(mat_wall)
     
-    return glass_obj, cam, ev, wmapping.inputs['Rotation'].default_value[2]
+    return glass_obj, cam, ev, z_rot
 
 def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
     mat = bpy.data.materials.new(name="GlassMat")
@@ -275,49 +297,16 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
     principled = nodes.new('ShaderNodeBsdfPrincipled')
     principled.inputs['IOR'].default_value = 1.5
     
-    # Transmission Weight
-    # For streaky glass, high haze areas should be more opaque (less transmission)
-    trans_weight_math = nodes.new('ShaderNodeMath')
-    trans_weight_math.operation = 'SUBTRACT'
-    trans_weight_math.inputs[0].default_value = 1.0
-    
-    if recipe == 'streaky-mix':
-        # More opaque streaks
-        mult = nodes.new('ShaderNodeMath')
-        mult.operation = 'MULTIPLY'
-        mult.inputs[1].default_value = 0.8
-        links.new(tex_h.outputs['Color'], mult.inputs[0])
-        links.new(mult.outputs['Value'], trans_weight_math.inputs[1])
-    else:
-        # Standard fully transmissive glass
-        trans_weight_math.inputs[1].default_value = 0.0
-
     if 'Transmission Weight' in principled.inputs:
-        links.new(trans_weight_math.outputs['Value'], principled.inputs['Transmission Weight'])
+        principled.inputs['Transmission Weight'].default_value = 1.0
     elif 'Transmission' in principled.inputs:
-        links.new(trans_weight_math.outputs['Value'], principled.inputs['Transmission'])
+        principled.inputs['Transmission'].default_value = 1.0
         
     # The transmittance color drives the Base Color
     links.new(tex_T.outputs['Color'], principled.inputs['Base Color'])
     
     # Haze drives the roughness of the transmission
-    # We combine it with the smudge map
-    smudge_noise = nodes.new('ShaderNodeTexNoise')
-    smudge_noise.inputs['Scale'].default_value = 10.0
-    smudge_noise.inputs['Detail'].default_value = 15.0
-    
-    smudge_map = nodes.new('ShaderNodeMapRange')
-    smudge_map.inputs['To Min'].default_value = 0.0
-    smudge_map.inputs['To Max'].default_value = 0.2
-    
-    links.new(smudge_noise.outputs['Fac'], smudge_map.inputs['Value'])
-    
-    add_roughness = nodes.new('ShaderNodeMath')
-    add_roughness.operation = 'ADD'
-    links.new(tex_h.outputs['Color'], add_roughness.inputs[0])
-    links.new(smudge_map.outputs['Result'], add_roughness.inputs[1])
-    
-    links.new(add_roughness.outputs['Value'], principled.inputs['Roughness'])
+    links.new(tex_h.outputs['Color'], principled.inputs['Roughness'])
     
     # Add grease pencil marks on top
     mark_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
@@ -464,7 +453,10 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     glass_obj.data.materials[0] = mat_gt
     
     scene.render.image_settings.file_format = 'PNG'
-    scene.render.image_settings.color_depth = '8'
+    scene.render.image_settings.color_depth = '16'
+    
+    # Ground truth maps should be linear data without sRGB view transforms
+    scene.view_settings.view_transform = 'Raw'
     
     # Render T
     tex_node.image = img_T
@@ -486,6 +478,7 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     
     # Restore
     glass_obj.data.materials[0] = orig_mat
+    scene.view_settings.view_transform = 'Standard'
     if bg_node:
         bg_node.inputs['Strength'].default_value = orig_strength
     if wall:
@@ -521,6 +514,7 @@ def parse_args():
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--count', type=int, default=1)
     parser.add_argument('--light-variations', type=int, default=3, help="Number of lighting variations per glass piece")
+    parser.add_argument('--validate', action='store_true', help="Run in uniform backlight validation mode")
     return parser.parse_args(argv)
 
 def main():
@@ -543,59 +537,64 @@ def main():
             
         for v in range(args.light_variations):
             has_shadow = True # Always generate pairs (with and without shadow)
+            has_frame = random.random() < 0.33
             lighting_id = f"light{random.randint(0, 9999):04d}"
             
             # Name directory with seed so identical glass pieces are grouped together, but have different lighting IDs
             sample_dir = os.path.join(args.out, f"{recipe}__seed{seed}__{lighting_id}")
             os.makedirs(sample_dir, exist_ok=True)
         
-        print(f"Generating {sample_dir}...")
-        
-        # 1. Setup scene FIRST (clears factory settings)
-        glass_obj, cam, ev, z_rot = setup_scene(hdri_path)
-        
-        # 2. Create textures
-        img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
-        
-        # 3. Create material
-        mat = create_glass_material(glass_obj, img_T, img_h, img_mark, recipe)
-        
-        metadata = {
-            "glass_name": f"{recipe}_{seed}",
-            "class_label": recipe,
-            "hdri_name": os.path.basename(hdri_path),
-            "hdri_rotation": z_rot,
-            "hdri_ev": ev,
-            "camera_pose": {
-                "location": list(cam.location),
-                "rotation": list(cam.rotation_euler)
-            },
-            "blender_version": bpy.app.version_string,
-            "seed": seed,
-            "has_shadow": has_shadow
-        }
-        
-        if has_shadow:
-            caster = add_shadow_caster(sample_dir)
+            print(f"Generating {sample_dir}...")
             
-            # Render with shadow
-            metadata["shadow_mode"] = "with_shadow"
-            render_sample(sample_dir, "with_shadow_")
+            # 1. Setup scene FIRST (clears factory settings)
+            if args.validate:
+                glass_obj, cam, ev, z_rot = setup_scene(None, has_frame=has_frame)
+            else:
+                glass_obj, cam, ev, z_rot = setup_scene(hdri_path, has_frame=has_frame)
+        
+            # 2. Create textures
+            img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
             
-            # Hide caster and render without
-            caster.hide_render = True
-            metadata["shadow_mode"] = "without_shadow"
-            render_sample(sample_dir, "without_shadow_")
-            
-        else:
-            metadata["shadow_mode"] = "none"
-            render_sample(sample_dir, "")
-            
-        # Render aligned ground truths
-        render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark)
-            
-        with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
-            json.dump(metadata, f, indent=2)
+            # 3. Create material
+            mat = create_glass_material(glass_obj, img_T, img_h, img_mark, recipe)
+        
+            metadata = {
+                "glass_name": f"{recipe}_{seed}",
+                "class_label": recipe,
+                "hdri_name": "UniformWhite" if args.validate else os.path.basename(hdri_path),
+                "hdri_rotation": z_rot,
+                "hdri_ev": ev,
+                "has_frame": has_frame,
+                "camera_pose": {
+                    "location": list(cam.location),
+                    "rotation": list(cam.rotation_euler)
+                },
+                "blender_version": bpy.app.version_string,
+                "seed": seed,
+                "has_shadow": has_shadow
+            }
+        
+            if has_shadow:
+                caster = add_shadow_caster(sample_dir)
+                
+                # Render with shadow
+                metadata["shadow_mode"] = "with_shadow"
+                render_sample(sample_dir, "with_shadow_")
+                
+                # Hide caster and render without
+                caster.hide_render = True
+                metadata["shadow_mode"] = "without_shadow"
+                render_sample(sample_dir, "without_shadow_")
+                
+            else:
+                metadata["shadow_mode"] = "none"
+                render_sample(sample_dir, "")
+                
+            # Render aligned ground truths
+            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark)
+                
+            with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
+                json.dump(metadata, f, indent=2)
 
 if __name__ == '__main__':
     main()

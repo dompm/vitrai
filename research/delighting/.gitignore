@@ -1,1 +1,5 @@
 .vlm_cache.json
+venv/
+test*.png
+test*.exr
+synthetic_data/
