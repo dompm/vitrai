@@ -1,0 +1,147 @@
+{
+  "split": "test",
+  "per_sample": [
+    {
+      "sample": "cathedral-green__seed42__light7527",
+      "class_label": "cathedral-green",
+      "glass_class": "cathedral-clear",
+      "shadow_pct": 4.3247222900390625,
+      "pred_shadow_pct": 4.698276026579037,
+      "in_raw": 87.14049295876663,
+      "in_classical": 71.78051715605154,
+      "in_neural": 16.23008780586978,
+      "out_classical": 19.201299446746432,
+      "out_neural": 19.1382998905098,
+      "all_classical": 21.47635885711621,
+      "all_neural": 19.01246395078375
+    },
+    {
+      "sample": "cathedral-green__seed43__light1262",
+      "class_label": "cathedral-green",
+      "glass_class": "cathedral-clear",
+      "shadow_pct": 3.099822998046875,
+      "pred_shadow_pct": 2.8797669447814283,
+      "in_raw": 56.566716228166925,
+      "in_classical": 41.964559225821766,
+      "in_neural": 11.750636603700686,
+      "out_classical": 24.133711603866747,
+      "out_neural": 24.118185522339996,
+      "all_classical": 24.731590123735053,
+      "all_neural": 23.70349453295761
+    },
+    {
+      "sample": "dark-opaque__seed44__light8879",
+      "class_label": "dark-opaque",
+      "glass_class": "dark-opaque",
+      "shadow_pct": 2.1327972412109375,
+      "pred_shadow_pct": 4.807007685824138,
+      "in_raw": 45.74452308749039,
+      "in_classical": 64.69462861242705,
+      "in_neural": 41.27442237740386,
+      "out_classical": 43.73881329526369,
+      "out_neural": 42.17564188542146,
+      "all_classical": 44.18974049522312,
+      "all_neural": 42.15624944551166
+    },
+    {
+      "sample": "streaky-mix__seed45__light7995",
+      "class_label": "streaky-mix",
+      "glass_class": "wispy",
+      "shadow_pct": 0.0957489013671875,
+      "pred_shadow_pct": 1.5455937847748336,
+      "in_raw": 138.65572438558542,
+      "in_classical": 16.582337525626905,
+      "in_neural": 13.970945834620435,
+      "out_classical": 18.984977928134935,
+      "out_neural": 18.9002514352621,
+      "all_classical": 18.982501599696132,
+      "all_neural": 18.895170949797162
+    },
+    {
+      "sample": "wispy-white__seed46__light6553",
+      "class_label": "wispy-white",
+      "glass_class": "wispy",
+      "shadow_pct": 6.182861328125,
+      "pred_shadow_pct": 12.036505567673057,
+      "in_raw": 83.01052854090474,
+      "in_classical": 14.416807743558985,
+      "in_neural": 14.498486793533091,
+      "out_classical": 12.14774974259077,
+      "out_neural": 11.144217421362354,
+      "all_classical": 12.288479440978609,
+      "all_neural": 11.352253230431899
+    }
+  ],
+  "per_class": {
+    "cathedral-green": {
+      "n": 2,
+      "in_raw": 71.85360459346677,
+      "in_classical": 56.87253819093665,
+      "in_neural": 13.990362204785232,
+      "out_classical": 21.667505525306588,
+      "out_neural": 21.6282427064249,
+      "all_classical": 23.10397449042563,
+      "all_neural": 21.35797924187068
+    },
+    "dark-opaque": {
+      "n": 1,
+      "in_raw": 45.74452308749039,
+      "in_classical": 64.69462861242705,
+      "in_neural": 41.27442237740386,
+      "out_classical": 43.73881329526369,
+      "out_neural": 42.17564188542146,
+      "all_classical": 44.18974049522312,
+      "all_neural": 42.15624944551166
+    },
+    "streaky-mix": {
+      "n": 1,
+      "in_raw": 138.65572438558542,
+      "in_classical": 16.582337525626905,
+      "in_neural": 13.970945834620435,
+      "out_classical": 18.984977928134935,
+      "out_neural": 18.9002514352621,
+      "all_classical": 18.982501599696132,
+      "all_neural": 18.895170949797162
+    },
+    "wispy-white": {
+      "n": 1,
+      "in_raw": 83.01052854090474,
+      "in_classical": 14.416807743558985,
+      "in_neural": 14.498486793533091,
+      "out_classical": 12.14774974259077,
+      "out_neural": 11.144217421362354,
+      "all_classical": 12.288479440978609,
+      "all_neural": 11.352253230431899
+    }
+  },
+  "cathedral": {
+    "n": 2,
+    "in_raw": 71.85360459346677,
+    "in_classical": 56.87253819093665,
+    "in_neural": 13.990362204785232,
+    "out_classical": 21.667505525306588,
+    "out_neural": 21.6282427064249,
+    "all_classical": 23.10397449042563,
+    "all_neural": 21.35797924187068
+  },
+  "overall": {
+    "n": 5,
+    "in_raw": 82.22359704018281,
+    "in_classical": 41.887770052697256,
+    "in_neural": 19.54491588302557,
+    "out_classical": 23.641310403320514,
+    "out_neural": 23.095319230979147,
+    "all_classical": 24.333734103349826,
+    "all_neural": 23.023926421896416
+  },
+  "with_shadow_samples": {
+    "n": 4,
+    "in_raw": 68.11556520383218,
+    "in_classical": 48.21412818446484,
+    "in_neural": 20.938408395126853,
+    "out_classical": 24.80539352211691,
+    "out_neural": 24.144086179908406,
+    "all_classical": 25.67154222926325,
+    "all_neural": 24.05611528992123
+  }
+}
