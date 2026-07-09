@@ -71,7 +71,7 @@
 
     .toolbar {
       display: grid;
-      grid-template-columns: repeat(6, minmax(130px, 1fr)) auto;
+      grid-template-columns: repeat(7, minmax(130px, 1fr)) auto;
       gap: 12px;
       padding: 14px 24px;
       border-bottom: 1px solid var(--line);
@@ -207,6 +207,22 @@
       gap: 8px;
     }
 
+    .truth-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .truth-pill {
+      display: block;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fffdfa;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 640;
+    }
+
     .checkline {
       display: flex;
       gap: 8px;
@@ -308,6 +324,14 @@
         </select>
       </label>
       <label>
+        Relief Source
+        <select id="source">
+          <option value="prior">Plausible prior</option>
+          <option value="manual">Artist tuned</option>
+          <option value="sheet" disabled>Sheet-derived</option>
+        </select>
+      </label>
+      <label>
         Relief <span id="reliefValue">64</span>
         <input id="relief" type="range" min="0" max="100" value="64">
       </label>
@@ -360,6 +384,14 @@
             <label class="checkline"><input type="checkbox" value="plastic">Too plastic / glossy</label>
             <label class="checkline"><input type="checkbox" value="busy">Texture is too busy</label>
             <label class="checkline"><input type="checkbox" value="useful">Would help choose a sheet</label>
+            <label class="checkline"><input type="checkbox" value="source">Needs source label</label>
+          </div>
+        </section>
+        <section class="aside-section">
+          <h2>Truth Check</h2>
+          <div class="truth-list">
+            <span class="truth-pill" id="sourceBadge">Relief: plausible prior</span>
+            <span class="truth-pill">Sheet-derived relief is the research target</span>
           </div>
         </section>
         <section class="aside-section">
@@ -381,6 +413,7 @@
     const controls = {
       material: document.getElementById("material"),
       background: document.getElementById("background"),
+      source: document.getElementById("source"),
       relief: document.getElementById("relief"),
       haze: document.getElementById("haze"),
       glint: document.getElementById("glint"),
@@ -653,9 +686,15 @@
     function updateLabels() {
       for (const key of Object.keys(labels)) labels[key].textContent = controls[key].value;
       const mat = MATERIALS[controls.material.value];
+      const sourceNames = {
+        prior: "plausible prior",
+        manual: "artist tuned",
+        sheet: "sheet-derived"
+      };
       document.getElementById("copyScore").textContent = "capture lighting";
       document.getElementById("v1Score").textContent = `${Math.round(mat.haze * Number(controls.haze.value))}% haze`;
-      document.getElementById("v2Score").textContent = `${controls.relief.value}% relief`;
+      document.getElementById("v2Score").textContent = `${controls.relief.value}% ${sourceNames[controls.source.value]}`;
+      document.getElementById("sourceBadge").textContent = `Relief: ${sourceNames[controls.source.value]}`;
     }
 
     function drawAll() {
@@ -677,6 +716,7 @@
       const payload = {
         material: controls.material.options[controls.material.selectedIndex].text,
         preview: controls.background.options[controls.background.selectedIndex].text,
+        relief_source: controls.source.options[controls.source.selectedIndex].text,
         relief: controls.relief.value,
         haze: controls.haze.value,
         glints: controls.glint.value,

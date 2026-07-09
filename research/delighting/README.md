@@ -18,7 +18,9 @@ recipes), and `008-preview-invariance.md` (product-shaped raw-copy vs material
 relight benchmark). `009-glassnet-zero.md` starts the high-risk neural
 inverse-rendering track. `010-material-v2-representation.md` starts a bolder
 representation reset for surface relief / normals. `011-artist-material-review-prototype.md`
-adds a standalone artist-facing comparison prototype.
+adds a standalone artist-facing comparison prototype. `012-artist-feedback-readout.md`
+turns the first artist readout into the "make it beautiful, but keep it honest"
+research rule.
 
 ## Layout
 

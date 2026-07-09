@@ -89,6 +89,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   `T,h` relight vs relief/normal relight with controls for glass class, background, relief, haze,
   glints, and light angle. Purpose is qualitative artist readout before the research over-optimizes
   for clean maps and loses the feel of glass.
+- 012 artist feedback readout: relief/normal rendering feels directionally right, but the product
+  must answer "is this derived from the real sheet, or invented?" Prototype now exposes `Relief
+  Source` / `Truth Check`; research should add a relief provenance/confidence signal.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -102,6 +105,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - Run the Material-v2 artist prototype with at least one stained-glass maker and turn feedback into
   renderer acceptance criteria: how much relief, what kind of glint, what backgrounds matter, and
   whether the preview helps choose glass.
+- Add provenance/confidence to Material-v2: sheet-derived vs plausible prior vs artist tuned. Do not
+  let a prettier invented relief map masquerade as measured glass.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
