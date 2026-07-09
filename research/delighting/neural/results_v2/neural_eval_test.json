@@ -1,0 +1,157 @@
+{
+  "split": "test",
+  "per_sample": [
+    {
+      "sample": "cathedral-amber__seed43__light9423",
+      "class_label": "cathedral-amber",
+      "glass_class": "cathedral-clear",
+      "shadow_pct": 3.783416748046875,
+      "pred_shadow_pct": 6.121826171875,
+      "in_raw": 118.3014711554148,
+      "in_classical": 86.22322571580749,
+      "in_neural": 10.934522151945043,
+      "out_classical": 24.931298899958726,
+      "out_neural": 24.484095048795577,
+      "all_classical": 27.250227924310185,
+      "all_neural": 23.971458238527315
+    },
+    {
+      "sample": "cathedral-green__seed42__light7527",
+      "class_label": "cathedral-green",
+      "glass_class": "cathedral-clear",
+      "shadow_pct": 4.3247222900390625,
+      "pred_shadow_pct": 6.926808416440531,
+      "in_raw": 87.15713278183298,
+      "in_classical": 71.76535333719539,
+      "in_neural": 15.30639618788327,
+      "out_classical": 19.213266174598722,
+      "out_neural": 18.991490404440174,
+      "all_classical": 21.487151668575535,
+      "all_neural": 18.832039415233208
+    },
+    {
+      "sample": "dark-opaque__seed44__light8879",
+      "class_label": "dark-opaque",
+      "glass_class": "dark-opaque",
+      "shadow_pct": 2.13623046875,
+      "pred_shadow_pct": 4.3474746852737765,
+      "in_raw": 45.86008422051817,
+      "in_classical": 46.371013428893484,
+      "in_neural": 17.89644631313779,
+      "out_classical": 18.09039565936168,
+      "out_neural": 17.677110802569427,
+      "all_classical": 18.699917535323863,
+      "all_neural": 17.681838061109403
+    },
+    {
+      "sample": "streaky-mix__seed45__light7018",
+      "class_label": "streaky-mix",
+      "glass_class": "wispy",
+      "shadow_pct": 4.2938232421875,
+      "pred_shadow_pct": 3.0901445753525643,
+      "in_raw": 130.90100849753858,
+      "in_classical": 17.495845890492138,
+      "in_neural": 17.289179479689086,
+      "out_classical": 18.471561454038866,
+      "out_neural": 18.42736904965869,
+      "all_classical": 18.396593506467692,
+      "all_neural": 18.33991760459065
+    },
+    {
+      "sample": "wispy-white__seed46__light6553",
+      "class_label": "wispy-white",
+      "glass_class": "wispy",
+      "shadow_pct": 6.182861328125,
+      "pred_shadow_pct": 30.088011326675083,
+      "in_raw": 82.95408250405686,
+      "in_classical": 19.256641483169574,
+      "in_neural": 18.297165307215213,
+      "out_classical": 12.536944831747837,
+      "out_neural": 10.100565450415674,
+      "all_classical": 12.953708476665161,
+      "all_neural": 10.608928403306681
+    }
+  ],
+  "per_class": {
+    "cathedral-amber": {
+      "n": 1,
+      "in_raw": 118.3014711554148,
+      "in_classical": 86.22322571580749,
+      "in_neural": 10.934522151945043,
+      "out_classical": 24.931298899958726,
+      "out_neural": 24.484095048795577,
+      "all_classical": 27.250227924310185,
+      "all_neural": 23.971458238527315
+    },
+    "cathedral-green": {
+      "n": 1,
+      "in_raw": 87.15713278183298,
+      "in_classical": 71.76535333719539,
+      "in_neural": 15.30639618788327,
+      "out_classical": 19.213266174598722,
+      "out_neural": 18.991490404440174,
+      "all_classical": 21.487151668575535,
+      "all_neural": 18.832039415233208
+    },
+    "dark-opaque": {
+      "n": 1,
+      "in_raw": 45.86008422051817,
+      "in_classical": 46.371013428893484,
+      "in_neural": 17.89644631313779,
+      "out_classical": 18.09039565936168,
+      "out_neural": 17.677110802569427,
+      "all_classical": 18.699917535323863,
+      "all_neural": 17.681838061109403
+    },
+    "streaky-mix": {
+      "n": 1,
+      "in_raw": 130.90100849753858,
+      "in_classical": 17.495845890492138,
+      "in_neural": 17.289179479689086,
+      "out_classical": 18.471561454038866,
+      "out_neural": 18.42736904965869,
+      "all_classical": 18.396593506467692,
+      "all_neural": 18.33991760459065
+    },
+    "wispy-white": {
+      "n": 1,
+      "in_raw": 82.95408250405686,
+      "in_classical": 19.256641483169574,
+      "in_neural": 18.297165307215213,
+      "out_classical": 12.536944831747837,
+      "out_neural": 10.100565450415674,
+      "all_classical": 12.953708476665161,
+      "all_neural": 10.608928403306681
+    }
+  },
+  "cathedral": {
+    "n": 2,
+    "in_raw": 102.7293019686239,
+    "in_classical": 78.99428952650143,
+    "in_neural": 13.120459169914156,
+    "out_classical": 22.072282537278724,
+    "out_neural": 21.737792726617876,
+    "all_classical": 24.368689796442858,
+    "all_neural": 21.40174882688026
+  },
+  "overall": {
+    "n": 5,
+    "in_raw": 93.03475583187227,
+    "in_classical": 48.222415971111616,
+    "in_neural": 15.944741887974079,
+    "out_classical": 18.648693403941163,
+    "out_neural": 17.93612615117591,
+    "all_classical": 19.757519822268485,
+    "all_neural": 17.88683634455345
+  },
+  "with_shadow_samples": {
+    "n": 5,
+    "in_raw": 93.03475583187227,
+    "in_classical": 48.222415971111616,
+    "in_neural": 15.944741887974079,
+    "out_classical": 18.648693403941163,
+    "out_neural": 17.93612615117591,
+    "all_classical": 19.757519822268485,
+    "all_neural": 17.88683634455345
+  }
+}

@@ -78,6 +78,14 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   the north-star hard case below, not a tunable color-constancy parameter — four other candidate
   fixes were tested and rejected as one-sided trades against wispy-white (see report 009 §2.1).
 
+- 012 (branch `research/delighting-datav2`) generator realism: full mullion grid → partial
+  border-edge occluders (20% of samples, params in meta.json); data v2 regenerated (validation gate
+  unchanged at the report-006 floors); shadow U-Net retrained on the FIXED extractor's T. Held-out
+  v2: inside-shadow 48.2→15.9 overall, dark-opaque 46.4→17.9 (beats the v1 net run OOD on the same
+  sample, 23.3) — but only after a documented dark-opaque train-coverage top-up: the first
+  same-scale retrain drew zero pair-detectable dark-glass shadows and silently lost the skill
+  (46.4→46.4). Occluder over-fire largely fixed on dark glass (fire ~100%→0–6%, lift 0.43→0.01);
+  still fires on an occluder behind CLEAR glass (98%, lift 0.56) — chroma-cue mask is the next step.
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
