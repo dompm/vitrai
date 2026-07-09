@@ -426,13 +426,53 @@ def main():
                         print(f"  Bullseye: {sku} classified as {category}")
                         time.sleep(0.05)
 
+    # Deduplicate registry by base color code formula
+    deduped = []
+    seen_formulas = set()
+    
+    # Sort registry to ensure preference is given:
+    # - For Bullseye: SKU ending with -1010 (standard 10x10 sheet) is preferred
+    # - For SGE: Base SKU (no -6X12) is preferred
+    def get_preference_score(item):
+        sku = item['base_sku'].upper()
+        mfg = item['manufacturer']
+        if mfg == 'Bullseye':
+            if sku.endswith('1010'): return 0
+            if sku.endswith('HALF'): return 1
+            return 2
+        else:
+            if '6X12' in sku: return 1
+            return 0
+
+    # Sort so that preferred items come first
+    registry_sorted = sorted(registry, key=get_preference_score)
+    
+    for item in registry_sorted:
+        mfg = item['manufacturer']
+        base_sku = item['base_sku']
+        
+        # Normalize formula ID
+        formula_id = base_sku.split('-')[0]
+        if mfg == 'Bullseye':
+            parts = base_sku.split('-')
+            if len(parts) >= 2:
+                formula_id = parts[0] + '-' + parts[1]
+                
+        formula_key = (mfg, formula_id)
+        if formula_key not in seen_formulas:
+            seen_formulas.add(formula_key)
+            deduped.append(item)
+            
+    # Sort alphabetically by manufacturer and base SKU
+    deduped.sort(key=lambda x: (x['manufacturer'], x['base_sku']))
+
     # Save outputs
     with open(REGISTRY_FILE, 'w') as f:
-        json.dump(registry, f, indent=2)
-    print(f"\nSaved {len(registry)} dynamic swatches to registry {REGISTRY_FILE}")
+        json.dump(deduped, f, indent=2)
+    print(f"\nSaved {len(deduped)} deduplicated dynamic swatches to registry {REGISTRY_FILE}")
     
-    generate_verify_html(registry)
-    generate_tracker_report(len(registry), downloaded, failed, registry)
+    generate_verify_html(deduped)
+    generate_tracker_report(len(deduped), len(deduped), failed, deduped)
     print("\nDynamic swatch harvester run complete!")
 
 def generate_verify_html(registry):
