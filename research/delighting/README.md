@@ -12,7 +12,10 @@ A ship/no-ship decision is made on the reports in `reports/`. Current state:
 `001-classical-baseline.md` (baseline), `002-iteration.md` (mark-inpaint fix,
 contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
 (class-prior absolute-transmittance anchor so dark glass renders dark),
-`004-hotspot.md` (backlight-hotspot recovery; VLM class default + anchor logging).
+`004-hotspot.md` (backlight-hotspot recovery; VLM class default + anchor logging),
+`007-full-recipe-eval.md` (ground-truth extractor eval across all 5 synthetic
+recipes), and `008-preview-invariance.md` (product-shaped raw-copy vs material
+relight benchmark).
 
 ## Layout
 
@@ -21,6 +24,7 @@ extract.py        pipeline + CLI (single file and batch/folder mode)
 vlm_classify.py   Track C: glass-class prior + mark localization via `claude` CLI
 contact_sheet.py  build one grid image over a batch (original|T|h|relit warm|cool)
 register_pair.py  cross-lighting validation (M3): register two photos, compare maps
+eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
 reports/          numbered experiment reports (honest; decision documents)
@@ -51,6 +55,9 @@ python3 contact_sheet.py benchmark/library results/library results/library/conta
 python3 register_pair.py A.jpg B.jpg --class wispy \
     --corners-a TL_x,TL_y,TR_x,TR_y,BR_x,BR_y,BL_x,BL_y --corners-b ...
 # omit corners to auto-register via ORB (needs similar framing)
+
+# product preview benchmark: compare copied capture pixels to controlled T/h relight
+python3 eval_preview_invariance.py --data synthetic_data --out results/preview_invariance
 ```
 
 manifest.json format (keys are filenames inside the folder):

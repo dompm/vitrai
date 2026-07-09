@@ -57,14 +57,21 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   (= 0.03 tint + 0.13 background-bleed — the single-photo ambiguity, not mainly extractor error),
   h 0.08; streaky-mix T 0.115, h over-hazed. Shadow gap (OP-1) quantified: T corrupted ~0.31
   (clear) / ~0.08 (milky), localized. Streaky physics fix confirmed by eye.
-- 006 validation coverage across all 5 recipes (in progress by synth-gen as of this writing).
+- 006 validation coverage closed across all 5 recipes; generator passes uniform-backlight consistency.
+- 007 full 5-recipe extractor eval: dark-opaque no longer blows out bright or magenta, but extractor
+  runs dark-opaque too dark; wispy-white/opalescent is faithful; streaky-mix remains over-hazed and
+  too neutral; cathedral carries relief/source-background texture in `T`.
+- 008 product preview-invariance benchmark (`eval_preview_invariance.py`): raw copied pixels vs
+  extracted `T,h` relit into a controlled warm preview. Material-relight wins strongly for
+  wispy-white/streaky/cathedral overall (excluding dark-opaque: raw MAE 43.5 vs material MAE 20.6
+  sRGB/255), but dark-opaque fails because `T` is too dark, and cathedral cast shadows become fake
+  dark transmittance locally (inside-shadow material gap worse than raw).
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
-- Finish rendering the 3 missing recipes → re-run `eval_synthetic.py` → answer the dark-opaque
-  absolute-scale question and the wispy-white (opalescent money case) faithfulness.
 - Add the **consistency** metric to the eval (same seed across lightings).
+- Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

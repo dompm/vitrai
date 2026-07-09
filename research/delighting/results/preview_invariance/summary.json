@@ -1,0 +1,738 @@
+{
+  "size": 700,
+  "n_samples": 17,
+  "preview_illum_rgb_linear": [
+    1.0,
+    0.86,
+    0.68
+  ],
+  "metric_units": "sRGB MAE on 0-255 scale after exposure-matching raw baseline to target preview",
+  "skipped": [
+    [
+      "streaky-mix__seed44__light4062",
+      "no meta"
+    ]
+  ],
+  "per_recipe": {
+    "cathedral-amber": {
+      "n": 2,
+      "raw_mae": 39.83069600162226,
+      "material_mae": 22.33576723736967,
+      "raw_p95": 99.68021999767186,
+      "material_p95": 79.10209767241327,
+      "raw_shadow_gap": 2.1169608801273543,
+      "material_shadow_gap": 2.517217485846247,
+      "raw_shadow_gap_inside": 44.371303096010806,
+      "material_shadow_gap_inside": 55.81281940672791,
+      "mean_raw_srgb": [
+        0.6581108792467663,
+        0.6195714183475571,
+        0.36661881197478896
+      ],
+      "mean_material_srgb": [
+        0.8214377743626671,
+        0.7292280688014875,
+        0.36963466414174156
+      ],
+      "mean_target_srgb": [
+        0.8734158098990832,
+        0.727583658889225,
+        0.43699708622939093
+      ]
+    },
+    "cathedral-green": {
+      "n": 7,
+      "raw_mae": 36.37625072432996,
+      "material_mae": 22.830667743785092,
+      "raw_p95": 92.52897767977696,
+      "material_p95": 76.93950279046997,
+      "raw_shadow_gap": 1.9799934022937544,
+      "material_shadow_gap": 2.4804742566947087,
+      "raw_shadow_gap_inside": 46.85118449516991,
+      "material_shadow_gap_inside": 59.828492217182564,
+      "mean_raw_srgb": [
+        0.47626236403845834,
+        0.6522960798280371,
+        0.4553699520776637
+      ],
+      "mean_material_srgb": [
+        0.6259230535728838,
+        0.7652787928436287,
+        0.46570764405227827
+      ],
+      "mean_target_srgb": [
+        0.6287977345698085,
+        0.7568025232514863,
+        0.5348661748791103
+      ]
+    },
+    "dark-opaque": {
+      "n": 2,
+      "raw_mae": 18.868134236289073,
+      "material_mae": 42.918065578062,
+      "raw_p95": 39.74931183822877,
+      "material_p95": 53.58989506345266,
+      "raw_shadow_gap": 0.871063849621135,
+      "material_shadow_gap": 0.6218238492696333,
+      "raw_shadow_gap_inside": 31.470621692945638,
+      "material_shadow_gap_inside": 23.62550388170013,
+      "mean_raw_srgb": [
+        0.3632649975917341,
+        0.3757314506538749,
+        0.3288736397965091
+      ],
+      "mean_material_srgb": [
+        0.28736609966524373,
+        0.2724727437291422,
+        0.20338169114469495
+      ],
+      "mean_target_srgb": [
+        0.45636843128069227,
+        0.4391585301197747,
+        0.3726119917040354
+      ]
+    },
+    "streaky-mix": {
+      "n": 4,
+      "raw_mae": 46.600358901335476,
+      "material_mae": 18.15654722284105,
+      "raw_p95": 93.10957445898504,
+      "material_p95": 46.12616825998089,
+      "raw_shadow_gap": 2.2750759024899234,
+      "material_shadow_gap": 1.2577596958574786,
+      "raw_shadow_gap_inside": 64.10192830600859,
+      "material_shadow_gap_inside": 21.20930950721365,
+      "mean_raw_srgb": [
+        0.6139273381548298,
+        0.6771824231144166,
+        0.6309480853143514
+      ],
+      "mean_material_srgb": [
+        0.8625976081420563,
+        0.8079077697747747,
+        0.7169640261579702
+      ],
+      "mean_target_srgb": [
+        0.7793192048391628,
+        0.7819836175517221,
+        0.744948239723333
+      ]
+    },
+    "wispy-white": {
+      "n": 2,
+      "raw_mae": 65.58486369627758,
+      "material_mae": 15.781258984685048,
+      "raw_p95": 103.1438675380162,
+      "material_p95": 32.08145626983296,
+      "raw_shadow_gap": 1.6687823893127631,
+      "material_shadow_gap": 1.660126852715932,
+      "raw_shadow_gap_inside": 27.045947152110703,
+      "material_shadow_gap_inside": 19.31355855043755,
+      "mean_raw_srgb": [
+        0.6389353191924156,
+        0.6266850550453938,
+        0.557438344714329
+      ],
+      "mean_material_srgb": [
+        0.8739490079243211,
+        0.8158317955048467,
+        0.7322617819131663
+      ],
+      "mean_target_srgb": [
+        0.9259230152693223,
+        0.8676479909821295,
+        0.7830316483705371
+      ]
+    }
+  },
+  "per_sample": [
+    {
+      "sample": "cathedral-amber__seed43__light2358",
+      "class_label": "cathedral-amber",
+      "glass_name": "cathedral-amber_43",
+      "glass_class": "cathedral-clear",
+      "has_frame": true,
+      "valid_pct": 94.42122448979592,
+      "shadow_pct": 5.400816326530612,
+      "raw_mae": 35.32151061579492,
+      "raw_p95": 110.14251140140563,
+      "material_mae": 21.836096222333556,
+      "material_p95": 80.73377035787065,
+      "raw_shadow_gap": 3.273391158670778,
+      "material_shadow_gap": 3.6927769690440986,
+      "raw_shadow_gap_inside": 54.5716252078725,
+      "material_shadow_gap_inside": 60.766516942313906,
+      "target_mean_srgb": [
+        0.8732526686093057,
+        0.7274448434669896,
+        0.43690246258820326
+      ],
+      "raw_mean_srgb": [
+        0.6346203442425751,
+        0.6231990228251129,
+        0.43156615202496595
+      ],
+      "material_mean_srgb": [
+        0.7809852391711365,
+        0.7220995216633583,
+        0.43807627527753645
+      ]
+    },
+    {
+      "sample": "cathedral-amber__seed43__light6158",
+      "class_label": "cathedral-amber",
+      "glass_name": "cathedral-amber_43",
+      "glass_class": "cathedral-clear",
+      "has_frame": false,
+      "valid_pct": 99.68918367346939,
+      "shadow_pct": 2.3728571428571428,
+      "raw_mae": 44.3398813874496,
+      "raw_p95": 89.21792859393807,
+      "material_mae": 22.835438252405783,
+      "material_p95": 77.47042498695588,
+      "raw_shadow_gap": 0.9605306015839308,
+      "material_shadow_gap": 1.3416580026483953,
+      "raw_shadow_gap_inside": 34.170980984149104,
+      "material_shadow_gap_inside": 50.85912187114191,
+      "target_mean_srgb": [
+        0.8735789511888606,
+        0.7277224743114605,
+        0.43709170987057866
+      ],
+      "raw_mean_srgb": [
+        0.6816014142509573,
+        0.6159438138700014,
+        0.301671471924612
+      ],
+      "material_mean_srgb": [
+        0.8618903095541977,
+        0.7363566159396167,
+        0.3011930530059467
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed42__light0409",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_42",
+      "glass_class": "cathedral-clear",
+      "has_frame": false,
+      "valid_pct": 100.0,
+      "shadow_pct": 2.490204081632653,
+      "raw_mae": 27.49176535974662,
+      "raw_p95": 71.0890758914299,
+      "material_mae": 19.039705129479348,
+      "material_p95": 49.42076596725238,
+      "raw_shadow_gap": 1.8301342615807001,
+      "material_shadow_gap": 2.194857236811991,
+      "raw_shadow_gap_inside": 51.60103424894276,
+      "material_shadow_gap_inside": 62.341282536690215,
+      "target_mean_srgb": [
+        0.628224332973315,
+        0.7561711008318776,
+        0.5343784773823651
+      ],
+      "raw_mean_srgb": [
+        0.4932202931633625,
+        0.6878243030551784,
+        0.537317190266631
+      ],
+      "material_mean_srgb": [
+        0.6123088541128815,
+        0.764306977108458,
+        0.5290973503055375
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed42__light3611",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_42",
+      "glass_class": "cathedral-clear",
+      "has_frame": false,
+      "valid_pct": 100.0,
+      "shadow_pct": 4.24734693877551,
+      "raw_mae": 38.35042809817731,
+      "raw_p95": 84.07979922364265,
+      "material_mae": 21.21916331609065,
+      "material_p95": 54.53715423451888,
+      "raw_shadow_gap": 1.8232851625882016,
+      "material_shadow_gap": 2.744021715895687,
+      "raw_shadow_gap_inside": 40.095913058236924,
+      "material_shadow_gap_inside": 60.175855674559266,
+      "target_mean_srgb": [
+        0.6295017457711779,
+        0.7576046159224181,
+        0.5354618823636168
+      ],
+      "raw_mean_srgb": [
+        0.4668078390094787,
+        0.6357297405068958,
+        0.46704785841441826
+      ],
+      "material_mean_srgb": [
+        0.6165123575232219,
+        0.7491227690877207,
+        0.4823935339762226
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed42__light4506",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_42",
+      "glass_class": "cathedral-clear",
+      "has_frame": true,
+      "valid_pct": 92.7865306122449,
+      "shadow_pct": 2.476734693877551,
+      "raw_mae": 43.90427057933144,
+      "raw_p95": 102.83510030099157,
+      "material_mae": 27.976084460399257,
+      "material_p95": 94.7399265072156,
+      "raw_shadow_gap": 1.8070720948246224,
+      "material_shadow_gap": 2.7933698191619056,
+      "raw_shadow_gap_inside": 51.44050576310144,
+      "material_shadow_gap_inside": 79.62335240975553,
+      "target_mean_srgb": [
+        0.6285310324387073,
+        0.7564768666878114,
+        0.5346428427407043
+      ],
+      "raw_mean_srgb": [
+        0.48001616853549167,
+        0.6359123081955997,
+        0.37623963468373905
+      ],
+      "material_mean_srgb": [
+        0.6577229463113299,
+        0.773680226037044,
+        0.3916388900954839
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed42__light7527",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_42",
+      "glass_class": "cathedral-clear",
+      "has_frame": false,
+      "valid_pct": 99.94938775510204,
+      "shadow_pct": 4.336326530612245,
+      "raw_mae": 34.159283665848875,
+      "raw_p95": 99.54032583811038,
+      "material_mae": 18.94906551483332,
+      "material_p95": 91.25986580105952,
+      "raw_shadow_gap": 2.677784306808314,
+      "material_shadow_gap": 3.035500674463999,
+      "raw_shadow_gap_inside": 55.715260097757394,
+      "material_shadow_gap_inside": 63.88303986952728,
+      "target_mean_srgb": [
+        0.628280436312871,
+        0.7562336413632882,
+        0.5344261398732681
+      ],
+      "raw_mean_srgb": [
+        0.4766509820911788,
+        0.6591906623048016,
+        0.45527983900522867
+      ],
+      "material_mean_srgb": [
+        0.6175886304254905,
+        0.7717063461172792,
+        0.4599508169011052
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed43__light1262",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_43",
+      "glass_class": "cathedral-clear",
+      "has_frame": true,
+      "valid_pct": 92.62448979591836,
+      "shadow_pct": 3.153469387755102,
+      "raw_mae": 34.452791594077105,
+      "raw_p95": 100.39373707033623,
+      "material_mae": 24.125347044072345,
+      "material_p95": 95.18829632886938,
+      "raw_shadow_gap": 1.7548835135924896,
+      "material_shadow_gap": 1.6774296483326996,
+      "raw_shadow_gap_inside": 44.433370903145736,
+      "material_shadow_gap_inside": 43.29646278957675,
+      "target_mean_srgb": [
+        0.6289035029002719,
+        0.7569007822140756,
+        0.5349584921012355
+      ],
+      "raw_mean_srgb": [
+        0.490912227521071,
+        0.6743631308597547,
+        0.4614384034756042
+      ],
+      "material_mean_srgb": [
+        0.6280733077446287,
+        0.7696196479343612,
+        0.4640940310485188
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed43__light2358",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_43",
+      "glass_class": "cathedral-clear",
+      "has_frame": true,
+      "valid_pct": 94.29551020408164,
+      "shadow_pct": 5.376530612244898,
+      "raw_mae": 31.738560275371437,
+      "raw_p95": 89.38788616205582,
+      "material_mae": 21.50589388921631,
+      "material_p95": 62.44537519071709,
+      "raw_shadow_gap": 3.1087944659384457,
+      "material_shadow_gap": 3.6202107214034185,
+      "raw_shadow_gap_inside": 52.81357548922591,
+      "material_shadow_gap_inside": 59.851120132880496,
+      "target_mean_srgb": [
+        0.6289422633910371,
+        0.7569696447319999,
+        0.5349883728652336
+      ],
+      "raw_mean_srgb": [
+        0.44780563109597005,
+        0.6421333049820965,
+        0.5233371160329835
+      ],
+      "material_mean_srgb": [
+        0.5910256393279326,
+        0.7518726923136615,
+        0.5488002974238043
+      ]
+    },
+    {
+      "sample": "cathedral-green__seed43__light6158",
+      "class_label": "cathedral-green",
+      "glass_name": "cathedral-green_43",
+      "glass_class": "cathedral-clear",
+      "has_frame": false,
+      "valid_pct": 99.68918367346939,
+      "shadow_pct": 2.3087755102040814,
+      "raw_mae": 44.53665549775691,
+      "raw_p95": 100.37691927187211,
+      "material_mae": 26.999414852404424,
+      "material_p95": 90.98513550365695,
+      "raw_shadow_gap": 0.8580000107235098,
+      "material_shadow_gap": 1.2979299807932605,
+      "raw_shadow_gap_inside": 31.858631905779266,
+      "material_shadow_gap_inside": 49.628332107288394,
+      "target_mean_srgb": [
+        0.629200828201279,
+        0.757261011008934,
+        0.5352070168273484
+      ],
+      "raw_mean_srgb": [
+        0.47842340685265605,
+        0.6309191088919324,
+        0.36692962266504114
+      ],
+      "material_mean_srgb": [
+        0.6582296395647017,
+        0.7766428913068765,
+        0.3839785886152762
+      ]
+    },
+    {
+      "sample": "dark-opaque__seed44__light1205",
+      "class_label": "dark-opaque",
+      "glass_name": "dark-opaque_44",
+      "glass_class": "dark-opaque",
+      "has_frame": true,
+      "valid_pct": 80.09775510204081,
+      "shadow_pct": 0.0,
+      "raw_mae": 18.965286555370096,
+      "raw_p95": 37.554713848856245,
+      "material_mae": 41.44443922273064,
+      "material_p95": 50.12519231010935,
+      "raw_shadow_gap": 0.2617732967095088,
+      "material_shadow_gap": 0.23599713942350456,
+      "raw_shadow_gap_inside": null,
+      "material_shadow_gap_inside": null,
+      "target_mean_srgb": [
+        0.4568258279223371,
+        0.439577518191963,
+        0.37297134966144013
+      ],
+      "raw_mean_srgb": [
+        0.3659022450063484,
+        0.3766210230851538,
+        0.3293071578376879
+      ],
+      "material_mean_srgb": [
+        0.29549076519734224,
+        0.2784120390596341,
+        0.20789025360430752
+      ]
+    },
+    {
+      "sample": "dark-opaque__seed44__light8879",
+      "class_label": "dark-opaque",
+      "glass_name": "dark-opaque_44",
+      "glass_class": "dark-opaque",
+      "has_frame": false,
+      "valid_pct": 99.17959183673469,
+      "shadow_pct": 2.153061224489796,
+      "raw_mae": 18.770981917208054,
+      "raw_p95": 41.943909827601296,
+      "material_mae": 44.39169193339336,
+      "material_p95": 57.054597816795976,
+      "raw_shadow_gap": 1.4803544025327613,
+      "material_shadow_gap": 1.007650559115762,
+      "raw_shadow_gap_inside": 31.470621692945638,
+      "material_shadow_gap_inside": 23.62550388170013,
+      "target_mean_srgb": [
+        0.4559110346390474,
+        0.4387395420475864,
+        0.3722526337466307
+      ],
+      "raw_mean_srgb": [
+        0.3606277501771198,
+        0.374841878222596,
+        0.3284401217553302
+      ],
+      "material_mean_srgb": [
+        0.2792414341331452,
+        0.2665334483986503,
+        0.19887312868508242
+      ]
+    },
+    {
+      "sample": "streaky-mix__seed44__light1911",
+      "class_label": "streaky-mix",
+      "glass_name": "streaky-mix_44",
+      "glass_class": "wispy",
+      "has_frame": false,
+      "valid_pct": 99.11693877551019,
+      "shadow_pct": 2.9340816326530614,
+      "raw_mae": 40.81891174408395,
+      "raw_p95": 84.38501918910251,
+      "material_mae": 15.190151352347245,
+      "material_p95": 42.07198815569565,
+      "raw_shadow_gap": 2.4077646508566213,
+      "material_shadow_gap": 0.5717277944916362,
+      "raw_shadow_gap_inside": 63.42437761060753,
+      "material_shadow_gap_inside": 5.228552262669286,
+      "target_mean_srgb": [
+        0.8073116731068921,
+        0.8000325792658812,
+        0.7573523944731988
+      ],
+      "raw_mean_srgb": [
+        0.6714441091487267,
+        0.7175734691008363,
+        0.6419455058056912
+      ],
+      "material_mean_srgb": [
+        0.8685259069292632,
+        0.8131848222499993,
+        0.7202412734358377
+      ]
+    },
+    {
+      "sample": "streaky-mix__seed44__light4632",
+      "class_label": "streaky-mix",
+      "glass_name": "streaky-mix_44",
+      "glass_class": "wispy",
+      "has_frame": false,
+      "valid_pct": 99.27326530612245,
+      "shadow_pct": 3.4391836734693877,
+      "raw_mae": 31.70442906369934,
+      "raw_p95": 83.92095166067058,
+      "material_mae": 16.74621943941668,
+      "material_p95": 44.28368281713967,
+      "raw_shadow_gap": 2.9426006617555567,
+      "material_shadow_gap": 1.8646509595897705,
+      "raw_shadow_gap_inside": 75.65829332865368,
+      "material_shadow_gap_inside": 32.50806419747081,
+      "target_mean_srgb": [
+        0.8084542752984124,
+        0.8008609728003955,
+        0.7581057505978662
+      ],
+      "raw_mean_srgb": [
+        0.7176706523751071,
+        0.7962017858005089,
+        0.7493211455384455
+      ],
+      "material_mean_srgb": [
+        0.8895688732699415,
+        0.8329647523265195,
+        0.7430472004880677
+      ]
+    },
+    {
+      "sample": "streaky-mix__seed45__light7018",
+      "class_label": "streaky-mix",
+      "glass_name": "streaky-mix_45",
+      "glass_class": "wispy",
+      "has_frame": true,
+      "valid_pct": 93.87857142857143,
+      "shadow_pct": 4.13795918367347,
+      "raw_mae": 67.89007723494895,
+      "raw_p95": 119.13166973463004,
+      "material_mae": 21.81674820228006,
+      "material_p95": 50.43390457204922,
+      "raw_shadow_gap": 2.2121748301073634,
+      "material_shadow_gap": 0.7474463055321254,
+      "raw_shadow_gap_inside": 45.037502873298905,
+      "material_shadow_gap_inside": 6.311072178562751,
+      "target_mean_srgb": [
+        0.7495828648006603,
+        0.7628883136349397,
+        0.7318347098141053
+      ],
+      "raw_mean_srgb": [
+        0.48693434525419355,
+        0.5403783460636703,
+        0.48898167512955415
+      ],
+      "material_mean_srgb": [
+        0.8576712017584771,
+        0.8002841768133165,
+        0.7072803072245405
+      ]
+    },
+    {
+      "sample": "streaky-mix__seed45__light7995",
+      "class_label": "streaky-mix",
+      "glass_name": "streaky-mix_45",
+      "glass_class": "wispy",
+      "has_frame": true,
+      "valid_pct": 93.06387755102041,
+      "shadow_pct": 0.1036734693877551,
+      "raw_mae": 45.988017562609656,
+      "raw_p95": 85.00065725153705,
+      "material_mae": 18.873069897320214,
+      "material_p95": 47.71509749503904,
+      "raw_shadow_gap": 1.5377634672401528,
+      "material_shadow_gap": 1.8472137238163822,
+      "raw_shadow_gap_inside": 72.28753941147424,
+      "material_shadow_gap_inside": 40.78954939015175,
+      "target_mean_srgb": [
+        0.7519280061506868,
+        0.7641526045056719,
+        0.7325001040081616
+      ],
+      "raw_mean_srgb": [
+        0.5796602458412917,
+        0.6545760914926511,
+        0.643544014783715
+      ],
+      "material_mean_srgb": [
+        0.8346244506105431,
+        0.785197327709264,
+        0.697287323483435
+      ]
+    },
+    {
+      "sample": "wispy-white__seed46__light1522",
+      "class_label": "wispy-white",
+      "glass_name": "wispy-white_46",
+      "glass_class": "wispy",
+      "has_frame": false,
+      "valid_pct": 99.68591836734694,
+      "shadow_pct": 5.52204081632653,
+      "raw_mae": 78.33839805706627,
+      "raw_p95": 124.01737290296525,
+      "material_mae": 19.32000146671639,
+      "material_p95": 35.191985687308424,
+      "raw_shadow_gap": 2.3660507877907255,
+      "material_shadow_gap": 2.022964920935033,
+      "raw_shadow_gap_inside": 41.123667824801885,
+      "material_shadow_gap_inside": 23.731736508683444,
+      "target_mean_srgb": [
+        0.9258174407810245,
+        0.8675494315320411,
+        0.7829412383185915
+      ],
+      "raw_mean_srgb": [
+        0.5813880289589344,
+        0.5751051502458526,
+        0.5093531159770968
+      ],
+      "material_mean_srgb": [
+        0.8556976540380874,
+        0.7984742014044051,
+        0.7162624519112774
+      ]
+    },
+    {
+      "sample": "wispy-white__seed46__light6553",
+      "class_label": "wispy-white",
+      "glass_name": "wispy-white_46",
+      "glass_class": "wispy",
+      "has_frame": false,
+      "valid_pct": 99.69183673469388,
+      "shadow_pct": 6.186530612244898,
+      "raw_mae": 52.83132933548888,
+      "raw_p95": 82.27036217306713,
+      "material_mae": 12.242516502653704,
+      "material_p95": 28.970926852357504,
+      "raw_shadow_gap": 0.9715139908348006,
+      "material_shadow_gap": 1.2972887844968308,
+      "raw_shadow_gap_inside": 12.96822647941952,
+      "material_shadow_gap_inside": 14.895380592191652,
+      "target_mean_srgb": [
+        0.92602858975762,
+        0.867746550432218,
+        0.7831220584224826
+      ],
+      "raw_mean_srgb": [
+        0.696482609425897,
+        0.6782649598449351,
+        0.6055235734515612
+      ],
+      "material_mean_srgb": [
+        0.8922003618105548,
+        0.8331893896052884,
+        0.7482611119150553
+      ]
+    }
+  ],
+  "light_variance": {
+    "cathedral-amber_43": {
+      "n": 2,
+      "raw_mean_std_srgb255": 7.825565760213524,
+      "material_mean_std_srgb255": 9.861928944563642,
+      "target_mean_std_srgb255": 0.033709330022054645
+    },
+    "cathedral-green_42": {
+      "n": 4,
+      "raw_mean_std_srgb255": 7.478732970985567,
+      "material_mean_std_srgb255": 6.595198598607198,
+      "target_mean_std_srgb255": 0.12992230343330657
+    },
+    "cathedral-green_43": {
+      "n": 3,
+      "raw_mean_std_srgb255": 8.57125164124366,
+      "material_mean_std_srgb255": 8.942368358299282,
+      "target_mean_std_srgb255": 0.03390626624300824
+    },
+    "dark-opaque_44": {
+      "n": 2,
+      "raw_mean_std_srgb255": 0.336628720401123,
+      "material_mean_std_srgb255": 1.5786644823872509,
+      "target_mean_std_srgb255": 0.10503812705521767
+    },
+    "streaky-mix_44": {
+      "n": 2,
+      "raw_mean_std_srgb255": 9.869796235499313,
+      "material_mean_std_srgb255": 2.7042249974507087,
+      "target_mean_std_srgb255": 0.1157849536548336
+    },
+    "streaky-mix_45": {
+      "n": 2,
+      "raw_mean_std_srgb255": 15.363154390985192,
+      "material_mean_std_srgb255": 2.04537981970641,
+      "target_mean_std_srgb255": 0.18168012262963856
+    },
+    "wispy-white_46": {
+      "n": 2,
+      "raw_mean_std_srgb255": 13.363056020471653,
+      "material_mean_std_srgb255": 4.386703629027973,
+      "target_mean_std_srgb255": 0.025036239178202746
+    }
+  }
+}
