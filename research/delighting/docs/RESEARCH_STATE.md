@@ -77,6 +77,20 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   remaining gap was traced to the same single-photo `T·B` background-separation ambiguity as OP-1/
   the north-star hard case below, not a tunable color-constancy parameter — four other candidate
   fixes were tested and rejected as one-sided trades against wispy-white (see report 009 §2.1).
+- 013 (branch `research/delighting-suncatcher`) FIRST real end-to-end product test: the app's
+  tutorial pair (real backlit suncatcher photo + the two hammered-cathedral sheet photos + GT
+  piece polygons). `suncatcher_bench.py` reimplements ResultPanel compositing and compares
+  raw-copy vs de-light+relight. Provenance caveat (maintainer-confirmed): pattern is DIFFERENT
+  physical glass than the sheets and has its own baked light → absolute color is style-distance,
+  not accuracy; primary metric is cross-piece consistency + lighting-position sensitivity (no
+  true reference needed). Split verdict, along the difficulty axes: de-lighting flattens the
+  tiles (interior pixel-CV −22/−33%) and improves brightness-consistency at the product level
+  (position-sensitivity luminance-CV −22% agg), but does NOT improve perceptual Lab color
+  consistency (slightly worse) — the residual is transmitted garden bokeh + relief in
+  transmissive cathedral glass, i.e. the ill-posed see-through-background separation
+  (difficulty 2), now confirmed on REAL glass not just Cycles. Biggest gap = learned T·B
+  separation, not solder/illuminant. Capture ask to make fidelity testable: shoot one sheet,
+  cut a piece from a known region, assemble+backlight, shoot the result.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
