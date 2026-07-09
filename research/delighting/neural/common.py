@@ -19,13 +19,17 @@ sys.path.insert(0, DELIGHT)
 
 import extract  # noqa: E402  (classical pipeline, reused verbatim)
 
-DATA_SNAPSHOT = os.path.join(HERE, "data_snapshot")
+# NEURAL_DATA_SNAPSHOT / NEURAL_WEIGHTS let a second dataset generation (report
+# 012, v2 synthetic data with fixed frame occluders) run through the same
+# pipeline without disturbing the v1 snapshot/weights this report 010/011 file
+# set was trained on.
+DATA_SNAPSHOT = os.environ.get("NEURAL_DATA_SNAPSHOT", os.path.join(HERE, "data_snapshot"))
 # CACHE_DIR holds classical maps precomputed from a specific extract.py. The
 # NEURAL_CACHE env var lets us build a second cache from the FIXED extractor
 # (report 009) without disturbing the original one (report 010 was trained on
 # the original extractor's T). See report 011 (combined run).
 CACHE_DIR = os.environ.get("NEURAL_CACHE", os.path.join(HERE, "cache"))
-WEIGHTS = os.path.join(HERE, "unet_shadow.pt")
+WEIGHTS = os.environ.get("NEURAL_WEIGHTS", os.path.join(HERE, "unet_shadow.pt"))
 
 # Working resolution for the cached maps (max dim). The classical extractor and
 # the eval both run at this size.
@@ -40,9 +44,12 @@ CLASS_MAP = {
     "streaky-mix": "wispy",
 }
 
-# Held-out test split. Every test LIGHTING id is absent from training, so the
-# test measures generalization to unseen shadows, not memorization. Cathedral
-# (the class report 008 flagged) contributes the two primary test samples.
+# Held-out test split for the ORIGINAL v1 dataset (report 010/011). Every test
+# LIGHTING id is absent from training, so the test measures generalization to
+# unseen shadows, not memorization. Cathedral (the class report 008 flagged)
+# contributes the two primary test samples. Kept verbatim for reproducibility
+# of the v1 reports; NOT used for v2 (those sample names don't exist there --
+# see split() below, which falls back to a data-driven rule in that case).
 TEST_SAMPLES = {
     "cathedral-green__seed42__light7527",
     "cathedral-green__seed43__light1262",
@@ -64,6 +71,27 @@ def list_samples():
 
 
 def split(names):
-    train = [n for n in names if n not in TEST_SAMPLES]
-    test = [n for n in names if n in TEST_SAMPLES]
+    """Train/test split, held out by UNSEEN LIGHTING id (same recipe+seed
+    sheet may appear in both, under a different lighting -- generalization,
+    not memorization).
+
+    If every v1 TEST_SAMPLES name is present, use that exact legacy split
+    (reproduces reports 010/011 bit-for-bit). Otherwise (e.g. the v2 dataset,
+    report 012, whose sample names differ) fall back to a deterministic
+    data-driven rule: group by recipe (the `__` prefix before the seed), and
+    hold out the alphabetically-last lighting id in each group.
+    """
+    names_set = set(names)
+    if TEST_SAMPLES <= names_set:
+        train = [n for n in names if n not in TEST_SAMPLES]
+        test = [n for n in names if n in TEST_SAMPLES]
+        return train, test
+
+    by_recipe = {}
+    for n in names:
+        recipe = n.split("__")[0]
+        by_recipe.setdefault(recipe, []).append(n)
+    test_set = {sorted(group)[-1] for group in by_recipe.values()}
+    train = [n for n in names if n not in test_set]
+    test = [n for n in names if n in test_set]
     return train, test

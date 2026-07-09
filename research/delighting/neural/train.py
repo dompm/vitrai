@@ -149,8 +149,10 @@ def main():
 
     torch.save({"state_dict": net.state_dict(), "in_ch": 6, "base": 16,
                 "args": vars(args)}, common.WEIGHTS)
-    json.dump(log, open(os.path.join(common.HERE, "train_log.json"), "w"), indent=2)
+    log_path = os.environ.get("NEURAL_TRAIN_LOG", os.path.join(common.HERE, "train_log.json"))
+    json.dump(log, open(log_path, "w"), indent=2)
     print(f"saved {common.WEIGHTS}")
+    print(f"saved {log_path}")
 
 
 if __name__ == "__main__":

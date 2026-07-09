@@ -16,6 +16,13 @@ DISTRIBUTION-SHIFT NOTE: the U-Net was trained with the ORIGINAL extractor's T a
 input. Cathedral/wispy T are (near) unchanged by the fix, so (3) is in-distribution
 there. dark-opaque T changed materially -> (3) feeds the model out-of-distribution
 input; we report it and flag it honestly rather than retrain.
+
+v2 NOTE (report 012): on `research/delighting-datav2` there is only ONE classical
+extractor (the fixed one merged in from report 009/011 -- there is no separate
+buggy "original" left to diff against). NEURAL_CACHE_ORIG / NEURAL_CACHE_FIX let
+the caller point both at the same v2 cache, so `orig == fixed` trivially
+(T-shift 0) and the three meaningful conditions become raw / fixed-classical /
+fixed-classical+retrained-neural, which is what report 012 actually compares.
 """
 import argparse
 import json
@@ -28,8 +35,8 @@ import common
 import eval_preview_invariance as epi
 from model import ShadowUNet, blend
 
-CACHE_ORIG = os.path.join(common.HERE, "cache")
-CACHE_FIX = os.path.join(common.HERE, "cache_fixed")
+CACHE_ORIG = os.environ.get("NEURAL_CACHE_ORIG", os.path.join(common.HERE, "cache"))
+CACHE_FIX = os.environ.get("NEURAL_CACHE_FIX", os.path.join(common.HERE, "cache_fixed"))
 
 
 def preview(T, h, bg):
@@ -96,9 +103,11 @@ def main():
             "in_orig": region_mae(p_orig, target, shadow),
             "in_fixed": region_mae(p_fix, target, shadow),
             "in_neural": region_mae(p_neu, target, shadow),
+            "out_raw": region_mae(raw, target, nonshadow),
             "out_orig": region_mae(p_orig, target, nonshadow),
             "out_fixed": region_mae(p_fix, target, nonshadow),
             "out_neural": region_mae(p_neu, target, nonshadow),
+            "all_raw": epi.srgb_mae255(raw, target, valid),
             "all_orig": epi.srgb_mae255(p_orig, target, valid),
             "all_fixed": epi.srgb_mae255(p_fix, target, valid),
             "all_neural": epi.srgb_mae255(p_neu, target, valid),
@@ -116,8 +125,8 @@ def main():
         return out
 
     keys = ["in_raw", "in_orig", "in_fixed", "in_neural",
-            "out_orig", "out_fixed", "out_neural",
-            "all_orig", "all_fixed", "all_neural", "T_shift_orig_to_fixed"]
+            "out_raw", "out_orig", "out_fixed", "out_neural",
+            "all_raw", "all_orig", "all_fixed", "all_neural", "T_shift_orig_to_fixed"]
     per_recipe = {lab: agg([r for r in rows if r["class_label"] == lab], keys)
                   for lab in sorted({r["class_label"] for r in rows})}
     shadowed = [r for r in rows if r["shadow_pct"] > 0.5]
@@ -130,15 +139,15 @@ def main():
     # markdown table (per recipe, inside/outside shadow)
     def cell(v):
         return "n/a" if v is None else f"{v:.1f}"
-    lines = ["| recipe | n | IN orig | IN fixed | IN fixed+neural | OUT orig | OUT fixed | OUT fixed+neural | T-shift |",
-             "|---|---|---|---|---|---|---|---|---|"]
+    lines = ["| recipe | n | IN raw | IN orig | IN fixed | IN fixed+neural | OUT raw | OUT orig | OUT fixed | OUT fixed+neural | T-shift |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     for lab, v in per_recipe.items():
-        lines.append(f"| {lab} | {v['n']} | {cell(v['in_orig'])} | {cell(v['in_fixed'])} | "
-                     f"{cell(v['in_neural'])} | {cell(v['out_orig'])} | {cell(v['out_fixed'])} | "
+        lines.append(f"| {lab} | {v['n']} | {cell(v['in_raw'])} | {cell(v['in_orig'])} | {cell(v['in_fixed'])} | "
+                     f"{cell(v['in_neural'])} | {cell(v['out_raw'])} | {cell(v['out_orig'])} | {cell(v['out_fixed'])} | "
                      f"{cell(v['out_neural'])} | {cell(v['T_shift_orig_to_fixed'])} |")
     so = summary["shadowed_overall"]
-    lines.append(f"| **shadowed (all)** | {so['n']} | {cell(so['in_orig'])} | {cell(so['in_fixed'])} | "
-                 f"{cell(so['in_neural'])} | {cell(so['out_orig'])} | {cell(so['out_fixed'])} | "
+    lines.append(f"| **shadowed (all)** | {so['n']} | {cell(so['in_raw'])} | {cell(so['in_orig'])} | {cell(so['in_fixed'])} | "
+                 f"{cell(so['in_neural'])} | {cell(so['out_raw'])} | {cell(so['out_orig'])} | {cell(so['out_fixed'])} | "
                  f"{cell(so['out_neural'])} | - |")
     table = "\n".join(lines)
     open(os.path.join(args.out, f"combined_table_{args.split}.md"), "w").write(table + "\n")
