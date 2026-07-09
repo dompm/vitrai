@@ -70,6 +70,18 @@ def list_samples():
     return out
 
 
+def _shadow_frac(name):
+    """Pair-detected shadow fraction from the cached npz (a DATA property,
+    derived from the with/without photo pair -- not a model output, so using
+    it in the split rule is annotation-based stratification, not leakage)."""
+    import numpy as np
+    p = os.path.join(CACHE_DIR, name + ".npz")
+    if not os.path.exists(p):
+        return None
+    z = np.load(p)
+    return float(z["shadow"].mean())
+
+
 def split(names):
     """Train/test split, held out by UNSEEN LIGHTING id (same recipe+seed
     sheet may appear in both, under a different lighting -- generalization,
@@ -78,8 +90,12 @@ def split(names):
     If every v1 TEST_SAMPLES name is present, use that exact legacy split
     (reproduces reports 010/011 bit-for-bit). Otherwise (e.g. the v2 dataset,
     report 012, whose sample names differ) fall back to a deterministic
-    data-driven rule: group by recipe (the `__` prefix before the seed), and
-    hold out the alphabetically-last lighting id in each group.
+    data-driven rule: group by recipe (the `__` prefix before the seed) and
+    hold out the alphabetically-last lighting id in each group -- restricted,
+    when the cache exists, to samples whose pair-detected shadow covers >0.5%
+    of the frame. Without that restriction a recipe can hold out a sample
+    with NO measurable shadow (e.g. dark-opaque under a dim EV draw), leaving
+    the inside-shadow metric undefined exactly where it matters.
     """
     names_set = set(names)
     if TEST_SAMPLES <= names_set:
@@ -91,7 +107,12 @@ def split(names):
     for n in names:
         recipe = n.split("__")[0]
         by_recipe.setdefault(recipe, []).append(n)
-    test_set = {sorted(group)[-1] for group in by_recipe.values()}
+    test_set = set()
+    for group in by_recipe.values():
+        fracs = {n: _shadow_frac(n) for n in group}
+        shadowed = [n for n in group if fracs[n] is not None and fracs[n] > 0.005]
+        pool = shadowed if shadowed else group
+        test_set.add(sorted(pool)[-1])
     train = [n for n in names if n not in test_set]
     test = [n for n in names if n in test_set]
     return train, test

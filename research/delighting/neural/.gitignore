@@ -6,3 +6,5 @@ cache_fixed/
 *.pt
 *.pth
 __pycache__/
+cache_v2/
+unet_shadow_v2.pt
