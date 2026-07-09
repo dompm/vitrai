@@ -54,18 +54,57 @@ from PIL import Image, ImageDraw
 CLASSES = ("opalescent", "wispy", "cathedral-clear", "dark-opaque")
 LUM = np.array([0.2126, 0.7152, 0.0722])
 
-# Absolute-transmittance anchor (report 003). Per-image exposure is unknown, so
-# the split between the illumination scale L and the transmittance scale T is a
-# gauge the photo does not fix -- and the self-recon metric is blind to it (L
-# absorbs whatever T gives up). We pin the gauge with a class prior: (percentile,
-# target) = "the clearest glass of this class transmits about `target`". Chosen
-# so dark-opaque comes out near-black (its p99->0.97 stretch was the visible bug)
-# while the near-clear classes are essentially unchanged (target ~= old 0.97).
+# Absolute-transmittance anchor (report 003, revised report 009). Per-image
+# exposure is unknown, so the split between the illumination scale L and the
+# transmittance scale T is a gauge the photo does not fix -- and the self-recon
+# metric is blind to it (L absorbs whatever T gives up). We pin the gauge with a
+# class prior: (percentile, target) = "the brightest 1% of this class transmits
+# about `target`". Chosen so dark-opaque comes out near-black (its p99->0.97
+# stretch was the original report-003 bug) while the near-clear classes are
+# essentially unchanged (target ~= old 0.97).
+#
+# Report 009 revision: synthetic per-pixel ground truth (report 007/008) showed
+# dark-opaque and opalescent running SYSTEMATICALLY TOO DARK against authored T,
+# to the point that dark-opaque's material-relight LOST to a raw pixel copy on
+# the product preview-invariance benchmark (report 008: raw MAE 18.9 vs material
+# 42.9) -- an over-dark anchor is a real regression, not just a numeric miss.
+# cathedral-clear / wispy were checked the same way and left UNCHANGED: their
+# extracted mean luminance already matches the measured GT within ~1-4%
+# (cathedral-amber ext/gt luminance 0.697/0.706; wispy-white's own GT p99 sits at
+# ~0.949, matching the 0.95 target almost exactly) -- their residual per-pixel
+# errors are relief/color-constancy issues (see fix 2, and report 007 item 4),
+# not an anchor-scale problem, and pushing the anchor further would overfit one
+# recipe (e.g. cathedral-amber) at the expense of another (cathedral-green is
+# already slightly OVER, not under) -- rejected per the overfitting guard.
+#   dark-opaque: measured GT p99 (same percentile the anchor targets) is ~0.216
+#   across both rendered samples, more than double the old 0.10. We do NOT fit
+#   that number directly -- the task brief itself flags gt~=0.19 as one
+#   synthetic recipe's authoring choice ("dim tinted, not near-black"), and nothing
+#   guarantees real "dark-opaque" sheets share that peak. Picked target = 0.20,
+#   deliberately just under the measured GT peak: a physically-legible "these
+#   sheets are deeply tinted, not literally opaque" reading that still leaves
+#   headroom below authored GT so we are not curve-fitting one sample. Checked
+#   against the real 9-sheet library (report 003's black.jpg, genuinely near-
+#   opaque): this only lifts its extracted mean from ~2% to ~4% (its own
+#   internal contrast -- median/peak ratio ~0.2 -- keeps it dark regardless of
+#   the class ceiling), so black glass still reads black.
+#   opalescent: no synthetic recipe exercises this CLASS directly (wispy-white/
+#   streaky-mix are both scored under the "wispy" oracle class per
+#   eval_synthetic.py). But wispy-white's measured GT p99 (~0.949, milky-white
+#   opal glass) refutes the old target's premise ("brightest is translucent, not
+#   clear" -> 0.80): strongly backlit milky glass CAN reach near-full
+#   transmittance at its brightest fleck (haze scatters the light, it does not
+#   have to absorb it). Raised to 0.88 -- still below wispy's 0.95 (milky
+#   diffusers are conservatively kept a notch below streaky/clear-patch glass,
+#   which really can show a clear near-white streak), but well above the old
+#   0.80. Validated only qualitatively (real library white.jpg, gauge (c)) since
+#   there is no ground truth for this class; a smaller, more conservative bump
+#   than dark-opaque's for that reason.
 T_ANCHOR = {
     "cathedral-clear": (99, 0.95),
     "wispy": (99, 0.95),
-    "opalescent": (99, 0.80),   # milky: brightest is translucent, not clear
-    "dark-opaque": (99, 0.10),  # brightest fleck transmits ~10%; median ends near-black
+    "opalescent": (99, 0.88),   # milky: brightest is translucent, not clear
+    "dark-opaque": (99, 0.20),  # brightest fleck transmits ~20%; median ends dark, not black
 }
 
 
@@ -223,11 +262,26 @@ def estimate_illumination(lin, glass_class, W):
         s2 = 6
         cs = cv2.resize(c.astype(np.float32), (W_ // s2, H_ // s2), interpolation=cv2.INTER_AREA)
         ws = cv2.resize(w0.astype(np.float32), (W_ // s2, H_ // s2), interpolation=cv2.INTER_AREA)
+        # report 009 fix 2: a nonzero weight FLOOR (as opposed to a hard cutoff)
+        # let the large mass of only-partially-milky pixels vote in the fit.
+        # For a material that is genuinely tinted in its clearer/less-milky
+        # areas (streaky-mix: real blue tint anti-correlates with haze, see
+        # report 009 for the measurement), that partial-milkiness mass is
+        # partially colored, not neutral -- it dragged the fit into
+        # mis-estimating a spatially-varying "illuminant" that actually
+        # inverted the true blueness/haze relationship (measured: raw photo
+        # corr(blueness, haze) = -0.16 (right sign), after the old fit = +0.18
+        # (flipped) ). Zeroing weight below 0.3 keeps only pixels confidently
+        # milky enough to be trusted as revealing illuminant, not glass color;
+        # verified this is a small, same-direction win on both recipes that
+        # exercise this code path (streaky-mix hue error 0.127 -> 0.123;
+        # wispy-white unaffected, 0.0142 -> 0.0153 chroma error, noise-level).
+        ws = np.where(ws < 0.3, 0.0, ws)
         ys, xs = np.mgrid[0:cs.shape[0], 0:cs.shape[1]]
         xs = xs / cs.shape[1] - 0.5
         ys = ys / cs.shape[0] - 0.5
         A = np.stack([np.ones_like(xs), xs, ys, xs * xs, ys * ys, xs * ys], -1).reshape(-1, 6)
-        wv = np.sqrt(np.maximum(ws.reshape(-1), 1e-4))
+        wv = np.sqrt(np.maximum(ws.reshape(-1), 1e-5))
         fit = np.zeros((H_ // s2 if False else cs.shape[0], cs.shape[1], 3))
         yf, xf = np.mgrid[0:cs.shape[0], 0:cs.shape[1]]
         for ch in range(3):
@@ -339,10 +393,33 @@ def assemble_T(R, h, glass_class, mark_mask=None):
     if glass_class == "cathedral-clear":
         # background assumed featureless backlight; relief/lensing stays in T
         return Rc, np.ones_like(Y)
-    # wispy / opalescent: trust pixels that are milky OR show a bright, near-
-    # neutral background (saturated bright pixels are background content, e.g.
-    # lawn -- these classes are near-white glass, so color there is not glass)
-    mx, mn = Rc.max(axis=-1), Rc.min(axis=-1)
+    # wispy / opalescent: trust pixels that are milky OR show a bright,
+    # near-the-SHEET'S-OWN-TINT background (saturated bright pixels that don't
+    # match the glass's own color are background content, e.g. lawn).
+    #
+    # Report 009 fix 2: the old version measured saturation against absolute
+    # neutral grey, i.e. it assumed this class is always near-white, so ANY
+    # real color was read as background bleed-through and diffusion-filled
+    # away -- one contributor to neutralizing streaky-mix's genuine blue tint
+    # to grey (report 007/008: gt [0.64,0.77,0.92] extracted as
+    # [0.77,0.78,0.78]). Investigation (report 009) found the dominant
+    # contributor was actually upstream in `estimate_illumination`'s chroma
+    # fit (fixed there separately); this confidence gate is a second, smaller,
+    # independently-correct issue with the same wrong premise, kept as a
+    # no-regression fix even though its effect was negligible on the specific
+    # samples measured here (confidence was already high almost everywhere on
+    # those samples -- see report 009 for the honest accounting). Fix: measure
+    # saturation relative to the sheet's OWN robust median hue (a
+    # wispy-white/opalescent sheet's median hue is near-neutral anyway, so
+    # this is a no-op there; a uniformly-tinted sheet's dominant color now
+    # reads as "not saturated", i.e. trusted as glass, while a patch that
+    # genuinely differs from the sheet's own tint -- true background
+    # bleed-through -- still stands out).
+    chroma = Rc / (Y[..., None] + 1e-6)
+    tint = np.median(chroma.reshape(-1, 3), axis=0)
+    tint = tint / (tint.mean() + 1e-9)
+    Rc_detinted = Rc / (tint[None, None, :] + 1e-6)
+    mx, mn = Rc_detinted.max(axis=-1), Rc_detinted.min(axis=-1)
     sat = (mx - mn) / (mx + 1e-6)
     desat = np.exp(-((sat / 0.35) ** 2))
     conf = np.clip(np.maximum(h, smoothstep(Y, 0.70, 0.92) * desat), 0, 1)

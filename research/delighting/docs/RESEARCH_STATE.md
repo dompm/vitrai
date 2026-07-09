@@ -66,6 +66,17 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   wispy-white/streaky/cathedral overall (excluding dark-opaque: raw MAE 43.5 vs material MAE 20.6
   sRGB/255), but dark-opaque fails because `T` is too dark, and cathedral cast shadows become fake
   dark transmittance locally (inside-shadow material gap worse than raw).
+- 009 (branch `research/delighting-classical`) fixed the two report-007/008 biases. `T_ANCHOR`:
+  dark-opaque 0.10->0.20 (data-driven, gt p99≈0.216, deliberately conservative — not curve-fit) and
+  opalescent 0.80->0.88 (no direct synthetic GT, justified by the closely-related wispy-white
+  evidence); cathedral-clear/wispy anchors left unchanged (measured already correctly calibrated;
+  moving them would overfit one recipe at another's expense — see report for the luminance table).
+  Preview-invariance headline: **dark-opaque flips from a raw-copy loss (42.9) to a material-relight
+  win (16.5 vs raw 18.9)**, with no other recipe regressing. Color-constancy (streaky-mix's blue):
+  partially fixed (milkiness-fit weight cutoff + sheet-relative desaturation in `assemble_T`); the
+  remaining gap was traced to the same single-photo `T·B` background-separation ambiguity as OP-1/
+  the north-star hard case below, not a tunable color-constancy parameter — four other candidate
+  fixes were tested and rejected as one-sided trades against wispy-white (see report 009 §2.1).
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
