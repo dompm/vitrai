@@ -1,4 +1,5 @@
 import os
+import sys
 import cv2
 import numpy as np
 
@@ -6,7 +7,7 @@ import numpy as np
 os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 def main():
-    root_dir = "validate_data"
+    root_dir = sys.argv[1] if len(sys.argv) > 1 else "validate_data"
     if not os.path.exists(root_dir):
         print(f"Error: {root_dir} not found.")
         return
@@ -63,8 +64,9 @@ def main():
     print(f"Validation Results: Uniform-Backlight T-Agreement")
     print(f"Total evaluated samples: {total_samples}")
     print("========================================")
-    for r, maes in recipes.items():
-        print(f"{r}: MAE = {np.mean(maes):.6f}")
+    for r in sorted(recipes):
+        maes = recipes[r]
+        print(f"{r}: MAE = {np.mean(maes):.6f}  (n={len(maes)})")
 
 if __name__ == '__main__':
     main()
