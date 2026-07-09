@@ -20,7 +20,8 @@ inverse-rendering track. `010-material-v2-representation.md` starts a bolder
 representation reset for surface relief / normals. `011-artist-material-review-prototype.md`
 adds a standalone artist-facing comparison prototype. `012-artist-feedback-readout.md`
 turns the first artist readout into the "make it beautiful, but keep it honest"
-research rule.
+research rule. `014-catalog-constrained-sheet-prior.md` uses manufacturer catalog
+images to sanity-check a sheet-level prior for the right-side glass panel.
 
 ## Layout
 
@@ -32,6 +33,8 @@ register_pair.py  cross-lighting validation (M3): register two photos, compare m
 eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
 train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
 generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
+sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppressing sheet-photo contamination
+catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -75,6 +78,10 @@ blender -b --python generate_synthetic.py -- --out synthetic_data_v2 --count 100
 
 # artist-facing Material-v2 comparison demo; open the file in a browser
 open prototypes/material-v2-artist-demo.html
+
+# catalog-constrained sheet-prior audit; registry currently lives in the main workspace
+python3 catalog_texture_audit.py \
+  --registry /Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json
 ```
 
 manifest.json format (keys are filenames inside the folder):

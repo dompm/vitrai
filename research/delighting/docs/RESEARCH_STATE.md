@@ -120,6 +120,13 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - 012 artist feedback readout: relief/normal rendering feels directionally right, but the product
   must answer "is this derived from the real sheet, or invented?" Prototype now exposes `Relief
   Source` / `Truth Check`; research should add a relief provenance/confidence signal.
+- 014 catalog-constrained sheet prior: using the real suncatcher sheet photos and 1,381 scraped
+  manufacturer catalog sheets, a sheet-level prior that keeps high-frequency hammered relief while
+  suppressing low/mid-frequency contamination reduces position sensitivity from raw 8.98 dE /
+  0.407 lum-CV and fixed `T/h` 10.12 dE / 0.318 lum-CV to 1.90 dE / 0.060 lum-CV. Catalog audit
+  says the tuned green prior keeps Textured/Baroque-level texture (50th percentile high-frequency)
+  while dropping low-frequency variation to a normal Cathedral range. This is promising but must be
+  class-gated/provenance-labeled because it can over-flatten true wisps/streaks.
 
 
 ## Open problems / next
@@ -136,6 +143,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   whether the preview helps choose glass.
 - Add provenance/confidence to Material-v2: sheet-derived vs plausible prior vs artist tuned. Do not
   let a prettier invented relief map masquerade as measured glass.
+- Use the scraped manufacturer catalog as a weak material prior: learn which spatial variation is
+  likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
