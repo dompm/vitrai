@@ -10,3 +10,4 @@ test*.png
 test*.exr
 *.tsbuildinfo
 .DS_Store
+__pycache__/
