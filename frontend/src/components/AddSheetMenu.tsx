@@ -10,10 +10,11 @@ interface AddSheetMenuProps {
   onPickUrl: (url: string, label: string, scale?: Scale | null) => void;
   onUpload: (file: File) => void;
   onClose: () => void;
+  onOpenLibrary: () => void;
 }
 
 export function AddSheetMenu({
-  anchor, currentProjectName, onPickUrl, onUpload, onClose,
+  anchor, currentProjectName, onPickUrl, onUpload, onClose, onOpenLibrary,
 }: AddSheetMenuProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,16 @@ export function AddSheetMenu({
       style={{ left: anchor.left, top: anchor.top }}
       onMouseDown={e => e.stopPropagation()}
     >
+      <button
+        className="add-sheet-menu-item add-sheet-menu-browse"
+        onClick={() => { onOpenLibrary(); onClose(); }}
+        style={{ fontWeight: 600, color: 'var(--amber)' }}
+      >
+        <span className="add-sheet-menu-upload-icon" aria-hidden>📂</span>
+        <span className="add-sheet-menu-label">Browse Glass Library...</span>
+      </button>
+      <div className="add-sheet-menu-divider" />
+
       <button
         className="add-sheet-menu-item add-sheet-menu-upload"
         onClick={() => fileInputRef.current?.click()}

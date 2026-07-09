@@ -5,6 +5,7 @@ import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
+import { GlassLibraryDialog } from './components/GlassLibraryDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
@@ -440,6 +441,7 @@ export function App() {
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
+  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -1428,6 +1430,13 @@ export function App() {
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
           onClose={() => setAddSheetMenu(null)}
+          onOpenLibrary={() => setShowGlassLibrary(true)}
+        />
+      )}
+      {showGlassLibrary && (
+        <GlassLibraryDialog
+          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
+          onClose={() => setShowGlassLibrary(false)}
         />
       )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />
