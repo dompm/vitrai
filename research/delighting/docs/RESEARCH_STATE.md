@@ -14,9 +14,15 @@ capture-invariant intrinsic representation, then **relight** it in a controllabl
 3D lamp), so the same physical glass always previews consistently.
 
 ## Material model
-Two per-pixel fields: **T(x)** = RGB transmittance in [0,1]; **h(x)** = haze/diffusion (1 = milky
-opal that glows and hides the background, 0 = clear glass showing the background sharply).
-Light model: `L(x) ≈ T(x)·[h·⟨B⟩ + (1−h)·B]`, B = backlight/background. IOR hardcoded 1.5.
+**v1 / current extractor:** two per-pixel fields: **T(x)** = RGB transmittance in [0,1];
+**h(x)** = haze/diffusion (1 = milky opal that glows and hides the background, 0 = clear glass
+showing the background sharply). Light model: `L(x) ≈ T(x)·[h·⟨B⟩ + (1−h)·B]`, B =
+backlight/background. IOR hardcoded 1.5.
+
+**v2 / high-risk representation reset:** keep `T,h`, but add **height/normal** so the app can render
+surface relief, local background warping, and glints. The synthetic generator now emits `gt_height`
+and `gt_normal`, and uses the same height texture to drive Blender bump. This is the current bet for
+making the final app preview feel like glass rather than a capture-invariant flat transparency.
 
 ## Success metric (refined)
 The **primary** metric is CROSS-CAPTURE CONSISTENCY / invariance — the same glass under different
@@ -41,14 +47,18 @@ anchored by a class prior (per-image normalization was a gauge bug that made bla
 report 003). All 9 default-library sheets extract & relight plausibly.
 **Track C — VLM class prior:** `claude` CLI multiple-choice classifier (classifier only, never numeric
 regression — small models collapse numbers). Batch default; manifest = explicit human override.
-**Learned track — not started:** the likely endgame for difficulty-(2); enabled by the synthetic data.
+**Learned track — high-risk active:** `train_glassnet_zero.py` proved a tiny class-conditioned U-Net
+can learn held-out-lighting invariance on the current synthetic data. Next version should predict
+Material-v2 channels (`T,h,height`) and be evaluated on held-out material identities.
 
 ## Synthetic ground-truth data (Blender/Cycles)
 Textures-first (T,h authored as images, fed to shader → GT by construction), `Standard` view transform,
 shadow on/off pairs (for the hand-shadow problem OP-1), mullion/frame toggle, multi-lighting per seed.
 Generator: `../generate_synthetic.py` (now in-house via `bpy` in a uv env). 5 recipes: cathedral-green,
-cathedral-amber, dark-opaque, streaky-mix, wispy-white. **Caveat:** Cycles glass is cleaner than real
-rolled glass — synthetic certifies method *correctness*, real photos remain the fidelity benchmark.
+cathedral-amber, dark-opaque, streaky-mix, wispy-white. As of report 010, the generator starts
+Material-v2 by exporting authored `height` and derived `normal` maps, and using that height to drive
+Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — synthetic certifies method
+*correctness*, real photos remain the fidelity benchmark.
 
 ## Iteration results
 - 001 classical baseline; 002 mark-inpaint + contrast + library batch + pair harness; 003 absolute
@@ -66,12 +76,25 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   wispy-white/streaky/cathedral overall (excluding dark-opaque: raw MAE 43.5 vs material MAE 20.6
   sRGB/255), but dark-opaque fails because `T` is too dark, and cathedral cast shadows become fake
   dark transmittance locally (inside-shadow material gap worse than raw).
+- 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
+  U-Net trained on the current synthetic data beats raw/classical on a held-out-lighting split
+  (GlassNet preview MAE 1.3-6.7 vs classical 11.6-42.6), but this is **not** new-sheet
+  generalization because sibling lightings of the same material are in training. Treat as a promising
+  signal for learned cross-lighting invariance, not a solved product model.
+- 010 representation reset: `T,h` is a useful base layer but insufficient for realistic glass because
+  it has no place for surface relief/lensing/glints. `generate_synthetic.py` now exports
+  Material-v2 `gt_height`/`gt_normal` and uses the same height texture for Blender bump. Syntax
+  verified; Blender sample render still pending because Blender is not on this environment's path.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
 - Add the **consistency** metric to the eval (same seed across lightings).
 - Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
+- For GlassNet: generate many material seeds per class, then evaluate a held-out-material split;
+  current neural result only proves held-out-lighting consistency.
+- Render a v2 synthetic batch and add a Material-v2 preview metric that scores background
+  displacement/highlight realism, not only color/haze.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

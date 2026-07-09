@@ -15,7 +15,9 @@ contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
 `004-hotspot.md` (backlight-hotspot recovery; VLM class default + anchor logging),
 `007-full-recipe-eval.md` (ground-truth extractor eval across all 5 synthetic
 recipes), and `008-preview-invariance.md` (product-shaped raw-copy vs material
-relight benchmark).
+relight benchmark). `009-glassnet-zero.md` starts the high-risk neural
+inverse-rendering track. `010-material-v2-representation.md` starts a bolder
+representation reset for surface relief / normals.
 
 ## Layout
 
@@ -25,6 +27,8 @@ vlm_classify.py   Track C: glass-class prior + mark localization via `claude` CL
 contact_sheet.py  build one grid image over a batch (original|T|h|relit warm|cool)
 register_pair.py  cross-lighting validation (M3): register two photos, compare maps
 eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
+train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
+generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
 reports/          numbered experiment reports (honest; decision documents)
@@ -58,6 +62,12 @@ python3 register_pair.py A.jpg B.jpg --class wispy \
 
 # product preview benchmark: compare copied capture pixels to controlled T/h relight
 python3 eval_preview_invariance.py --data synthetic_data --out results/preview_invariance
+
+# high-risk neural baseline (requires torch in the ignored .venv)
+./.venv/bin/python train_glassnet_zero.py --data synthetic_data --out results/glassnet_zero_classcond
+
+# synthetic Material-v2 data (requires Blender on PATH)
+blender -b --python generate_synthetic.py -- --out synthetic_data_v2 --count 100 --light-variations 3
 ```
 
 manifest.json format (keys are filenames inside the folder):
