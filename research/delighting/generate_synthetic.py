@@ -166,6 +166,87 @@ def download_polyhaven_hdri(out_dir):
             f.write(r.content)
     return os.path.abspath(hdri_path)
 
+# Realistic partial window-frame occluders (report review: the old full mullion
+# cross was over-aggressive vs real captures -- a real handheld photo of a sheet
+# near a window mostly shows a frame EDGE poking in from one border, not a
+# symmetric cross covering the whole pane). Coordinates below are in the glass
+# plane's local frame: after setup_scene's (90deg, 0, 0) rotation, local X maps
+# 1:1 to world X and local Y maps 1:1 to world Z (world Y is depth/normal), so
+# these bounds can be reasoned about as plain 2D image-plane coordinates.
+#
+# NOTE: the visible half-extent at the occluder's depth is NOT the glass
+# plane's own half-size (0.25) -- the camera's default 50mm/36mm lens is
+# actually narrower than that (the glass is deliberately oversized so it
+# bleeds off all four edges, per the "no borders" comment below), and the
+# horizontal/vertical FOV are not equal even for a square render. We must
+# derive the true visible box from the camera's own FOV, or bars end up
+# almost entirely outside frame (only a sliver of their corner visible).
+FRAME_BORDERS = ['top', 'bottom', 'left', 'right']
+OCCLUDER_Y = 0.01  # depth offset behind the glass (matches the old WindowFrame position)
+
+
+def add_frame_occluders(cam):
+    """Create 1-2 near-black bars hugging edge(s) of the frame, like a real
+    photo of a sheet held near a window edge. Returns the occluder params
+    (recorded into meta.json) so the dark-occluder-through-clear-glass trap
+    stays auditable: these pixels must be visible in the photo but must NOT
+    leak into the extracted T.
+
+    `cam` must already be positioned/rotated (called after camera setup) so
+    we can compute the true visible frustum box at the occluder's depth.
+    """
+    dist = abs(OCCLUDER_Y - cam.location.y)
+    vis_half_x = dist * math.tan(cam.data.angle_x / 2.0)
+    vis_half_z = dist * math.tan(cam.data.angle_y / 2.0)
+    margin_x, margin_z = vis_half_x * 1.5, vis_half_z * 1.5  # bars run well past frame -> no floating inner edge
+
+    # Mostly a single edge; occasionally two adjacent edges (a frame corner).
+    n_borders = 1 if random.random() < 0.7 else 2
+    borders = random.sample(FRAME_BORDERS, n_borders)
+
+    params = []
+    for i, border in enumerate(borders):
+        reach_frac = random.uniform(0.08, 0.35)   # fraction of the visible half-extent
+        jitter_frac = random.uniform(-0.04, 0.04)  # irregular inner edge, not perfectly flush
+        darkness = random.uniform(0.005, 0.02)     # near-black, slightly varied
+
+        if border in ('top', 'bottom'):
+            thickness = max(0.005, (reach_frac + jitter_frac) * vis_half_z)
+        else:
+            thickness = max(0.005, (reach_frac + jitter_frac) * vis_half_x)
+
+        lo_x, hi_x = -(vis_half_x + margin_x), (vis_half_x + margin_x)
+        lo_z, hi_z = -(vis_half_z + margin_z), (vis_half_z + margin_z)
+        if border == 'top':
+            x0, x1 = lo_x, hi_x
+            z0, z1 = vis_half_z - thickness, vis_half_z + margin_z
+        elif border == 'bottom':
+            x0, x1 = lo_x, hi_x
+            z0, z1 = -(vis_half_z + margin_z), -(vis_half_z - thickness)
+        elif border == 'left':
+            x0, x1 = -(vis_half_x + margin_x), -(vis_half_x - thickness)
+            z0, z1 = lo_z, hi_z
+        else:  # right
+            x0, x1 = vis_half_x - thickness, vis_half_x + margin_x
+            z0, z1 = lo_z, hi_z
+
+        cx, cz = (x0 + x1) / 2.0, (z0 + z1) / 2.0
+        bpy.ops.mesh.primitive_plane_add(size=1, location=(cx, OCCLUDER_Y, cz), rotation=(math.radians(90), 0, 0))
+        bar = bpy.context.active_object
+        bar.name = f"FrameOccluder_{border}"
+        bar.scale = (x1 - x0, z1 - z0, 1.0)
+
+        mat_frame = bpy.data.materials.new(name=f"FrameOccluderMat_{i}")
+        mat_frame.use_nodes = True
+        mat_frame.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (darkness, darkness, darkness, 1)
+        bar.data.materials.append(mat_frame)
+
+        params.append({"border": border, "thickness": round(thickness, 4),
+                        "reach_frac": round(reach_frac, 4), "darkness": round(darkness, 4)})
+
+    return params
+
+
 def setup_scene(hdri_path, has_frame=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     
@@ -252,31 +333,25 @@ def setup_scene(hdri_path, has_frame=False):
     bpy.ops.mesh.primitive_plane_add(size=0.5, align='WORLD', location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
     glass_obj = bpy.context.active_object
     glass_obj.name = "GlassSheet"
-    
-    if has_frame:
-        # Window Frame (mullions/crossbars)
-        bpy.ops.mesh.primitive_grid_add(x_subdivisions=2, y_subdivisions=2, size=0.6, location=(0, 0.01, 0), rotation=(math.radians(90), 0, 0))
-        frame_obj = bpy.context.active_object
-        frame_obj.name = "WindowFrame"
-        wire = frame_obj.modifiers.new(name="Wireframe", type='WIREFRAME')
-        wire.thickness = 0.01
-        
-        mat_frame = bpy.data.materials.new(name="FrameMat")
-        mat_frame.use_nodes = True
-        mat_frame.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.01, 0.01, 0.01, 1)
-        frame_obj.data.materials.append(mat_frame)
-    
+
     # Camera - zoomed in so the glass perfectly fills the frame
     bpy.ops.object.camera_add(location=(0, -0.4, 0), rotation=(math.radians(90), 0, 0))
     cam = bpy.context.active_object
     scene.camera = cam
-    
+
     # Randomize camera slightly
     cam.location.x += random.uniform(-0.02, 0.02)
     cam.location.z += random.uniform(-0.02, 0.02)
     cam.rotation_euler.x += random.uniform(-0.05, 0.05)
     cam.rotation_euler.z += random.uniform(-0.05, 0.05)
-    
+
+    frame_params = []
+    if has_frame:
+        # Partial window-frame edge(s) entering from the image border(s) --
+        # see add_frame_occluders() above. Replaces the old full mullion cross.
+        # Needs the camera (for its true FOV/frustum), so must run after it exists.
+        frame_params = add_frame_occluders(cam)
+
     # Dark wall behind camera to block HDRI reflections on the front face (simulates dim interior)
     bpy.ops.mesh.primitive_plane_add(size=5.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
     wall = bpy.context.active_object
@@ -291,7 +366,7 @@ def setup_scene(hdri_path, has_frame=False):
         bsdf.inputs["Specular"].default_value = 0.0
     wall.data.materials.append(mat_wall)
     
-    return glass_obj, cam, ev, z_rot
+    return glass_obj, cam, ev, z_rot, frame_params
 
 def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
     mat = bpy.data.materials.new(name="GlassMat")
@@ -589,23 +664,23 @@ def main():
             
         for v in range(args.light_variations):
             has_shadow = True # Always generate pairs (with and without shadow)
-            has_frame = random.random() < 0.33
+            has_frame = random.random() < 0.20  # partial frame-edge occluder trap (report 012)
             if args.validate:
                 has_frame = False # No window mullions blocking transmission during math evaluation
                 has_shadow = False # Skip shadow pass entirely during validation
             lighting_id = f"light{random.randint(0, 9999):04d}"
-            
+
             # Name directory with seed so identical glass pieces are grouped together, but have different lighting IDs
             sample_dir = os.path.join(args.out, f"{recipe}__seed{seed}__{lighting_id}")
             os.makedirs(sample_dir, exist_ok=True)
-        
+
             print(f"Generating {sample_dir}...")
-            
+
             # 1. Setup scene FIRST (clears factory settings)
             if args.validate:
-                glass_obj, cam, ev, z_rot = setup_scene(None, has_frame=has_frame)
+                glass_obj, cam, ev, z_rot, frame_params = setup_scene(None, has_frame=has_frame)
             else:
-                glass_obj, cam, ev, z_rot = setup_scene(hdri_path, has_frame=has_frame)
+                glass_obj, cam, ev, z_rot, frame_params = setup_scene(hdri_path, has_frame=has_frame)
         
             # 2. Create textures
             img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
@@ -620,6 +695,7 @@ def main():
                 "hdri_rotation": z_rot,
                 "hdri_ev": ev,
                 "has_frame": has_frame,
+                "frame_occluders": frame_params,
                 "camera_pose": {
                     "location": list(cam.location),
                     "rotation": list(cam.rotation_euler)
