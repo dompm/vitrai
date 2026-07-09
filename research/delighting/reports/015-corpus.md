@@ -23,9 +23,12 @@ transmittance ground-truth set, and not uniformly usable even for that without p
   highly saturated no-texture solid swatches can degenerate the absolute-scale anchor (one image
   hit `T_anchor_k = 880`, collapsing `T` to all-black, MAE 83/255), and streaky/marbled glass with
   sharp local contrast sometimes loses all texture in `T`.
-- The VLM class prior (`vlm_classify.py`, `claude`/haiku CLI) scores **[see §4 — filled in below]**
-  against metadata ground truth on 40 high-confidence images — the first real-scale test past the
-  2-photo validation quoted in the script's own docstring.
+- The VLM class prior (`vlm_classify.py`, `claude`/haiku CLI) scores **30.6% (11/36)** against
+  metadata ground truth — barely above chance for the 3-way choice this sample actually exercised
+  — the first real-scale test past the 2-photo validation quoted in the script's own docstring
+  ("both correct"). It over-predicts `wispy` and struggles most on `opalescent`/`cathedral-clear`,
+  plausibly because its prompt assumes "held against a light source" and a meaningful slice of the
+  corpus (§2) isn't backlit that way.
 - **Bottom line for research use** (§5): the corpus is good for a classifier training set and for
   grounding the synthetic recipes' color/texture *statistics*, weak-to-unusable as ground truth for
   anything numeric (`T`, `h`, consistency), and only usable as a pseudo-label source with the
@@ -240,22 +243,61 @@ wide margin.
 
 ## 4. VLM classifier accuracy at scale
 
-`../corpus/run_vlm_subset.py`, `../results/corpus/vlm_confusion.json`. 40 images sampled from the
+`../corpus/run_vlm_subset.py`, `../results/corpus/vlm_confusion.json`. Images sampled from the
 **high-confidence** metadata tier only (direct category match, not the Textured/Baroque guess),
 stratified across manufacturer x class, classified with the real `claude`/haiku CLI subprocess
-(`vlm_classify.classify_glass`, ~15 s/call). This is the first test of the classifier past the
-2-photo validation quoted in its own docstring.
+(`vlm_classify.classify_glass`, ~15 s/call, real elapsed ~505 s for the batch). This is the first
+test of the classifier past the 2-photo validation quoted in its own docstring ("amber swatch -> C,
+wispy sheet -> B, both correct").
 
-<!-- FILLED IN AFTER THE BACKGROUND RUN COMPLETES -->
+**Sampling caveat, itself a finding:** the request was for 40 images stratified across
+manufacturer x class among the "high"-confidence tier; only **36** came back, because
+`dark-opaque` is *never* high-confidence in this census's tiering — it's only ever reached via the
+"Black Opalescent"/"Opaque" name-keyword override (§1.3), which is deliberately tagged `medium`.
+So this run, as scoped, **cannot test the VLM on dark-opaque at all** — a real gap, not just small
+print; a follow-up would need to sample from the medium tier (or a hand-verified subset) to get
+dark-opaque coverage.
+
+**Result: 11/36 correct = 30.6% overall accuracy — barely above chance (33% for a 3-way choice,
+which is what this sample actually exercised since it has zero dark-opaque examples) and far below
+the "validated" 100% (2/2) the script's docstring reports.** This is the headline finding of this
+task: the class-prior VLM step, at the scale tested here, is not a reliable signal on this real
+photo corpus, in sharp contrast to the confidence its docstring implies from a 2-image check.
+
+Confusion matrix (rows = metadata ground truth, columns = VLM prediction; dark-opaque row/column
+all-zero for the reason above):
+
+| gt \\ pred | opalescent | wispy | cathedral-clear | dark-opaque |
+|---|---:|---:|---:|---:|
+| opalescent (n=12) | 3 | 4 | 5 | 0 |
+| wispy (n=12) | 2 | 5 | 5 | 0 |
+| cathedral-clear (n=12) | 3 | 6 | 3 | 0 |
+| dark-opaque (n=0) | 0 | 0 | 0 | 0 |
+
+Per-class accuracy: opalescent 25.0% (3/12), wispy 41.7% (5/12), cathedral-clear 25.0% (3/12).
+
+Two patterns stand out:
+- **The VLM over-predicts `wispy`** (15/36 predictions, 42%, vs. an even 12/36/33% if unbiased) and
+  under-predicts `opalescent` (8/36, 22%) — it seems to default toward "translucent with some
+  streaks" as a catch-all guess when uncertain, rather than committing to either extreme
+  (fully-diffusing opal or clearly-see-through cathedral).
+- **This is very plausibly connected to §2's lighting finding.** The classifier prompt explicitly
+  frames the image as "a photo of a stained-glass sheet held against a light source" — but §2 found
+  the corpus is not uniformly backlit, and even within the "backlit-verified" manufacturers there
+  are front-lit-leaning subsets. A front-lit photo of, say, a cathedral-clear swatch doesn't show
+  "background clearly visible through it" the way the prompt's option (C) describes, because
+  nothing is transilluminating it — so the model is being asked to pick between descriptions that
+  don't cleanly apply to the photo it's shown, which is a much better explanation for nearly-random
+  performance than "the model is just bad at this."
 
 ## 5. Research-use verdict
 
 | use case | verdict | what it needs |
 |---|---|---|
-| **(a) DINO/linear classifier training set** | **Supports it, with the SGE/Textured-Baroque caveats.** 2,649 images (82.8%) have a class label with no image inspection at all, spread across all 4 extractor classes present in the corpus's product lines (dark-opaque is real but rare: 103 images, 3.9% of labeled corpus — expect class imbalance to matter). Needs: drop or hand-label SGE (no metadata); either drop the Textured/Baroque low-confidence tier or treat it as noisy/weak-labeled; a held-out split by manufacturer (not just by image) if the goal is generalization, since each manufacturer has a distinct visual "look" (see §2) that a classifier could shortcut on. |
+| **(a) DINO/linear classifier training set** | **Supports it, with the SGE/Textured-Baroque caveats.** 2,649 images (82.8%) have a class label with no image inspection at all, spread across all 4 extractor classes present in the corpus's product lines (dark-opaque is real but rare: 103 images, 3.9% of labeled corpus — expect class imbalance to matter). Needs: drop or hand-label SGE (no metadata, and §4 shows the VLM can't be trusted to fill that gap either — 30.6% accuracy, worse than not labeling at all); either drop the Textured/Baroque low-confidence tier or treat it as noisy/weak-labeled; a held-out split by manufacturer (not just by image) if the goal is generalization, since each manufacturer has a distinct visual "look" (see §2) that a classifier could shortcut on. |
 | **(b) synthetic-recipe grounding statistics** | **Partially supports it.** The corpus gives a much richer real color/texture distribution than the 5 hand-authored synthetic recipes (cathedral-green, cathedral-amber, dark-opaque, streaky-mix, wispy-white) — e.g. §1 shows cathedral-clear alone spans 1,658 images across 4 manufacturers with wide hue/saturation variety the 2 cathedral recipes can't represent, and dark-opaque is a real, distinct, if rare, product line rather than a single dark-glass guess. Use it to check recipe *coverage* (do the recipes span the real hue/saturation/haze range, or clip to a narrow slice?) — this needs a follow-up pass extracting per-class color/haze histograms from the §3-style extractor output (or simpler: raw-pixel color statistics, since that doesn't need the extractor to be right) and comparing to the recipes' authored ranges. Not yet done here — flagged as the natural next task. It does **not** support grounding *T,h absolute values* against the corpus, because there's no ground truth (see (c)). |
 | **(c) consistency / domain-adaptation training data** | **Does not support it, structurally.** The consistency metric (RESEARCH_STATE.md: "same seed across lightings") needs multiple photos of the *same physical glass* under different lighting. The catalog corpus is one photo per SKU (plus incidental same-SKU size-variant crops, which are typically the same photograph re-cropped, not an independent lighting condition) — there is no cross-lighting pair for any sheet in this corpus. This is the same "real photos still un-shot" gap flagged in `RESEARCH_STATE.md`'s open problems; this corpus doesn't close it. |
-| **(d) pseudo-label source** | **Usable, narrowly, after the QA gates in this report.** For the ~57-image-scale regime demonstrated in §3 (metadata class -> extractor `T,h` as a "probably OK" pseudo-label), apply: (i) the manufacturer/category triage from §2 (drop SGE, drop Youghiogheny dark-opaque, treat Textured/Baroque as needing a spot-check); (ii) the §3 QA gate `T_anchor_k > 5` as an automatic reject; (iii) still expect the iridescent-finish and sharp-marbled-texture failure modes to occasionally slip through with a *plausible-looking but wrong* `T` (no automatic gate found for these — visual spot-check recommended for any class-mismatched-looking result). Pseudo-labels from this pipeline are appropriate as weak supervision/pretraining signal, not as an eval set — there is no ground truth anywhere in this corpus to score against. |
+| **(d) pseudo-label source** | **Usable, narrowly, after the QA gates in this report — and only using the metadata class, not the VLM class, as the prior.** For the ~57-image-scale regime demonstrated in §3 (metadata class -> extractor `T,h` as a "probably OK" pseudo-label), apply: (i) the manufacturer/category triage from §2 (drop SGE, drop Youghiogheny dark-opaque, treat Textured/Baroque as needing a spot-check); (ii) the §3 QA gate `T_anchor_k > 5` as an automatic reject; (iii) still expect the iridescent-finish and sharp-marbled-texture failure modes to occasionally slip through with a *plausible-looking but wrong* `T` (no automatic gate found for these — visual spot-check recommended for any class-mismatched-looking result). §4's result means the VLM prior should **not** be trusted as a fallback for the 347 images (10.8%, mostly SGE) with no metadata class — at 30.6% accuracy it would inject more label noise than it resolves, so those images need a human label or exclusion, not a VLM guess. Pseudo-labels from this pipeline are appropriate as weak supervision/pretraining signal, not as an eval set — there is no ground truth anywhere in this corpus to score against. |
 
 **What this corpus cannot do, stated plainly:** it cannot serve as ground truth for `T`/`h` values
 (no measurement exists, only photos), it cannot supply cross-lighting or shadow/no-shadow pairs
