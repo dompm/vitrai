@@ -1,0 +1,7 @@
+# neural shadow-removal PoC: commit code + small eval artifacts only
+.venv/
+data_snapshot/
+cache/
+*.pt
+*.pth
+__pycache__/
