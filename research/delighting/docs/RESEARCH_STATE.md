@@ -127,6 +127,12 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   says the tuned green prior keeps Textured/Baroque-level texture (50th percentile high-frequency)
   while dropping low-frequency variation to a normal Cathedral range. This is promising but must be
   class-gated/provenance-labeled because it can over-flatten true wisps/streaks.
+- 015 catalog prior gate: a first robust-statistics gate scores whether broad low-frequency variation
+  looks anomalous for the presumed material family. Suncatcher scores are green raw 0.84, green fixed
+  `T/h` 0.66, green prior 0.14; orange raw 0.54, orange fixed `T/h` 0.22, orange prior 0.10.
+  Catalog false positives are still too high at a 0.50 threshold (15-21% by category), but 0.70 is a
+  useful conservative "offer/try prior assistance" signal and creates the provenance hook the artist
+  feedback asked for.
 
 
 ## Open problems / next
@@ -145,6 +151,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   let a prettier invented relief map masquerade as measured glass.
 - Use the scraped manufacturer catalog as a weak material prior: learn which spatial variation is
   likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
+- Replace the hand-built catalog prior gate with a learned contamination/prior-strength head trained
+  on catalog negatives plus synthetic background-leak positives.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

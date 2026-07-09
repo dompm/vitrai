@@ -294,6 +294,16 @@ def main():
         "n_skipped": len(skipped),
         "skipped": skipped[:50],
         "category_summary": category_summary,
+        "catalog_rows": [
+            {
+                k: row[k]
+                for k in (
+                    "id", "manufacturer", "category", "name", "mean_lum", "lum_cv",
+                    "lowfreq_cv", "highfreq_std", "highfreq_p95", "chroma_mad", "sat_mean"
+                )
+            }
+            for row in rows
+        ],
         "suncatcher_conditions": suncatcher_rows,
     }
     with open(os.path.join(args.out, "metrics.json"), "w") as f:

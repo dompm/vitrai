@@ -22,6 +22,8 @@ adds a standalone artist-facing comparison prototype. `012-artist-feedback-reado
 turns the first artist readout into the "make it beautiful, but keep it honest"
 research rule. `014-catalog-constrained-sheet-prior.md` uses manufacturer catalog
 images to sanity-check a sheet-level prior for the right-side glass panel.
+`015-catalog-prior-gate.md` adds a first catalog-statistics gate so prior cleanup
+is provenance-aware rather than automatic.
 
 ## Layout
 
@@ -35,6 +37,7 @@ train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
 generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
 sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppressing sheet-photo contamination
 catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
+catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -82,6 +85,9 @@ open prototypes/material-v2-artist-demo.html
 # catalog-constrained sheet-prior audit; registry currently lives in the main workspace
 python3 catalog_texture_audit.py \
   --registry /Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json
+
+# first-pass gate: should the sheet-prior be offered/applied?
+python3 catalog_prior_gate.py
 ```
 
 manifest.json format (keys are filenames inside the folder):

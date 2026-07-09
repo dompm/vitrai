@@ -1,0 +1,116 @@
+{
+  "audit": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/delight-003/research/delighting/results/catalog_texture_audit/metrics.json",
+  "suncatcher_family": "Textured/Baroque",
+  "suncatcher_scores": [
+    {
+      "id": "green_raw",
+      "family": "Textured/Baroque",
+      "score": 0.8358976068242249,
+      "z_lowfreq": 1.3445102964976745,
+      "z_chroma": -0.397719927343038,
+      "z_detail": 0.808067296381869,
+      "lowfreq_cv": 0.6106627975997836,
+      "highfreq_std": 0.5644232307451318,
+      "chroma_mad": 0.019681428767771236
+    },
+    {
+      "id": "green_relit",
+      "family": "Textured/Baroque",
+      "score": 0.6583761089143109,
+      "z_lowfreq": 0.7649943086712727,
+      "z_chroma": -0.40062788222299633,
+      "z_detail": 0.7838333475658339,
+      "lowfreq_cv": 0.4773722637776583,
+      "highfreq_std": 0.5577755051973123,
+      "chroma_mad": 0.019481004120910805
+    },
+    {
+      "id": "green_prior",
+      "family": "Textured/Baroque",
+      "score": 0.13537725157331923,
+      "z_lowfreq": -0.9316268399780281,
+      "z_chroma": -0.6832771565876387,
+      "z_detail": -0.005054386211521236,
+      "lowfreq_cv": 0.08714396404502753,
+      "highfreq_std": 0.34137209599628926,
+      "chroma_mad": 6.938893903907228e-18
+    },
+    {
+      "id": "orange_raw",
+      "family": "Textured/Baroque",
+      "score": 0.5409146876463483,
+      "z_lowfreq": 0.4281293886739845,
+      "z_chroma": -0.30142544244047886,
+      "z_detail": 0.3256521252942682,
+      "lowfreq_cv": 0.3998922529486275,
+      "highfreq_std": 0.4320897145757512,
+      "chroma_mad": 0.02631832271142115
+    },
+    {
+      "id": "orange_relit",
+      "family": "Textured/Baroque",
+      "score": 0.22404090565924123,
+      "z_lowfreq": -0.18995778200293914,
+      "z_chroma": 0.4865227904412977,
+      "z_detail": 0.03582075657420935,
+      "lowfreq_cv": 0.25773022349860775,
+      "highfreq_std": 0.35258474371747583,
+      "chroma_mad": 0.08062599007175336
+    },
+    {
+      "id": "orange_prior",
+      "family": "Textured/Baroque",
+      "score": 0.10006663874083907,
+      "z_lowfreq": -1.0914112089882873,
+      "z_chroma": -0.35535166766153325,
+      "z_detail": -0.463107534872523,
+      "lowfreq_cv": 0.050393047264127966,
+      "highfreq_std": 0.2157214378337182,
+      "chroma_mad": 0.022601571560660227
+    }
+  ],
+  "catalog_self_check": {
+    "Opalescent": {
+      "n": 356,
+      "median_score": 0.3315610967820612,
+      "p75_score": 0.448839348652377,
+      "flag_gt_050": 0.21348314606741572,
+      "flag_gt_070": 0.09831460674157304
+    },
+    "Wispy/Streaky": {
+      "n": 163,
+      "median_score": 0.2767428720119595,
+      "p75_score": 0.45489208106385703,
+      "flag_gt_050": 0.2085889570552147,
+      "flag_gt_070": 0.09815950920245399
+    },
+    "Textured/Baroque": {
+      "n": 138,
+      "median_score": 0.28185155193727507,
+      "p75_score": 0.47877153870181055,
+      "flag_gt_050": 0.21014492753623187,
+      "flag_gt_070": 0.08695652173913043
+    },
+    "Cathedral": {
+      "n": 699,
+      "median_score": 0.2904858775985465,
+      "p75_score": 0.4080619207343962,
+      "flag_gt_050": 0.15450643776824036,
+      "flag_gt_070": 0.055793991416309016
+    },
+    "English Muffle": {
+      "n": 17,
+      "median_score": 0.37529179389350703,
+      "p75_score": 0.4271113725426169,
+      "flag_gt_050": 0.17647058823529413,
+      "flag_gt_070": 0.11764705882352941
+    },
+    "Ring Mottle": {
+      "n": 8,
+      "median_score": 0.24270763017805583,
+      "p75_score": 0.39255226555853884,
+      "flag_gt_050": 0.25,
+      "flag_gt_070": 0.0
+    }
+  }
+}
