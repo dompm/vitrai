@@ -642,6 +642,8 @@ def parse_args():
     parser.add_argument('--count', type=int, default=1)
     parser.add_argument('--light-variations', type=int, default=3, help="Number of lighting variations per glass piece")
     parser.add_argument('--validate', action='store_true', help="Run in uniform backlight validation mode")
+    parser.add_argument('--recipe', type=str, default=None,
+                        help="Render only this recipe (targeted top-up, e.g. extra dark-opaque shadow-pair samples)")
     return parser.parse_args(argv)
 
 def main():
@@ -657,7 +659,11 @@ def main():
         seed = args.seed + i
         random.seed(seed)
         
-        if args.count == 5:
+        if args.recipe is not None:
+            if args.recipe not in recipes:
+                raise ValueError(f"Unknown recipe: {args.recipe}")
+            recipe = args.recipe
+        elif args.count == 5:
             recipe = recipes[i]
         else:
             recipe = random.choice(recipes)

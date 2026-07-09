@@ -97,6 +97,21 @@ def split(names):
     with NO measurable shadow (e.g. dark-opaque under a dim EV draw), leaving
     the inside-shadow metric undefined exactly where it matters.
     """
+    # Explicit override (comma-separated names). Used for the report-012
+    # dark-opaque top-up: extra TRAIN-only samples were rendered after the
+    # test set was already fixed, and the deterministic rule below would have
+    # silently moved the held-out sample. Pinning it keeps every before/after
+    # table in the report on the identical test set.
+    override = os.environ.get("NEURAL_TEST_OVERRIDE")
+    if override:
+        test_set = {s.strip() for s in override.split(",") if s.strip()}
+        missing = test_set - set(names)
+        if missing:
+            raise SystemExit(f"NEURAL_TEST_OVERRIDE names not in snapshot: {sorted(missing)}")
+        train = [n for n in names if n not in test_set]
+        test = [n for n in names if n in test_set]
+        return train, test
+
     names_set = set(names)
     if TEST_SAMPLES <= names_set:
         train = [n for n in names if n not in TEST_SAMPLES]
