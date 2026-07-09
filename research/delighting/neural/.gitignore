@@ -2,6 +2,7 @@
 .venv/
 data_snapshot/
 cache/
+cache_fixed/
 *.pt
 *.pth
 __pycache__/

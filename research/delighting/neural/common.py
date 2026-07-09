@@ -20,7 +20,11 @@ sys.path.insert(0, DELIGHT)
 import extract  # noqa: E402  (classical pipeline, reused verbatim)
 
 DATA_SNAPSHOT = os.path.join(HERE, "data_snapshot")
-CACHE_DIR = os.path.join(HERE, "cache")
+# CACHE_DIR holds classical maps precomputed from a specific extract.py. The
+# NEURAL_CACHE env var lets us build a second cache from the FIXED extractor
+# (report 009) without disturbing the original one (report 010 was trained on
+# the original extractor's T). See report 011 (combined run).
+CACHE_DIR = os.environ.get("NEURAL_CACHE", os.path.join(HERE, "cache"))
 WEIGHTS = os.path.join(HERE, "unet_shadow.pt")
 
 # Working resolution for the cached maps (max dim). The classical extractor and
