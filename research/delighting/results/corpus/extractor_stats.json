@@ -1,0 +1,1064 @@
+{
+  "n_processed": 57,
+  "n_failed": 0,
+  "failed_files": [],
+  "per_class": {
+    "cathedral-clear": {
+      "n": 16,
+      "recon_mae_mean": 1.7137864389005126,
+      "recon_mae_max": 5.8631967932142715,
+      "h_mean_avg": 0.07841797613213106,
+      "h_mean_range": [
+        0.06002303400369,
+        0.14896489245450872
+      ],
+      "T_lum_mean_avg": 0.6349040488863164,
+      "T_lum_range": [
+        0.20210076207455413,
+        0.8826205294365989
+      ],
+      "T_raw_p99_outliers": 1
+    },
+    "dark-opaque": {
+      "n": 8,
+      "recon_mae_mean": 2.2745422574535725,
+      "recon_mae_max": 5.2213483698944065,
+      "h_mean_avg": 0.31776390066157223,
+      "h_mean_range": [
+        0.2524995797033738,
+        0.5529519974022143
+      ],
+      "T_lum_mean_avg": 0.10825186217725848,
+      "T_lum_range": [
+        0.043365901503894404,
+        0.18094211950676028
+      ],
+      "T_raw_p99_outliers": 0
+    },
+    "opalescent": {
+      "n": 19,
+      "recon_mae_mean": 6.177773468327668,
+      "recon_mae_max": 83.13048639455788,
+      "h_mean_avg": 0.43161104861628435,
+      "h_mean_range": [
+        0.055005937797989506,
+        0.9958449894016673
+      ],
+      "T_lum_mean_avg": 0.7293975786958924,
+      "T_lum_range": [
+        0.0,
+        0.8711324686714277
+      ],
+      "T_raw_p99_outliers": 1
+    },
+    "wispy": {
+      "n": 14,
+      "recon_mae_mean": 6.264226723937187,
+      "recon_mae_max": 31.74153759584155,
+      "h_mean_avg": 0.2013479542124053,
+      "h_mean_range": [
+        0.0050220290795013715,
+        0.7971269083658862
+      ],
+      "T_lum_mean_avg": 0.7948699934058082,
+      "T_lum_range": [
+        0.37258809330709913,
+        0.8735642669402411
+      ],
+      "T_raw_p99_outliers": 1
+    }
+  },
+  "all_metrics": [
+    {
+      "file": "bullseye-0013200030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.9962583269805481,
+      "recon_p95_srgb255": 2.9424988854870326,
+      "h_mean": 0.060056747849121114,
+      "T_mean_rgb": [
+        0.9500000000077851,
+        0.8597050422270006,
+        0.000452352603887016
+      ],
+      "T_mean_lum": 0.8168637060587411,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.6304013259278725,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0013200031fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.8162076099993385,
+      "recon_p95_srgb255": 17.703289379543886,
+      "h_mean": 0.0628994427250497,
+      "T_mean_rgb": [
+        0.9499032563899014,
+        0.7741700102818623,
+        0.14153942595058672
+      ],
+      "T_mean_lum": 0.7658549702140631,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0014140030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.7934592850023234,
+      "recon_p95_srgb255": 10.196569758902426,
+      "h_mean": 0.08640584576533765,
+      "T_mean_rgb": [
+        0.7183817378784628,
+        0.9246984850722461,
+        0.9494212665048144
+      ],
+      "T_mean_lum": 0.8826205294365989,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0011400031f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.8194098877859295,
+      "recon_p95_srgb255": 16.285360911149244,
+      "h_mean": 0.061289186590260246,
+      "T_mean_rgb": [
+        0.19325219508925437,
+        0.5518986642228417,
+        0.9069072688409168
+      ],
+      "T_mean_lum": 0.5012820461376285,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0001000071ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 2.7118654959338477,
+      "recon_p95_srgb255": 13.979992497834358,
+      "h_mean": 0.2524995797033738,
+      "T_mean_rgb": [
+        0.07605637522300505,
+        0.07293268750216471,
+        0.09030573587070907
+      ],
+      "T_mean_lum": 0.07485111760381201,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.984079066190486,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0000130030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 0.13039342952527372,
+      "recon_p95_srgb255": 0.7498283839008075,
+      "h_mean": 0.5529519974022143,
+      "T_mean_rgb": [
+        0.17956414448240032,
+        0.1807791731009715,
+        0.18661381977758432
+      ],
+      "T_mean_lum": 0.18094211950676028,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.029226057317205,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0001000073f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 3.170606611994198,
+      "recon_p95_srgb255": 16.652570543113534,
+      "h_mean": 0.2607883971550762,
+      "T_mean_rgb": [
+        0.04060094324361397,
+        0.044178255753066754,
+        0.043460560328846536
+      ],
+      "T_mean_lum": 0.043365901503894404,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.9254938174553733,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0001610050f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.24594762821191188,
+      "recon_p95_srgb255": 1.4262972786581476,
+      "h_mean": 0.9958449894016673,
+      "T_mean_rgb": [
+        0.8704470920355556,
+        0.8713346453447647,
+        0.8711479024268932
+      ],
+      "T_mean_lum": 0.8711324686714277,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0268439618772953,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0002030030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.6496022681115537,
+      "recon_p95_srgb255": 2.6771363436479287,
+      "h_mean": 0.05763685904885675,
+      "T_mean_rgb": [
+        0.8084110858118901,
+        0.8097763252458141,
+        0.2991107497124062
+      ],
+      "T_mean_lum": 0.7726160207882826,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0696879723495503,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0002360050f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.10280868529482005,
+      "recon_p95_srgb255": 0.7473866687923318,
+      "h_mean": 0.9731331694643081,
+      "T_mean_rgb": [
+        0.8399191487826254,
+        0.8414009050211123,
+        0.8418278050009199
+      ],
+      "T_mean_lum": 0.8411167058228982,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0498506673471477,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0003370030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.3508784685533198,
+      "recon_p95_srgb255": 1.5155506217907646,
+      "h_mean": 0.05502646333385864,
+      "T_mean_rgb": [
+        0.865326859272129,
+        0.8615510709457053,
+        0.04008849608739947
+      ],
+      "T_mean_lum": 0.8030442056378894,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0624630428784236,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0003050030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.4990804231595711,
+      "recon_p95_srgb255": 2.5769685592019504,
+      "h_mean": 0.45789415124625044,
+      "T_mean_rgb": [
+        0.8789217084637015,
+        0.7478759106088393,
+        0.7122001395693699
+      ],
+      "T_mean_lum": 0.7731604565631233,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0641416053523092,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-0032030030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.872247430403548,
+      "recon_p95_srgb255": 7.59965610369708,
+      "h_mean": 0.013827502813612766,
+      "T_mean_rgb": [
+        0.8472209390847975,
+        0.8978269042604349,
+        0.3676765191278289
+      ],
+      "T_mean_lum": 0.8487912182574624,
+      "T_anchor_k": 0.9560864937145344,
+      "T_raw_p99": 1.0554455978278763,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "bullseye-60105b0030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.7637126187581332,
+      "recon_p95_srgb255": 4.108857834765116,
+      "h_mean": 0.64483798639816,
+      "T_mean_rgb": [
+        0.8016604410245184,
+        0.7877860900145565,
+        0.8478834557966702
+      ],
+      "T_mean_lum": 0.7950748068485961,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0282361997629548,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of121rr.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.32984242256409024,
+      "recon_p95_srgb255": 2.2138491135832346,
+      "h_mean": 0.06024602796007283,
+      "T_mean_rgb": [
+        0.2749273912195353,
+        0.8872538273327786,
+        0.10358466850276091
+      ],
+      "T_mean_lum": 0.700492313745212,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2269539562586653,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of142s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.8414848972064194,
+      "recon_p95_srgb255": 3.6634288336099807,
+      "h_mean": 0.06167229466335307,
+      "T_mean_rgb": [
+        0.9500000000077851,
+        0.5160407565393378,
+        0.4560304010169591
+      ],
+      "T_mean_lum": 0.6039677440303548,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 2.319378761200413,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of3172s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.12924624672219204,
+      "recon_p95_srgb255": 1.000598173495733,
+      "h_mean": 0.13653446159928176,
+      "T_mean_rgb": [
+        0.8945425394601763,
+        0.7395493246102565,
+        0.5543198394600366
+      ],
+      "T_mean_lum": 0.7591273132592377,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.1816500618510288,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of5386w.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.7663053767932555,
+      "recon_p95_srgb255": 10.93875405279054,
+      "h_mean": 0.06012506396644401,
+      "T_mean_rgb": [
+        0.35570200441273525,
+        0.4945865093180939,
+        0.9488744940641999
+      ],
+      "T_mean_lum": 0.4978592560732992,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 3.739945661341712,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of100girid6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.61366782214658,
+      "recon_p95_srgb255": 6.8423799449069005,
+      "h_mean": 0.14896489245450872,
+      "T_mean_rgb": [
+        0.7668812016374743,
+        0.8718426599027482,
+        0.935169813040372
+      ],
+      "T_mean_lum": 0.8541000743303147,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2608288283996525,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of1009w6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 0.6510747756906543,
+      "recon_p95_srgb255": 3.0010752201839135,
+      "h_mean": 0.3089523288140811,
+      "T_mean_rgb": [
+        0.06604475895559112,
+        0.060687615087655945,
+        0.05909477408755612
+      ],
+      "T_mean_lum": 0.06171154075374606,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.3812591625759294,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of1009sirid.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 1.944961234816105,
+      "recon_p95_srgb255": 13.496415820677509,
+      "h_mean": 0.32096019576400214,
+      "T_mean_rgb": [
+        0.08191719313052195,
+        0.1400746128836568,
+        0.1514714128893836
+      ],
+      "T_mean_lum": 0.1285331944047186,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of1009sirid6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 1.944961234816105,
+      "recon_p95_srgb255": 13.496415820677509,
+      "h_mean": 0.32096019576400214,
+      "T_mean_rgb": [
+        0.08191719313052195,
+        0.1400746128836568,
+        0.1514714128893836
+      ],
+      "T_mean_lum": 0.1285331944047186,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of606783cc6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 1.8588423404585532,
+      "recon_p95_srgb255": 7.6146656784633855,
+      "h_mean": 0.20035714270413105,
+      "T_mean_rgb": [
+        0.8276059563468865,
+        0.75680429360569,
+        0.5225069235194848
+      ],
+      "T_mean_lum": 0.7549404569841629,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.113756117475416,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of209s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.09839268048908809,
+      "recon_p95_srgb255": 0.6676368576638445,
+      "h_mean": 0.9884719088758379,
+      "T_mean_rgb": [
+        0.8571602125462499,
+        0.8572888094391564,
+        0.8558825995050792
+      ],
+      "T_mean_lum": 0.8571599413821452,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0209015201045515,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of603483cc6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 1.5050592410735277,
+      "recon_p95_srgb255": 7.34932789361101,
+      "h_mean": 0.47280634394843835,
+      "T_mean_rgb": [
+        0.583415125430728,
+        0.5769226557689086,
+        0.5841573416375736
+      ],
+      "T_mean_lum": 0.5788252991386358,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.168381598735383,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of60079s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.12809430933796023,
+      "recon_p95_srgb255": 0.6777602110925626,
+      "h_mean": 0.8653959286968635,
+      "T_mean_rgb": [
+        0.8030317223286547,
+        0.8048487093149906,
+        0.8047606393820739
+      ],
+      "T_mean_lum": 0.8044560592322881,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0631420938661345,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of22872s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.03599278483385427,
+      "recon_p95_srgb255": 0.06112908212248848,
+      "h_mean": 0.9953692971788888,
+      "T_mean_rgb": [
+        0.8687621160491789,
+        0.8697379006650623,
+        0.8697236959114107
+      ],
+      "T_mean_lum": 0.8695294232722972,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0171832026276588,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of31902s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.2639349733575047,
+      "recon_p95_srgb255": 7.874194188241669,
+      "h_mean": 0.10327140112568454,
+      "T_mean_rgb": [
+        0.745773233341508,
+        0.8008598574627553,
+        0.578171968049837
+      ],
+      "T_mean_lum": 0.7730703755588464,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0821074984235477,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-of81854s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.18848470198889833,
+      "recon_p95_srgb255": 0.9464207218542148,
+      "h_mean": 0.7971269083658862,
+      "T_mean_rgb": [
+        0.7683967991987061,
+        0.784007892895708,
+        0.7950272821918097
+      ],
+      "T_mean_lum": 0.7814845742827968,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.038885703330277,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-ofr23.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.688304308285404,
+      "recon_p95_srgb255": 15.448868135647759,
+      "h_mean": 0.4757803854499886,
+      "T_mean_rgb": [
+        0.763810396605997,
+        0.8081304102161021,
+        0.798956211484741
+      ],
+      "T_mean_lum": 0.7980455981739388,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0348438446967752,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "oceanside-ofr926x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 5.007759174813163,
+      "recon_p95_srgb255": 17.296178864125423,
+      "h_mean": 0.015678267561136904,
+      "T_mean_rgb": [
+        0.5778064455816894,
+        0.8894555974012646,
+        0.8260289083407999
+      ],
+      "T_mean_lum": 0.8186195807742885,
+      "T_anchor_k": 0.9537894730026876,
+      "T_raw_p99": 1.3505033228040444,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yu586x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.0700003901231843,
+      "recon_p95_srgb255": 4.622852389881028,
+      "h_mean": 0.06002303400369,
+      "T_mean_rgb": [
+        0.9497423139505019,
+        0.5658270860745,
+        0.00968575053388793
+      ],
+      "T_mean_lum": 0.6072940590932244,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 2.069036473357339,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-y5506sp.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.27284544649692144,
+      "recon_p95_srgb255": 1.8403590212166752,
+      "h_mean": 0.06010801384012182,
+      "T_mean_rgb": [
+        0.5791016358495212,
+        0.500146738102999,
+        0.06152954850783614
+      ],
+      "T_mean_lum": 0.48526438827487517,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.388162042317677,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yd9007x9.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 4.915491893311555,
+      "recon_p95_srgb255": 32.07345732796902,
+      "h_mean": 0.06027345375440453,
+      "T_mean_rgb": [
+        0.9006871628717564,
+        0.325782842655045,
+        0.1679112575975823
+      ],
+      "T_mean_lum": 0.4366091726905255,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-y1165sp.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.5986822240268674,
+      "recon_p95_srgb255": 3.421473664102521,
+      "h_mean": 0.0920548040451848,
+      "T_mean_rgb": [
+        0.6263793852249532,
+        0.5802762885877699,
+        0.89086353956413
+      ],
+      "T_mean_lum": 0.6125022064528874,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-y4004hs6x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.6407269437733967,
+      "recon_p95_srgb255": 9.513652592901844,
+      "h_mean": 0.05508095958555215,
+      "T_mean_rgb": [
+        0.8795023813374359,
+        0.832208830746971,
+        0.08547307683795605
+      ],
+      "T_mean_lum": 0.7883491181698409,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.6086749324861087,
+      "T_raw_p99_outlier": true
+    },
+    {
+      "file": "youghiogheny-y6647rg.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 4.947482143826439,
+      "recon_p95_srgb255": 14.923518456185134,
+      "h_mean": 0.10032283646937593,
+      "T_mean_rgb": [
+        0.6347328370135964,
+        0.7034253612629584,
+        0.5657247555803278
+      ],
+      "T_mean_lum": 0.6788793468772146,
+      "T_anchor_k": 0.8805138757372064,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yu00366x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.6838038976539865,
+      "recon_p95_srgb255": 3.9141805361085775,
+      "h_mean": 0.48732136450004643,
+      "T_mean_rgb": [
+        0.7787762444778467,
+        0.7612317115097296,
+        0.6476308815524219
+      ],
+      "T_mean_lum": 0.7567596992957174,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0450720020450455,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yu00786x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.331353482747915,
+      "recon_p95_srgb255": 10.844358238284586,
+      "h_mean": 0.09018125035828788,
+      "T_mean_rgb": [
+        0.7881235044685124,
+        0.7588460971567631,
+        0.41348761958693536
+      ],
+      "T_mean_lum": 0.7401355918707115,
+      "T_anchor_k": 0.8801656905936774,
+      "T_raw_p99": 1.078883147310791,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yd0097x9.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 9.431537510968543,
+      "recon_p95_srgb255": 33.806547686980586,
+      "h_mean": 0.2346696418242115,
+      "T_mean_rgb": [
+        0.8026877770079747,
+        0.8029283856153304,
+        0.8355296609498929
+      ],
+      "T_mean_lum": 0.8052310443039891,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.1171751660067946,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yf5501.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.9500381624041336,
+      "recon_p95_srgb255": 3.3343187055257397,
+      "h_mean": 0.14074502815339118,
+      "T_mean_rgb": [
+        0.9470682409217313,
+        0.887920026908426,
+        0.5149190536863526
+      ],
+      "T_mean_lum": 0.8735642669402411,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.155501049496417,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yuf6061256x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.9643782168233757,
+      "recon_p95_srgb255": 8.580843005136972,
+      "h_mean": 0.10346122159061769,
+      "T_mean_rgb": [
+        0.8678010300331641,
+        0.8184676078879333,
+        0.8395684233324274
+      ],
+      "T_mean_lum": 0.8304793723109151,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.3046614813723918,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "youghiogheny-yuf606125.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.9643782168233757,
+      "recon_p95_srgb255": 8.580843005136972,
+      "h_mean": 0.10346122159061769,
+      "T_mean_rgb": [
+        0.8678010300331641,
+        0.8184676078879333,
+        0.8395684233324274
+      ],
+      "T_mean_lum": 0.8304793723109151,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.3046614813723918,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf32105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.22381972149040247,
+      "recon_p95_srgb255": 1.533233850648936,
+      "h_mean": 0.07026518025862348,
+      "T_mean_rgb": [
+        0.361399200900925,
+        0.8848537071332566,
+        0.37146644618172286
+      ],
+      "T_mean_lum": 0.7365007188651528,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.146537390492482,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wi418classic.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.370664678544329,
+      "recon_p95_srgb255": 1.9541095927919936,
+      "h_mean": 0.11374613360732257,
+      "T_mean_rgb": [
+        0.9196954745323924,
+        0.6124219609354354,
+        0.865568934893292
+      ],
+      "T_mean_lum": 0.6960255214443927,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2197049447606598,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-w18h.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 5.8631967932142715,
+      "recon_p95_srgb255": 38.25428538989653,
+      "h_mean": 0.06002303503132044,
+      "T_mean_rgb": [
+        0.947799285678052,
+        0.0007070223330121846,
+        0.0012876948541577676
+      ],
+      "T_mean_lum": 0.20210076207455413,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 4.749606851712348,
+      "T_raw_p99_outlier": true
+    },
+    {
+      "file": "wissmach-wf38105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 2.4211269069579906,
+      "recon_p95_srgb255": 12.123149110075152,
+      "h_mean": 0.26612351390694666,
+      "T_mean_rgb": [
+        0.005307373347113273,
+        0.13096547921792312,
+        0.17548938801824185
+      ],
+      "T_mean_lum": 0.10746519212537185,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 2.301389024642217,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wblacki.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 5.2213483698944065,
+      "recon_p95_srgb255": 27.50983783190085,
+      "h_mean": 0.25887499678288145,
+      "T_mean_rgb": [
+        0.03484160199383041,
+        0.1666922590943477,
+        0.19372588402233143
+      ],
+      "T_mean_lum": 0.14061263711504596,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf40lum105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.078242194292619,
+      "recon_p95_srgb255": 10.575064738314675,
+      "h_mean": 0.1861962388774518,
+      "T_mean_rgb": [
+        0.7959198373587671,
+        0.7927349597616336,
+        0.6844505660421305
+      ],
+      "T_mean_lum": 0.7855939315120021,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.3540852098482288,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf35105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 2.0815576025040747,
+      "recon_p95_srgb255": 6.314768464579559,
+      "h_mean": 0.1668144508507478,
+      "T_mean_rgb": [
+        0.5535724983103958,
+        0.7210472061341808,
+        0.6351295420311189
+      ],
+      "T_mean_lum": 0.6792388279025464,
+      "T_anchor_k": 0.8804890628552161,
+      "T_raw_p99": 1.0640009994605624,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf31105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.040025781865391644,
+      "recon_p95_srgb255": 0.007095360039961448,
+      "h_mean": 0.8882069253204604,
+      "T_mean_rgb": [
+        0.7679161308658902,
+        0.7485992269078355,
+        0.7500198764511827
+      ],
+      "T_mean_lum": 0.7528085715862757,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0168215992209224,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf40105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 83.13048639455788,
+      "recon_p95_srgb255": 220.0,
+      "h_mean": 0.055005937797989506,
+      "T_mean_rgb": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "T_mean_lum": 0.0,
+      "T_anchor_k": 880.0,
+      "T_raw_p99": 1.4802913884556077,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wf10lum105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 10.969318627479842,
+      "recon_p95_srgb255": 46.894909393692664,
+      "h_mean": 0.10954370605038966,
+      "T_mean_rgb": [
+        0.8466954322866784,
+        0.7555825738250319,
+        0.4211601774370008
+      ],
+      "T_mean_lum": 0.7508078705144978,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.5,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wiwo101irid.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 7.954012842455797,
+      "recon_p95_srgb255": 34.49961422537227,
+      "h_mean": 0.12537015769932336,
+      "T_mean_rgb": [
+        0.743490097360326,
+        0.8954407650985522,
+        0.8592421467454253
+      ],
+      "T_mean_lum": 0.8605225128921198,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.4742162401288084,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wiwo703.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.101960949455441,
+      "recon_p95_srgb255": 6.891208543278703,
+      "h_mean": 0.015011678889346113,
+      "T_mean_rgb": [
+        0.7521396403935128,
+        0.9028905395415053,
+        0.9190220485569722
+      ],
+      "T_mean_lum": 0.8720055933335238,
+      "T_anchor_k": 0.9500353077819862,
+      "T_raw_p99": 1.1960165778491905,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wiwo702.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 31.74153759584155,
+      "recon_p95_srgb255": 138.85957938050566,
+      "h_mean": 0.0050220290795013715,
+      "T_mean_rgb": [
+        0.022869100173784185,
+        0.4714004494371178,
+        0.42355292483009427
+      ],
+      "T_mean_lum": 0.37258809330709913,
+      "T_anchor_k": 0.9503005077957061,
+      "T_raw_p99": 1.2192559001034053,
+      "T_raw_p99_outlier": false
+    },
+    {
+      "file": "wissmach-wiwo118irid.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 15.806887432741764,
+      "recon_p95_srgb255": 45.39863235172538,
+      "h_mean": 0.04060792843219716,
+      "T_mean_rgb": [
+        0.911270622545936,
+        0.8541599997514664,
+        0.8807774544588489
+      ],
+      "T_mean_lum": 0.8682234983865831,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.7523713028102628,
+      "T_raw_p99_outlier": true
+    }
+  ],
+  "class_T_raw_p99_stats": {
+    "cathedral-clear": {
+      "n": 16,
+      "T_raw_p99_mean": 1.8395128936012406,
+      "T_raw_p99_std": 0.9744966099021843
+    },
+    "dark-opaque": {
+      "n": 8,
+      "T_raw_p99_mean": 1.6401808910226514,
+      "T_raw_p99_std": 0.37684942844451164
+    },
+    "opalescent": {
+      "n": 19,
+      "T_raw_p99_mean": 1.1739042663916386,
+      "T_raw_p99_std": 0.19556302378357066
+    },
+    "wispy": {
+      "n": 14,
+      "T_raw_p99_mean": 1.222420097570367,
+      "T_raw_p99_std": 0.19722887587137364
+    }
+  }
+}

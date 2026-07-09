@@ -1,0 +1,66 @@
+{
+  "n_files_on_disk": 3200,
+  "n_registry_rows": 1381,
+  "by_manufacturer_disk": {
+    "bullseye": 1650,
+    "oceanside": 560,
+    "sge": 236,
+    "wissmach": 222,
+    "youghiogheny": 532
+  },
+  "metadata_resolution": {
+    "exact": 1381,
+    "fuzzy_size_variant": 1472,
+    "none": 347
+  },
+  "no_metadata_by_manufacturer": {
+    "bullseye": 45,
+    "oceanside": 27,
+    "sge": 236,
+    "wissmach": 4,
+    "youghiogheny": 35
+  },
+  "manufacturer_x_category_exact_rows": {
+    "Bullseye|Opalescent": 162,
+    "Bullseye|Wispy/Streaky": 91,
+    "Bullseye|Textured/Baroque": 15,
+    "Bullseye|Cathedral": 342,
+    "Oceanside|Opalescent": 57,
+    "Oceanside|Cathedral": 108,
+    "Oceanside|Textured/Baroque": 69,
+    "Oceanside|Wispy/Streaky": 52,
+    "Wissmach|English Muffle": 17,
+    "Wissmach|Cathedral": 103,
+    "Wissmach|Textured/Baroque": 29,
+    "Wissmach|Opalescent": 53,
+    "Wissmach|Wispy/Streaky": 16,
+    "Youghiogheny|Opalescent": 84,
+    "Youghiogheny|Cathedral": 146,
+    "Youghiogheny|Textured/Baroque": 25,
+    "Youghiogheny|Wispy/Streaky": 4,
+    "Youghiogheny|Ring Mottle": 8
+  },
+  "class_mapping_counts": {
+    "opalescent": 692,
+    "dark-opaque": 103,
+    "wispy": 400,
+    "cathedral-clear": 1658
+  },
+  "class_mapping_confidence": {
+    "high": 2513,
+    "medium": 136,
+    "low": 204
+  },
+  "class_mapping_rules": {
+    "category:Opalescent": 658,
+    "name:black-opal/opaque-override": 103,
+    "category:Wispy/Streaky": 385,
+    "category:Cathedral": 1470,
+    "textured:default": 171,
+    "textured:color-mix-keyword": 15,
+    "textured:opal-keyword": 18,
+    "category:English-Muffle->cathedral": 17,
+    "category:Ring-Mottle->opalescent": 16
+  },
+  "confident_from_metadata_pct": 82.78125
+}
