@@ -1,6 +1,58 @@
 import { useEffect, useState, useMemo } from 'react';
 import type { Scale } from '../types';
 
+const COLOR_FAMILIES = [
+  { id: 'All', label: 'All Colors', emoji: '🌈' },
+  { id: 'Red', label: 'Red', emoji: '🔴' },
+  { id: 'Orange', label: 'Orange', emoji: 'orange' },
+  { id: 'Yellow', label: 'Yellow', emoji: '🟡' },
+  { id: 'Green', label: 'Green', emoji: '🟢' },
+  { id: 'Blue', label: 'Blue', emoji: '🔵' },
+  { id: 'Purple', label: 'Purple', emoji: '🟣' },
+  { id: 'Pink', label: 'Pink', emoji: '💗' },
+  { id: 'Brown', label: 'Brown/Amber', emoji: '🟤' },
+  { id: 'Monochrome', label: 'White/Black/Gray', emoji: '⚪' },
+  { id: 'Clear', label: 'Clear', emoji: '🌐' }
+];
+
+const getColorFamily = (name: string, sku: string): string => {
+  const n = name.toLowerCase();
+  const s = sku.toUpperCase();
+  
+  if (n.includes('clear') || n.includes('crystal') || n.includes('ice') || s.includes('ICE') || s.startsWith('W800') || s.startsWith('Y800') || s.startsWith('OF100ICE')) {
+    return 'Clear';
+  }
+  if (n.includes('white') || n.includes('black') || n.includes('gray') || n.includes('grey') || n.includes('charcoal') || n.includes('pearl') || n.includes('silver') || n.includes('opal white')) {
+    return 'Monochrome';
+  }
+  if (n.includes('red') || n.includes('cherry') || n.includes('ruby') || n.includes('daredevil') || n.includes('grenadine') || n.includes('crimson')) {
+    return 'Red';
+  }
+  if (n.includes('orange') || n.includes('tangerine') || n.includes('persimmon') || n.includes('coral') || n.includes('peach')) {
+    return 'Orange';
+  }
+  if (n.includes('yellow') || n.includes('canary') || n.includes('lemon') || n.includes('marigold')) {
+    return 'Yellow';
+  }
+  if (n.includes('green') || n.includes('lime') || n.includes('moss') || n.includes('sage') || n.includes('emerald') || n.includes('caribbean') || n.includes('aventurine green') || n.includes('pine')) {
+    return 'Green';
+  }
+  if (n.includes('blue') || n.includes('cobalt') || n.includes('sky') || n.includes('turquoise') || n.includes('indigo') || n.includes('teal') || n.includes('ocean') || n.includes('caribbean blue') || n.includes('aqua')) {
+    return 'Blue';
+  }
+  if (n.includes('purple') || n.includes('violet') || n.includes('plum') || n.includes('heather') || n.includes('amethyst') || n.includes('grape') || n.includes('lavender') || n.includes('lilac') || n.includes('eggplant')) {
+    return 'Purple';
+  }
+  if (n.includes('pink') || n.includes('rose') || n.includes('fuchsia') || n.includes('cranberry') || n.includes('gold pink') || n.includes('magenta')) {
+    return 'Pink';
+  }
+  if (n.includes('brown') || n.includes('amber') || n.includes('bronze') || n.includes('chestnut') || n.includes('chocolate') || n.includes('wood') || n.includes('gold') || n.includes('cognac') || n.includes('caramel') || n.includes('tan') || n.includes('honey')) {
+    return 'Brown';
+  }
+  
+  return 'All';
+};
+
 interface SwatchItem {
   id: string;
   manufacturer: string;
@@ -27,6 +79,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
   const [search, setSearch] = useState('');
   const [mfgFilter, setMfgFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('All');
+  const [colorFilter, setColorFilter] = useState('All');
   const [sortBy, setSortBy] = useState<'common' | 'sku' | 'name'>('common');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
@@ -92,8 +145,13 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
       result = result.filter(item => item.category === catFilter);
     }
 
+    // Color filter
+    if (colorFilter !== 'All') {
+      result = result.filter(item => getColorFamily(item.name, item.base_sku) === colorFilter);
+    }
+
     return result;
-  }, [library, search, mfgFilter, catFilter]);
+  }, [library, search, mfgFilter, catFilter, colorFilter]);
 
   // Sort items
   const sortedItems = useMemo(() => {
@@ -147,7 +205,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
   // Reset page size when filter changes
   useEffect(() => {
     setVisibleCount(ITEMS_PER_PAGE);
-  }, [search, mfgFilter, catFilter, sortBy]);
+  }, [search, mfgFilter, catFilter, sortBy, colorFilter]);
 
   const paginatedItems = useMemo(() => {
     return sortedItems.slice(0, visibleCount);
@@ -220,6 +278,23 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                 <option value="sku">SKU (A-Z)</option>
                 <option value="name">Name (A-Z)</option>
               </select>
+            </div>
+          </div>
+
+          {/* Color Filter Pills */}
+          <div className="glass-library-filters-section">
+            <span className="glass-library-filter-label">Color:</span>
+            <div className="glass-library-filter-pills">
+              {COLOR_FAMILIES.map(col => (
+                <button
+                  key={col.id}
+                  className={`glass-library-pill ${colorFilter === col.id ? 'active' : ''}`}
+                  onClick={() => setColorFilter(col.id)}
+                >
+                  <span style={{ marginRight: '4px' }}>{col.emoji}</span>
+                  {col.label}
+                </button>
+              ))}
             </div>
           </div>
 
