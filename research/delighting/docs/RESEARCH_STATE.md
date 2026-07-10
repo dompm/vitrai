@@ -284,6 +284,12 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   0.132), because the optimizer learns background bars as relief. But oracle-initialized height gives
   the best material/background/displacement state (T-MAE 0.0992, B-MAE 0.1464, disp EPE 2.23,
   height corr 0.796). Conclusion: relief is a good latent state, not a free inference solution.
+- 025 integrable free-flow projection: use free-flow `D` as an easy fit, project it to the closest
+  scalar height field, then refine with height-field `D`. This non-oracle bridge improves geometry
+  and leakage modestly (T-MAE 0.1026 -> 0.1017, B-MAE 0.1703 -> 0.1634, T-bg corr 0.111 -> 0.084,
+  disp EPE 3.55 -> 3.01), but remains far from oracle-height (T-MAE 0.0985, height corr 0.778).
+  Conclusion: staged projection is useful, but the next test should bake integrability into the
+  optimizer or add a material scale prior.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -324,6 +330,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - After report 024, do not swap free flow for cold-start height. Test a staged renderer:
   free-flow warm start -> integrable height projection -> height-field refinement, then add the
   material scale/color prior.
+- After report 025, test free-flow with a curl/integrability penalty before projection, or combine
+  projected relief with the material scale/color prior. Projection helps geometry but barely moves
+  absolute material color.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

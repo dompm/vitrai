@@ -45,7 +45,9 @@ constraint; it reduces background leakage in `T` sharply but still needs a
 material scale/color prior. `024-height-field-displacement-prior.md` tests a
 height-derived displacement state: cold-start height is worse than free flow,
 but oracle-initialized height gives the best `T/B/D`, so relief is a promising
-state only if it can be initialized or inferred.
+state only if it can be initialized or inferred. `025-integrable-flow-projection.md`
+projects free-flow displacement into a height-field warm start; it improves
+geometry/leakage modestly but still leaves a material-scale gap.
 
 ## Layout
 
@@ -67,6 +69,7 @@ differentiable_sheet_inverse.py  tiny renderer/optimizer for T + background B + 
 differentiable_sheet_twoframe.py  two-observation identifiability test for shared T,D and learned B_i
 differentiable_sheet_motion.py  known-shift shared-background inverse-rendering test
 differentiable_sheet_heightfield.py  height-field displacement prior vs free-flow D test
+differentiable_sheet_integrable_projection.py  free-flow warm start projected to integrable relief
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -146,6 +149,10 @@ python3 differentiable_sheet_motion.py --sweep \
 # height-field displacement prior: physical relief state vs free optical flow
 python3 differentiable_sheet_heightfield.py --sweep \
   --out results/differentiable_sheet_heightfield_sweep
+
+# project free-flow displacement into an integrable height-field warm start
+python3 differentiable_sheet_integrable_projection.py --sweep \
+  --out results/differentiable_sheet_integrable_projection_sweep
 ```
 
 manifest.json format (keys are filenames inside the folder):

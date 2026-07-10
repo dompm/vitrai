@@ -1,0 +1,204 @@
+{
+  "case": "seed62",
+  "claim": "Project free-flow displacement into an integrable height-field warm start.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_integrable_projection_sweep",
+    "size": 144,
+    "seed": 62,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "shift_x": 19.0,
+    "shift_y": -11.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "height_low_res": 54,
+    "steps_motion": 1200,
+    "steps_height": 1400,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "lr_h": 0.055,
+    "lr_scale": 0.02,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "height_tv": 0.01,
+    "height_lap": 0.018,
+    "height_scale_max": 18.0,
+    "height_scale_logit": 0.0,
+    "log_every": 450,
+    "sweep": true,
+    "sweep_seeds": "61,62,63,64",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 14.518889904022217,
+    "shifts": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        19.0,
+        -11.0
+      ]
+    ],
+    "projected_scale_init": 1.7377838058325694,
+    "oracle_scale_init": 2.9985489774908425
+  },
+  "metrics": [
+    {
+      "name": "two-frame free-flow D",
+      "renderer_recon_mae": 0.00193802232388407,
+      "T_mae": 0.10039548575878143,
+      "T_lum_mae": 0.19145198166370392,
+      "B_mae": 0.1649618297815323,
+      "preview_lum_cv": 0.142500344064237,
+      "T_highfreq_corr_with_bg": 0.10121580277100439,
+      "disp_epe_px": 3.698976755142212,
+      "disp_corr_x": 0.432243725992221,
+      "disp_corr_y": 0.21139631270533216,
+      "height_corr": 0.0,
+      "height_abs_corr": 0.0,
+      "height_lap_std": 0.0,
+      "height_scale": 0.0
+    },
+    {
+      "name": "height-field from projected free-flow",
+      "renderer_recon_mae": 0.002460636547766626,
+      "T_mae": 0.09799693524837494,
+      "T_lum_mae": 0.1880718469619751,
+      "B_mae": 0.15361958742141724,
+      "preview_lum_cv": 0.1472584693157382,
+      "T_highfreq_corr_with_bg": 0.07624294328486866,
+      "disp_epe_px": 3.1075069904327393,
+      "disp_corr_x": 0.5059023973298363,
+      "disp_corr_y": 0.4892287743773822,
+      "height_corr": 0.24591528640053945,
+      "height_abs_corr": 0.24591528640053945,
+      "height_lap_std": 0.014159854501485825,
+      "height_scale": 1.5800340175628662
+    },
+    {
+      "name": "height-field oracle init",
+      "renderer_recon_mae": 0.002340956241823733,
+      "T_mae": 0.0933072566986084,
+      "T_lum_mae": 0.18016459047794342,
+      "B_mae": 0.1359756886959076,
+      "preview_lum_cv": 0.1493161241560983,
+      "T_highfreq_corr_with_bg": 0.1025048989068209,
+      "disp_epe_px": 2.2832753658294678,
+      "disp_corr_x": 0.7664205317134386,
+      "disp_corr_y": 0.7882369624043304,
+      "height_corr": 0.7562253624000203,
+      "height_abs_corr": 0.7562253624000203,
+      "height_lap_std": 0.013798682019114494,
+      "height_scale": 1.9239616394042969
+    }
+  ],
+  "logs": {
+    "free": [
+      {
+        "step": 0,
+        "loss": 0.023563595488667488,
+        "recon": 0.023510314524173737,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 450,
+        "loss": 0.002698961878195405,
+        "recon": 0.00201000040397048,
+        "disp_abs": 1.632065773010254
+      },
+      {
+        "step": 900,
+        "loss": 0.0026406655088067055,
+        "recon": 0.001963929273188114,
+        "disp_abs": 1.6006081104278564
+      },
+      {
+        "step": 1199,
+        "loss": 0.0026222558226436377,
+        "recon": 0.0019489908590912819,
+        "disp_abs": 1.5988802909851074
+      }
+    ],
+    "projected": [
+      {
+        "step": 0,
+        "loss": 0.02404622733592987,
+        "recon": 0.02291722595691681,
+        "disp_abs": 1.3533796072006226,
+        "height_scale": 1.7694363594055176
+      },
+      {
+        "step": 450,
+        "loss": 0.0035070718731731176,
+        "recon": 0.0025873566046357155,
+        "disp_abs": 1.1699349880218506,
+        "height_scale": 1.6254702806472778
+      },
+      {
+        "step": 900,
+        "loss": 0.003395137842744589,
+        "recon": 0.002518073422834277,
+        "disp_abs": 1.1344760656356812,
+        "height_scale": 1.592437505722046
+      },
+      {
+        "step": 1350,
+        "loss": 0.0033060398418456316,
+        "recon": 0.002447109669446945,
+        "disp_abs": 1.1140823364257812,
+        "height_scale": 1.579829216003418
+      },
+      {
+        "step": 1399,
+        "loss": 0.003309041727334261,
+        "recon": 0.002455845009535551,
+        "disp_abs": 1.1118563413619995,
+        "height_scale": 1.5800340175628662
+      }
+    ],
+    "oracle": [
+      {
+        "step": 0,
+        "loss": 0.02480403147637844,
+        "recon": 0.023481518030166626,
+        "disp_abs": 2.2391109466552734,
+        "height_scale": 2.948901891708374
+      },
+      {
+        "step": 450,
+        "loss": 0.003323180368170142,
+        "recon": 0.0024040478747338057,
+        "disp_abs": 1.3439983129501343,
+        "height_scale": 1.9243651628494263
+      },
+      {
+        "step": 900,
+        "loss": 0.003259682795032859,
+        "recon": 0.0023673279210925102,
+        "disp_abs": 1.3241006135940552,
+        "height_scale": 1.9132100343704224
+      },
+      {
+        "step": 1350,
+        "loss": 0.003246317384764552,
+        "recon": 0.0023594656959176064,
+        "disp_abs": 1.3269762992858887,
+        "height_scale": 1.920046091079712
+      },
+      {
+        "step": 1399,
+        "loss": 0.003219623351469636,
+        "recon": 0.002337354002520442,
+        "disp_abs": 1.3277684450149536,
+        "height_scale": 1.9239616394042969
+      }
+    ]
+  }
+}
