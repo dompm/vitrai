@@ -1,0 +1,409 @@
+{
+  "definition": "Report 024 -- targeted re-fetch of the 14 registered Bullseye reactive(non-iridescent)/Alchemy images report 019 identified as test-fire-tile contamination (019's smoking gun). Executes 019 Patch #1 as a one-off recovery, not a scraper rewrite. Does NOT edit glass_swatch_registry.json -- registry integration is the scraper owner's, this manifest is the bridge.",
+  "n_targets": 14,
+  "n_recovered": 7,
+  "n_unrecoverable": 7,
+  "recovered": [
+    {
+      "old_id": "bullseye-0000090030f1010",
+      "old_file": "bullseye-0000090030f1010.jpg",
+      "new_file": "bullseye-0000090030f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Cloud Opalescent, Double-rolled, 3 mm, Fusible",
+      "base_sku": "000009-0030-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/reactive-cloud-opalescent-double-rolled-3-mm-fusible",
+      "image_position_picked": 2,
+      "n_candidate_images": 2,
+      "flagger_verdict": [
+        "clean"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.4931,
+        "border_white": 0.4993,
+        "fg_frac": 0.5063,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.5063,
+        "mean_blob_solidity": 0.9393,
+        "fg_sat": 0.1628
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "human_verification_caveat": "the picked image (position 2) is a genuine photo of the product sheet (~85% of frame, edge-to-edge, consistent corners) but includes a small 4-tile reaction-demo insert in the upper-left corner -- not a pure clean sheet, but materially correct vs. the pure test-fire lead photo it replaces. A center-crop color/texture extractor would not touch the corner insert."
+    },
+    {
+      "old_id": "bullseye-0000090050f1010",
+      "old_file": "bullseye-0000090050f1010.jpg",
+      "new_file": "bullseye-0000090050f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Cloud Opalescent, Thin-rolled, 2 mm, Fusible",
+      "base_sku": "000009-0050-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/reactive-cloud-opalescent-thin-rolled-2-mm-fusible",
+      "image_position_picked": 2,
+      "n_candidate_images": 2,
+      "flagger_verdict": [
+        "clean"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.4976,
+        "border_white": 0.4916,
+        "fg_frac": 0.4996,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4996,
+        "mean_blob_solidity": 0.9915,
+        "fg_sat": 0.1657
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "human_verification_caveat": "same hybrid sheet+corner-demo composite style as 0000090030 (same product line, other size variant)."
+    },
+    {
+      "old_id": "bullseye-0010090050f1010",
+      "old_file": "bullseye-0010090050f1010.jpg",
+      "new_file": "bullseye-0010090050f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Ice Transparent, Thin-rolled, 2 mm, Fusible",
+      "base_sku": "001009-0050-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/reactive-ice-transparent-thin-rolled-2-mm-fusible",
+      "image_position_picked": 2,
+      "n_candidate_images": 2,
+      "flagger_verdict": [
+        "clean"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.9993,
+        "border_white": 0.9985,
+        "fg_frac": 0.0,
+        "n_blobs": 0,
+        "biggest_blob_frac": 0.0,
+        "mean_blob_solidity": 0.0,
+        "fg_sat": 0.0
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "human_verification_caveat": null
+    },
+    {
+      "old_id": "bullseye-0010150031f1010",
+      "old_file": "bullseye-0010150031f1010.jpg",
+      "new_file": "bullseye-0010150031f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "base_sku": "001015-0031-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+      "image_position_picked": 4,
+      "n_candidate_images": 4,
+      "flagger_verdict": [
+        "product_on_white"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.6217,
+        "border_white": 0.8381,
+        "fg_frac": 0.3516,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3494,
+        "mean_blob_solidity": 0.6041,
+        "fg_sat": 0.042
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles"
+      ],
+      "human_verification_caveat": null
+    },
+    {
+      "old_id": "bullseye-0010150051f1010",
+      "old_file": "bullseye-0010150051f1010.jpg",
+      "new_file": "bullseye-0010150051f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "base_sku": "001015-0051-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
+      "image_position_picked": 4,
+      "n_candidate_images": 4,
+      "flagger_verdict": [
+        "product_on_white"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.5687,
+        "border_white": 0.8416,
+        "fg_frac": 0.4141,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4132,
+        "mean_blob_solidity": 0.7261,
+        "fg_sat": 0.0305
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles"
+      ],
+      "human_verification_caveat": null
+    },
+    {
+      "old_id": "bullseye-0010160031f1010",
+      "old_file": "bullseye-0010160031f1010.jpg",
+      "new_file": "bullseye-0010160031f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "base_sku": "001016-0031-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+      "image_position_picked": 4,
+      "n_candidate_images": 4,
+      "flagger_verdict": [
+        "product_on_white"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.6217,
+        "border_white": 0.8381,
+        "fg_frac": 0.3503,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3483,
+        "mean_blob_solidity": 0.6021,
+        "fg_sat": 0.0418
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles"
+      ],
+      "human_verification_caveat": null
+    },
+    {
+      "old_id": "bullseye-0010160051f1010",
+      "old_file": "bullseye-0010160051f1010.jpg",
+      "new_file": "bullseye-0010160051f1010-v2.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "base_sku": "001016-0051-F-1010",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
+      "image_position_picked": 4,
+      "n_candidate_images": 4,
+      "flagger_verdict": [
+        "product_on_white"
+      ],
+      "flagger_signals": {
+        "white_frac": 0.5346,
+        "border_white": 0.8389,
+        "fg_frac": 0.4502,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4497,
+        "mean_blob_solidity": 0.7867,
+        "fg_sat": 0.0432
+      },
+      "quarantine_reason_original": [
+        "test_fire_tiles"
+      ],
+      "human_verification_caveat": null
+    }
+  ],
+  "unrecoverable": [
+    {
+      "id": "bullseye-0010090030f1010",
+      "base_sku": "001009-0030-F-1010",
+      "name": "Reactive Ice Transparent, Double-rolled, 3 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010090030f1010.jpg",
+      "old_file": "bullseye-0010090030f1010.jpg",
+      "quarantine_reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "reason": "no_candidate_passed_flagger",
+      "product_url": "https://shop.bullseyeglass.com/products/reactive-ice-transparent-double-rolled-3-mm-fusible",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001009-0030-F_01.jpg?v=1765590924",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001009-0030-F_02.jpg?v=1765590923",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150030f1010",
+      "base_sku": "001015-0030-F-1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, 3 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010150030f1010.jpg",
+      "old_file": "bullseye-0010150030f1010.jpg",
+      "quarantine_reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "reason": "no_candidate_passed_flagger",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-3-mm-fusible",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0030-F_01.jpg?v=1765590923",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0030-F_02.jpg?v=1765590924",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150050f1010",
+      "base_sku": "001015-0050-F-1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, 2 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010150050f1010.jpg",
+      "old_file": "bullseye-0010150050f1010.jpg",
+      "quarantine_reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "reason": "no_candidate_passed_flagger",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-thin-rolled-2-mm-fusible",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0050-F_01.jpg?v=1765591054",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0050-F_02.jpg?v=1765591054",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160030f1010",
+      "base_sku": "001016-0030-F-1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, 3 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010160030f1010.jpg",
+      "old_file": "bullseye-0010160030f1010.jpg",
+      "quarantine_reason": [
+        "product_on_white",
+        "reaction_demo_line"
+      ],
+      "reason": "human_verification_rejected_automated_pick",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-double-rolled-3-mm-fusible",
+      "automated_pick_position": 1,
+      "override_note": "both live product images are the same before/after fired-tile demo (different crop/zoom); the 'winner' picked by the automated flagger (position 1) is NOT a sheet -- flagger false negative, confirmed by eye.",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0030-F_01.jpg?v=1765590924",
+          "reasons": [
+            "product_on_white"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0030-F_02.jpg?v=1765590924",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160050f1010",
+      "base_sku": "001016-0050-F-1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, 2 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010160050f1010.jpg",
+      "old_file": "bullseye-0010160050f1010.jpg",
+      "quarantine_reason": [
+        "product_on_white",
+        "reaction_demo_line"
+      ],
+      "reason": "human_verification_rejected_automated_pick",
+      "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-thin-rolled-2-mm-fusible",
+      "automated_pick_position": 1,
+      "override_note": "same before/after demo pair as 0010160030 (same colorway, other size variant); flagger false negative, confirmed by eye.",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0050-F_01.jpg?v=1765591056",
+          "reasons": [
+            "product_on_white"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0050-F_02.jpg?v=1765591056",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010190030f1010",
+      "base_sku": "001019-0030-F-1010",
+      "name": "Red Reactive Clear Transparent, Double-rolled, 3 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010190030f1010.jpg",
+      "old_file": "bullseye-0010190030f1010.jpg",
+      "quarantine_reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "reason": "no_candidate_passed_flagger",
+      "product_url": "https://shop.bullseyeglass.com/products/red-reactive-clear-transparent-double-rolled-3-mm-fusible",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001019-0030-F_01.jpg?v=1765590925",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001019-0030-F_02.jpg?v=1765590924",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010190050f1010",
+      "base_sku": "001019-0050-F-1010",
+      "name": "Red Reactive Clear Transparent, Thin-rolled, 2 mm, Fusible",
+      "old_local_image": "/assets/catalog_images/bullseye-0010190050f1010.jpg",
+      "old_file": "bullseye-0010190050f1010.jpg",
+      "quarantine_reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "reason": "no_candidate_passed_flagger",
+      "product_url": "https://shop.bullseyeglass.com/products/red-reactive-clear-transparent-thin-rolled-2-mm-fusible",
+      "candidates": [
+        {
+          "position": 1,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001019-0050-F_01.jpg?v=1765591058",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        },
+        {
+          "position": 2,
+          "url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001019-0050-F_02.jpg?v=1765591058",
+          "reasons": [
+            "test_fire_tiles"
+          ]
+        }
+      ]
+    }
+  ]
+}
