@@ -129,6 +129,59 @@ T_ANCHOR = {
 # flag `anchor_fallback` in the metrics so batch runs can QA-filter.
 ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
 
+# ---- Continuous (image-statistics) absolute-scale anchor (report 016) ------
+# Motivation: the class-anchored gauge above hangs ENTIRELY on the class label,
+# and report 015 measured the VLM class prior at 30.6% accuracy on the real
+# catalog corpus (barely above chance), with the catalog metadata itself being
+# noisy marketing taxonomy at class boundaries. A dark sheet misread as
+# cathedral-clear comes out ~4.75x too bright (0.95/0.20) under the class
+# anchor -- a catastrophic, invisible failure. The continuous anchor estimates
+# the absolute scale from CLASS-FREE image statistics and uses the class prior
+# only as a regularizer, so a wrong class degrades the scale gracefully
+# instead of failing hard.
+#
+# Model:  t_img = T_LO + (T_HI - T_LO) * sigmoid(c0 + c . (x - mu) / sd)
+# with 3 class-free features of the raw linear photo:
+#   log(p95(Y))    absolute brightness of the brightest transmitting regions
+#                  (~ backlight x brightest transmittance; the main scale cue)
+#   sat_lit        luminance-GATED mean saturation (only pixels bright enough,
+#                  smoothstep(Y, 0.10, 0.30), for saturation to be signal) --
+#                  deep tinted cathedral glass stays saturated even when dim,
+#                  while dense dark-opaque glass reads dim AND (in its lit
+#                  pixels, if any) desaturated
+#   lit_frac       mean of that luminance gate: how much of the sheet
+#                  transmits at all
+# Feature-hardening note (measured, not hypothetical): a tighter synthetic
+# fit exists using raw p90(saturation) and mean milkiness (LOO mean 1.27x vs
+# this set's 1.45x), but both features are Cycles artifacts in disguise --
+# on real photos, sensor noise at near-black gives a black sheet
+# sat_p90 = 0.90 (read as "vividly tinted" -> t_img 0.39 for library
+# black.jpg), and real hammered-opal relief kills milkiness' smoothness term
+# (library white.jpg milk 0.12 vs synthetic wispy 0.5 -> t_img 0.36 for a
+# bright milky sheet). The gated features fix both real-photo cases
+# (white 0.93, black 0.28) at a measured cost in synthetic LOO accuracy;
+# robustness in the wild is the goal, so the gated set ships.
+# Fit: ridge (lam=2.0) least squares in logit space on the 26 synthetic-v2
+# samples with authored GT, target = p99 of gt_T (the exact statistic T_ANCHOR
+# pins). Accuracy on that set: worst in-sample scale ratio ~2.9x, leave-one-
+# sample-out mean 1.45x, vs the 4.75x a dark<->cathedral class flip costs the
+# class anchor. Residual failure mode (honest): "dark glass under bright
+# backlight" vs "bright glass under dim backlight" genuinely overlap in
+# single-photo statistics -- the same L*T gauge ambiguity as ever; the
+# estimator compresses that ambiguity to ~2-3x, it cannot remove it.
+#
+# The class prior remains as a REGULARIZER via an adaptive log-space blend
+# (`blend_anchor_target`): when image estimate and class target agree within
+# ANCHOR_BLEND_TAU0 (ratio), trust the class target fully (zero drift on
+# healthy extractions); as disagreement grows toward TAU1, shift up to
+# ANCHOR_BLEND_WMAX of the way (in log space) to the image estimate. Constants
+# tuned on the synthetic class-error-injection eval (eval_class_injection.py).
+ANCHOR_T_LO, ANCHOR_T_HI = 0.10, 0.98
+ANCHOR_FEAT_MU = np.array([-1.53142, 0.317627, 0.321582])
+ANCHOR_FEAT_SD = np.array([0.900396, 0.203289, 0.34496])
+ANCHOR_COEF = np.array([0.752747, 0.796464, 0.403915, 0.75393])
+ANCHOR_BLEND_TAU0, ANCHOR_BLEND_TAU1, ANCHOR_BLEND_WMAX = 1.5, 3.0, 0.85
+
 
 # ---------------------------------------------------------------- basic ops
 def srgb_to_lin(a):
@@ -238,6 +291,65 @@ def milkiness(rgb_like, r_tex):
     return bright * smooth * desat
 
 
+def estimate_anchor_scale(lin):
+    """Continuous, class-free absolute-scale estimate t_img (report 016): the
+    predicted p99 transmittance of the sheet, from raw-photo statistics only.
+    See the ANCHOR_* constants comment for model, features, fit and limits."""
+    Y = lum(lin)
+    mx, mn = lin.max(axis=-1), lin.min(axis=-1)
+    sat = (mx - mn) / (mx + 1e-6)
+    wlit = smoothstep(Y, 0.10, 0.30)
+    sat_lit = float((sat * wlit).sum() / (wlit.sum() + 1e-6)) if wlit.sum() > 1 else 0.0
+    x = np.array([
+        float(np.log(max(np.percentile(Y, 95), 1e-3))),
+        sat_lit,
+        float(wlit.mean()),
+    ])
+    s = ANCHOR_COEF[0] + float(np.dot(ANCHOR_COEF[1:], (x - ANCHOR_FEAT_MU) / ANCHOR_FEAT_SD))
+    return ANCHOR_T_LO + (ANCHOR_T_HI - ANCHOR_T_LO) / (1.0 + np.exp(-s))
+
+
+def blend_anchor_target(t_class, t_img):
+    """Class prior as regularizer (report 016): adaptive log-space blend.
+    Agreement within TAU0 -> class target untouched; disagreement ramping to
+    TAU1 -> up to WMAX of the (log) distance moved toward the image estimate."""
+    d = abs(np.log(t_img) - np.log(t_class))
+    ramp = (d - np.log(ANCHOR_BLEND_TAU0)) / (np.log(ANCHOR_BLEND_TAU1) - np.log(ANCHOR_BLEND_TAU0))
+    w = ANCHOR_BLEND_WMAX * float(np.clip(ramp, 0.0, 1.0))
+    return float(np.exp((1.0 - w) * np.log(t_class) + w * np.log(t_img)))
+
+
+def luminance_envelope(Y):
+    """Smooth luminance envelope (class-free). Since T<=1 and I = L*T, the
+    illumination rides on top of the observed luminance, so a large-window
+    high-percentile filter tracks L*T_bright.
+
+    p95/0.35 chosen by sweep (report 002): higher percentile pushes glass
+    structure out of the envelope into T (+21% T contrast on the wispy case)
+    at negligible cost in residual illumination on the easy case.
+
+    Hotspot recovery (report 004): the broad envelope smooths a compact
+    backlight hotspot down, so R = I/L runs hot there and the hotspot leaks
+    into T (blue's cyan patch, red's milder one). A tighter-window,
+    higher-percentile envelope tracks the compact peak; taking the max lifts
+    the envelope only where the tight peak exceeds the broad one -- i.e. on a
+    compact bright blob. Over broad uniform glass the two agree, so glass
+    color is untouched (median unchanged)."""
+    from scipy.ndimage import percentile_filter
+    H_, W_ = Y.shape
+    s = 8
+    small = cv2.resize(Y.astype(np.float32), (max(W_ // s, 8), max(H_ // s, 8)),
+                       interpolation=cv2.INTER_AREA).astype(np.float64)
+    d = max(small.shape)
+    win = max(5, int(0.35 * d))
+    base = gauss(percentile_filter(small, 95, size=win, mode='nearest'), 0.15 * d)
+    pw = max(3, int(0.15 * d))
+    peak = gauss(percentile_filter(small, 98, size=pw, mode='nearest'), 0.05 * d)
+    env = np.maximum(base, peak)
+    env = cv2.resize(env.astype(np.float32), (W_, H_), interpolation=cv2.INTER_CUBIC).astype(np.float64)
+    return np.maximum(env, 1e-3)
+
+
 def estimate_illumination(lin, glass_class, W):
     """L = smooth luminance envelope x low-order chroma field.
 
@@ -252,29 +364,7 @@ def estimate_illumination(lin, glass_class, W):
     """
     Y = lum(lin)
     H_, W_ = Y.shape
-
-    # --- luminance envelope (percentile filter on a downsampled grid)
-    from scipy.ndimage import percentile_filter
-    s = 8
-    small = cv2.resize(Y.astype(np.float32), (max(W_ // s, 8), max(H_ // s, 8)),
-                       interpolation=cv2.INTER_AREA).astype(np.float64)
-    # p95/0.35 chosen by sweep (report 002): higher percentile pushes glass
-    # structure out of the envelope into T (+21% T contrast on the wispy case)
-    # at negligible cost in residual illumination on the easy case
-    d = max(small.shape)
-    win = max(5, int(0.35 * d))
-    base = gauss(percentile_filter(small, 95, size=win, mode='nearest'), 0.15 * d)
-    # hotspot recovery (report 004): the broad envelope smooths a compact backlight
-    # hotspot down, so R = I/L runs hot there and the hotspot leaks into T (blue's
-    # cyan patch, red's milder one). A tighter-window, higher-percentile envelope
-    # tracks the compact peak; taking the max lifts L only where the tight peak
-    # exceeds the broad one -- i.e. on a compact bright blob. Over broad uniform
-    # glass the two agree, so glass color is untouched (median L unchanged).
-    pw = max(3, int(0.15 * d))
-    peak = gauss(percentile_filter(small, 98, size=pw, mode='nearest'), 0.05 * d)
-    env = np.maximum(base, peak)
-    env = cv2.resize(env.astype(np.float32), (W_, H_), interpolation=cv2.INTER_CUBIC).astype(np.float64)
-    env = np.maximum(env, 1e-3)
+    env = luminance_envelope(Y)
 
     # --- chroma field
     chroma = np.ones_like(lin)
@@ -500,10 +590,16 @@ def load_linear(path, corners, size):
     return srgb_to_lin(np.asarray(img).astype(np.float64) / 255.0)
 
 
-def extract_maps(lin, glass_class, mark_region="unknown"):
+def extract_maps(lin, glass_class, mark_region="unknown", anchor="class"):
     """Core map computation (pipeline steps 1-4) on a linear-RGB image.
     Returns a dict of the intermediate/output arrays. process() adds metrics
-    and file output on top; the harness reuses the maps directly."""
+    and file output on top; the harness reuses the maps directly.
+
+    anchor: 'class' (report 003/009 class-prior target), 'continuous'
+    (report 016: class-free image-statistics estimate, class prior as
+    regularizer via blend_anchor_target), or 'none' (research/eval only:
+    return the UNANCHORED maps, k=1, so an eval harness can apply and
+    compare anchor designs itself)."""
     W = lin.shape[1]
     # 1. speculars
     lin_ns, spec_mask = suppress_speculars(lin, glass_class, W)
@@ -530,37 +626,52 @@ def extract_maps(lin, glass_class, mark_region="unknown"):
     # by the inverse so L*T (and thus the self-recon) is exactly invariant -- the
     # scale is a gauge, only T's numeric level changes. See T_ANCHOR.
     pct, target = T_ANCHOR[glass_class]
+    # t_img is computed in EVERY mode: even when it does not drive the anchor,
+    # |log(t_img / class target)| is a free class/photo-mismatch QA signal
+    # (report 016 flags the corpus images whose metadata class contradicts the
+    # photo -- e.g. a "dark-opaque" registry row whose photo is a front-lit
+    # iridescent coating -- at ratio > 2 with no false hits on the library).
+    t_img = float(estimate_anchor_scale(lin))
+    if anchor == "continuous":
+        target = blend_anchor_target(target, t_img)
     # raw_p99: p99 of the un-clipped transmittance before assemble_T's [0,1] clip
     # saturates it. This is the per-sheet scale diagnostic -- how far the brightest
     # transmitting pixels sit above the envelope's clear level (residual
     # hotspot / specular). k itself is ~class-constant because the envelope already
     # normalizes each sheet's clear level to ~1, so raw_p99 is what actually varies.
     raw_p99 = float(np.percentile(np.clip(R, 0, None), 99))
-    k = target / max(np.percentile(T, pct), 1e-3)
-    # sanity gate (see ANCHOR_K_MIN/MAX comment): out-of-band k means the T
-    # assembly degenerated (e.g. conf collapsed to 0 and diffusion_fill had no
-    # source -> T identically 0 -> k explodes to target/1e-3). Rebuild T from
-    # the directly-observed R, re-anchor, clamp as a last resort, and flag.
     anchor_fallback = False
-    if not (ANCHOR_K_MIN < k < ANCHOR_K_MAX):
-        anchor_fallback = True
-        T = np.clip(R, 0, 1)
-        conf = np.ones_like(conf)
+    if anchor == "none":
+        k = 1.0
+        target = None
+    else:
         k = target / max(np.percentile(T, pct), 1e-3)
-        k = float(np.clip(k, ANCHOR_K_MIN, ANCHOR_K_MAX))
-    T = np.clip(T * k, 0, 1)
-    L, R = L / k, R * k
+        # sanity gate (see ANCHOR_K_MIN/MAX comment): out-of-band k means the T
+        # assembly degenerated (e.g. conf collapsed to 0 and diffusion_fill had
+        # no source -> T identically 0 -> k explodes to target/1e-3). Rebuild T
+        # from the directly-observed R, re-anchor, clamp as a last resort, flag.
+        if not (ANCHOR_K_MIN < k < ANCHOR_K_MAX):
+            anchor_fallback = True
+            T = np.clip(R, 0, 1)
+            conf = np.ones_like(conf)
+            k = target / max(np.percentile(T, pct), 1e-3)
+            k = float(np.clip(k, ANCHOR_K_MIN, ANCHOR_K_MAX))
+        T = np.clip(T * k, 0, 1)
+        L, R = L / k, R * k
     return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R, "mark_mask": mark_mask,
             "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99,
-            "anchor_fallback": anchor_fallback}
+            "anchor_fallback": anchor_fallback, "anchor_mode": anchor,
+            "anchor_target": (None if target is None else float(target)),
+            "anchor_t_img": t_img}
 
 
-def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown"):
+def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown",
+            anchor="class"):
     """mark_region: 'unknown' (global conservative detector), 'none' (skip
     mark handling), or a 3x3 grid cell name (targeted aggressive detector)."""
     name = os.path.splitext(os.path.basename(path))[0]
     lin = load_linear(path, corners, size)
-    m = extract_maps(lin, glass_class, mark_region)
+    m = extract_maps(lin, glass_class, mark_region, anchor=anchor)
     lin_ns, spec_mask, L, R = m["lin_ns"], m["spec_mask"], m["L"], m["R"]
     mark_mask, h, T, conf = m["mark_mask"], m["h"], m["T"], m["conf"]
 
@@ -588,6 +699,16 @@ def process(path, glass_class, corners, out_dir, size, debug=False, mark_region=
         # True when the sanity gate fired: k left (ANCHOR_K_MIN, ANCHOR_K_MAX)
         # and T was rebuilt from R. Batch runs should QA-flag these outputs.
         "anchor_fallback": m["anchor_fallback"],
+        # 'class' or 'continuous' (report 016). anchor_t_img is the class-free
+        # image-statistics scale estimate (computed in every mode);
+        # anchor_target the target actually anchored to. anchor_scale_disagree
+        # = max ratio between t_img and the CLASS target -- > ~2 flags a
+        # class/photo mismatch worth reviewing, whichever mode anchored T.
+        "anchor_mode": m["anchor_mode"],
+        "anchor_target": m["anchor_target"],
+        "anchor_t_img": m["anchor_t_img"],
+        "anchor_scale_disagree": float(max(m["anchor_t_img"] / T_ANCHOR[glass_class][1],
+                                           T_ANCHOR[glass_class][1] / m["anchor_t_img"])),
     }
 
     # 6. outputs
@@ -636,6 +757,10 @@ def main():
                     help="skip the default VLM class call (use --class / manifest override, else 'wispy')")
     ap.add_argument("--mark-region", default=None,
                     help="'none', 'unknown', or a 3x3 cell (e.g. bottom-right)")
+    ap.add_argument("--anchor", choices=("class", "continuous"), default="class",
+                    help="absolute-scale anchor: 'class' (class-prior target, report 003/009) "
+                         "or 'continuous' (image-statistics estimate with the class prior as "
+                         "regularizer, report 016)")
     ap.add_argument("--debug", action="store_true", help="save intermediate masks/fields")
     args = ap.parse_args()
 
@@ -678,11 +803,12 @@ def main():
             entry = manifest.get(f, {})
             p = os.path.join(args.input, f)
             process(p, classify(p, entry), entry.get("corners"),
-                    args.out, args.size, args.debug, mark_region=marks(p, entry))
+                    args.out, args.size, args.debug, mark_region=marks(p, entry),
+                    anchor=args.anchor)
     else:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None
         process(args.input, classify(args.input), corners, args.out, args.size, args.debug,
-                mark_region=marks(args.input))
+                mark_region=marks(args.input), anchor=args.anchor)
 
 
 if __name__ == "__main__":

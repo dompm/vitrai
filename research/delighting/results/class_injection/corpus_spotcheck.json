@@ -1,0 +1,322 @@
+[
+  {
+    "file": "wissmach-wf40105.jpg",
+    "meta_class": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": true,
+      "T_mean_lum": 0.27531974980657364
+    },
+    "t_img": 0.8104797461607782,
+    "meta_continuous": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": true,
+      "T_mean_lum": 0.27531974980657364
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.05199602183821175
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.6570302130462521,
+      "target": 0.6570302130462521,
+      "gate_fired": false,
+      "T_mean_lum": 0.17081478652958926
+    }
+  },
+  {
+    "file": "wissmach-wf10lum105.jpg",
+    "meta_class": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": false,
+      "T_mean_lum": 0.7508078705144978
+    },
+    "t_img": 0.9657709446761368,
+    "meta_continuous": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": false,
+      "T_mean_lum": 0.7508078705144978
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.15380178923444918
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7626012529715331,
+      "target": 0.7626012529715331,
+      "gate_fired": false,
+      "T_mean_lum": 0.5864471858972728
+    }
+  },
+  {
+    "file": "oceanside-of22872s.jpg",
+    "meta_class": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": false,
+      "T_mean_lum": 0.8695294232722972
+    },
+    "t_img": 0.921500134807334,
+    "meta_continuous": {
+      "class_used": "opalescent",
+      "k": 0.88,
+      "target": 0.88,
+      "gate_fired": false,
+      "T_mean_lum": 0.8695294232722972
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.19134253145703267
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7327833484180543,
+      "target": 0.7327833484180543,
+      "gate_fired": false,
+      "T_mean_lum": 0.701063104479357
+    }
+  },
+  {
+    "file": "wissmach-wblacki.jpg",
+    "meta_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.14061263711504596
+    },
+    "t_img": 0.9389880491621395,
+    "meta_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7445871800971895,
+      "target": 0.7445871800971895,
+      "gate_fired": false,
+      "T_mean_lum": 0.5234918347776074
+    },
+    "flip_class": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.6679516972624852
+    },
+    "flip_continuous": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.6679516972624852
+    }
+  },
+  {
+    "file": "bullseye-0000130030ffull.jpg",
+    "meta_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.18094211950676028
+    },
+    "t_img": 0.9354417451401275,
+    "meta_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7421962132356974,
+      "target": 0.7421962132356974,
+      "gate_fired": false,
+      "T_mean_lum": 0.6714727795637927
+    },
+    "flip_class": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.859475067657111
+    },
+    "flip_continuous": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.859475067657111
+    }
+  },
+  {
+    "file": "oceanside-of1009w6x12.jpg",
+    "meta_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.06171154075374606
+    },
+    "t_img": 0.39642792216314215,
+    "meta_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.2526882409737941,
+      "target": 0.2526882409737941,
+      "gate_fired": false,
+      "T_mean_lum": 0.07796890340423351
+    },
+    "flip_class": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.2933513733601867
+    },
+    "flip_continuous": {
+      "class_used": "cathedral-clear",
+      "k": 0.574988262659189,
+      "target": 0.574988262659189,
+      "gate_fired": false,
+      "T_mean_lum": 0.17755115422848505
+    }
+  },
+  {
+    "file": "oceanside-of3172s.jpg",
+    "meta_class": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.7591273132592377
+    },
+    "t_img": 0.9547169046861774,
+    "meta_continuous": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.7591273132592377
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.15981627647562888
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7551755489492258,
+      "target": 0.7551755489492258,
+      "gate_fired": false,
+      "T_mean_lum": 0.6034467215925216
+    }
+  },
+  {
+    "file": "wissmach-w18h.jpg",
+    "meta_class": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.20210076207455413
+    },
+    "t_img": 0.8450749850343079,
+    "meta_continuous": {
+      "class_used": "cathedral-clear",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.20210076207455413
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.04254678543919004
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.680793591225967,
+      "target": 0.680793591225967,
+      "gate_fired": false,
+      "T_mean_lum": 0.14482789427133436
+    }
+  },
+  {
+    "file": "wissmach-wiwo702.jpg",
+    "meta_class": {
+      "class_used": "wispy",
+      "k": 0.9503005077957061,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.37258809330709913
+    },
+    "t_img": 0.9278687109423447,
+    "meta_continuous": {
+      "class_used": "wispy",
+      "k": 0.9503005077957061,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.37258809330709913
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.11564659000959551
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7370858088696824,
+      "target": 0.7370858088696824,
+      "gate_fired": false,
+      "T_mean_lum": 0.4262073017012161
+    }
+  },
+  {
+    "file": "bullseye-60105b0030fhalf.jpg",
+    "meta_class": {
+      "class_used": "wispy",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.7950748068485961
+    },
+    "t_img": 0.9561779351093229,
+    "meta_continuous": {
+      "class_used": "wispy",
+      "k": 0.95,
+      "target": 0.95,
+      "gate_fired": false,
+      "T_mean_lum": 0.7950748068485961
+    },
+    "flip_class": {
+      "class_used": "dark-opaque",
+      "k": 0.2,
+      "target": 0.2,
+      "gate_fired": false,
+      "T_mean_lum": 0.15943597223263006
+    },
+    "flip_continuous": {
+      "class_used": "dark-opaque",
+      "k": 0.7561577528915255,
+      "target": 0.7561577528915255,
+      "gate_fired": false,
+      "T_mean_lum": 0.6027937324675059
+    }
+  }
+]
