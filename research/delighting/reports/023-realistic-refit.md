@@ -215,7 +215,9 @@ Every h_mae for cathedral and dark-family recipes is **exactly unchanged** (conf
 is correctly scoped to opalescent/wispy only, §1.2 item 3). streaky-mix/wispy-white's T_mae move by
 ≤0.001 — noise, not regression. No recipe crosses from "working" to "broken."
 
-## 4. Held-out evaluation (fresh renders, never used for fitting)
+## 4. Harnesses and held-out evaluation
+
+### 4.1 Held-out evaluation (fresh renders, never used for fitting)
 
 Per the brief's instruction not to fit-and-score on the same renders: `fit_anchor.py`'s refit (§4.2)
 used `render_022` (13 recipes, 25 samples) plus the pre-existing v1/v2/dark-family sets. A **fresh
@@ -225,7 +227,7 @@ the shipped extractor on data it has never seen in any fitting step.
 
 [TO BE FILLED: held-out per-recipe table once render_023_holdout completes]
 
-## 4.2 Continuous anchor refit (`fit_anchor.py`) — LORO
+### 4.2 Continuous anchor refit (`fit_anchor.py`) — LORO
 
 `fit_anchor.py --data <v2> --data <dark-deep/ruby/slate> --data <render_022> --t-lo 0.04 --ship` on the
 combined 60-sample/13-recipe set (35 samples/5-8 recipes from reports 016/017 + 25 new render_022
@@ -257,7 +259,7 @@ n=2 LORO cell in this table).
 `ANCHOR_FEAT_MU/SD/COEF` shipped from the fit-on-all-data pass; `T_LO/T_HI` (0.04/0.98) unchanged — no
 new recipe sits outside that range.
 
-## 4.3 Class-error injection (`eval_class_injection.py`, 60 samples × 4 classes)
+### 4.3 Class-error injection (`eval_class_injection.py`, 60 samples × 4 classes)
 
 Full tables in `results/class_injection_023/injection_tables.md`. Summary:
 
@@ -276,7 +278,7 @@ mean 0.105 vs 017's 0.107; continuous 0.105/0.176 vs 017's 0.103/0.190 — the w
 anything slightly easier on average since it adds several well-behaved recipes alongside the two hard
 new dark ones).
 
-## 4.4 Cross-lighting invariance (`eval_cross_lighting.py`)
+### 4.4 Cross-lighting invariance (`eval_cross_lighting.py`)
 
 Full table in `results/cross_lighting_023/cross_lighting_table.md`. Same finding as report 020:
 `continuous_persheet` beats plain `continuous` on every dark-family and most cathedral cells (e.g.
@@ -390,5 +392,5 @@ python3 eval_cross_lighting.py --data <v2> --data <dark-*> --data <render_022> -
 
 # library regression + contact sheet (§5)
 python3 extract.py benchmark/library --no-vlm --out /tmp/lib_after
-# (before: git show HEAD~2:research/delighting/extract.py, run the same batch)
+# (before: git show a3fc07a:research/delighting/extract.py, run the same batch)
 ```
