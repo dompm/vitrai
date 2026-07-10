@@ -29,6 +29,8 @@ suncatcher failure and should not distract from inverse rendering.
 `017-catalog-leak-cleaner.md` turns the catalog into weak clean-material
 supervision for a neural leakage-field cleaner; it improves brightness
 consistency modestly but does not solve chroma/background separation.
+`018-luma-leakage-field.md` adds a safer luma-only cleanup mode that preserves
+uploaded glass hue while reducing broad brightness leakage.
 
 ## Layout
 
@@ -103,6 +105,8 @@ python3 learned_prior_gate.py
 ./.venv/bin/python train_catalog_leak_cleaner.py --steps 900
 ./.venv/bin/python train_catalog_leak_cleaner.py \
   --out results/catalog_leak_cleaner_smooth --steps 900 --smooth-residual 33
+./.venv/bin/python train_catalog_leak_cleaner.py \
+  --out results/catalog_leak_cleaner_luma --steps 900 --smooth-residual 33 --output-mode luma
 ```
 
 manifest.json format (keys are filenames inside the folder):

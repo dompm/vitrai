@@ -145,6 +145,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   dE 8.98 -> 8.02, fixed `T/h`+neural improves luminance-CV 0.318 -> 0.261, but the hand sheet
   prior is still far stronger (1.90 dE / 0.060 lum-CV). Verdict: keep "measured relief + learned
   smooth leakage field"; catalog-only supervision is not enough, especially for chroma leakage.
+- 018 luma-only leakage field: added `--output-mode luma`, where the network may only apply a smooth
+  scalar exposure field (`output = input * field`) and cannot repaint hue/chroma. It is weaker than
+  RGB smooth-field cleanup (after fixed `T/h`: lum-CV 0.318 -> 0.291 instead of 0.261), but keeps hue
+  stable (1.7 -> 1.7 instead of RGB smooth-field's 2.1). Product read: this is a safer default assist
+  for "uneven backlight/background brightness" because it preserves uploaded glass color provenance.
 
 
 ## Open problems / next
@@ -166,8 +171,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - For learned leakage/prior strength, use the smooth-field representation from report 017 and train
   on better positives from real cross-lighting/capture pairs or synthetic renders that reproduce
   garden/window leakage through hammered cathedral glass.
-- Split luminance leakage from chroma leakage explicitly; report 017 improves brightness before it
-  understands color.
+- Split luminance leakage from chroma leakage explicitly: report 018 suggests a safe luma head can
+  run with weak supervision, but any chroma head needs confidence and better paired/rendered data.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

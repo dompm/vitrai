@@ -299,9 +299,12 @@ def conv_block(cin, cout):
 class TinyMaterialCleaner(nn.Module):
     """Residual U-Net: change only what the input gives evidence for."""
 
-    def __init__(self, base=18, smooth_residual=0):
+    def __init__(self, base=18, smooth_residual=0, output_mode="rgb"):
         super().__init__()
         self.smooth_residual = int(smooth_residual)
+        if output_mode not in ("rgb", "luma"):
+            raise ValueError(f"unknown output_mode {output_mode!r}")
+        self.output_mode = output_mode
         self.enc1 = conv_block(3, base)
         self.enc2 = conv_block(base, base * 2)
         self.enc3 = conv_block(base * 2, base * 4)
@@ -313,7 +316,7 @@ class TinyMaterialCleaner(nn.Module):
         self.dec2 = conv_block(base * 4, base)
         self.up1 = nn.ConvTranspose2d(base, base, 2, stride=2)
         self.dec1 = conv_block(base * 2, base)
-        self.head = nn.Conv2d(base, 3, 1)
+        self.head = nn.Conv2d(base, 3 if output_mode == "rgb" else 1, 1)
 
     def forward(self, x):
         e1 = self.enc1(x)
@@ -323,10 +326,15 @@ class TinyMaterialCleaner(nn.Module):
         d3 = self.dec3(torch.cat([self.up3(b), e3], 1))
         d2 = self.dec2(torch.cat([self.up2(d3), e2], 1))
         d1 = self.dec1(torch.cat([self.up1(d2), e1], 1))
-        resid = 0.42 * torch.tanh(self.head(d1))
+        field = self.head(d1)
         if self.smooth_residual > 1:
             k = self.smooth_residual
-            resid = F.avg_pool2d(resid, k, stride=1, padding=k // 2)
+            field = F.avg_pool2d(field, k, stride=1, padding=k // 2)
+        if self.output_mode == "luma":
+            # Preserve input chroma/hue by applying one smooth exposure scale.
+            scale = torch.exp(0.55 * torch.tanh(field))
+            return torch.clamp(x * scale, 0.0, 1.0)
+        resid = 0.42 * torch.tanh(field)
         return torch.clamp(x + resid, 0.0, 1.0)
 
 
@@ -337,7 +345,11 @@ def lowpass_torch(x, k=25):
 def train_model(train, test, backgrounds, args, out_dir):
     device = "mps" if torch.backends.mps.is_available() and not args.cpu else "cpu"
     rng = np.random.default_rng(args.seed + 100)
-    net = TinyMaterialCleaner(base=args.base, smooth_residual=args.smooth_residual).to(device)
+    net = TinyMaterialCleaner(
+        base=args.base,
+        smooth_residual=args.smooth_residual,
+        output_mode=args.output_mode,
+    ).to(device)
     opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, args.steps)
     n_params = sum(p.numel() for p in net.parameters())
@@ -389,6 +401,7 @@ def train_model(train, test, backgrounds, args, out_dir):
         "state_dict": net.state_dict(),
         "base": args.base,
         "smooth_residual": args.smooth_residual,
+        "output_mode": args.output_mode,
         "args": vars(args),
     }, os.path.join(out_dir, "catalog_leak_cleaner.pt"))
     json.dump(log, open(os.path.join(out_dir, "train_log.json"), "w"), indent=2)
@@ -678,6 +691,8 @@ def main():
     ap.add_argument("--base", type=int, default=18)
     ap.add_argument("--smooth-residual", type=int, default=0,
                     help="If >1, blur the predicted residual so the net edits only low-frequency leakage.")
+    ap.add_argument("--output-mode", choices=("rgb", "luma"), default="rgb",
+                    help="rgb edits color; luma applies only a smooth scalar exposure field.")
     ap.add_argument("--lr", type=float, default=1.5e-3)
     ap.add_argument("--eval-patches", type=int, default=96)
     ap.add_argument("--seed", type=int, default=17)
