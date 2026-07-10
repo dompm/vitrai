@@ -167,6 +167,9 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
         const name = item.name.toLowerCase();
         let score = 0;
         
+        // Check if the glass has multiple colors or is a blend/streaky combo
+        const isMultiColor = name.includes('and') || name.includes('&') || name.includes('/') || name.includes(',') || name.includes('mix') || name.includes('blend') || name.includes('streaky') || name.includes('wispy') || name.includes('mottle') || name.includes('variegated') || name.includes('spirit');
+        
         // Core baseline colors
         const coreColors = ['white', 'black', 'clear', 'red', 'blue', 'green', 'yellow', 'orange', 'amber', 'pink', 'cobalt blue', 'turquoise'];
         for (const color of coreColors) {
@@ -180,8 +183,15 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
         if (name.includes('solid')) score += 15;
         if (name.includes('opal') && !name.includes('opal-art') && !name.includes('fusers reserve')) score += 10;
         
-        if (name.includes('stipple') || name.includes('ripple') || name.includes('granite') || name.includes('mottle') || name.includes('streaky') || name.includes('mix') || name.includes('blend')) {
+        // Promote clean single colors, penalize complex mixtures
+        if (isMultiColor) {
           score -= 40;
+        } else {
+          score += 15;
+        }
+        
+        if (name.includes('stipple') || name.includes('ripple') || name.includes('granite') || name.includes('mottle') || name.includes('streaky') || name.includes('mix') || name.includes('blend')) {
+          score -= 30;
         }
         if (name.includes('fusers reserve') || name.includes('opal-art') || name.includes('baroque') || name.includes('artique')) {
           score -= 30;
