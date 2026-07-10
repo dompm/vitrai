@@ -285,6 +285,31 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   not one replacing the other; the specific envelope-swap hybrid is not the right integration
   depth for a unified default. No PR, not shipped; `--illum quotient` stays research-only pending
   a dedicated haze/anchor retune for that convention (flagged, not attempted).
+- 029 (branch `research/delighting-029`, `029-vlm-realism-critique.md`) VLM realism critique
+  of render_022 vs the clean catalog corpus vs 12 in-the-wild photos (23 blind pairwise/
+  triplet `claude`-CLI calls; the SAME instrument runs the diagnostics and the real-vs-real
+  calibration controls). Ranked gap list, known vs NEW: (1) texture SPATIAL statistics read
+  procedural — 15/16 diagnostic calls — periodicity/isotropy/no roll-direction anisotropy/no
+  seed-bubble event layer (a NEW dimension beyond 022's hf-ENERGY fix); (2) camera-optics
+  layer absent or wrong (no shot grain/CA/DoF; where noise exists it is signal-INdependent
+  Cycles residual — NEW, but discounted vs catalog targets: it fired in all 3 calibration
+  false-positives); (3) layer DECOUPLING — color gradients/vignette/hotspot ride on top of
+  the relief instead of being modulated by it (10/16, NEW, most actionable: couple T to
+  height via Beer-Lambert at texture-authoring time); (4) zero front-surface specularity
+  (9/16, KNOWN = MMv3 G2, now with frequency evidence); (5) lighting monotony (KNOWN) plus a
+  NEW bug-level artifact: the saturated-opalescent render carries a razor-sharp HDRI-horizon
+  seam THROUGH supposedly milky opal glass — eye-verified, direct visual evidence of MMv3
+  G1's roughness-only-haze insufficiency. Calibration: 3/7 real-vs-real controls
+  false-positived (43%), always calling the cleaner CATALOG-style image synthetic; no wild
+  photo was ever called synthetic — the catalog corpus itself is "synthetic-adjacent" in
+  capture statistics (matters for what the learned track can learn from it). Honest caveat:
+  file paths leaked set identity to the critic (one verdict echoed a recipe name), so the
+  16/16 detection stat is soft; the observation inventory is the deliverable and its
+  strongest items were verified by eye. Maintainer add-on folded in: real sheet marks can be
+  WHITE paint-pen on dark glass — the generator draws dark-only strokes and composites them
+  aliased (7/16 calls caught the mark inconsistency); queued as a generator+detector fix.
+  Pre-scaling to-do in report §5: front veil (G2), T-height Beer-Lambert coupling, seed/
+  bubble event layer + roll anisotropy, opal scatter (G1), camera post (photo-only), marks.
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
