@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_GLASS_ASSETS, TUTORIAL_GLASS_ASSETS } from '../assets';
 import { listAllSheetsAcrossProjects, type RecentSheet } from '../storage/opfs';
@@ -20,6 +20,20 @@ export function AddSheetMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recent, setRecent] = useState<RecentSheet[]>([]);
+  const [adjustedLeft, setAdjustedLeft] = useState(anchor.left);
+
+  useLayoutEffect(() => {
+    if (menuRef.current) {
+      const rect = menuRef.current.getBoundingClientRect();
+      const rightEdge = anchor.left + rect.width;
+      const pad = 12; // Safety margin from screen edge
+      if (rightEdge > window.innerWidth) {
+        setAdjustedLeft(Math.max(pad, window.innerWidth - rect.width - pad));
+      } else {
+        setAdjustedLeft(anchor.left);
+      }
+    }
+  }, [anchor.left]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +73,7 @@ export function AddSheetMenu({
     <div
       ref={menuRef}
       className="add-sheet-menu"
-      style={{ left: anchor.left, top: anchor.top }}
+      style={{ left: adjustedLeft, top: anchor.top }}
       onMouseDown={e => e.stopPropagation()}
     >
       <button
