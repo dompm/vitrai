@@ -8,12 +8,31 @@ dataset with authored ground-truth transmittance (gt_T) and haze (gt_h) rendered
 through the same camera, so extracted maps can be compared per-pixel on an
 ABSOLUTE scale.
 
-Ground-truth conventions (VERIFIED, see report 005 sec 1):
-  * gt_T.exr  : float32 RGB, LINEAR transmittance in [0,1]. Directly comparable to
-                the extractor's returned T (also linear). Confirmed by the fact that
-                photo_linear / gt_T yields a near-neutral backlight L (G/R 1.10),
-                whereas treating gt_T as sRGB gives an implausible magenta L.
-  * gt_h.png  : 16-bit, LINEAR haze fraction /65535. Comparable to extractor h.
+Ground-truth conventions (VERIFIED, see report 005 sec 1; UNITS CORRECTED report 025):
+  * gt_T.exr  : float32 RGB. Report 017 measured (and report 025 re-confirms) that
+                the renderer applies an sRGB-shaped encode between the AUTHORED
+                linear texture and everything it writes to disk (gt_T.exr, gt_h.exr/
+                png, and even the raw `tex_*.exr` texture dumps -- the encode happens
+                at Blender's `Image.save()`, not in the camera/view-transform step;
+                see report 025 sec 1). This is "LINEAR" only in the sense of being
+                directly comparable to the extractor's own T, which has always been
+                fit/anchored (T_ANCHOR, the continuous-anchor constants) against this
+                same rendered/encoded gt_T statistic, never against authored arrays --
+                so no change needed here, T's calibration was already self-consistent
+                in "rendered units" end to end.
+  * gt_h.png  : 16-bit uint /65535, but SRGB-ENCODED relative to the authored haze
+                value (measured to the 3rd decimal, report 022 sec 6 + report 025 sec
+                1: rendered = srgb_encode(authored), e.g. authored 0.09 -> stored
+                0.332). Unlike T, the extractor's `estimate_haze` was never calibrated
+                against this rendered statistic -- report 021 sec 5 picked AUTHORED
+                flat-h targets to match the real corpus's own extractor-h_mean
+                statistic (i.e. authored h is meant to equal what a correct extractor
+                OUTPUTS, native units). So h's canonical convention is AUTHORED LINEAR,
+                and this loader now applies `extract.srgb_to_lin` after the /65535
+                normalization to recover it -- directly comparable to extractor h.
+                Old reports (up to and including 023) compared extractor h against the
+                UNDECODED (rendered/encoded) gt_h; report 025 sec "units" has the
+                old->corrected number mapping.
   * gt_mark_mask.png : marking layer (grease pencil). Marked pixels optionally
                 excluded from T/h error (extractor inpaints them; they are a
                 separate concern).
@@ -25,10 +44,13 @@ error from classifier error):
   cathedral-green / cathedral-amber -> cathedral-clear
   dark-opaque                       -> dark-opaque
   wispy-white                       -> wispy
-  streaky-mix                       -> wispy   (documented judgment: gt_h floor
-     ~0.24 sits below opalescent's 0.55 h-floor and its streaks reach near-clear,
-     so wispy -- variable h with clear streaks -- fits the range; opalescent would
-     force a high haze floor the data does not have.)
+  streaky-mix                       -> wispy   (documented judgment: authored h
+     floor 0.05 sits below opalescent's 0.55 h-floor and its streaks reach
+     near-clear, so wispy -- variable h with clear streaks -- fits the range;
+     opalescent would force a high haze floor the data does not have. Report 025:
+     restated in authored units -- this was "~0.24" pre-025, the RENDERED/encoded
+     floor srgb_encode(0.05); the comparison and conclusion are unchanged, only the
+     unit label was wrong.)
 
 Usage
 -----
@@ -96,9 +118,13 @@ def load_gt_T(sample):
 
 
 def load_gt_h(sample):
+    """Report 025: gt_h.png is sRGB-shaped-ENCODED relative to the authored haze
+    value (see the module docstring's units note); decode it so the returned array
+    is in the same authored-linear units as the extractor's own h."""
     p = os.path.join(sample, "gt_h.png")
     if os.path.exists(p):
-        return np.asarray(Image.open(p)).astype(np.float64) / 65535.0
+        raw = np.asarray(Image.open(p)).astype(np.float64) / 65535.0
+        return extract.srgb_to_lin(raw)
     return None
 
 

@@ -191,11 +191,40 @@ def save_numpy_to_image(array, filepath, is_color=True):
         filepath = filepath[:-4] + '.exr'
     img.filepath_raw = filepath
     img.file_format = 'OPEN_EXR'
-        
+
     img.save()
-    
+
     # We must set colorspace AFTER saving, otherwise Blender zeroes out the pixels!
     img.colorspace_settings.name = 'Linear Rec.709' if is_color else 'Non-Color'
+
+    # Report 025 (units investigation): the EXR guard above does NOT fully avoid
+    # the encode it names. Measured directly (a standalone Image.new/foreach_set/
+    # save() with no scene/render involved at all): `img.save()` bakes an
+    # sRGB-shaped encode into the FILE on disk regardless of format (EXR included)
+    # -- e.g. an authored flat 0.09 array lands at ~0.332 in the saved bytes, to
+    # the 3rd decimal exactly `srgb_encode(0.09)`. This affects every file this
+    # function writes (tex_T/tex_h/tex_mark_mask/tex_height/tex_normal .exr) and,
+    # via the identical code path inside render_ground_truths' emission-passthrough
+    # GT render below, gt_T/gt_h/gt_mark_mask/gt_height too (017/022 already
+    # documented this for gt_T/gt_h specifically; 025 traces the mechanism to this
+    # function, not the render/view-transform step, and confirms it is a FILE-WRITE
+    # phenomenon: reading `img.pixels` back in-memory right after save(), before
+    # `colorspace_settings.name` is reassigned below, still gives the correct
+    # authored value -- so the in-memory Image datablock (what the actual glass
+    # material's shader nodes consume when this same `img` object is wired into
+    # the Roughness/Emission node graph) is NOT affected, only what lands on disk
+    # for any external (non-Blender) reader. Net effect: every *.exr/*.png ground-
+    # truth file this generator writes is sRGB-shaped-encoded relative to the
+    # authored array when read by extract.py/eval_*.py/cv2/PIL/numpy; report 025
+    # fixes this on the READ side (`extract.srgb_to_lin` decode in eval_synthetic.
+    # py / eval_preview_invariance.py's `load_gt_h`) rather than here, so existing
+    # renders (v1/v2/dark-family/render_022/render_023_holdout) stay valid without
+    # a re-render -- see report 025 sec "units" for the full writeup. T's own
+    # calibration (T_ANCHOR, the continuous anchor) was already fit against this
+    # same rendered/encoded gt_T statistic throughout 003-023, so it needed no
+    # change; h's authoring (report 021 sec 5) targeted the real corpus's
+    # extractor-h_mean statistic (authored-linear units), which is why only h's
+    # readers needed a decode.
     return img
 
 def create_glass_textures(recipe, out_dir, size=1536, seed=42):
@@ -831,7 +860,11 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_heig
     scene.render.image_settings.file_format = 'OPEN_EXR'
     scene.render.image_settings.color_depth = '32'
     scene.view_settings.view_transform = 'Raw'
-    
+    # NOTE (report 025): 'Raw' here does not fully bypass the sRGB-shaped encode --
+    # gt_T/gt_h/gt_mark_mask/gt_height all come out sRGB-shaped-encoded relative to
+    # authored units, same mechanism as save_numpy_to_image's tex_*.exr above (see
+    # its comment). Not fixed here; see report 025 for the read-side fix and why.
+
     # Emission shaders don't need many samples
     orig_samples = scene.cycles.samples
     scene.cycles.samples = 1

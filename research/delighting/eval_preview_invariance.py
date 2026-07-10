@@ -37,15 +37,14 @@ from PIL import Image, ImageDraw  # noqa: E402
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import extract  # noqa: E402
-
-
-CLASS_MAP = {
-    "cathedral-green": "cathedral-clear",
-    "cathedral-amber": "cathedral-clear",
-    "dark-opaque": "dark-opaque",
-    "wispy-white": "wispy",
-    "streaky-mix": "wispy",
-}
+# Report 025: share eval_synthetic's CLASS_MAP (all 13 recipes, including 022's
+# five gap recipes -- cathedral-blue/red, saturated-opalescent, streaky-fine-
+# texture, dark-textured) instead of this module's own 5-recipe copy, so the
+# preview-invariance benchmark exercises the same recipes eval_synthetic.py's
+# GT-accuracy numbers cover. Previously this harness silently skipped every
+# report-022 recipe as "unknown class" (render_022/render_023_holdout both
+# have with/without-shadow pairs for all 13).
+from eval_synthetic import CLASS_MAP  # noqa: E402
 
 PREVIEW_ILLUM = np.array([1.0, 0.86, 0.68], dtype=np.float64)
 
@@ -83,9 +82,18 @@ def load_gt_T(sample):
 
 
 def load_gt_h(sample):
+    """Report 025: gt_h.png is sRGB-shaped-ENCODED relative to the authored haze
+    value (Blender's `Image.save()` bakes an sRGB-shaped encode into every ground-
+    truth file it writes; see eval_synthetic.py's module docstring and report 025
+    sec 1). Decode so `target = render_preview(gtT, gth, bg)` below mixes with the
+    same haze convention the extracted `h` (fed into the same render_preview call
+    for the material-relight route) already uses -- pre-025 this was a real,
+    load-bearing units mismatch inside the benchmark's own reference target, not
+    just a reporting artifact."""
     path = os.path.join(sample, "gt_h.png")
     if os.path.exists(path):
-        return np.asarray(Image.open(path)).astype(np.float64) / 65535.0
+        raw = np.asarray(Image.open(path)).astype(np.float64) / 65535.0
+        return extract.srgb_to_lin(raw)
     return None
 
 
