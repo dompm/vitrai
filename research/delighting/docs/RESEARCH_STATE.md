@@ -225,6 +225,43 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   outlier photo's per-photo estimate; per-sheet pooling exactly fixes this (the shipped
   combination posts worst-case 3.90x->3.30x and LORO 3.37x->2.28x, both BETTER than 017,
   not just recovered) — the two fixes were designed to be shipped together, not separately.
+- 023 (branch `research/delighting-023`, `023-realistic-refit.md`) fixed report 022's two
+  named follow-ups: a saturation-collapse chain (three bugs — `estimate_illumination`'s
+  milky-pixel chroma fit couldn't distinguish a genuinely-tinted sheet's own diluted color from
+  an independent colored illuminant; an independent-per-channel `np.clip` desaturated any pixel
+  whose dominant channel exceeded 1; `estimate_haze`'s background-bleed cue then misread the
+  sheet's own restored tint as background) and the cathedral `T_ANCHOR` overscale (0.95, fit on
+  only 2 of the now-13 recipes, lowered to 0.85). Saturated-opalescent/streaky-fine-texture
+  T_mae improved 0.206->0.098 / 0.279->0.159; cathedral-blue/red T_mae improved similarly;
+  library verdict pass (every cathedral tile MORE saturated, never grayer). Held out on a fresh
+  seed batch (800-812) generated after all constants were frozen. Honest cost AS MEASURED AT
+  THE TIME: h_mae appeared to get worse on the two saturation-fixed recipes — **report 025
+  found this was itself a units-bug artifact, not a real regression; see below.**
+- 024 (branch `research/delighting-024`, `024-refetch.md`) targeted re-fetch of report 019's
+  smoking-gun contaminated Bullseye Reactive/Alchemy catalog images (test-fire-tile/demo-line
+  photos scraped instead of the real sheet): 7/14 recovered genuinely (the other 7 have no real
+  sheet photo on Bullseye's storefront at all, confirmed not a scraper miss); clean corpus
+  1,274->1,281. `build_swatch_library.py`/`glass_swatch_registry.json` deliberately not
+  touched (write-policy handoff) — unrelated to the T/h extraction pipeline.
+- 025 (branch `research/delighting-025`, `025-units-and-haze.md`) settled the haze-authoring
+  units question 022 §6 opened, and closed it retroactively: `Image.save()` (not the camera/
+  view-transform step — traced with a scene-free standalone repro) bakes an sRGB-shaped encode
+  into EVERY ground-truth file the generator writes, so `gt_h.png` read raw is `srgb_encode
+  (authored h)`, not authored h. T's whole calibration (`T_ANCHOR`, the continuous anchor) was
+  already fit against this same rendered/encoded statistic throughout 003-023, so T needed no
+  change; h was authored to match the real corpus's own extractor-h_mean (authored-linear
+  units), so only h's readers were wrong. Fixed by decoding `gt_h` with `extract.srgb_to_lin`
+  in `eval_synthetic.py`/`eval_preview_invariance.py` (no re-render needed — read-side fix,
+  verified to the 3rd decimal on 26 samples). **Punchline: report 023's apparent haze
+  regression on saturated-opalescent/streaky-fine-texture dissolves completely under corrected
+  units** — recomputing 023's own before/after cells shows h_mae IMPROVED (0.309->0.262,
+  0.422->0.310, held-out-confirmed) — 023's fix was comparing its more-accurate haze estimate
+  against a GT inflated ~1.4-3.7x by the encode bug, which read as "worse" purely from the
+  wrong denominator. Zero changes to `estimate_haze`/`extract.py` (target already met by the
+  units fix alone; library byte-identical, verified to 15 decimals on all 9 sheets). Flagged,
+  not fixed: a broader pre-existing (not 023-introduced) haze-accuracy gap on dark-slate/
+  streaky-mix/wispy-white/dark-deep, visible now that units are honest — candidate for a
+  dedicated future haze-tuning pass.
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -300,12 +337,25 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   percentile fallback gate); only validated/shipped in combination with per-sheet pooling —
   see report 020 SS2.3/SS3.1 for why it is not a safe ship in isolation.
 - Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
-- Refit `T_ANCHOR`/`ANCHOR_*` on the 022 recipe statistics (they were fit on the old 8
-  recipes; report 022 §5 measures the resulting overscale on cathedral-blue/red).
-- Fix the 009 desaturation trade for SATURATED wispy/opal glass (022 §5: saturated-opalescent
-  and streaky-fine-texture collapse to near-neutral — first GT evidence, was an evidence hole).
-- Decide haze-authoring units (022 §6 note 1: rendered gt_h = srgb_encode(authored h), so
-  authored-unit targets from 021 overshoot in extractor/rendered units).
+- ~~Refit `T_ANCHOR`/`ANCHOR_*` on the 022 recipe statistics.~~ DONE, report 023 (cathedral
+  0.95->0.85, continuous anchor refit on the full 60-sample/13-recipe set; cathedral-blue/red
+  anchor-scale ratio 1.33x/1.26x -> 1.19x/1.13x, inside the 1.2x goal, held-out-confirmed).
+- ~~Fix the 009 desaturation trade for SATURATED wispy/opal glass.~~ DONE, report 023
+  (illuminant-chroma-fit clamp + hue-preserving clip + sheet-relative bg_color; saturated-
+  opalescent/streaky-fine-texture T_mae 0.206/0.279 -> 0.098/0.159). Report 023's own h_mae
+  side-effect numbers on the same fix were themselves measured in the (then-undiscovered)
+  buggy GT-haze units — see the units item below, now resolved: in corrected units the h
+  side-effect was ALSO an improvement, not the disclosed cost 023 recorded.
+- ~~Decide haze-authoring units (022 §6 note 1: rendered gt_h = srgb_encode(authored h)).~~
+  DONE, report 025: authored-linear is canonical (matches how 021 grounded the authored haze
+  values, and how the material model's `h·⟨B⟩+(1−h)·B` uses h physically); root cause is
+  Blender's `Image.save()`, not the camera/view-transform step; fixed by decoding `gt_h` on
+  read (`extract.srgb_to_lin`) in `eval_synthetic.py`/`eval_preview_invariance.py`, no
+  re-render needed. Resolved a live evidence gap: report 023's disclosed "h got worse" cost on
+  saturated-opalescent/streaky-fine-texture was entirely a units artifact (both actually
+  improved once measured correctly). Open follow-up from 025: a broader, pre-existing (not
+  023-caused) haze-accuracy gap on dark-slate/streaky-mix/wispy-white/dark-deep, now visible
+  in trustworthy units for the first time — candidate for a dedicated haze-tuning pass.
 - For GlassNet: generate many material seeds per class, then evaluate a held-out-material split;
   current neural result only proves held-out-lighting consistency.
 - Render a v2 synthetic batch and add a Material-v2 preview metric that scores background
