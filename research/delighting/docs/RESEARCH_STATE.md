@@ -86,6 +86,24 @@ rolled glass — synthetic certifies method *correctness*, real photos remain th
   same-scale retrain drew zero pair-detectable dark-glass shadows and silently lost the skill
   (46.4→46.4). Occluder over-fire largely fixed on dark glass (fire ~100%→0–6%, lift 0.43→0.01);
   still fires on an occluder behind CLEAR glass (98%, lift 0.56) — chroma-cue mask is the next step.
+- 014 (branch `research/delighting-assembled`) the ASSEMBLED-PAIR BENCHMARK — the
+  purest end-to-end metric, simulated entirely in Blender so the flat sheet CAPTURE
+  and a 2×2 leaded ASSEMBLED piece are the SAME authored glass (new
+  `generate_assembled.py` `--assembled` mode; pieces = UV rects of the shared sheet
+  texture, A↔C correspondence verified to MAE 1e-4). Two materials (cathedral-green
+  transmissive, wispy-white opalescent), IBL_1 capture vs IBL_2 relight truth
+  (rotated 90–135° + ±1EV). **Drag test (headline): wispy relit dispersion collapses
+  to the grain floor (Lab dE 5.30→1.01 ≈ floor 0.92; lum-CV 0.141→0.050) — dragging
+  opalescent glass becomes texture-only; cathedral relit halves lum-CV (0.292→0.140)
+  but stays 16× above the floor** (see-through `T·B` residual, the north-star hard
+  case, now visible with GT). **Honest negative: from the identity source, raw-copy
+  BEATS delight+relight on absolute composite-vs-truth fidelity** (extractor adds
+  reconstruction error, T-MAE cathedral 0.134 / wispy 0.036, while raw carries true
+  pixels) — de-lighting's win is consistency/invariance, not absolute per-piece
+  fidelity. The honest illuminant `<L_A>·2^ΔEV` (no B pixel used) leaves the
+  HDRI-rotation colour unmodeled — that global term, not the extractor, dominates the
+  absolute error (oracle-gain ceiling cuts wispy 23→4.3).
+
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
