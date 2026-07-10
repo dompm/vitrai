@@ -35,7 +35,7 @@ const getColorFamily = (name: string, sku: string): string => {
   if (match(['orange', 'tangerine', 'persimmon', 'coral', 'peach', 'pumpkin', 'apricot'])) {
     return 'Orange';
   }
-  if (match(['yellow', 'canary', 'lemon', 'marigold', 'french vanilla', 'marzipan', 'almond', 'citronelle', 'butterscotch', 'cream', 'custard', 'dandelion', 'flaxen', 'noble brass', 'mustard', 'banana', 'straw', 'butter', 'vanilla', 'sunflower', 'ocher', 'ochre'])) {
+  if (match(['yellow', 'canary', 'lemon', 'marigold', 'marzipan', 'almond', 'citronelle', 'butterscotch', 'custard', 'dandelion', 'flaxen', 'noble brass', 'mustard', 'banana', 'straw', 'butter', 'sunflower', 'ocher', 'ochre'])) {
     return 'Yellow';
   }
   if (match(['green', 'lime', 'moss', 'sage', 'emerald', 'caribbean', 'aventurine', 'pine', 'artichoke', 'celadon', 'pea pod', 'jade', 'olive', 'fern', 'mint', 'chartreuse', 'olivine', 'asparagus', 'clover', 'meadow', 'grass', 'foliage', 'avocado', 'lichen', 'basil', 'kiwi', 'seaweed', 'forest', 'viridian'])) {
