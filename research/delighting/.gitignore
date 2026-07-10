@@ -9,6 +9,8 @@ assembled_data/
 validate_data/
 validate_data_check/
 validate_data_check_v2/
+validate_data_022/
+render_022/
 debug_*.py
 test_save_render.py
 test*.png

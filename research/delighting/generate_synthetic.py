@@ -10,20 +10,49 @@ import sys
 # Ensure we're running in background mode if we want, though this script works either way.
 # Usage: python generate_synthetic.py --out DIR --seed N --count M
 
-def generate_noise(size, scale, seed, octaves=1):
-    """Generate basic 2D noise using numpy."""
-    np.random.seed(seed)
-    
+def generate_noise(size, scale, seed, octaves=1, persistence=0.55, lacunarity=6.0):
+    """Generate 2D value noise, optionally blended across multiple frequency
+    octaves.
+
+    Report 021/022: this function has declared an `octaves` parameter since
+    the generator's first version, but the body never read it -- every T/h
+    noise call was single-frequency, making every recipe's authored texture
+    10-300x too spatially smooth vs the real catalog corpus
+    (`corpus/appearance_stats.py`'s `hf_energy_frac`). `octaves=1` (the
+    default) is BYTE-IDENTICAL to the old single-frequency behavior -- same
+    seed, same single `np.random.rand(base_res, base_res)` call, same zoom,
+    same normalize -- so every existing caller that doesn't ask for detail
+    (e.g. `generate_relief_height`'s own fine/mid/broad calls, which already
+    hand-blend three scales the way this function now does generically) is
+    unaffected. `octaves>1` blends `octaves` independently-seeded noise
+    fields, each `lacunarity`x finer in scale and `persistence`x lower
+    amplitude than the last (standard fractal/fBm noise convention), then
+    renormalizes the sum to [0,1] once at the end.
+    """
     from scipy.ndimage import zoom
-    
-    base_res = max(1, int(size / scale))
-    low_freq = np.random.rand(base_res, base_res)
-    
-    zoom_factor = size / base_res
-    noise_img = zoom(low_freq, zoom_factor, order=3) 
-    
-    noise_img = noise_img[:size, :size]
-    
+
+    def _band(band_scale, band_seed):
+        np.random.seed(band_seed)
+        base_res = max(1, int(size / band_scale))
+        low_freq = np.random.rand(base_res, base_res)
+        zoom_factor = size / base_res
+        img = zoom(low_freq, zoom_factor, order=3)
+        return img[:size, :size]
+
+    octaves = max(1, int(octaves))
+    total = np.zeros((size, size), dtype=np.float64)
+    amp_sum = 0.0
+    amp = 1.0
+    band_scale = float(scale)
+    for i in range(octaves):
+        # offset seed per-band so octaves aren't correlated copies of each
+        # other at different zoom factors
+        total += amp * _band(max(1.0, band_scale), seed + i * 7919)
+        amp_sum += amp
+        amp *= persistence
+        band_scale /= lacunarity
+
+    noise_img = total / amp_sum
     # Normalize to 0-1
     noise_img = (noise_img - noise_img.min()) / (noise_img.max() - noise_img.min() + 1e-8)
     return noise_img
@@ -82,25 +111,36 @@ def generate_relief_height(recipe, size, seed):
 
     rng = random.Random(seed + 107)
 
-    if recipe in ("cathedral-green", "cathedral-amber"):
+    if recipe in ("cathedral-green", "cathedral-amber", "cathedral-blue", "cathedral-red"):
+        # Report 022: cathedral-blue/red are the same family of hammered
+        # cathedral glass as green/amber (021 gap recipes), just different
+        # authored color -- share the relief statistics, not a new surface.
         height = hammered
         bump_distance = rng.uniform(0.0016, 0.0045)
-    elif recipe in ("dark-opaque", "dark-deep", "dark-ruby", "dark-slate"):
+    elif recipe in ("dark-opaque", "dark-deep", "dark-ruby", "dark-slate", "dark-textured"):
         # Report 017: the three new dark-family recipes (very-dark neutral,
         # dark-tinted, medium-dark) share dark-opaque's hammered-relief
         # statistics -- same family of dense rolled glass at different
-        # absolute darkness/tint, not a different surface finish.
+        # absolute darkness/tint, not a different surface finish. Report 022
+        # adds dark-textured (021 gap recipe) to the same family -- it is
+        # purely a T/h texture-detail fix, not a new relief profile.
         height = 0.65 * hammered + 0.35 * generate_noise(size, scale=28, seed=seed + 104)
         bump_distance = rng.uniform(0.0010, 0.0030)
-    elif recipe == "streaky-mix":
+    elif recipe in ("streaky-mix", "streaky-fine-texture"):
         # Streaky sheets are smoother, with relief that follows the pull
-        # direction instead of isotropic hammered cells.
+        # direction instead of isotropic hammered cells. Report 022:
+        # streaky-fine-texture (021 gap recipe) is the same pulled-glass
+        # relief family as streaky-mix, its gap is in T/h texture detail.
         low = generate_noise(size, scale=220, seed=seed + 105)
         source_rows = max(1, size // 12)
         stretched = zoom(low[:source_rows, :], (size / source_rows, 1), order=3)[:size, :size]
         height = 0.70 * stretched + 0.30 * gaussian_filter(fine, sigma=5.0)
         bump_distance = rng.uniform(0.00015, 0.0007)
-    elif recipe == "wispy-white":
+    elif recipe in ("wispy-white", "saturated-opalescent"):
+        # Report 022: saturated-opalescent (021 gap recipe, the first
+        # opalescent-class recipe) shares wispy-white's soft, cellular
+        # diffuser relief -- both are milky/diffusing glass families: same
+        # relief mechanism, different authored color/haze.
         height = 0.50 * hammered + 0.50 * generate_noise(size, scale=90, seed=seed + 106)
         bump_distance = rng.uniform(0.0008, 0.0025)
     else:
@@ -160,24 +200,53 @@ def save_numpy_to_image(array, filepath, is_color=True):
 
 def create_glass_textures(recipe, out_dir, size=1536, seed=42):
     np.random.seed(seed)
-    
+
+    # ---- Report 022: per-family octave/roughness parameters -------------
+    # generate_noise's octaves parameter was declared but unused (021 §3);
+    # wiring it up made every recipe's texture detail tunable, so each
+    # family gets its own (octaves, persistence, lacunarity) tuned against
+    # `corpus/appearance_stats.py`'s hf_energy_frac real per-class medians
+    # (cathedral-clear 0.046, opalescent 0.020, wispy 0.017, dark-opaque
+    # 0.110). Tuned offline against the pure-numpy recipe re-derivation
+    # (appearance_stats.py mirrors these exact constants -- keep both files
+    # in sync when touching these). Dark-family's real 0.110 is
+    # texture-relief-driven (021 §3), not purely a flat-color-noise
+    # property -- (4, 0.6, 6.0) lands the flat-authored-T statistic at
+    # ~0.068, a large, deliberate step up from the old ~0.0016 without
+    # pretending a flat color noise field alone explains real dark glass's
+    # relief-and-lighting-driven texture energy (see report 022 §2 for the
+    # honest gap).
+    CATHEDRAL_OCT = dict(octaves=4, persistence=0.6, lacunarity=6.0)
+    OPALESCENT_OCT = dict(octaves=4, persistence=0.5, lacunarity=5.6)
+    WISPY_OCT = dict(octaves=3, persistence=0.5, lacunarity=6.0)
+    DARK_OCT = dict(octaves=4, persistence=0.6, lacunarity=6.0)
+
     if recipe == 'cathedral-green':
-        base_color = np.array([0.15, 0.55, 0.20])
-        noise = generate_noise(size, scale=200, seed=seed)
-        noise_scaled = (noise * 0.2) - 0.1 
-        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
-        h = np.full((size, size), 0.02, dtype=np.float32)
-        
-    elif recipe == 'cathedral-amber':
-        base_color = np.array([0.75, 0.45, 0.08])
-        noise = generate_noise(size, scale=200, seed=seed)
+        # Report 022 §B: was [0.15,0.55,0.20] (authored Lab C=50.5, ~1.8x
+        # real cathedral-clear's median C=28.7 -- 021 §3/§4). Re-picked at
+        # the same L/hue, chroma pulled to the real median (Lab 72.2,28.7,
+        # 146deg -> this linear value, computed by inverting srgb_to_lab).
+        base_color = np.array([0.269, 0.5054, 0.2916])
+        noise = generate_noise(size, scale=200, seed=seed, **CATHEDRAL_OCT)
         noise_scaled = (noise * 0.2) - 0.1
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
-        h = np.full((size, size), 0.02, dtype=np.float32)
-        
+        # Report 022 §B: 0.02 -> 0.09 (real cathedral-clear avg haze,
+        # 021 §4 item 1 -- both cathedral recipes were under-hazed too).
+        h = np.full((size, size), 0.09, dtype=np.float32)
+
+    elif recipe == 'cathedral-amber':
+        # Report 022 §B: was [0.75,0.45,0.08] (authored Lab C=55.8). Same
+        # re-pick as cathedral-green: same L/hue (75.3, 84deg), chroma to
+        # the real median (28.7).
+        base_color = np.array([0.6424, 0.4664, 0.2347])
+        noise = generate_noise(size, scale=200, seed=seed, **CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        h = np.full((size, size), 0.09, dtype=np.float32)
+
     elif recipe == 'dark-opaque':
         base_color = np.array([0.03, 0.035, 0.03])
-        noise = generate_noise(size, scale=50, seed=seed)
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
         noise_scaled = (noise * 0.01) - 0.005
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.3, dtype=np.float32)
@@ -198,7 +267,7 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
     elif recipe == 'dark-deep':
         # very-dark neutral, target rendered p99 (all channels) ~= 0.05
         base_color = np.array([0.0039, 0.0039, 0.0041])
-        noise = generate_noise(size, scale=50, seed=seed)
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
         noise_scaled = (noise * 0.0012) - 0.0006
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.30, dtype=np.float32)
@@ -208,7 +277,7 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
         # channel) ~= 0.12, with G/B held well below for real chroma
         # (not a near-neutral dark like dark-opaque).
         base_color = np.array([0.0143, 0.0023, 0.0027])
-        noise = generate_noise(size, scale=50, seed=seed)
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
         noise_scaled = (noise * 0.0043) - 0.0021
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.20, dtype=np.float32)
@@ -217,33 +286,125 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
         # medium-dark, blue-grey: target rendered p99 (dominant/B channel)
         # ~= 0.30, bracketing dark-opaque's 0.216 from above.
         base_color = np.array([0.0593, 0.0660, 0.0732])
-        noise = generate_noise(size, scale=50, seed=seed)
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
         noise_scaled = (noise * 0.020) - 0.010
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.15, dtype=np.float32)
 
     elif recipe == 'streaky-mix':
-        noise = generate_noise(size, scale=250, seed=seed)
         from scipy.ndimage import zoom
+        noise = generate_noise(size, scale=250, seed=seed)
         noise_stretched = zoom(noise[:size//10, :], (10, 1), order=3)[:size, :size]
-        mask = np.clip((noise_stretched - 0.3) * 2.0, 0, 1) 
-        
+        mask = np.clip((noise_stretched - 0.3) * 2.0, 0, 1)
+
         color1 = np.array([0.9, 0.9, 0.95])
         color2 = np.array([0.3, 0.5, 0.8])
-        
+
         T = color1 * mask[..., None] + color2 * (1 - mask[..., None])
         h = 0.9 * mask + 0.05 * (1 - mask)
-        
+        # Report 022 §A: streaky-mix's macro streak mask is a hard-thresholded
+        # step (`clip((x-0.3)*2, 0,1)`), so most of the image sits flat at 0
+        # or 1 -- a fine multiplicative overlay (the cathedral mechanism)
+        # gets absorbed by that clip almost everywhere and barely moves
+        # hf_energy_frac (measured: <2x at amp=1.0). An ADDITIVE fine-detail
+        # layer applied AFTER the color mix (same mechanism the dark family
+        # already used) is not subject to that saturation and reaches the
+        # real wispy-class hf median (~0.017) at amp=0.8.
+        h0 = T.shape[0]
+        detail = generate_noise(size, scale=60, seed=seed + 901,
+                                 octaves=4, persistence=0.6, lacunarity=6.0)
+        detail_scaled = (detail * 0.8) - 0.4
+        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
+
     elif recipe == 'wispy-white':
-        noise = generate_noise(size, scale=150, seed=seed)
-        mask = generate_noise(size, scale=50, seed=seed+1)
+        noise = generate_noise(size, scale=150, seed=seed, **WISPY_OCT)
+        mask = generate_noise(size, scale=50, seed=seed+1, **WISPY_OCT)
         wisp = np.clip((noise * mask) * 2.0, 0, 1)
-        
+
         base_color = np.array([0.85, 0.87, 0.92])
         wisp_color = np.array([0.55, 0.55, 0.55])
-        
+
         T = base_color * (1 - wisp[..., None]) + wisp_color * wisp[..., None]
         h = 0.5 + 0.45 * wisp
+
+    # ---- Report 022: five gap recipes from 021 §5 (Lab->linear base_color
+    # and haze targets taken verbatim from that report's exemplar-grounded
+    # table; class mapping for the extractor/appearance-grounding harnesses:
+    # cathedral-blue/red -> cathedral-clear, saturated-opalescent ->
+    # opalescent (the FIRST opalescent-class recipe), streaky-fine-texture/
+    # dark-textured -> wispy/dark-opaque respectively.)
+    elif recipe == 'cathedral-blue':
+        # 021 §5 target Lab (45, 45, 255deg); grounded on wissmach-wi341dr.jpg
+        # ("Medium Blue Double Rolled", no finish keyword) -- the two nearer
+        # neighbors are "Luminescent" (surface-interference) lines, excluded
+        # per 021's caveat.
+        base_color = np.array([0.0, 0.174, 0.450])
+        noise = generate_noise(size, scale=200, seed=seed, **CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        h = np.full((size, size), 0.09, dtype=np.float32)
+
+    elif recipe == 'cathedral-red':
+        # 021 §5 target Lab (45, 55, 10deg); grounded on oceanside-of152s.jpg
+        # (clean solid red, no caveats).
+        base_color = np.array([0.503, 0.043, 0.110])
+        noise = generate_noise(size, scale=200, seed=seed, **CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        h = np.full((size, size), 0.09, dtype=np.float32)
+
+    elif recipe == 'saturated-opalescent':
+        # 021 §5 target Lab (60, 45, 340deg); grounded on
+        # bullseye-0003010030f1010.jpg (clean rose); the other two nearest
+        # neighbors are dichroic/Luminescent lines, excluded per 021's
+        # caveat. FIRST opalescent-class recipe (021 §3: 21% of the clean
+        # corpus, zero prior synthetic coverage).
+        base_color = np.array([0.602, 0.172, 0.416])
+        noise = generate_noise(size, scale=200, seed=seed, **OPALESCENT_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        # 021 §5: flat haze 0.55-0.65 (real range up to 0.98); mid of range.
+        h = np.full((size, size), 0.60, dtype=np.float32)
+
+    elif recipe == 'streaky-fine-texture':
+        # 021 §5 target Lab (55, 40, 30deg); grounded on 3 clean, no-caveat
+        # exemplars (bullseye-0023110030f1010.jpg hf0.046,
+        # oceanside-of31902s.jpg hf0.064, oceanside-ofr9512x12.jpg hf0.039,
+        # mean ~0.05) -- notably FINER than the wispy class median (0.017),
+        # which is the entire point of the recipe (021 explicitly separated
+        # this gap from ordinary wispy/streaky texture flatness). Unlike
+        # streaky-mix's hard two-tone streak mask (which saturates and
+        # swamps any added fine detail, see that recipe's comment), this is
+        # a SOFT streak-direction brightness modulation on one base color
+        # (matching the exemplars' "marbled" look, not a two-color mix)
+        # plus a stronger additive fine-detail layer for the recipe's
+        # namesake texture.
+        from scipy.ndimage import zoom
+        base_color = np.array([0.549, 0.145, 0.125])
+        streak = generate_noise(size, scale=250, seed=seed)
+        streak_stretched = zoom(streak[:size//10, :], (10, 1), order=3)[:size, :size]
+        streak_mod = (streak_stretched - 0.5) * 0.3
+        h0 = streak_mod.shape[0]
+        T = np.clip(base_color * (1 + streak_mod[..., None]), 0, 1)
+        detail = generate_noise(size, scale=45, seed=seed + 902,
+                                 octaves=4, persistence=0.6, lacunarity=6.0)
+        detail_scaled = (detail * 0.2) - 0.1
+        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
+        # 021 §5: flat haze 0.25-0.35 (real wispy avg 0.215); mid of range.
+        h = np.full((size, size), 0.30, dtype=np.float32)
+
+    elif recipe == 'dark-textured':
+        # 021 §5 target Lab (15, 5, 200deg); grounded on 3 clean, no-caveat
+        # exemplars (oceanside-of1009s.jpg hf0.369,
+        # bullseye-0001000043f1010.jpg hf0.502 -- "clearly ribbed/reeded",
+        # wissmach-wblack.jpg hf0.250). 021 §5: this recipe is purely a
+        # texture-detail fix (haze already matches the dark family, no gap).
+        base_color = np.array([0.012, 0.021, 0.021])
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
+        noise_scaled = (noise * 0.020) - 0.010
+        T = np.clip(base_color + noise_scaled[..., None], 0, 1)
+        h = np.full((size, size), 0.29, dtype=np.float32)
+
     else:
         raise ValueError(f"Unknown recipe: {recipe}")
         
@@ -787,7 +948,10 @@ def main():
     args = parse_args()
     
     recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white',
-               'dark-deep', 'dark-ruby', 'dark-slate']
+               'dark-deep', 'dark-ruby', 'dark-slate',
+               # Report 022: five gap recipes (021 §5)
+               'cathedral-blue', 'cathedral-red', 'saturated-opalescent',
+               'streaky-fine-texture', 'dark-textured']
     
     os.makedirs(args.out, exist_ok=True)
     hdri_path = download_polyhaven_hdri(args.out)
