@@ -6,9 +6,67 @@ import json
 import math
 import random
 import sys
+import time
+from contextlib import contextmanager
 
 # Ensure we're running in background mode if we want, though this script works either way.
 # Usage: python generate_synthetic.py --out DIR --seed N --count M
+
+# ---------------------------------------------------------------------------
+# Report: render-at-scale efficiency instrumentation.
+#
+# Lightweight, non-nested wall-time stage tracking. `stage(name)` blocks are
+# scattered inline (never wrapped one inside another) so STAGE_TOTALS sums to
+# the in-script wall time exactly -- no double counting from nested regions.
+# Buckets, chosen to match the six things that dominate a synthetic-render
+# process: hdri_download/hdri_load (network + Blender image decode),
+# texture_authoring (numpy/scipy CPU work), scene_build (bpy.ops scene
+# construction), main_render (the actual path-traced Cycles render --
+# the GPU-bound stage), gt_render (fast samples=1 emission-passthrough GT
+# passes -- also GPU, but ~free), image_encode_io (numpy->bpy.data.images
+# encode + PNG/EXR writes + meta.json). `_T_SCRIPT_BEGIN` marks the first
+# line this script's own Python code runs; the gap between that and the
+# process's true wall-clock start (Blender binary init, addon/device
+# enumeration, Python/bpy already initialized before -P scripts run) is NOT
+# visible from inside the script -- report it externally as
+# shell_wall_time - printed TOTAL, the "process startup" bucket.
+# ---------------------------------------------------------------------------
+_T_SCRIPT_BEGIN = time.perf_counter()
+STAGE_TOTALS = {}
+STAGE_COUNTS = {}
+
+
+def _record(name, elapsed):
+    STAGE_TOTALS[name] = STAGE_TOTALS.get(name, 0.0) + elapsed
+    STAGE_COUNTS[name] = STAGE_COUNTS.get(name, 0) + 1
+    print(f"[TIMING] {name}: {elapsed:.4f}s", flush=True)
+
+
+@contextmanager
+def stage(name):
+    t0 = time.perf_counter()
+    try:
+        yield
+    finally:
+        _record(name, time.perf_counter() - t0)
+
+
+def dump_timings(out_dir):
+    """Write the cumulative per-process stage breakdown as JSON so a farm
+    supervisor (render_farm.py) can aggregate across shards without scraping
+    stdout."""
+    script_total = time.perf_counter() - _T_SCRIPT_BEGIN
+    payload = {
+        "stage_totals_s": {k: round(v, 4) for k, v in STAGE_TOTALS.items()},
+        "stage_counts": STAGE_COUNTS,
+        "script_total_s": round(script_total, 4),
+        "pid": os.getpid(),
+    }
+    path = os.path.join(out_dir, f"timings_pid{os.getpid()}.json")
+    with open(path, "w") as f:
+        json.dump(payload, f, indent=2)
+    print(f"[TIMING] script_total: {script_total:.4f}s", flush=True)
+    return payload
 
 def generate_noise(size, scale, seed, octaves=1, persistence=0.55, lacunarity=6.0):
     """Generate 2D value noise, optionally blended across multiple frequency
@@ -227,8 +285,20 @@ def save_numpy_to_image(array, filepath, is_color=True):
     # readers needed a decode.
     return img
 
-def create_glass_textures(recipe, out_dir, size=1536, seed=42):
+def author_glass_arrays(recipe, size=1536, seed=42):
+    """The numpy/scipy CPU-only half of texture generation (recipe T/h color
+    fields, mark scribble, relief height + derived normal). Pure function of
+    (recipe, seed, size) -- no bpy/Blender state touched, nothing here is
+    invalidated by bpy.ops.wm.read_factory_settings.
+
+    Report render-at-scale: split out of the old create_glass_textures so it
+    can be CACHED across light variations of the same glass piece (same
+    recipe+seed) -- see main()'s `_texture_cache`. Before this split, every
+    light variation re-ran this entire block from scratch even though its
+    output only depends on (recipe, seed), never on the lighting variation.
+    """
     np.random.seed(seed)
+    _t0_tex = time.perf_counter()
 
     # ---- Report 022: per-family octave/roughness parameters -------------
     # generate_noise's octaves parameter was declared but unused (021 §3);
@@ -436,25 +506,60 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
 
     else:
         raise ValueError(f"Unknown recipe: {recipe}")
-        
+
+    # ---- texture_authoring stage: the numpy/scipy CPU work above (recipe
+    # color/haze fields) plus the mark scribble + relief height + normal
+    # derivation below, EXCLUDING the bpy image encode/save calls (those are
+    # image_encode_io -- a separate cost with a different hardware profile:
+    # this bucket is single-threaded numpy/scipy on CPU, encode is Blender's
+    # C++ image write path).
+    mark = generate_scribble_mask(size, seed + 5)
+    height, bump_distance = generate_relief_height(recipe, size, seed)
+    normal = height_to_normal(height, strength=18.0)
+    _record('texture_authoring', time.perf_counter() - _t0_tex)
+
+    return T, h, mark, height, normal, bump_distance
+
+
+def encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance):
+    """The bpy half: upload each numpy array into a fresh bpy.data.images
+    datablock and write it to disk. MUST run every light variation --
+    bpy.ops.wm.read_factory_settings(use_empty=True) in setup_scene() wipes
+    ALL datablocks (including any images from a prior variation), so the
+    encode step cannot be cached the way author_glass_arrays() can. This is
+    also why save_numpy_to_image() always creates a brand-new image
+    datablock (its own docstring/comment: "prevent Blender caching across
+    variations") -- that constraint is unchanged here, just factored apart
+    from the (cacheable) numpy compute.
+    """
     T_path = os.path.join(out_dir, "tex_T.png")
     h_path = os.path.join(out_dir, "tex_h.png")
     mark_path = os.path.join(out_dir, "tex_mark_mask.png")
     height_path = os.path.join(out_dir, "tex_height.png")
     normal_path = os.path.join(out_dir, "tex_normal.png")
-    
-    img_T = save_numpy_to_image(T, T_path, is_color=True)
-    img_h = save_numpy_to_image(h, h_path, is_color=False)
-    
-    mark = generate_scribble_mask(size, seed+5)
-    img_mark = save_numpy_to_image(mark, mark_path, is_color=False)
 
-    height, bump_distance = generate_relief_height(recipe, size, seed)
-    img_height = save_numpy_to_image(height, height_path, is_color=False)
-    normal = height_to_normal(height, strength=18.0)
-    img_normal = save_numpy_to_image(normal, normal_path, is_color=True)
-    
+    with stage('image_encode_io'):
+        img_T = save_numpy_to_image(T, T_path, is_color=True)
+        img_h = save_numpy_to_image(h, h_path, is_color=False)
+        img_mark = save_numpy_to_image(mark, mark_path, is_color=False)
+        img_height = save_numpy_to_image(height, height_path, is_color=False)
+        img_normal = save_numpy_to_image(normal, normal_path, is_color=True)
+
     return img_T, img_h, img_mark, img_height, img_normal, bump_distance
+
+
+def create_glass_textures(recipe, out_dir, size=1536, seed=42, cache=None):
+    """Back-compat entry point: author (or fetch from `cache`) + encode in
+    one call. `cache` is an optional dict the caller keeps alive across
+    light variations, keyed by (recipe, seed) -- see main()."""
+    key = (recipe, seed, size)
+    if cache is not None and key in cache:
+        T, h, mark, height, normal, bump_distance = cache[key]
+    else:
+        T, h, mark, height, normal, bump_distance = author_glass_arrays(recipe, size=size, seed=seed)
+        if cache is not None:
+            cache[key] = (T, h, mark, height, normal, bump_distance)
+    return encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance)
 
 def download_polyhaven_hdri(out_dir):
     """Downloads a small outdoor HDRI from polyhaven if not present."""
@@ -467,6 +572,31 @@ def download_polyhaven_hdri(out_dir):
         with open(hdri_path, 'wb') as f:
             f.write(r.content)
     return os.path.abspath(hdri_path)
+
+
+def resolve_hdri_path(out_dir, hdri_dir=None, seed=0):
+    """Report render-at-scale: at 20k-sample scale a single downloaded HDRI
+    (the historical default) is a lighting-diversity bottleneck, and a live
+    polyhaven.org download per fresh --out dir is a single point of failure
+    on marketplace nodes with flaky/no egress. If --hdri-dir is given, deter-
+    ministically pick one .hdr/.exr file from it (seed-keyed, so the same
+    seed always picks the same HDRI -- required for the determinism check),
+    no network call. Otherwise fall back to the original single-file
+    download-into-out-dir behavior, unchanged, for backward compatibility.
+    """
+    with stage('hdri_download'):
+        if hdri_dir:
+            candidates = sorted(
+                f for f in os.listdir(hdri_dir)
+                if f.lower().endswith(('.hdr', '.exr'))
+            )
+            if not candidates:
+                raise ValueError(f"--hdri-dir {hdri_dir} has no .hdr/.exr files")
+            chosen = candidates[seed % len(candidates)]
+            path = os.path.abspath(os.path.join(hdri_dir, chosen))
+        else:
+            path = download_polyhaven_hdri(out_dir)
+    return path
 
 # Realistic partial window-frame occluders (report review: the old full mullion
 # cross was over-aggressive vs real captures -- a real handheld photo of a sheet
@@ -550,8 +680,9 @@ def add_frame_occluders(cam):
 
 
 def setup_scene(hdri_path, has_frame=False):
+    _t0_scene = time.perf_counter()
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    
+
     scene = bpy.context.scene
     scene.render.engine = 'CYCLES'
     # Try GPU, fallback to CPU
@@ -613,9 +744,12 @@ def setup_scene(hdri_path, has_frame=False):
         wout = wnodes.new('ShaderNodeOutputWorld')
         wbg = wnodes.new('ShaderNodeBackground')
         wtex = wnodes.new('ShaderNodeTexEnvironment')
-        
-        wtex.image = bpy.data.images.load(hdri_path)
-        
+
+        _record('scene_build', time.perf_counter() - _t0_scene)
+        with stage('hdri_load'):
+            wtex.image = bpy.data.images.load(hdri_path)
+        _t0_scene = time.perf_counter()
+
         wmapping = wnodes.new('ShaderNodeMapping')
         wcoord = wnodes.new('ShaderNodeTexCoord')
         
@@ -667,7 +801,8 @@ def setup_scene(hdri_path, has_frame=False):
     elif "Specular" in bsdf.inputs:
         bsdf.inputs["Specular"].default_value = 0.0
     wall.data.materials.append(mat_wall)
-    
+
+    _record('scene_build', time.perf_counter() - _t0_scene)
     return glass_obj, cam, ev, z_rot, frame_params
 
 def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=True):
@@ -778,10 +913,13 @@ def generate_hand_mask(size=512):
 
 def add_shadow_caster(out_dir):
     # Generate hand mask
-    hand = generate_hand_mask()
+    with stage('texture_authoring'):
+        hand = generate_hand_mask()
     hand_path = os.path.join(out_dir, 'hand_mask.png')
-    img_hand = save_numpy_to_image(hand, hand_path, is_color=False)
-    
+    with stage('image_encode_io'):
+        img_hand = save_numpy_to_image(hand, hand_path, is_color=False)
+
+    _t0_scene = time.perf_counter()
     # Create a plane for the shadow caster
     # Size 0.3 covers the entire 0.28m camera FOV
     # Place it at the camera's X/Z location so it perfectly aligns with the visible frame
@@ -821,12 +959,14 @@ def add_shadow_caster(out_dir):
     # Rotate slightly for interesting pose
     caster.rotation_euler.z += random.uniform(-0.5, 0.5)
     caster.rotation_euler.x += random.uniform(-0.1, 0.1)
-    
+
+    _record('scene_build', time.perf_counter() - _t0_scene)
     return caster
 
 def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal):
+    _t0_scene = time.perf_counter()
     scene = bpy.context.scene
-    
+
     # Hide the world background for ground truths (make it black)
     world = bpy.context.scene.world
     bg_node = world.node_tree.nodes.get('Background')
@@ -868,70 +1008,52 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_heig
     # Emission shaders don't need many samples
     orig_samples = scene.cycles.samples
     scene.cycles.samples = 1
-    
-    # Render T (EXR)
-    tex_node.image = img_T
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.filepath = os.path.join(sample_dir, "gt_T.exr")
-    bpy.ops.render.render(write_still=True)
-    
-    # Render h (EXR)
-    tex_node.image = img_h
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_h.exr")
-    bpy.ops.render.render(write_still=True)
-    
-    # Render mark (EXR)
-    tex_node.image = img_mark
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.exr")
-    bpy.ops.render.render(write_still=True)
 
-    # Render relief height (EXR)
-    tex_node.image = img_height
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_height.exr")
-    bpy.ops.render.render(write_still=True)
+    _record('scene_build', time.perf_counter() - _t0_scene)
 
-    # Render derived normal map (EXR)
-    tex_node.image = img_normal
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.filepath = os.path.join(sample_dir, "gt_normal.exr")
-    bpy.ops.render.render(write_still=True)
-    
-    # Render T (PNG for viz)
-    scene.render.image_settings.file_format = 'PNG'
-    scene.render.image_settings.color_depth = '16'
-    tex_node.image = img_T
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.filepath = os.path.join(sample_dir, "gt_T.png")
-    bpy.ops.render.render(write_still=True)
-    
-    # Render h (PNG for viz)
-    tex_node.image = img_h
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_h.png")
-    bpy.ops.render.render(write_still=True)
-    
-    # Render mark (PNG for viz)
-    tex_node.image = img_mark
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.png")
-    bpy.ops.render.render(write_still=True)
+    # Render each GT channel ONCE and save the same render result to both
+    # EXR (training/eval target) and PNG (viz/training fallback), instead of
+    # the historical render-per-file (10 render calls per sample).
+    #
+    # Report render-at-scale: measured on the 6-sample M4 baseline, each
+    # `bpy.ops.render.render()` call costs ~7s of essentially FIXED per-call
+    # overhead at samples=1 (film/denoise/sync bookkeeping -- the emission
+    # path-trace itself is trivial), so the 10 GT render calls (427.8s
+    # total) cost MORE than the 12 real 64-sample main renders (394.1s).
+    # Rendering once per channel and saving twice -- the exact pattern
+    # render_sample() below has always used for photo.png/photo_linear.exr
+    # -- halves that. Pixel content is unchanged: Cycles renders are
+    # deterministic for a fixed scene/seed, so the old PNG (a second,
+    # identical render of the same emission scene) had the same pixels as
+    # the old EXR's render anyway; both files still go through the same
+    # image_settings encode paths as before (EXR 32-bit / PNG 16-bit, per-
+    # channel RGB/BW color_mode, view transform 'Raw' -- set above).
+    # Verified old-vs-new by file hash (docs/RENDER_AT_SCALE.md,
+    # determinism section) and by the --validate gate.
+    gt_channels = [
+        ("gt_T", img_T, 'RGB'),
+        ("gt_h", img_h, 'BW'),
+        ("gt_mark_mask", img_mark, 'BW'),
+        ("gt_height", img_height, 'BW'),
+        ("gt_normal", img_normal, 'RGB'),
+    ]
+    for gt_name, gt_img, color_mode in gt_channels:
+        tex_node.image = gt_img
+        with stage('gt_render'):
+            bpy.ops.render.render(write_still=False)
+        rr = bpy.data.images['Render Result']
+        with stage('image_encode_io'):
+            scene.render.image_settings.file_format = 'OPEN_EXR'
+            scene.render.image_settings.color_depth = '32'
+            scene.render.image_settings.color_mode = color_mode
+            rr.save_render(os.path.abspath(os.path.join(sample_dir, f"{gt_name}.exr")))
 
-    # Render relief height (PNG for viz/training fallback)
-    tex_node.image = img_height
-    scene.render.image_settings.color_mode = 'BW'
-    scene.render.filepath = os.path.join(sample_dir, "gt_height.png")
-    bpy.ops.render.render(write_still=True)
+            scene.render.image_settings.file_format = 'PNG'
+            scene.render.image_settings.color_depth = '16'
+            rr.save_render(os.path.abspath(os.path.join(sample_dir, f"{gt_name}.png")))
 
-    # Render derived normal map (PNG for viz/training fallback)
-    tex_node.image = img_normal
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.filepath = os.path.join(sample_dir, "gt_normal.png")
-    bpy.ops.render.render(write_still=True)
-    
     # Restore
+    _t1_scene = time.perf_counter()
     glass_obj.data.materials[0] = orig_mat
     scene.view_settings.view_transform = 'Standard'
     scene.cycles.samples = orig_samples
@@ -939,25 +1061,30 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_heig
         bg_node.inputs['Strength'].default_value = orig_strength
     if wall:
         wall.hide_render = False
+    _record('scene_build', time.perf_counter() - _t1_scene)
 
 def render_sample(out_dir, prefix):
     scene = bpy.context.scene
-    
-    # Render once
-    bpy.ops.render.render(write_still=False)
+
+    # Render once -- this is THE main render: full Cycles path trace at
+    # scene.cycles.samples (64), 1536x1536, with the transmission/glass
+    # bounce settings from setup_scene. The GPU-bound stage.
+    with stage('main_render'):
+        bpy.ops.render.render(write_still=False)
     img = bpy.data.images['Render Result']
-    
-    # Save sRGB PNG
-    scene.render.image_settings.file_format = 'PNG'
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.image_settings.color_depth = '8'
-    img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo.png")))
-    
-    # Save Linear EXR
-    scene.render.image_settings.file_format = 'OPEN_EXR'
-    scene.render.image_settings.color_mode = 'RGB'
-    scene.render.image_settings.color_depth = '32'
-    img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo_linear.exr")))
+
+    with stage('image_encode_io'):
+        # Save sRGB PNG
+        scene.render.image_settings.file_format = 'PNG'
+        scene.render.image_settings.color_mode = 'RGB'
+        scene.render.image_settings.color_depth = '8'
+        img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo.png")))
+
+        # Save Linear EXR
+        scene.render.image_settings.file_format = 'OPEN_EXR'
+        scene.render.image_settings.color_mode = 'RGB'
+        scene.render.image_settings.color_depth = '32'
+        img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo_linear.exr")))
 
 def parse_args():
     # Because blender consumes some arguments when run via `blender -b -P`, 
@@ -975,6 +1102,10 @@ def parse_args():
     parser.add_argument('--validate', action='store_true', help="Run in uniform backlight validation mode")
     parser.add_argument('--recipe', type=str, default=None,
                         help="Render only this recipe (targeted top-up, e.g. extra dark-opaque shadow-pair samples)")
+    parser.add_argument('--hdri-dir', type=str, default=None,
+                        help="Directory of pre-fetched .hdr/.exr files; one is picked "
+                             "deterministically per seed (no network call). Falls back to "
+                             "the single-file polyhaven download into --out if omitted.")
     return parser.parse_args(argv)
 
 def main():
@@ -987,13 +1118,33 @@ def main():
                'streaky-fine-texture', 'dark-textured']
     
     os.makedirs(args.out, exist_ok=True)
-    hdri_path = download_polyhaven_hdri(args.out)
-    
+
+    # Report render-at-scale: texture authoring (numpy/scipy) depends only on
+    # (recipe, seed), never on light variation, but every light-variation
+    # iteration used to redo it from scratch because setup_scene()'s
+    # read_factory_settings wipes bpy state each time. This cache keeps the
+    # AUTHORED ARRAYS alive across a glass piece's light variations (a plain
+    # dict, since a single generate_synthetic.py process only ever needs the
+    # current glass piece's arrays -- unbounded growth is fine at the sizes
+    # --count uses, and each process is short-lived under render_farm.py
+    # sharding). The bpy image encode still runs every variation (see
+    # encode_glass_textures' docstring) -- only the CPU-bound compute is
+    # amortized.
+    _texture_cache = {}
+
     # If count is exactly 5, generate one of each recipe. Otherwise, pick randomly.
     for i in range(args.count):
         seed = args.seed + i
         random.seed(seed)
-        
+
+        # Resolved per-glass-piece (keyed on seed) so an --hdri-dir pack gives
+        # lighting diversity across the batch, not one fixed HDRI for the
+        # whole run; deterministic (same seed -> same HDRI) for reproducibility.
+        # Skipped entirely in --validate mode (setup_scene(None, ...) below
+        # never uses it -- no point resolving/downloading).
+        hdri_path = None if args.validate else resolve_hdri_path(
+            args.out, hdri_dir=args.hdri_dir, seed=seed)
+
         if args.recipe is not None:
             if args.recipe not in recipes:
                 raise ValueError(f"Unknown recipe: {args.recipe}")
@@ -1023,15 +1174,18 @@ def main():
             else:
                 glass_obj, cam, ev, z_rot, frame_params = setup_scene(hdri_path, has_frame=has_frame)
         
-            # 2. Create textures
+            # 2. Create textures (numpy compute cached across this glass
+            # piece's light variations; bpy encode always redone -- see
+            # create_glass_textures/_texture_cache comments above)
             img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(
-                recipe, sample_dir, size=1536, seed=seed
+                recipe, sample_dir, size=1536, seed=seed, cache=_texture_cache
             )
             
             # 3. Create material
-            mat = create_glass_material(
-                glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance
-            )
+            with stage('scene_build'):
+                mat = create_glass_material(
+                    glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance
+                )
         
             metadata = {
                 "glass_name": f"{recipe}_{seed}",
@@ -1074,8 +1228,11 @@ def main():
             # Render aligned ground truths
             render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal)
                 
-            with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
-                json.dump(metadata, f, indent=2)
+            with stage('image_encode_io'):
+                with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
+                    json.dump(metadata, f, indent=2)
+
+    dump_timings(args.out)
 
 if __name__ == '__main__':
     main()
