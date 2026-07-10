@@ -1,0 +1,138 @@
+{
+  "cathedral-green": {
+    "recipe": "cathedral-green",
+    "glass_class": "cathedral-clear",
+    "L_mean": [
+      0.28969828884238186,
+      0.28969828884238186,
+      0.28969828884238186
+    ],
+    "T_mae_vs_authored": 0.1335626353333594,
+    "variants": {
+      "rot135_evm1": {
+        "ev2": -1.0,
+        "gEV": 0.5,
+        "I2_hat": [
+          0.14484914442119093,
+          0.14484914442119093,
+          0.14484914442119093
+        ],
+        "raw_honest_mae255": 16.192405842378303,
+        "relit_honest_mae255": 20.396515513039834,
+        "raw_oracle_gain_mae255": 15.097430169590632,
+        "relit_oracle_gain_mae255": 17.989780660928012,
+        "oracle_g_relit": [
+          0.1832052192535733,
+          0.18364690000387923,
+          0.18378930205694102
+        ]
+      },
+      "rot90_evp1": {
+        "ev2": 1.0,
+        "gEV": 2.0,
+        "I2_hat": [
+          0.5793965776847637,
+          0.5793965776847637,
+          0.5793965776847637
+        ],
+        "raw_honest_mae255": 15.36258242366342,
+        "relit_honest_mae255": 18.049943813380164,
+        "raw_oracle_gain_mae255": 13.514003093092565,
+        "relit_oracle_gain_mae255": 17.554778092734114,
+        "oracle_g_relit": [
+          0.5259910599077103,
+          0.5805552144780666,
+          0.6185887841399187
+        ]
+      }
+    },
+    "assembly_control_IBL1": {
+      "raw_copy_vs_C_mae255": 0.04222338232001864,
+      "relit_vs_C_mae255": 7.5055297514721016,
+      "note": "raw-copy vs C ~ pure compositing-geometry error (should be tiny); relit vs C adds extractor error + the intentional envelope flattening under matched lighting"
+    },
+    "drag": {
+      "n_positions": 9,
+      "raw": {
+        "lum_cv": 0.2920669357070666,
+        "lab_dE": 9.841454636078844
+      },
+      "relit": {
+        "lum_cv": 0.1401757118336364,
+        "lab_dE": 10.334400266752054
+      },
+      "grain_floor": {
+        "lum_cv": 0.008509419480854341,
+        "lab_dE": 0.2816975786960384
+      }
+    }
+  },
+  "wispy-white": {
+    "recipe": "wispy-white",
+    "glass_class": "wispy",
+    "L_mean": [
+      0.2793877578254232,
+      0.3069830316636251,
+      0.2552252181266236
+    ],
+    "T_mae_vs_authored": 0.03615403432153467,
+    "variants": {
+      "rot135_evm1": {
+        "ev2": -1.0,
+        "gEV": 0.5,
+        "I2_hat": [
+          0.1396938789127116,
+          0.15349151583181256,
+          0.1276126090633118
+        ],
+        "raw_honest_mae255": 22.96639708130901,
+        "relit_honest_mae255": 24.058702779150337,
+        "raw_oracle_gain_mae255": 4.338567787592618,
+        "relit_oracle_gain_mae255": 5.975630829241451,
+        "oracle_g_relit": [
+          0.23644690660615106,
+          0.24071802150922889,
+          0.20439997082140787
+        ]
+      },
+      "rot90_evp1": {
+        "ev2": 1.0,
+        "gEV": 2.0,
+        "I2_hat": [
+          0.5587755156508464,
+          0.6139660633272502,
+          0.5104504362532472
+        ],
+        "raw_honest_mae255": 4.5680002912586914,
+        "relit_honest_mae255": 11.25479198195871,
+        "raw_oracle_gain_mae255": 3.1876379700470316,
+        "relit_oracle_gain_mae255": 10.596205327128924,
+        "oracle_g_relit": [
+          0.5496370105167934,
+          0.624900638151643,
+          0.5926298401287693
+        ]
+      }
+    },
+    "assembly_control_IBL1": {
+      "raw_copy_vs_C_mae255": 0.12987934310406968,
+      "relit_vs_C_mae255": 7.632856445690645,
+      "note": "raw-copy vs C ~ pure compositing-geometry error (should be tiny); relit vs C adds extractor error + the intentional envelope flattening under matched lighting"
+    },
+    "drag": {
+      "n_positions": 9,
+      "raw": {
+        "lum_cv": 0.14147473347447614,
+        "lab_dE": 5.3010376695020085
+      },
+      "relit": {
+        "lum_cv": 0.050198248089085094,
+        "lab_dE": 1.0059055572807578
+      },
+      "grain_floor": {
+        "lum_cv": 0.027294476314729164,
+        "lab_dE": 0.9178320448371975
+      }
+    }
+  }
+}
