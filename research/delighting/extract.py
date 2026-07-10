@@ -161,14 +161,27 @@ ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
 # bright milky sheet). The gated features fix both real-photo cases
 # (white 0.93, black 0.28) at a measured cost in synthetic LOO accuracy;
 # robustness in the wild is the goal, so the gated set ships.
-# Fit: ridge (lam=2.0) least squares in logit space on the 26 synthetic-v2
-# samples with authored GT, target = p99 of gt_T (the exact statistic T_ANCHOR
-# pins). Accuracy on that set: worst in-sample scale ratio ~2.9x, leave-one-
-# sample-out mean 1.45x, vs the 4.75x a dark<->cathedral class flip costs the
-# class anchor. Residual failure mode (honest): "dark glass under bright
-# backlight" vs "bright glass under dim backlight" genuinely overlap in
-# single-photo statistics -- the same L*T gauge ambiguity as ever; the
-# estimator compresses that ambiguity to ~2-3x, it cannot remove it.
+# Fit: ridge (lam=2.0) least squares in logit space, target = p99 of gt_T
+# (the exact statistic T_ANCHOR pins). Report 016 fit on the 26 synthetic-v2
+# samples (5 recipes); report 017 refit on the widened 35-sample / 8-recipe
+# set after adding three dark-family recipes (dark-deep ~0.055, dark-ruby
+# ~0.13, dark-slate ~0.31) -- the dark end had been calibrated by ONE recipe
+# (leave-dark-opaque-out could not predict dark at all, LORO worst 4.29x;
+# now 3.37x with held-out dark predictions actually landing dark, and every
+# dark-family LORO cell <= 2.5x; see fit_anchor.py + report 017). T_LO
+# lowered 0.10 -> 0.04 with the refit: dark-deep's authored GT (0.055) sits
+# below the old floor, i.e. the old model could not represent it; the refit
+# at 0.04 is also better in-sample (mean 1.44x vs 1.51x) and on the real
+# library (black.jpg t_img 0.236 vs target 0.20; blue.jpg -- report 016's
+# only mover -- stays at the old disagreement, 0.611 vs old 0.620, where a
+# T_LO=0.10 refit pushed it to 0.497 = 1.9x disagreement).
+# Residual failure mode (honest): "dark glass under bright backlight" vs
+# "bright glass under dim backlight" genuinely overlap in single-photo
+# statistics -- the same L*T gauge ambiguity as ever; the estimator
+# compresses that ambiguity to ~2-3x, it cannot remove it. Note the
+# sat_lit feature reads 0 on ALL dim captures (the luminance gate excludes
+# every pixel), so tinted-vs-neutral darkness is invisible to the estimator
+# exactly where it would help most (report 017 dark-ruby measurement).
 #
 # The class prior remains as a REGULARIZER via an adaptive log-space blend
 # (`blend_anchor_target`): when image estimate and class target agree within
@@ -176,10 +189,10 @@ ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
 # healthy extractions); as disagreement grows toward TAU1, shift up to
 # ANCHOR_BLEND_WMAX of the way (in log space) to the image estimate. Constants
 # tuned on the synthetic class-error-injection eval (eval_class_injection.py).
-ANCHOR_T_LO, ANCHOR_T_HI = 0.10, 0.98
-ANCHOR_FEAT_MU = np.array([-1.53142, 0.317627, 0.321582])
-ANCHOR_FEAT_SD = np.array([0.900396, 0.203289, 0.34496])
-ANCHOR_COEF = np.array([0.752747, 0.796464, 0.403915, 0.75393])
+ANCHOR_T_LO, ANCHOR_T_HI = 0.04, 0.98
+ANCHOR_FEAT_MU = np.array([-1.98505, 0.238821, 0.241629])
+ANCHOR_FEAT_SD = np.array([1.16796, 0.221127, 0.327259])
+ANCHOR_COEF = np.array([0.0933926, 1.28039, 0.412618, 0.542164])
 ANCHOR_BLEND_TAU0, ANCHOR_BLEND_TAU1, ANCHOR_BLEND_WMAX = 1.5, 3.0, 0.85
 
 
