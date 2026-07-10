@@ -2,17 +2,18 @@ import { useEffect, useState, useMemo } from 'react';
 import type { Scale } from '../types';
 
 const COLOR_FAMILIES = [
-  { id: 'All', label: 'All Colors', emoji: '🌈' },
-  { id: 'Red', label: 'Red', emoji: '🔴' },
-  { id: 'Orange', label: 'Orange', emoji: 'orange' },
-  { id: 'Yellow', label: 'Yellow', emoji: '🟡' },
-  { id: 'Green', label: 'Green', emoji: '🟢' },
-  { id: 'Blue', label: 'Blue', emoji: '🔵' },
-  { id: 'Purple', label: 'Purple', emoji: '🟣' },
-  { id: 'Pink', label: 'Pink', emoji: '💗' },
-  { id: 'Brown', label: 'Brown/Amber', emoji: '🟤' },
-  { id: 'Monochrome', label: 'White/Black/Gray', emoji: '⚪' },
-  { id: 'Clear', label: 'Clear', emoji: '🌐' }
+  { id: 'All', label: 'All Colors', colorStyle: 'linear-gradient(135deg, #ff4500, #ffd700, #32cd32, #00bfff, #da70d6)' },
+  { id: 'Red', label: 'Red', colorStyle: '#e63946' },
+  { id: 'Orange', label: 'Orange', colorStyle: '#f4a261' },
+  { id: 'Yellow', label: 'Yellow', colorStyle: '#e9c46a' },
+  { id: 'Green', label: 'Green', colorStyle: '#2a9d8f' },
+  { id: 'Blue', label: 'Blue', colorStyle: '#457b9d' },
+  { id: 'Purple', label: 'Purple', colorStyle: '#8338ec' },
+  { id: 'Pink', label: 'Pink', colorStyle: '#ff006e' },
+  { id: 'Brown', label: 'Brown/Amber', colorStyle: '#a06a42' },
+  { id: 'Monochrome', label: 'White/Black/Gray', colorStyle: 'linear-gradient(135deg, #ffffff, #888888, #111111)' },
+  { id: 'Clear', label: 'Clear', colorStyle: 'rgba(255, 255, 255, 0.1)' },
+  { id: 'Other', label: 'Multi/Other', colorStyle: 'linear-gradient(45deg, #f72585, #7209b7, #3f37c9, #4cc9f0)' }
 ];
 
 const getColorFamily = (name: string, sku: string): string => {
@@ -22,35 +23,35 @@ const getColorFamily = (name: string, sku: string): string => {
   if (n.includes('clear') || n.includes('crystal') || n.includes('ice') || s.includes('ICE') || s.startsWith('W800') || s.startsWith('Y800') || s.startsWith('OF100ICE')) {
     return 'Clear';
   }
-  if (n.includes('white') || n.includes('black') || n.includes('gray') || n.includes('grey') || n.includes('charcoal') || n.includes('pearl') || n.includes('silver') || n.includes('opal white')) {
+  if (n.includes('white') || n.includes('black') || n.includes('gray') || n.includes('grey') || n.includes('charcoal') || n.includes('pearl') || n.includes('silver') || n.includes('opal white') || n.includes('reactive cloud') || n.includes('platinum') || n.includes('opaline') || n.includes('pewter') || n.includes('ivory')) {
     return 'Monochrome';
   }
-  if (n.includes('red') || n.includes('cherry') || n.includes('ruby') || n.includes('daredevil') || n.includes('grenadine') || n.includes('crimson')) {
+  if (n.includes('red') || n.includes('cherry') || n.includes('ruby') || n.includes('daredevil') || n.includes('grenadine') || n.includes('crimson') || n.includes('cinnabar') || n.includes('tomato') || n.includes('scarlet') || n.includes('rhubarb') || n.includes('carnelian') || n.includes('flame') || n.includes('tulip') || n.includes('wine')) {
     return 'Red';
   }
   if (n.includes('orange') || n.includes('tangerine') || n.includes('persimmon') || n.includes('coral') || n.includes('peach')) {
     return 'Orange';
   }
-  if (n.includes('yellow') || n.includes('canary') || n.includes('lemon') || n.includes('marigold')) {
+  if (n.includes('yellow') || n.includes('canary') || n.includes('lemon') || n.includes('marigold') || n.includes('french vanilla') || n.includes('marzipan') || n.includes('almond') || n.includes('citronelle') || n.includes('butterscotch') || n.includes('cream') || n.includes('custard') || n.includes('dandelion') || n.includes('flaxen') || n.includes('noble brass')) {
     return 'Yellow';
   }
-  if (n.includes('green') || n.includes('lime') || n.includes('moss') || n.includes('sage') || n.includes('emerald') || n.includes('caribbean') || n.includes('aventurine green') || n.includes('pine')) {
+  if (n.includes('green') || n.includes('lime') || n.includes('moss') || n.includes('sage') || n.includes('emerald') || n.includes('caribbean') || n.includes('aventurine') || n.includes('pine') || n.includes('artichoke') || n.includes('celadon') || n.includes('pea pod') || n.includes('jade') || n.includes('olive') || n.includes('fern') || n.includes('mint') || n.includes('chartreuse') || n.includes('olivine') || n.includes('asparagus')) {
     return 'Green';
   }
-  if (n.includes('blue') || n.includes('cobalt') || n.includes('sky') || n.includes('turquoise') || n.includes('indigo') || n.includes('teal') || n.includes('ocean') || n.includes('caribbean blue') || n.includes('aqua')) {
+  if (n.includes('blue') || n.includes('cobalt') || n.includes('sky') || n.includes('turquoise') || n.includes('indigo') || n.includes('teal') || n.includes('ocean') || n.includes('aqua') || n.includes('cyan') || n.includes('periwinkle') || n.includes('sapphire') || n.includes('navy') || n.includes('chambray') || n.includes('lagoon')) {
     return 'Blue';
   }
-  if (n.includes('purple') || n.includes('violet') || n.includes('plum') || n.includes('heather') || n.includes('amethyst') || n.includes('grape') || n.includes('lavender') || n.includes('lilac') || n.includes('eggplant')) {
+  if (n.includes('purple') || n.includes('violet') || n.includes('plum') || n.includes('heather') || n.includes('amethyst') || n.includes('grape') || n.includes('lavender') || n.includes('lilac') || n.includes('eggplant') || n.includes('mauve')) {
     return 'Purple';
   }
   if (n.includes('pink') || n.includes('rose') || n.includes('fuchsia') || n.includes('cranberry') || n.includes('gold pink') || n.includes('magenta')) {
     return 'Pink';
   }
-  if (n.includes('brown') || n.includes('amber') || n.includes('bronze') || n.includes('chestnut') || n.includes('chocolate') || n.includes('wood') || n.includes('gold') || n.includes('cognac') || n.includes('caramel') || n.includes('tan') || n.includes('honey')) {
+  if (n.includes('brown') || n.includes('amber') || n.includes('bronze') || n.includes('chestnut') || n.includes('chocolate') || n.includes('wood') || n.includes('gold') || n.includes('cognac') || n.includes('caramel') || n.includes('tan') || n.includes('honey') || n.includes('umber') || n.includes('mink') || n.includes('khaki') || n.includes('coffee') || n.includes('champagne') || n.includes('sienna') || n.includes('copper') || n.includes('terra cotta')) {
     return 'Brown';
   }
   
-  return 'All';
+  return 'Other';
 };
 
 interface SwatchItem {
@@ -290,8 +291,20 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                   key={col.id}
                   className={`glass-library-pill ${colorFilter === col.id ? 'active' : ''}`}
                   onClick={() => setColorFilter(col.id)}
+                  style={{ display: 'inline-flex', alignItems: 'center' }}
                 >
-                  <span style={{ marginRight: '4px' }}>{col.emoji}</span>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      width: '10px',
+                      height: '10px',
+                      borderRadius: '50%',
+                      marginRight: '6px',
+                      background: col.colorStyle,
+                      border: col.id === 'Clear' ? '1px dashed rgba(255, 255, 255, 0.6)' : '1px solid rgba(255, 255, 255, 0.25)',
+                      flexShrink: 0
+                    }}
+                  />
                   {col.label}
                 </button>
               ))}
