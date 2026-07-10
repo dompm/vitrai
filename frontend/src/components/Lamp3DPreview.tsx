@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as THREE from 'three';
 import type { Project, LampConfig, GlassSheet } from '../types';
 import { computeUnrolledLamp, patternToSurface } from '../utils/lampGeometry';
@@ -25,6 +26,10 @@ const DEFAULT_CONFIG: LampConfig = {
 
 // Module-level texture cache shared across instances — sheet image URLs rarely change.
 const textureCache = new Map<string, THREE.Texture>();
+// Sheet images are multi-MB data URLs; without a cap the GPU memory held by
+// stale entries (replaced uploads, deleted sheets) grows for the app's
+// lifetime. Map preserves insertion order, so evict oldest first.
+const TEXTURE_CACHE_MAX = 24;
 
 function loadSheetTexture(sheet: GlassSheet, onLoad: () => void): THREE.Texture {
   const key = sheet.imageUrl;
@@ -41,10 +46,39 @@ function loadSheetTexture(sheet: GlassSheet, onLoad: () => void): THREE.Texture 
   tx.wrapS = THREE.ClampToEdgeWrapping;
   tx.wrapT = THREE.ClampToEdgeWrapping;
   textureCache.set(key, tx);
+  while (textureCache.size > TEXTURE_CACHE_MAX) {
+    const [oldestKey, oldest] = textureCache.entries().next().value as [string, THREE.Texture];
+    oldest.dispose();
+    textureCache.delete(oldestKey);
+  }
   return tx;
 }
 
+// Dispose every child of the lamp group (meshes, instanced solder geometry,
+// seam lines). InstancedMesh.dispose() releases the instanceMatrix GPU
+// buffer that geometry/material disposal alone leaves behind — and the
+// rebuild runs on every pointer-move while dragging the profile editor.
+function disposeGroupChildren(group: THREE.Group) {
+  for (let i = group.children.length - 1; i >= 0; i--) {
+    const obj = group.children[i];
+    group.remove(obj);
+    if (obj instanceof THREE.Mesh) {
+      obj.geometry?.dispose();
+      const mat = obj.material;
+      if (Array.isArray(mat)) mat.forEach(m => m.dispose());
+      else (mat as THREE.Material).dispose();
+      if ((obj as THREE.InstancedMesh).isInstancedMesh) {
+        (obj as THREE.InstancedMesh).dispose();
+      }
+    } else if (obj instanceof THREE.LineSegments) {
+      obj.geometry?.dispose();
+      (obj.material as THREE.Material).dispose();
+    }
+  }
+}
+
 export function Lamp3DPreview({ project }: Props) {
+  const { t } = useTranslation();
   const config = project.lampConfig ?? DEFAULT_CONFIG;
   const unrolledLamp = useMemo(() => computeUnrolledLamp(config), [config]);
 
@@ -102,7 +136,7 @@ export function Lamp3DPreview({ project }: Props) {
     };
     (renderer as unknown as { _render: () => void })._render = render;
 
-    function resize() {
+    const resize = () => {
       const w = container.clientWidth;
       const h = container.clientHeight;
       if (w === 0 || h === 0) return;
@@ -110,14 +144,18 @@ export function Lamp3DPreview({ project }: Props) {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       render();
-    }
+    };
     const ro = new ResizeObserver(resize);
     ro.observe(container);
     resize();
 
     return () => {
       ro.disconnect();
+      if (lampGroupRef.current) disposeGroupChildren(lampGroupRef.current);
       renderer.dispose();
+      // Each mount creates a fresh WebGL context and browsers cap those
+      // (~16); release this one eagerly instead of waiting for GC.
+      renderer.forceContextLoss();
       if (renderer.domElement.parentNode === container) {
         container.removeChild(renderer.domElement);
       }
@@ -131,19 +169,7 @@ export function Lamp3DPreview({ project }: Props) {
     const renderer = rendererRef.current;
     if (!group || !renderer) return;
 
-    for (let i = group.children.length - 1; i >= 0; i--) {
-      const obj = group.children[i];
-      group.remove(obj);
-      if (obj instanceof THREE.Mesh) {
-        obj.geometry?.dispose();
-        const mat = obj.material;
-        if (Array.isArray(mat)) mat.forEach(m => m.dispose());
-        else (mat as THREE.Material).dispose();
-      } else if (obj instanceof THREE.LineSegments) {
-        obj.geometry?.dispose();
-        (obj.material as THREE.Material).dispose();
-      }
-    }
+    disposeGroupChildren(group);
 
     const { profilePoints } = config;
     // Use a high segment count when smooth so the lamp reads as curved.
@@ -231,15 +257,20 @@ export function Lamp3DPreview({ project }: Props) {
         if (tier) {
           const m = tier.meta;
           if (m.type === 'cylinder') {
-            const theta01 = Math.max(0, Math.min(1, (px - m.leftX) / m.width));
-            const v = Math.max(0, Math.min(1, (py - m.topY) / m.height));
+            const theta01 = Math.max(0, Math.min(1, (px - m.leftX) / Math.max(1e-6, m.width)));
+            const v = Math.max(0, Math.min(1, (py - m.topY) / Math.max(1e-6, m.height)));
             surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
           } else {
             const dx = px - m.apexX;
             const dy = py - m.apexY;
             const d = Math.hypot(dx, dy);
-            const v = Math.max(0, Math.min(1, (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top)));
-            const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+            // Denominator is negative for contracting tiers (L_top > L_bot);
+            // clamping it positive collapsed those tiers onto the top ring.
+            const dDenom = m.L_bot - m.L_top;
+            const v = Math.abs(dDenom) < 1e-6 ? 0.5 : Math.max(0, Math.min(1, (d - m.L_top) / dDenom));
+            // Inverse of the layout parameterization (dx = sin(a), dy = sign*cos(a));
+            // keeps theta01 increasing with pattern-x on contracting tiers too.
+            const angleRel = Math.atan2(dx, m.bisectorSign * dy);
             const theta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
             surf = { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
           }
@@ -287,7 +318,9 @@ export function Lamp3DPreview({ project }: Props) {
       const sheet = sheetById.get(piece.glassSheetId);
       if (!sheet) continue;
 
-      const centroid2D = computeCentroid(piece.polygon);
+      // Must match the centroid the sheet renderer/packing use (curve-flattened
+      // outline), otherwise curved pieces sample a shifted glass region.
+      const centroid2D = computeCentroid(flat);
       const { x: tx, y: ty, rotation, scale } = piece.transform;
       const cosR = Math.cos(rotation);
       const sinR = Math.sin(rotation);
@@ -314,10 +347,17 @@ export function Lamp3DPreview({ project }: Props) {
       }
       if (skip) continue;
 
-      // Fan triangulation from vertex 0 — fine for convex pieces (the common case).
-      const indices: number[] = [];
-      for (let i = 1; i < flat.length - 1; i++) {
-        indices.push(0, i, i + 1);
+      // Proper (earcut) triangulation in 2D pattern space — SAM outlines are
+      // routinely concave, and a vertex-0 fan would draw glass outside them.
+      let indices: number[] = THREE.ShapeUtils.triangulateShape(
+        flat.map(([x, y]) => new THREE.Vector2(x, y)), []
+      ).flat();
+      if (indices.length === 0) {
+        // Degenerate outline: fall back to a fan so we still draw something.
+        indices = [];
+        for (let i = 1; i < flat.length - 1; i++) {
+          indices.push(0, i, i + 1);
+        }
       }
 
       const geom = new THREE.BufferGeometry();
@@ -469,7 +509,7 @@ export function Lamp3DPreview({ project }: Props) {
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', minHeight: 0 }}>
       <div className="panel-header">
         <div className="panel-title">
-          <span className="panel-title-eyebrow">3D PREVIEW (DRAG TO SPIN)</span>
+          <span className="panel-title-eyebrow">{t('lamp3dPreviewTitle').toUpperCase()}</span>
         </div>
       </div>
       <div

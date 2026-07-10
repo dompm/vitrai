@@ -31,7 +31,7 @@ function applyScales(project: Project, sheetId?: string): Project {
 function makeNewSheet(prev: Project, t: (key: string) => string): GlassSheet {
   const glass = DEFAULT_GLASS_ASSETS[prev.sheets.length % DEFAULT_GLASS_ASSETS.length];
   return {
-    id: `sheet-${Date.now()}`,
+    id: `sheet-${crypto.randomUUID()}`,
     label: `${t('sheet')} ${prev.sheets.length + 1}`,
     imageUrl: glass.url,
     crop: { top: 0, left: 0, bottom: 0, right: 0 },
@@ -126,7 +126,14 @@ export function useProject() {
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const savingIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestProjectRef = useRef(project);
-  latestProjectRef.current = project;
+
+  // Single entry point for replacing the project wholesale (load/switch/
+  // delete/import). Keeps latestProjectRef in sync immediately so a
+  // subsequent updateProject in the same tick can't work from a stale base.
+  const replaceProject = useCallback((p: Project) => {
+    latestProjectRef.current = p;
+    setProject(p);
+  }, []);
 
   const persist = useCallback(async (p: Project, name: string) => {
     if (savingIndicatorTimerRef.current) clearTimeout(savingIndicatorTimerRef.current);
@@ -164,20 +171,53 @@ export function useProject() {
   }, [persist]);
 
   useEffect(() => {
+    // OPFS is best-effort storage; ask the browser not to evict it.
+    void navigator.storage?.persist?.().catch(() => {});
     const last = localStorage.getItem('vitraux-last-project') ?? 'default';
-    loadProjectFromOPFS(last).then(async p => {
-      if (p) {
-        setProject(p);
-        setActiveSheetId(p.sheets[0]?.id ?? '');
-      } else {
-        const fresh = { ...EMPTY_PROJECT, name: last };
-        setProject(fresh);
-        await saveToOPFS(fresh, last);
-      }
-      setIsLoaded(true);
-      refreshProjectList();
-    });
+    loadProjectFromOPFS(last)
+      .then(async p => {
+        if (p) {
+          replaceProject(p);
+          setActiveSheetId(p.sheets[0]?.id ?? '');
+        } else {
+          // Genuinely no file — first visit under this name.
+          const fresh = { ...EMPTY_PROJECT, name: last };
+          replaceProject(fresh);
+          await saveToOPFS(fresh, last).catch(err => {
+            console.error('[useProject] initial save failed', err);
+            setSaveStatus('error');
+          });
+        }
+      })
+      .catch(err => {
+        // The file exists but couldn't be read (corrupt JSON, transient OPFS
+        // error). Start fresh under a different name so autosave can never
+        // overwrite the original file.
+        console.error('[useProject] failed to load project', err);
+        const fallback = { ...EMPTY_PROJECT, name: `${last} (recovered)` };
+        replaceProject(fallback);
+        localStorage.setItem('vitraux-last-project', fallback.name);
+      })
+      .finally(() => {
+        setIsLoaded(true);
+        refreshProjectList();
+      });
   }, [refreshProjectList]);
+
+  // Flush any pending debounced save when the tab is being hidden/closed, so
+  // edits made within the debounce window aren't lost.
+  useEffect(() => {
+    const onPageHide = () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+        const p = latestProjectRef.current;
+        void persist(p, p.name);
+      }
+    };
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [persist]);
 
   // Keep activeSheetId valid if the active sheet is ever deleted
   useEffect(() => {
@@ -186,58 +226,75 @@ export function useProject() {
     }
   }, [project.sheets, activeSheetId]);
 
+  // NOTE: state updaters passed to setProject/setUndoStack/setRedoStack must
+  // stay pure — React StrictMode double-invokes them, so any side effect
+  // inside an updater (pushing history, scheduling timers, other setState
+  // calls) runs twice and corrupts the undo/redo stacks. All side effects
+  // below happen at call time, outside the updaters.
   const updateProject = useCallback((updater: (p: Project) => Project, skipHistory = false) => {
-    setProject(prev => {
-      const next = updater(prev);
-      if (!skipHistory) {
-        setUndoStack(u => [...u.slice(-49), prev]);
-        setRedoStack([]);
-      }
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = setTimeout(() => {
-        void persist(next, next.name);
-        refreshProjectList();
-      }, 500);
-      return next;
-    });
+    const prev = latestProjectRef.current;
+    const next = updater(prev);
+    if (next === prev) return;
+    latestProjectRef.current = next;
+    if (!skipHistory) {
+      setUndoStack(u => [...u.slice(-49), prev]);
+      setRedoStack([]);
+    }
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      void persist(next, next.name);
+      refreshProjectList();
+    }, 500);
+    setProject(next);
   }, [refreshProjectList, persist]);
 
   const undo = useCallback(() => {
-    setUndoStack(u => {
-      if (u.length === 0) return u;
-      const prev = u[u.length - 1];
-      const newStack = u.slice(0, -1);
-      setProject(current => {
-        setRedoStack(r => [...r, current]);
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { void persist(prev, prev.name); }, 500);
-        return prev;
-      });
-      return newStack;
-    });
-  }, [persist]);
+    if (undoStack.length === 0) return;
+    const current = latestProjectRef.current;
+    // The name is non-historied state: snapshots recorded before a rename
+    // still carry the old name, and restoring it would point autosave at a
+    // deleted OPFS file (see #111).
+    const prev = { ...undoStack[undoStack.length - 1], name: current.name };
+    setUndoStack(undoStack.slice(0, -1));
+    setRedoStack(r => [...r, current]);
+    latestProjectRef.current = prev;
+    setProject(prev);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { void persist(prev, prev.name); }, 500);
+  }, [undoStack, persist]);
 
   const redo = useCallback(() => {
-    setRedoStack(r => {
-      if (r.length === 0) return r;
-      const next = r[r.length - 1];
-      const newStack = r.slice(0, -1);
-      setProject(current => {
-        setUndoStack(u => [...u, current]);
-        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = setTimeout(() => { void persist(next, next.name); }, 500);
-        return next;
-      });
-      return newStack;
-    });
-  }, [persist]);
+    if (redoStack.length === 0) return;
+    const current = latestProjectRef.current;
+    const next = { ...redoStack[redoStack.length - 1], name: current.name };
+    setRedoStack(redoStack.slice(0, -1));
+    setUndoStack(u => [...u, current]);
+    latestProjectRef.current = next;
+    setProject(next);
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => { void persist(next, next.name); }, 500);
+  }, [redoStack, persist]);
 
   const setProjectName = useCallback((name: string) => {
     const oldName = project.name;
-    updateProject(prev => ({ ...prev, name }));
-    void deleteFromOPFS(oldName);
+    if (name === oldName) return;
+    // skipHistory: the rename is applied outside undo/redo (undo/redo also
+    // preserve the current name), so no stack entry is needed.
+    updateProject(prev => ({ ...prev, name }), true);
+    // Write under the new name first and only delete the old file once that
+    // write has succeeded, so there is never a moment with no copy on disk.
+    void (async () => {
+      try {
+        await saveToOPFS({ ...latestProjectRef.current, name }, name);
+        await deleteFromOPFS(oldName);
+        refreshProjectList();
+      } catch (err) {
+        console.error('[useProject] rename save failed', err);
+        setSaveStatus('error');
+      }
+    })();
     localStorage.setItem('vitraux-last-project', name);
-  }, [project.name, updateProject]);
+  }, [project.name, updateProject, refreshProjectList]);
 
   const createNewProject = useCallback(async (name: string, type: 'flat' | 'lamp' = 'flat') => {
     await flushSave();
@@ -263,21 +320,33 @@ export function useProject() {
         line: { x1: 0, y1: height / 2, x2: width, y2: height / 2 },
       };
     }
-    setProject(newProject);
+    replaceProject(newProject);
     setUndoStack([]);
     setRedoStack([]);
     setActiveSheetId('');
     setSelectedPieceIds([]);
     localStorage.setItem('vitraux-last-project', name);
-    await saveToOPFS(newProject, name);
+    try {
+      await saveToOPFS(newProject, name);
+    } catch (err) {
+      console.error('[useProject] save failed', err);
+      setSaveStatus('error');
+    }
     await refreshProjectList();
   }, [flushSave, refreshProjectList]);
 
   const switchProject = useCallback(async (name: string) => {
     await flushSave();
-    const p = await loadProjectFromOPFS(name);
+    let p: Project | null = null;
+    try {
+      p = await loadProjectFromOPFS(name);
+    } catch (err) {
+      // Stay on the current project rather than switching to a broken one.
+      console.error('[useProject] failed to load project', err);
+      return;
+    }
     if (p) {
-      setProject(p);
+      replaceProject(p);
       setUndoStack([]);
       setRedoStack([]);
       setActiveSheetId(p.sheets[0]?.id ?? '');
@@ -296,9 +365,12 @@ export function useProject() {
       }
       const others = availableProjects.filter(n => n !== name);
       if (others.length > 0) {
-        const p = await loadProjectFromOPFS(others[0]);
+        const p = await loadProjectFromOPFS(others[0]).catch(err => {
+          console.error('[useProject] failed to load project', err);
+          return null;
+        });
         if (p) {
-          setProject(p);
+          replaceProject(p);
           setUndoStack([]);
           setRedoStack([]);
           setActiveSheetId(p.sheets[0]?.id ?? '');
@@ -307,13 +379,18 @@ export function useProject() {
         }
       } else {
         const fresh = { ...EMPTY_PROJECT, name: 'default' };
-        setProject(fresh);
+        replaceProject(fresh);
         setUndoStack([]);
         setRedoStack([]);
         setActiveSheetId(fresh.sheets[0]?.id ?? '');
         setSelectedPieceIds([]);
         localStorage.setItem('vitraux-last-project', 'default');
-        await saveToOPFS(fresh, 'default');
+        try {
+          await saveToOPFS(fresh, 'default');
+        } catch (err) {
+          console.error('[useProject] save failed', err);
+          setSaveStatus('error');
+        }
       }
     }
     await refreshProjectList();
@@ -391,22 +468,16 @@ export function useProject() {
       return [id];
     });
     if (id) {
-      setProject(prev => {
-        const piece = prev.pieces.find(p => p.id === id);
-        if (piece) setActiveSheetId(piece.glassSheetId);
-        return prev;
-      });
+      const piece = latestProjectRef.current.pieces.find(p => p.id === id);
+      if (piece) setActiveSheetId(piece.glassSheetId);
     }
   }, []);
 
   const selectPieces = useCallback((ids: string[]) => {
     setSelectedPieceIds(ids);
     if (ids.length > 0) {
-      setProject(prev => {
-        const last = prev.pieces.find(p => p.id === ids[ids.length - 1]);
-        if (last) setActiveSheetId(last.glassSheetId);
-        return prev;
-      });
+      const last = latestProjectRef.current.pieces.find(p => p.id === ids[ids.length - 1]);
+      if (last) setActiveSheetId(last.glassSheetId);
     }
   }, []);
 
@@ -847,8 +918,13 @@ export function useProject() {
   }, []);
 
   const loadProjectData = useCallback((newProject: Project) => {
-    setProject(newProject);
-    void saveToOPFS(newProject, newProject.name);
+    replaceProject(newProject);
+    setUndoStack([]);
+    setRedoStack([]);
+    void saveToOPFS(newProject, newProject.name).catch(err => {
+      console.error('[useProject] save failed', err);
+      setSaveStatus('error');
+    });
     localStorage.setItem('vitraux-last-project', newProject.name);
     setSelectedPieceIds([]);
     setActiveSheetId(newProject.sheets[0]?.id ?? '');
@@ -919,7 +995,7 @@ export function useProject() {
   }, [updateProject]);
 
   const addSheetFromImage = useCallback((url: string, label: string, scale: Scale | null = null) => {
-    const id = `sheet-${Date.now()}`;
+    const id = `sheet-${crypto.randomUUID()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {
@@ -956,7 +1032,7 @@ export function useProject() {
   }, [updateProject]);
 
   const addSheetFromImageAndMovePieces = useCallback((url: string, label: string, srcSheetId: string) => {
-    const id = `sheet-${Date.now()}`;
+    const id = `sheet-${crypto.randomUUID()}`;
     const cleanLabel = stripExtension(label);
     updateProject(prev => {
       const newSheet: GlassSheet = {

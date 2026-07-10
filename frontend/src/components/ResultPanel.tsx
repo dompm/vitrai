@@ -628,7 +628,6 @@ function findLengthSnap(
 
   let bestMatch: typeof segments[0] | null = null;
   let bestDistPx = tolerancePx;
-  const tolerance = tolerancePx / effectiveScale;
 
   for (const seg of segments) {
     const dist = Math.abs(currentLen - seg.length);
@@ -689,8 +688,11 @@ export function ResultPanel({
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
 
-  const [isShiftDown, setIsShiftDown] = useState(false);
+  const [, setIsShiftDown] = useState(false);
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  // Tracks whether the pointer is over this panel, so single-key tool
+  // shortcuts only apply here instead of firing into both panels at once.
+  const isPointerInsideRef = useRef(false);
 
   const piecesRef = useRef(project.pieces);
   piecesRef.current = project.pieces;
@@ -919,76 +921,108 @@ export function ResultPanel({
     }
   }, [hoverPoint, lastPoint, activeTool]);
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.code === 'Space' && !e.repeat) {
-        e.preventDefault();
-        setIsSpaceDown(true);
-        return;
-      }
-      if (e.key === 'Shift') {
-        if (!e.repeat) {
-          setIsShiftDown(true);
-          if (lastMousePosRef.current) {
-            updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
-          }
-        }
-      }
-      if (e.key === 'v') handleToolChange('select');
-      else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'b' && !isEncoding) handleToolChange('box');
-      else if (e.key === 'p') handleToolChange('pen');
-      else if (e.key === 'n') handleToolChange('pencil');
-      else if (e.key === 'c') handleToolChange('crop');
-      else if (e.key === 'm') handleToolChange('measure');
-      else if (e.key === 'i') handleToolChange('inspect');
-      else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
-      else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
-      else if (e.key === 'Enter') {
-        if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
-          commitActivePolygon();
-        }
-      }
-      else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
-        // window listener from also firing project undo on the same event.
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setActivePolygonPoints(prev => prev.slice(0, -1));
-      }
-      else if (e.key === 'Escape') {
-        if (isSolderPopoverOpenRef.current) {
-          setIsSolderPopoverOpen(false);
-        } else if (refineModeRef.current) {
-          onRefineModeChange(null);
-        } else if (activePolygonPointsRef.current.length > 0) {
-          setActivePolygonPoints([]);
-          setHoverPoint(null);
-          setHoverSnapped(false);
-          setActiveSnapLabels([]);
-        } else {
-          handleToolChange('select');
-        }
-      }
+  // Capture phase — the ONLY thing that belongs here is the pen Cmd+Z
+  // vertex-pop, which must beat App.tsx's bubble-phase undo regardless of
+  // registration order. Everything else (tool shortcuts, Escape, …) lives in
+  // the bubble-phase handler below so that an open modal's capture-phase
+  // Escape handler (which stops propagation, see #115) suppresses it — this
+  // panel doesn't need to know a modal is open.
+  function handleKeyDownCapture(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
+      // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
+      // window listener from also firing project undo on the same event.
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setActivePolygonPoints(prev => prev.slice(0, -1));
     }
-    function handleKeyUp(e: KeyboardEvent) {
-      if (e.code === 'Space') setIsSpaceDown(false);
-      if (e.key === 'Shift') {
-        setIsShiftDown(false);
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if (e.code === 'Space' && !e.repeat) {
+      e.preventDefault();
+      setIsSpaceDown(true);
+      return;
+    }
+    if (e.key === 'Shift') {
+      if (!e.repeat) {
+        setIsShiftDown(true);
         if (lastMousePosRef.current) {
-          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
+          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
         }
       }
     }
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // Scope single-key shortcuts to the hovered panel (matching SheetPanel);
+    // without this, one keystroke switches tools on both panels at once.
+    if (!isPointerInsideRef.current) return;
+    // Compare case-insensitively so the shortcuts survive Caps Lock.
+    const key = e.key.toLowerCase();
+    if (key === 'v') handleToolChange('select');
+    else if (key === 'h') handleToolChange('pan');
+    else if (key === 'b' && !isEncoding) handleToolChange('box');
+    else if (key === 'p') handleToolChange('pen');
+    else if (key === 'n') handleToolChange('pencil');
+    else if (key === 'c') handleToolChange('crop');
+    else if (key === 'm') handleToolChange('measure');
+    else if (key === 'i') handleToolChange('inspect');
+    else if (key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+    else if (key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
+    else if (e.key === 'Enter') {
+      if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
+        commitActivePolygon();
+      }
+    }
+    else if (e.key === 'Escape') {
+      if (isSolderPopoverOpenRef.current) {
+        setIsSolderPopoverOpen(false);
+      } else if (refineModeRef.current) {
+        onRefineModeChange(null);
+      } else if (activePolygonPointsRef.current.length > 0) {
+        setActivePolygonPoints([]);
+        setHoverPoint(null);
+        setHoverSnapped(false);
+        setActiveSnapLabels([]);
+      } else {
+        handleToolChange('select');
+      }
+    }
+  }
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.code === 'Space') setIsSpaceDown(false);
+    if (e.key === 'Shift') {
+      setIsShiftDown(false);
+      if (lastMousePosRef.current) {
+        updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
+      }
+    }
+  }
+
+  // Dispatch through a ref so the listeners always see the latest render's
+  // closures. The previous [activeTool]-dep effect kept stale captures of
+  // isEncoding, project and measure alive between tool changes ('b' stayed
+  // dead after encoding finished; 'm' calibrated against an old crop).
+  const keyHandlersRef = useRef({ downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp });
+  keyHandlersRef.current = { downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp };
+
+  useEffect(() => {
+    const downCapture = (e: KeyboardEvent) => keyHandlersRef.current.downCapture(e);
+    const down = (e: KeyboardEvent) => keyHandlersRef.current.down(e);
+    const up = (e: KeyboardEvent) => keyHandlersRef.current.up(e);
+    // Capture phase only for the pen Cmd+Z vertex-pop, which must run before
+    // App.tsx's bubble-phase undo listener regardless of registration order.
+    // The rest stay bubble-phase so an open modal can stop them (see above).
+    window.addEventListener('keydown', downCapture, true);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', downCapture, true);
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTool]);
+  }, []);
 
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
@@ -1015,12 +1049,24 @@ export function ResultPanel({
     return e.target.getType() === 'Stage' || (e.target as { attrs?: { id?: string } }).attrs?.id === 'bg';
   }
 
+  // Capture the pointer for the duration of a drag gesture so pointermove/
+  // pointerup keep arriving even when the pointer leaves the canvas before
+  // release — otherwise the gesture (pan, box, marquee, pencil) sticks "on"
+  // and keeps following the bare cursor when it re-enters.
+  function capturePointer(e: KonvaEventObject<PointerEvent>) {
+    const evt = e.evt;
+    if (evt && evt.target instanceof Element && evt.pointerId !== undefined) {
+      try { evt.target.setPointerCapture(evt.pointerId); } catch { /* pointer already gone */ }
+    }
+  }
+
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
     if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
+      capturePointer(e);
       vp.startPan(ptr);
       return;
     }
@@ -1193,18 +1239,21 @@ export function ResultPanel({
     }
 
     if (activeTool === 'pencil') {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setPencilPoints([[x, y]]);
       return;
     }
 
     if (activeTool === 'box' && !isEncoding) {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
       return;
     }
 
     if (activeTool === 'select' && isBackground(e)) {
+      capturePointer(e);
       if (IS_TOUCH) {
         vp.startPan(ptr);
       } else {
@@ -1291,6 +1340,15 @@ export function ResultPanel({
       setPencilPoints([]);
       return;
     }
+    vp.endPan();
+  }
+
+  // The browser cancelled the gesture (OS gesture, tab switch, capture lost):
+  // abort in-progress drags without committing anything.
+  function handlePointerCancel() {
+    setDrawingBox(null);
+    setMarqueeBox(null);
+    setPencilPoints([]);
     vp.endPan();
   }
 
@@ -1513,7 +1571,13 @@ export function ResultPanel({
   });
 
   return (
-    <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div
+      className="result-panel-inner"
+      data-tutorial-panel="pattern"
+      style={{ display: 'flex', flex: 1, minHeight: 0 }}
+      onPointerEnter={() => { isPointerInsideRef.current = true; }}
+      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+    >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
         <div className="tooltip-wrapper" ref={solderPopoverRef}>
@@ -1692,6 +1756,7 @@ export function ResultPanel({
                   setActiveSnapLabels([]);
                 }
               }}
+              onPointerCancel={handlePointerCancel}
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer>
@@ -2214,7 +2279,7 @@ export function ResultPanel({
               const displayPiece = isMultiple ? {
                 ...piece,
                 id: '__multiple__',
-                label: `${selectedPieceIds.length} pieces`,
+                label: t('pieces', { count: selectedPieceIds.length }),
                 // If all selected pieces share the same sheet, show it; otherwise, use a special value
                 glassSheetId: project.pieces.filter(p => selectedPieceIds.includes(p.id))
                   .every((p, _, arr) => p.glassSheetId === arr[0].glassSheetId) 
@@ -2224,7 +2289,11 @@ export function ResultPanel({
 
               const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
               const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
-              const isDrawing = drawingBox !== null;
+              const isDrawing = drawingBox !== null
+                || pencilPoints.length > 0
+                || (activeTool === 'pen' && activePolygonPoints.length > 0)
+                || draggedCorner !== null
+                || draggedMidpoint !== null;
               const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
 
               return (
@@ -2236,7 +2305,7 @@ export function ResultPanel({
                   padding: anchor.margin,
                   zIndex: 10,
                   pointerEvents: isInteracting ? 'none' : 'auto',
-                  opacity: isDrawing ? 0 : 0.95,
+                  opacity: isInteracting ? 0 : 0.95,
                   transition: 'opacity 0.2s ease, transform 0.3s ease-out',
                 }}>
                   <div style={{ pointerEvents: isInteracting ? 'none' : 'auto' }}>

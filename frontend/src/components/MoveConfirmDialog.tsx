@@ -17,10 +17,17 @@ export function MoveConfirmDialog({ count, srcLabel, destLabel, onCancel, onConf
   useEffect(() => {
     confirmRef.current?.focus();
     function handleKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onCancel();
+      if (e.key === 'Escape') {
+        // Capture phase + stopPropagation: the Esc that dismisses this dialog
+        // must not also reach the panels' window handlers (which would reset
+        // tools / discard an in-progress pen polygon — see #94).
+        e.preventDefault();
+        e.stopPropagation();
+        onCancel();
+      }
     }
-    document.addEventListener('keydown', handleKey);
-    return () => document.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
   }, [onCancel]);
 
   return (

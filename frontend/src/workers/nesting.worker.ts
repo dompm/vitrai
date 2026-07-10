@@ -22,15 +22,24 @@ export interface NestingProgressMessage {
 
 export interface NestingCompleteMessage {
   type: 'COMPLETE';
+  // Pieces that could not be placed (e.g. larger than the sheet's usable
+  // area); they keep their old position and the caller should tell the user.
+  payload: { skippedPieceIds: string[] };
+}
+
+export interface NestingErrorMessage {
+  type: 'ERROR';
+  payload: { message: string };
 }
 
 export type NestingWorkerMessage = NestingStartMessage;
-export type NestingWorkerResponse = NestingProgressMessage | NestingCompleteMessage;
+export type NestingWorkerResponse = NestingProgressMessage | NestingCompleteMessage | NestingErrorMessage;
 
 self.onmessage = (e: MessageEvent<NestingWorkerMessage>) => {
   if (e.data.type === 'START') {
     const { pieces, bin, allowRotations, gapPx } = e.data.payload;
     const placedPolys: Polygon[] = [];
+    const skippedPieceIds: string[] = [];
 
     try {
       for (const piece of pieces) {
@@ -56,12 +65,17 @@ self.onmessage = (e: MessageEvent<NestingWorkerMessage>) => {
               rotation: result.rotation
             }
           });
+        } else {
+          skippedPieceIds.push(piece.id);
         }
       }
     } catch (err) {
-      console.error("Worker error during packing:", err);
-    } finally {
-      self.postMessage({ type: 'COMPLETE' });
+      self.postMessage({
+        type: 'ERROR',
+        payload: { message: err instanceof Error ? err.message : String(err) },
+      });
+      return;
     }
+    self.postMessage({ type: 'COMPLETE', payload: { skippedPieceIds } });
   }
 };

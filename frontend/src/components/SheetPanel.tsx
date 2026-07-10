@@ -102,6 +102,9 @@ function PieceOutline({
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
     e.cancelBubble = true;
+    // Capture the pointer so the rotation keeps tracking (and properly
+    // commits on pointerup) even if the pointer leaves the canvas.
+    if (e.evt.pointerId !== undefined) e.target.getStage()?.content.setPointerCapture(e.evt.pointerId);
     dragStartedFromHandle.current = true;
     onRotateStart?.();
   }
@@ -167,7 +170,6 @@ interface SheetPanelProps {
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onUpdatePieceTransform: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onBatchTransformChange?: (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -177,7 +179,7 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform, onBatchTransformChange,
+  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform,
   onCropChange, onScaleChange, onImageLoad,
   activeTool, onChangeActiveTool, isTutorial = false
 }: SheetPanelProps) {
@@ -193,6 +195,9 @@ export function SheetPanel({
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
+  // Tracks whether the pointer is over this panel, so single-key tool
+  // shortcuts only apply here instead of firing into both panels at once.
+  const isPointerInsideRef = useRef(false);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -202,10 +207,19 @@ export function SheetPanel({
         setIsSpaceDown(true);
         return;
       }
-      if (e.key === 'v') handleToolChange('select');
-      else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'c') handleToolChange('crop');
-      else if (e.key === 'm') handleToolChange('measure');
+      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // Scope tool shortcuts to the hovered panel: without this, one keystroke
+      // switches tools on BOTH panels, and 'm' silently fabricates a default
+      // scale for the sheet even when the user meant the pattern panel.
+      if (!isPointerInsideRef.current) return;
+      // Compare case-insensitively so the shortcuts still work with Caps Lock
+      // on (matching the undo/redo fix), which otherwise sends 'V'/'H'/… .
+      const key = e.key.toLowerCase();
+      if (key === 'v') handleToolChange('select');
+      else if (key === 'h') handleToolChange('pan');
+      else if (key === 'c') handleToolChange('crop');
+      else if (key === 'm') handleToolChange('measure');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -237,6 +251,7 @@ export function SheetPanel({
   const vp = useViewport(sheetW, sheetH);
   const measure = useMeasure();
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
+  const marqueeJustEndedRef = useRef(false);
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
   useEffect(() => {
@@ -255,7 +270,7 @@ export function SheetPanel({
       const x2 = saved?.x2 ?? defaultX2;
       const y2 = saved?.y2 ?? defaultY;
       measure.loadLine({ x1, y1, x2, y2 });
-      if (!sheet.scale && !forceTool) {
+      if (!sheet.scale) {
         const px = Math.hypot(x2 - x1, y2 - y1);
         onScaleChange({ pxPerUnit: px / 6, unit: 'in', line: { x1, y1, x2, y2 } });
       }
@@ -273,8 +288,13 @@ export function SheetPanel({
   }
 
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
-    const ptr = e.target.getStage()?.getPointerPosition();
+    const stage = e.target.getStage();
+    const ptr = stage?.getPointerPosition();
     if (!ptr) return;
+    // Capture the pointer so pan/marquee gestures still receive pointermove/
+    // pointerup when the button is released outside the canvas; otherwise the
+    // gesture sticks "on" until the next click.
+    if (e.evt.pointerId !== undefined) stage?.content.setPointerCapture(e.evt.pointerId);
     const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
@@ -334,6 +354,10 @@ export function SheetPanel({
       } else if (Math.abs(marqueeBox.x2 - marqueeBox.x1) < 2 && Math.abs(marqueeBox.y2 - marqueeBox.y1) < 2) {
         onSelectPiece(null);
       }
+      // Konva synthesizes a `click` after this pointerup (it has no movement
+      // threshold); suppress it so it can't clear the selection we just made.
+      marqueeJustEndedRef.current = true;
+      setTimeout(() => { marqueeJustEndedRef.current = false; }, 0);
       setMarqueeBox(null);
       return;
     }
@@ -345,7 +369,21 @@ export function SheetPanel({
     vp.endPan();
   }
 
+  function handlePointerCancel() {
+    // A browser/system pointer-cancel (focus loss, touch-scroll takeover, OS
+    // popup) means no pointerup will arrive, so the captured gesture would
+    // otherwise stick "on". Abort the in-flight marquee without selecting,
+    // land any rotation-so-far in history like pointerup does, and end panning.
+    setMarqueeBox(null);
+    if (rotatingPiece) {
+      onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+    }
+    setRotatingPieceId(null);
+    vp.endPan();
+  }
+
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
+    if (marqueeJustEndedRef.current) return;
     if (!rotatingPieceId && activeTool === 'select' && isBackground(e)) onSelectPiece(null);
   }
 
@@ -472,9 +510,21 @@ export function SheetPanel({
 
     const gapPx = defaultCuttingGapPx(sheet);
     try {
-      await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
-        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, true);
+      // Record exactly one history entry (the pre-pack snapshot) on the first
+      // placement so a single Cmd+Z reverts the whole pack; the remaining
+      // streamed placements skip history.
+      let historyRecorded = false;
+      const skippedPieceIds = await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
+        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, historyRecorded);
+        historyRecorded = true;
       });
+      // Pieces too big for the sheet stay where they were — the packer just
+      // leaves them out, so tell the user rather than silently dropping them.
+      if (skippedPieceIds.length > 0) {
+        alert(t('smartPackSkipped', { count: skippedPieceIds.length }));
+      }
+    } catch (err) {
+      console.error('[SheetPanel] smart pack failed', err);
     } finally {
       setIsPacking(false);
     }
@@ -483,7 +533,13 @@ export function SheetPanel({
   const packDisabled = pieces.length === 0 || isPacking;
 
   return (
-    <div className="result-panel-inner" data-tutorial-panel="glass" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div
+      className="result-panel-inner"
+      data-tutorial-panel="glass"
+      style={{ display: 'flex', flex: 1, minHeight: 0 }}
+      onPointerEnter={() => { isPointerInsideRef.current = true; }}
+      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+    >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
         <div className="tooltip-wrapper" ref={packPopoverRef}>
@@ -516,7 +572,7 @@ export function SheetPanel({
             <div className="solder-popover">
               <div className="solder-popover-section">
                 <span className="solder-popover-title" style={{ marginBottom: '12px', display: 'block' }}>{t('smartPack', 'Smart Pack')}</span>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: CANVAS.fg, cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-soft)', cursor: 'pointer', userSelect: 'none', padding: '4px 0', marginBottom: '16px' }}>
                   <input 
                     type="checkbox" 
                     checked={allowRotations} 
@@ -559,6 +615,7 @@ export function SheetPanel({
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerCancel}
           onClick={handleStageClick}
         >
           <Layer>

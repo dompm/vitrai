@@ -78,6 +78,8 @@ export interface LampConfig {
 }
 
 export interface Project {
+  /** Schema version this project's shape conforms to; see storage/projectSchema.ts. */
+  version: number;
   name: string;
   patternImageUrl: string;
   patternWidth: number;

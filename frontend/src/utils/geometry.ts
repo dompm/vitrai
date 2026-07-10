@@ -42,13 +42,20 @@ export function handleToCtrl(A: [number, number], B: [number, number], H: [numbe
 }
 
 export function computeCentroid(polygon: [number, number][]): { x: number; y: number } {
+  if (polygon.length === 0) return { x: 0, y: 0 };
   const x = polygon.reduce((s, p) => s + p[0], 0) / polygon.length;
   const y = polygon.reduce((s, p) => s + p[1], 0) / polygon.length;
   return { x, y };
 }
 
+// Each pass doubles the vertex count; cap it so repeated Smooth clicks can't
+// inflate a piece into tens of thousands of vertices and blow up clipping,
+// snapping, and packing downstream.
+const SMOOTH_MAX_VERTICES = 512;
+
 export function smoothPolygon(pts: [number, number][]): [number, number][] {
   if (pts.length < 3) return pts;
+  if (pts.length * 2 > SMOOTH_MAX_VERTICES) return pts;
   const n = pts.length;
   const out: [number, number][] = [];
   for (let i = 0; i < n; i++) {
@@ -98,28 +105,49 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
   try {
     const subjPoly = [subject];
     const clipPolys = clipPolygons.map(p => [p]);
-    
+
     const diff = polygonClipping.difference(subjPoly, ...clipPolys);
-    
+
     if (diff.length === 0) return [];
-    
+
+    // polygon-clipping returns rings closed (first vertex repeated at the
+    // end) and re-anchored at an arbitrary vertex; piece polygons are stored
+    // open everywhere else. Strip the closing duplicate so downstream code
+    // (flattenCurves/centroid/snapping) never sees a zero-length edge.
+    const openRing = (ring: [number, number][]): [number, number][] => {
+      if (ring.length > 1) {
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first[0] === last[0] && first[1] === last[1]) return ring.slice(0, -1);
+      }
+      return ring;
+    };
+
     let largestRing: [number, number][] = [];
     let maxArea = -1;
-    
+
     for (const multi of diff) {
-      const ring = multi[0];
-      let area = 0;
-      for (let i = 0; i < ring.length - 1; i++) {
-        area += ring[i][0] * ring[i+1][1] - ring[i+1][0] * ring[i][1];
-      }
-      area = Math.abs(area) / 2;
-      
+      const ring = openRing(multi[0] as [number, number][]);
+      const area = computePolygonArea(ring);
+
       if (area > maxArea) {
         maxArea = area;
-        largestRing = ring as [number, number][];
+        largestRing = ring;
       }
     }
-    
+
+    // Nothing was actually subtracted: hand back the subject untouched so
+    // callers keep its exact vertex order/anchoring (and any curve metadata
+    // indexed against it). The difference is a subset of the subject, so
+    // equal area means an identical region.
+    const subjectArea = computePolygonArea(subject);
+    if (
+      diff.length === 1 && diff[0].length === 1 &&
+      Math.abs(maxArea - subjectArea) <= subjectArea * 1e-9
+    ) {
+      return subject;
+    }
+
     return largestRing;
   } catch (e) {
     console.warn("Clipping failed", e);
@@ -127,14 +155,41 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
   }
 }
 
+/**
+ * Cyclic polygon equality: the same ring may come back from clipping
+ * re-anchored at a different start vertex, closed (duplicate end vertex),
+ * or with reversed winding — all of which still describe an unchanged
+ * polygon. A naive index-by-index compare treated those as "changed" and
+ * made every curve edit near a neighbor discard its Bezier metadata.
+ */
 export function arePolygonsEqual(p1: [number, number][], p2: [number, number][], epsilon = 0.1): boolean {
-  if (p1.length !== p2.length) return false;
-  for (let i = 0; i < p1.length; i++) {
-    if (Math.abs(p1[i][0] - p2[i][0]) > epsilon || Math.abs(p1[i][1] - p2[i][1]) > epsilon) {
-      return false;
+  const stripClosed = (p: [number, number][]) =>
+    p.length > 1 && p[0][0] === p[p.length - 1][0] && p[0][1] === p[p.length - 1][1]
+      ? p.slice(0, -1)
+      : p;
+  const a = stripClosed(p1);
+  const b = stripClosed(p2);
+  if (a.length !== b.length) return false;
+  const n = a.length;
+  if (n === 0) return true;
+
+  const matches = (i: number, j: number) =>
+    Math.abs(a[i][0] - b[j][0]) <= epsilon && Math.abs(a[i][1] - b[j][1]) <= epsilon;
+
+  // Only offsets where b matches a's first vertex can align — typically 0-1
+  // candidates, so this stays near-linear for the common "not equal" case.
+  for (let off = 0; off < n; off++) {
+    if (!matches(0, off)) continue;
+    for (const dir of [1, -1]) {
+      let ok = true;
+      for (let i = 1; i < n; i++) {
+        const j = (((off + dir * i) % n) + n) % n;
+        if (!matches(i, j)) { ok = false; break; }
+      }
+      if (ok) return true;
     }
   }
-  return true;
+  return false;
 }
 
 export function computePolygonArea(polygon: [number, number][]): number {

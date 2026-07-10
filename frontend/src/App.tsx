@@ -16,10 +16,11 @@ import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
-import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
+import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
+import { parseProject } from './storage/projectSchema';
 import type { ToolId } from './components/Toolbar';
 import './App.css';
 
@@ -273,6 +274,7 @@ export function App() {
   const { t, i18n } = useTranslation();
   const {
     project,
+    isLoaded,
     selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
@@ -280,7 +282,6 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    batchUpdatePieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -330,6 +331,10 @@ export function App() {
     setIsSymmetryEnabled,
   } = useProject();
 
+  // Always-current project, for async handlers that resolve after re-renders.
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
   const [backendStatus, setBackendStatus] = useState('');
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
@@ -361,6 +366,11 @@ export function App() {
   const preTutorialProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Wait for the OPFS project load before deciding whether to show the
+    // welcome tutorial — at mount `project` is still the empty placeholder,
+    // so a returning user with saved work (but cleared localStorage) would
+    // be dumped into the tutorial on top of their project.
+    if (!isLoaded || tutorialLoadedRef.current) return;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -380,7 +390,8 @@ export function App() {
     } finally {
       tutorialLoadedRef.current = true;
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   const startTutorialTour = () => {
     preTutorialProjectRef.current = project.name;
@@ -455,8 +466,16 @@ export function App() {
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
-  const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
+  const [debugMask, setDebugMaskState] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
   const [debugMaskPieceId, setDebugMaskPieceId] = useState<string | null>(null);
+  // Close the previous ImageBitmap when replacing it — they pin large
+  // buffers and repeated refine clicks accumulate tens of MB otherwise.
+  const setDebugMask = (m: { bitmap: ImageBitmap; width: number; height: number } | null) => {
+    setDebugMaskState(prev => {
+      if (prev && prev.bitmap !== m?.bitmap) prev.bitmap.close();
+      return m;
+    });
+  };
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -465,7 +484,7 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
-  const [focusedPanelIdx, setFocusedPanelIdx] = useState<number | null>(null);
+  const [, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
   const isLamp = project.projectType === 'lamp';
@@ -535,7 +554,7 @@ export function App() {
   useEffect(() => {
     setPatternImageId(null);
     if (!project.patternImageUrl) {
-      setBackendStatus("No pattern image uploaded");
+      setBackendStatus(t('statusNoPatternImage', 'No pattern image uploaded'));
       return;
     }
     const backend = getSamBackend(setBackendStatus);
@@ -564,11 +583,16 @@ export function App() {
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      // Read neighbors through the ref, not the render-time snapshot: another
+      // segmentation may have finished while this one was awaiting, and
+      // clipping against its pre-segment polygon would leave the two pieces
+      // overlapping.
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
@@ -592,7 +616,10 @@ export function App() {
   async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
     addPiecePromptPoint(pieceId, point);
 
-    const piece = project.pieces.find(p => p.id === pieceId);
+    // Read through the ref so rapid refine clicks build on the freshest
+    // prompt-point list — a stale render snapshot here would silently drop
+    // the previous click's point from the request.
+    const piece = projectRef.current.pieces.find(p => p.id === pieceId);
     if (!piece || !patternImageId) return;
 
     const newPoints = [...(piece.promptPoints || []), point];
@@ -601,9 +628,10 @@ export function App() {
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const others = project.pieces.filter(p => p.id !== pieceId);
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
@@ -675,7 +703,7 @@ export function App() {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
@@ -689,13 +717,15 @@ export function App() {
         if (printRef.current.ready) printRef.current.fn();
         return;
       }
-      if (isMod && e.key === 'z') {
+      // Compare lowercase: Shift (Cmd+Shift+Z) and Caps Lock both make
+      // e.key uppercase, which used to leave the redo branch unreachable.
+      if (isMod && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
         return;
       }
-      if (isMod && e.key === 'y') {
+      if (isMod && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
         return;
@@ -708,7 +738,23 @@ export function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPieceIds, deletePiece, undo, redo]);
+  }, [selectedPieceIds, deletePieces, undo, redo]);
+
+  // Validates/migrates/repairs a just-parsed project file (see
+  // storage/projectSchema.ts) and either loads it — surfacing a warning if
+  // anything had to be dropped — or refuses it with an explanatory alert.
+  const handleProjectFileData = (data: unknown) => {
+    const result = parseProject(data);
+    if (!result.ok) {
+      alert(t(result.reasonKey));
+      return;
+    }
+    loadProjectData(result.project);
+    if (result.repairs.length > 0) {
+      const details = result.repairs.map(r => t(r.reasonKey, { path: r.path })).join('\n');
+      alert(t('schemaRepairWarning', { details }));
+    }
+  };
 
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -717,7 +763,7 @@ export function App() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        loadProjectData(data);
+        handleProjectFileData(data);
       } catch (err) {
         console.error(err);
         alert(t('invalidProject'));
@@ -728,19 +774,36 @@ export function App() {
   };
 
   const handleSaveProject = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    // Blob instead of a data: URI — projects embed base64 images and easily
+    // exceed browser URL length limits.
+    const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataStr;
+    a.href = url;
     a.download = `${project.name}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  };
+
+  const loadPatternImageFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.width, img.height);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      updatePatternImage(file);
+      loadPatternImageFile(file);
       setPatternTool('select');
     }
   };
@@ -982,7 +1045,7 @@ export function App() {
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target?.result as string);
-          loadProjectData(data);
+          handleProjectFileData(data);
         } catch (err) {
           console.error(err);
           alert(t('invalidProject'));
@@ -990,16 +1053,7 @@ export function App() {
       };
       reader.readAsText(file);
     } else if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        const img = new Image();
-        img.onload = () => {
-          updatePatternImage(dataUrl, img.width, img.height);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+      loadPatternImageFile(file);
     }
   };
 
@@ -1045,12 +1099,12 @@ export function App() {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                 if (e.key === 'Escape') { setNameDraft(project.name); (e.target as HTMLInputElement).blur(); }
               }}
-              title="Click to rename"
+              title={t('clickToRename')}
             />
             <button
               className="project-chevron-btn"
               onClick={() => setIsProjectDropdownOpen(o => !o)}
-              title="Switch project"
+              title={t('switchProjectTooltip', 'Switch project')}
             >
               ▾
             </button>
@@ -1070,12 +1124,12 @@ export function App() {
                         className="project-delete-btn"
                         onClick={e => {
                           e.stopPropagation();
-                          if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
+                          if (window.confirm(t('confirmDeleteProject', { defaultValue: 'Delete "{{name}}"? This cannot be undone.', name }))) {
                             void deleteProject(name);
                             setIsProjectDropdownOpen(false);
                           }
                         }}
-                        title="Delete project"
+                        title={t('deleteProjectTooltip', 'Delete project')}
                       >
                         ×
                       </button>
@@ -1088,12 +1142,12 @@ export function App() {
           <button
             className="btn-ghost"
             onClick={async () => {
-              const defaultName = `Project ${availableProjects.length + 1}`;
+              const defaultName = t('defaultProjectName', { defaultValue: 'Project {{num}}', num: availableProjects.length + 1 });
               await createNewProject(defaultName, 'flat');
               projectNameInputRef.current?.focus();
               projectNameInputRef.current?.select();
             }}
-            title="New project"
+            title={t('newProjectTooltip', 'New project')}
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
           >
             +
@@ -1102,10 +1156,10 @@ export function App() {
           <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
           {/* Undo / Redo */}
-          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title={t('undoTooltip', 'Undo (Ctrl+Z)')} style={{ padding: '4px 8px' }}>
             <IconUndo size={14} />
           </button>
-          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title={t('redoTooltip', 'Redo (Ctrl+Y)')} style={{ padding: '4px 8px' }}>
             <IconRedo size={14} />
           </button>
 
@@ -1160,7 +1214,7 @@ export function App() {
           <button
             className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(true)}
-            title="Menu"
+            title={t('menuTitle', 'Menu')}
           >
             ···
           </button>
@@ -1256,7 +1310,7 @@ export function App() {
               }}
               role="separator"
               aria-orientation="horizontal"
-              aria-label="Resize 3D preview"
+              aria-label={t('resizePreviewLabel', 'Resize 3D preview')}
             >
               <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 2, background: 'var(--hairline-2)', borderRadius: 1 }} />
             </div>
@@ -1315,23 +1369,11 @@ export function App() {
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
-            pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
-            onSelectPieces={selectPieces}
             onUpdatePieceTransform={updatePieceTransform}
-            onBatchTransformChange={batchUpdatePieceTransforms}
-            onUpdatePieceLabel={updatePieceLabel}
-            onUpdatePieceSheet={updatePieceSheet}
-            onUpdatePiecesSheet={updatePiecesSheet}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
-            onDeletePiece={deletePiece}
-            onDeletePieces={deletePieces}
-            onSmoothPiece={handleSmoothPiece}
-            onSmoothPieces={handleSmoothPieces}
-            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
@@ -1430,7 +1472,7 @@ export function App() {
         <div className="mobile-drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
         <div className="mobile-drawer-panel">
           <div className="mobile-drawer-header">
-            <span className="mobile-drawer-title">Menu</span>
+            <span className="mobile-drawer-title">{t('menuTitle', 'Menu')}</span>
             <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
           </div>
 
@@ -1510,7 +1552,7 @@ export function App() {
           initialConfig={project.lampConfig}
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
-          onUpdatePatternScale={(scale) => updateProject(p => ({ ...p, patternScale: scale }))}
+          onUpdatePatternScale={updatePatternScale}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);

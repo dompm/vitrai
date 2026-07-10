@@ -1,4 +1,10 @@
 import * as ort from "onnxruntime-web/webgpu";
+// Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
+// bundle). Vite emits the file as a same-origin asset, so segmentation no
+// longer depends on a third-party CDN being reachable, and the JS/wasm
+// versions can never drift apart. The relative node_modules path is needed
+// because the package's exports map doesn't expose ./dist/*.
+import ortWasmUrl from "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm?url";
 
 // onnxruntime-web's WASM backend can spawn Emscripten pthread workers using
 // this module's own URL when its preferred worker script isn't reachable.
@@ -7,10 +13,11 @@ import * as ort from "onnxruntime-web/webgpu";
 const isPthread = (self as { name?: string }).name === 'em-pthread';
 
 if (!isPthread) {
-  // Disable WASM threading entirely — WebGPU EP doesn't need threads, and
-  // this keeps ORT from spawning pthread workers in the first place.
+  // numThreads stays 1 on the WebGPU path (the EP doesn't need threads, and
+  // this keeps ORT from spawning pthread workers needlessly); the wasm
+  // fallback raises it in detectExecutionProviders().
   ort.env.wasm.numThreads = 1;
-  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+  ort.env.wasm.wasmPaths = { wasm: new URL(ortWasmUrl, self.location.href).href };
 }
 
 const HF = 'https://huggingface.co/onnx-community/sam2.1-hiera-base-plus-ONNX/resolve/main/onnx';
@@ -33,10 +40,20 @@ export type WorkerInMsg =
       points?: [number, number, number][] }
   | { type: 'autoSegment'; id: string; sessionId: string };
 
+export type SamDevice = 'webgpu' | 'wasm';
+
+/** i18n keys (resolved on the main thread — workers can't use i18next). */
+export type SamStatusKey =
+  | 'samStatusInit'
+  | 'samStatusLoadingDecoder'
+  | 'samStatusCompilingDecoder'
+  | 'samStatusLoadingEncoder'
+  | 'samStatusCompilingEncoder';
+
 export type WorkerOutMsg =
-  | { type: 'ready';            device: string }
+  | { type: 'ready';            device: SamDevice }
   | { type: 'init:error';       error: string }
-  | { type: 'status';           text: string }
+  | { type: 'status';           key: SamStatusKey }
   | { type: 'progress';         fraction: number }
   | { type: 'encode:done';      id: string; sessionId: string }
   | { type: 'encode:error';     id: string; error: string }
@@ -138,10 +155,16 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
         if (value) {
           chunks.push(value);
           loaded += value.length;
-          downloadProgress.set(filename, { loaded, total });
+          // `total` is a guess when Content-Length is missing; never let the
+          // reported fraction hit/exceed 1 while bytes are still streaming.
+          downloadProgress.set(filename, { loaded, total: Math.max(total, loaded + 1) });
           reportProgress();
         }
       }
+      // The true size is known now — replace the guessed total so the
+      // aggregate fraction can actually reach 1 (and never overshoots it).
+      downloadProgress.set(filename, { loaded, total: loaded });
+      reportProgress();
 
       let position = 0;
       const buf = new Uint8Array(loaded);
@@ -150,18 +173,24 @@ async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> 
         position += chunk.length;
       }
 
-      // Save to cache for next time
-      const handle = await root.getFileHandle(filename, { create: true });
-      const writable = await (handle as any).createWritable();
-      await writable.write(buf);
-      await writable.close();
-      console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
-      
+      // Save to cache for next time — best-effort: a failed cache write must
+      // not throw away the bytes we just downloaded.
+      try {
+        const handle = await root.getFileHandle(filename, { create: true });
+        const writable = await (handle as any).createWritable();
+        await writable.write(buf);
+        await writable.close();
+        console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
+      } catch (cacheErr) {
+        console.warn(`[SAM Worker] Could not cache ${filename} in OPFS:`, cacheErr);
+      }
+
       return buf.buffer;
     }
   } catch (err) {
     console.warn(`[SAM Worker] Cache failed for ${filename}, falling back to network:`, err);
     const res = await fetch(url);
+    if (!res.ok) throw new Error(`Fetch failed for ${filename}: ${res.status} ${res.statusText}`);
     const buf = await res.arrayBuffer();
     downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
     reportProgress();
@@ -279,6 +308,35 @@ async function saveEmbedToDB(imageUrl: string, embed: CachedEmbed): Promise<void
 
 let initDecoderStarted = false;
 let initEncoderStarted = false;
+
+// Probe for a usable WebGPU adapter (in this worker — page-level support is
+// not enough) instead of assuming it. Previously the worker always reported
+// device 'webgpu' even when ORT silently fell back to single-threaded wasm.
+let detectedDevice: 'webgpu' | 'wasm' = 'wasm';
+let epPromise: Promise<ort.InferenceSession.ExecutionProviderConfig[]> | null = null;
+function detectExecutionProviders(): Promise<ort.InferenceSession.ExecutionProviderConfig[]> {
+  if (!epPromise) {
+    epPromise = (async () => {
+      try {
+        const gpu = (navigator as { gpu?: { requestAdapter(): Promise<unknown | null> } }).gpu;
+        const adapter = gpu ? await gpu.requestAdapter() : null;
+        if (adapter) {
+          detectedDevice = 'webgpu';
+          return ['webgpu', 'wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+        }
+      } catch {
+        // No usable adapter — fall through to wasm.
+      }
+      detectedDevice = 'wasm';
+      // Single-threaded CPU inference of the ~300 MB encoder is unusably
+      // slow, and the site is cross-origin isolated precisely so threaded
+      // wasm works — use it. (em-pthread workers are guarded at module top.)
+      ort.env.wasm.numThreads = Math.max(1, Math.min(navigator.hardwareConcurrency || 1, 8));
+      return ['wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+    })();
+  }
+  return epPromise;
+}
 let decoderReadyPromise: Promise<void> | null = null;
 let encoderReadyPromise: Promise<void> | null = null;
 
@@ -297,14 +355,14 @@ async function initDecoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 decoder model…' });
+    post({ type: 'status', key: 'samStatusLoadingDecoder' });
     const [decModel, decData] = await Promise.all([
       fetchCached(DECODER_URL, 'sam2_base_decoder.onnx'),
       fetchCached(DECODER_DATA_URL, 'sam2_base_decoder.onnx_data'),
     ]);
 
-    post({ type: 'status', text: 'Compiling SAM2 decoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    post({ type: 'status', key: 'samStatusCompilingDecoder' });
+    const ep = await detectExecutionProviders();
     decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
       executionProviders: ep,
       externalData: [{
@@ -318,6 +376,23 @@ async function initDecoder() {
     rejectReady(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
+}
+
+// Shared fetch of the encoder model files. Deduplicated so the post-init
+// background warm-up and the first encode can't download the ~309 MB twice
+// concurrently.
+let encoderFetchPromise: Promise<[ArrayBuffer, ArrayBuffer]> | null = null;
+function fetchEncoderModels(): Promise<[ArrayBuffer, ArrayBuffer]> {
+  if (!encoderFetchPromise) {
+    const p = Promise.all([
+      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
+      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
+    ]);
+    // On failure allow a later retry, but never clobber a newer attempt.
+    p.catch(() => { if (encoderFetchPromise === p) encoderFetchPromise = null; });
+    encoderFetchPromise = p;
+  }
+  return encoderFetchPromise;
 }
 
 async function initEncoder() {
@@ -335,14 +410,11 @@ async function initEncoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 encoder model…' });
-    const [encModel, encData] = await Promise.all([
-      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
-      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
-    ]);
+    post({ type: 'status', key: 'samStatusLoadingEncoder' });
+    const [encModel, encData] = await fetchEncoderModels();
 
-    post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    post({ type: 'status', key: 'samStatusCompilingEncoder' });
+    const ep = await detectExecutionProviders();
     encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
       executionProviders: ep,
       externalData: [{
@@ -350,6 +422,8 @@ async function initEncoder() {
         path: 'vision_encoder.onnx_data'
       }]
     });
+    // Session owns its copies now; release the raw buffers.
+    encoderFetchPromise = null;
     resolveReady();
   } catch (err) {
     console.error("[SAM Worker] Encoder initialization failed:", err);
@@ -358,13 +432,56 @@ async function initEncoder() {
   }
 }
 
+async function fileExistsInCache(filename: string): Promise<boolean> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    await root.getFileHandle(filename);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Background warm-up of the encoder download right after init. Without this,
+// the first encode triggered a second ~309 MB download after the progress UI
+// had already reported 100% for the (much smaller) decoder — looking like the
+// model was downloading twice.
+async function warmEncoderCache() {
+  try {
+    await fetchEncoderModels();
+    // If no encode has claimed the buffers yet, drop them — they're in the
+    // OPFS cache now and the first encode will read them from disk instead
+    // of pinning ~300 MB in worker memory indefinitely.
+    if (!initEncoderStarted) encoderFetchPromise = null;
+  } catch (err) {
+    console.warn('[SAM Worker] Encoder warm-up failed (will retry on first segment):', err);
+    // Don't leave unfinished entries stalling the progress bar below 100%.
+    downloadProgress.delete('sam2_base_encoder.onnx');
+    downloadProgress.delete('sam2_base_encoder.onnx_data');
+    reportProgress();
+  }
+}
+
 async function init() {
   if (initStarted) return;
   initStarted = true;
   try {
-    post({ type: 'status', text: 'Initializing SAM2 models…' });
+    post({ type: 'status', key: 'samStatusInit' });
+    // On a first run, register the encoder files in the progress accounting
+    // before the decoder downloads, so the reported fraction covers the full
+    // first-run download instead of completing after the decoder and
+    // restarting for the encoder.
+    if (!(await fileExistsInCache('sam2_base_encoder.onnx_data'))) {
+      if (!downloadProgress.has('sam2_base_encoder.onnx')) {
+        downloadProgress.set('sam2_base_encoder.onnx', { loaded: 0, total: 4000000 });
+      }
+      if (!downloadProgress.has('sam2_base_encoder.onnx_data')) {
+        downloadProgress.set('sam2_base_encoder.onnx_data', { loaded: 0, total: 305000000 });
+      }
+    }
     await initDecoder();
-    post({ type: 'ready', device: 'webgpu' });
+    post({ type: 'ready', device: detectedDevice });
+    void warmEncoderCache();
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);
     const error = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err);

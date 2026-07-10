@@ -114,16 +114,17 @@ export function defaultCuttingGapPx(sheet: GlassSheet): number {
   return Math.max(8, sw * 0.01);
 }
 
+/** Resolves with the ids of pieces that did not fit on the sheet (left at their old position). */
 export function packPiecesSmart(
   pieces: Piece[],
   sheet: GlassSheet,
   gapPx: number,
   allowRotations: boolean,
   onProgress: (placement: PiecePlacement) => void
-): Promise<void> {
-  return new Promise((resolve) => {
+): Promise<string[]> {
+  return new Promise((resolve, reject) => {
     if (pieces.length === 0) {
-      resolve();
+      resolve([]);
       return;
     }
 
@@ -151,24 +152,46 @@ export function packPiecesSmart(
           pieceId: msg.payload.pieceId,
           x: originX + msg.payload.x,
           y: originY + msg.payload.y,
-          rotation: msg.payload.rotation
+          // The worker's rotation is relative to the baked-in base rotation.
+          rotation: (baseRotationById.get(msg.payload.pieceId) ?? 0) + msg.payload.rotation
         });
       } else if (msg.type === 'COMPLETE') {
         worker.terminate();
-        resolve();
+        resolve(msg.payload.skippedPieceIds);
+      } else if (msg.type === 'ERROR') {
+        worker.terminate();
+        reject(new Error(msg.payload.message));
       }
     };
 
+    // Without these, a worker that fails to load or crashes leaves the
+    // promise unsettled forever (and the caller's spinner stuck).
+    worker.onerror = (e) => {
+      worker.terminate();
+      reject(new Error(e.message || 'Nesting worker failed to start'));
+    };
+    worker.onmessageerror = () => {
+      worker.terminate();
+      reject(new Error('Nesting worker message could not be deserialized'));
+    };
+
+    const baseRotationById = new Map(pieces.map(p => [p.id, p.transform.rotation]));
     const payloadPieces = pieces.map(p => {
       const flat = flattenCurves(p.polygon, p.curvePoints);
       const centroid = computeCentroid(flat);
-      
+
       const s = p.transform.scale;
-      // We start from 0 rotation because the worker tests different rotations from the base orientation
-      const poly = flat.map(([px, py]) => ({
-        x: s * (px - centroid.x),
-        y: s * (py - centroid.y)
-      }));
+      const cos = Math.cos(p.transform.rotation);
+      const sin = Math.sin(p.transform.rotation);
+      // Bake the piece's current rotation into the base polygon so the
+      // worker's trial rotations are relative to the user's orientation —
+      // with rotations disabled, a manually rotated piece keeps its angle
+      // instead of snapping back to 0.
+      const poly = flat.map(([px, py]) => {
+        const dx = s * (px - centroid.x);
+        const dy = s * (py - centroid.y);
+        return { x: cos * dx - sin * dy, y: sin * dx + cos * dy };
+      });
       
       // Calculate a padded bounding box to account for gapPx on the piece
       // Alternatively, we handle gap in the math utility. We do handle it in the math utility now!

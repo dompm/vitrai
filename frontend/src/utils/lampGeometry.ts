@@ -194,11 +194,16 @@ function computeSmoothLayout(config: LampConfig): Extract<UnrolledLamp, { mode: 
       const apexY = cumTop - bisectorSign * L_top;
 
       // Approximate the sector outline with SECTOR_STEPS points along each arc.
+      // dx deliberately has no bisectorSign: the sector is symmetric about its
+      // vertical bisector, so the shape is identical, but this keeps the angle
+      // parameter a (and thus theta01) increasing with pattern-x for BOTH
+      // expanding and contracting tiers — otherwise contracting tiers render
+      // horizontally mirrored relative to the rest of the lamp.
       const topArc: [number, number][] = [];
       const botArc: [number, number][] = [];
       for (let k = 0; k <= SECTOR_STEPS; k++) {
         const a = -theta / 2 + (k / SECTOR_STEPS) * theta;
-        const dx = bisectorSign * Math.sin(a);
+        const dx = Math.sin(a);
         const dy = bisectorSign * Math.cos(a);
         topArc.push([L_top * dx, apexY + L_top * dy]);
         botArc.push([L_bot * dx, apexY + L_bot * dy]);
@@ -275,8 +280,9 @@ export function patternToSurface(
     if (m.type === 'cylinder') {
       if (px < m.leftX || px > m.leftX + m.width) continue;
       if (py < m.topY || py > m.topY + m.height) continue;
-      const theta01 = (px - m.leftX) / m.width;
-      const v = (py - m.topY) / m.height;
+      // Degenerate (zero-size) tiers would yield 0/0 = NaN here.
+      const theta01 = m.width > 1e-6 ? (px - m.leftX) / m.width : 0.5;
+      const v = m.height > 1e-6 ? (py - m.topY) / m.height : 0.5;
       return { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v };
     }
     // sector
@@ -284,11 +290,18 @@ export function patternToSurface(
     const dy = py - m.apexY;
     const d = Math.hypot(dx, dy);
     if (d < 1e-6) continue;
-    if (d < m.L_top - 0.5 || d > m.L_bot + 0.5) continue;
-    const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+    // For a contracting tier (Rt > Rb) L_top > L_bot, so the valid band is
+    // [min, max] of the two — and v's denominator is legitimately negative
+    // (numerator is too); clamping it positive collapsed every point to v=0.
+    const dLo = Math.min(m.L_top, m.L_bot);
+    const dHi = Math.max(m.L_top, m.L_bot);
+    if (d < dLo - 0.5 || d > dHi + 0.5) continue;
+    // Inverse of the layout parameterization: dx = sin(a), dy = sign*cos(a).
+    const angleRel = Math.atan2(dx, m.bisectorSign * dy);
     if (angleRel < -m.theta / 2 || angleRel > m.theta / 2) continue;
     const theta01 = (angleRel + m.theta / 2) / m.theta;
-    const v = (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top);
+    const dDenom = m.L_bot - m.L_top;
+    const v = Math.abs(dDenom) < 1e-6 ? 0.5 : (d - m.L_top) / dDenom;
     const vClamped = Math.max(0, Math.min(1, v));
     return { mode: 'smooth', tierIdx: tier.tierIdx, theta01, v: vClamped };
   }
@@ -487,8 +500,9 @@ export function patternToSurfaceRobust(
         if (dist < bestDistY) {
           bestDistY = dist;
           bestTierIdx = t;
-          bestV = Math.max(0, Math.min(1, (py - m.topY) / m.height));
-          bestTheta01 = Math.max(0, Math.min(1, (px - m.leftX) / m.width));
+          // NaN from a zero-size tier would pass straight through min/max.
+          bestV = Math.max(0, Math.min(1, (py - m.topY) / Math.max(1e-6, m.height)));
+          bestTheta01 = Math.max(0, Math.min(1, (px - m.leftX) / Math.max(1e-6, m.width)));
         }
       } else {
         const dx = px - m.apexX;
@@ -499,8 +513,11 @@ export function patternToSurfaceRobust(
         if (dist < bestDistY) {
           bestDistY = dist;
           bestTierIdx = t;
-          bestV = Math.max(0, Math.min(1, (d - m.L_top) / Math.max(1e-6, m.L_bot - m.L_top)));
-          const angleRel = Math.atan2(m.bisectorSign * dx, m.bisectorSign * dy);
+          // Denominator is negative for contracting tiers; keep its sign
+          // (see patternToSurface) or reflow collapses points onto v=0.
+          const dDenom = m.L_bot - m.L_top;
+          bestV = Math.abs(dDenom) < 1e-6 ? 0.5 : Math.max(0, Math.min(1, (d - m.L_top) / dDenom));
+          const angleRel = Math.atan2(dx, m.bisectorSign * dy);
           bestTheta01 = Math.max(0, Math.min(1, (angleRel + m.theta / 2) / m.theta));
         }
       }
@@ -555,7 +572,7 @@ export function surfaceToPatternRobust(
     } else {
       const d = m.L_top + v * (m.L_bot - m.L_top);
       const angleRel = -m.theta / 2 + theta01 * m.theta;
-      const dx = m.bisectorSign * Math.sin(angleRel);
+      const dx = Math.sin(angleRel);
       const dy = m.bisectorSign * Math.cos(angleRel);
       const x = m.apexX + d * dx;
       const y = m.apexY + d * dy;
