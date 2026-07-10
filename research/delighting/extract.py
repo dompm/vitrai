@@ -107,6 +107,28 @@ T_ANCHOR = {
     "dark-opaque": (99, 0.20),  # brightest fleck transmits ~20%; median ends dark, not black
 }
 
+# Anchor sanity gate (report 016). The anchor gain k = target / p99(T_pre) is
+# ~class-constant in healthy extractions because the illumination envelope
+# already normalizes the sheet's clear level to ~1, so p99(T_pre) clips at ~1
+# and k ~= the class target. Measured over every in-sample extraction we have
+# (26 synthetic v2 samples under oracle class, the 9-sheet real library, the 2
+# benchmark singles, and the 57-image backlit-verified corpus subset of report
+# 015), k spans [0.20, 0.9614] -- EXCEPT one catastrophic corpus case
+# (wissmach-wf40105.jpg, a texture-free saturated solid red under the
+# `opalescent` prior) where assemble_T's saturation cue read the ENTIRE sheet
+# as background bleed-through, conf collapsed to 0 everywhere, diffusion_fill
+# had no trusted source pixel, T came out identically zero, and k hit the
+# percentile floor at target/1e-3 = 880, leaving T black (recon MAE 83/255,
+# report 015 section 3 item 2). k outside a sane band is therefore a SYMPTOM
+# of a degenerate T assembly (or a badly wrong class prior), not a fixable
+# gain -- clamping k alone would keep the black T. The gate: if k leaves
+# (0.05, 5.0) -- >= 4x margin on both sides of every in-sample value -- rebuild
+# T by trusting R directly (the same assembly cathedral-clear/dark-opaque use;
+# R is the directly-observed illumination-normalized image, so it is always
+# non-degenerate), recompute k, clamp it into the band as a last resort, and
+# flag `anchor_fallback` in the metrics so batch runs can QA-filter.
+ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
+
 
 # ---------------------------------------------------------------- basic ops
 def srgb_to_lin(a):
@@ -515,10 +537,22 @@ def extract_maps(lin, glass_class, mark_region="unknown"):
     # normalizes each sheet's clear level to ~1, so raw_p99 is what actually varies.
     raw_p99 = float(np.percentile(np.clip(R, 0, None), 99))
     k = target / max(np.percentile(T, pct), 1e-3)
+    # sanity gate (see ANCHOR_K_MIN/MAX comment): out-of-band k means the T
+    # assembly degenerated (e.g. conf collapsed to 0 and diffusion_fill had no
+    # source -> T identically 0 -> k explodes to target/1e-3). Rebuild T from
+    # the directly-observed R, re-anchor, clamp as a last resort, and flag.
+    anchor_fallback = False
+    if not (ANCHOR_K_MIN < k < ANCHOR_K_MAX):
+        anchor_fallback = True
+        T = np.clip(R, 0, 1)
+        conf = np.ones_like(conf)
+        k = target / max(np.percentile(T, pct), 1e-3)
+        k = float(np.clip(k, ANCHOR_K_MIN, ANCHOR_K_MAX))
     T = np.clip(T * k, 0, 1)
     L, R = L / k, R * k
     return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R, "mark_mask": mark_mask,
-            "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99}
+            "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99,
+            "anchor_fallback": anchor_fallback}
 
 
 def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown"):
@@ -551,6 +585,9 @@ def process(path, glass_class, corners, out_dir, size, debug=False, mark_region=
         # -- an outlier there flags a residual hotspot or a possible misclass.
         "T_anchor_k": m["k"],
         "T_raw_p99": m["raw_p99"],
+        # True when the sanity gate fired: k left (ANCHOR_K_MIN, ANCHOR_K_MAX)
+        # and T was rebuilt from R. Batch runs should QA-flag these outputs.
+        "anchor_fallback": m["anchor_fallback"],
     }
 
     # 6. outputs
