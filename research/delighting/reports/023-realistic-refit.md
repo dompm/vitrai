@@ -51,7 +51,7 @@ recipe set was fixed, and two systematic breaks were measured against the new, m
 - **Harnesses**: class-error injection worst wrong-class ratio 17.06x (class anchor, unchanged
   order-of-magnitude from 016/017) → 3.98x (continuous) → 3.15x (continuous, per-sheet pooled) on the
   widened 13-recipe/60-sample set — same shape as every prior report, no regression. LORO worst-case
-  4.30x (5-recipe baseline, reproduced exactly) → 4.13x (13 recipes) — dominated by the two darkest
+  4.30x (5-recipe baseline, same-methodology comparison, see §4.2 caveat) → 4.13x (13 recipes) — dominated by the two darkest
   dark-family within-darkness cells, the same known-hard regime reports 017/020 already named.
   Cross-lighting invariance: `continuous_persheet` beats plain `continuous` on every dark-family and
   most cathedral cells, same pattern as report 020.
@@ -249,12 +249,18 @@ samples/5 new recipes).
 | streaky-mix | 6 | 0.922-1.001 | 0.384-0.947 | 1.37x | 2.42x |
 | wispy-white | 6 | 0.931-0.951 | 0.693-0.976 | 1.08x | 1.34x |
 
-**LORO worst-case: 4.30x (5-recipe baseline, reproduced exactly to confirm the harness is faithful) →
-4.13x (13 recipes).** The worst cell moves from dark-opaque (report 017's headline) to dark-deep — both
-within-darkness-spectrum extrapolation, the same hard regime reports 017 (§1.2, "the gauge ambiguity is
-intrinsic") and 020 already named, not a new failure mode. Every non-dark-family recipe's LORO cell is
-≤3x except cathedral-red (2.91x, n=2, one seed — small-sample noise, matches the pattern of every other
-n=2 LORO cell in this table).
+**LORO worst-case: 4.30x (5-recipe baseline) → 4.13x (13 recipes).** The 4.30x "before" number is close
+to, but not a literal reproduction of, report 017's 4.29x: `--recipes-before` filters the LORO to the
+five original recipe LABELS, but since `render_022` also contains new-seed renders of those same five
+recipes, the "before" pool here is larger (e.g. `wispy-white` n=6 here vs 017's original n≤6 -- exact
+counts differ) than 017's specific 26-sample set. The comparison is still apples-to-apples WITHIN this
+run (identical script, identical per-recipe samples in both the 5-recipe and 13-recipe fits), which is
+what the before→after delta is measuring; it is not a byte-for-byte replay of 017's number. The worst
+cell moves from dark-opaque (report 017's headline) to dark-deep — both within-darkness-spectrum
+extrapolation, the same hard regime reports 017 (§1.2, "the gauge ambiguity is intrinsic") and 020
+already named, not a new failure mode. Every non-dark-family recipe's LORO cell is ≤3x except
+cathedral-red (2.91x, n=2, one seed — small-sample noise, matches the pattern of every other n=2 LORO
+cell in this table).
 
 `ANCHOR_FEAT_MU/SD/COEF` shipped from the fit-on-all-data pass; `T_LO/T_HI` (0.04/0.98) unchanged — no
 new recipe sits outside that range.
