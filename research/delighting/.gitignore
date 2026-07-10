@@ -3,6 +3,9 @@ venv/
 .venv/
 synthetic_data/
 synthetic_data_v2/
+assembled_data/
+*.exr
+*.hdr
 validate_data/
 validate_data_check/
 validate_data_check_v2/

@@ -368,7 +368,7 @@ def setup_scene(hdri_path, has_frame=False):
     
     return glass_obj, cam, ev, z_rot, frame_params
 
-def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
+def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe, use_bump=True):
     mat = bpy.data.materials.new(name="GlassMat")
     
     # We must use nodes to set up the material
@@ -422,19 +422,26 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe):
     
     links.new(mix_mark.outputs['Shader'], out_node.inputs['Surface'])
     
-    # Hammered surface bump (affects glossy and translucent)
-    noise_node = nodes.new('ShaderNodeTexNoise')
-    noise_node.inputs['Scale'].default_value = 50.0
-    bump_node = nodes.new('ShaderNodeBump')
-    
-    # Streaky glass is generally smoother/less bumpy
-    if recipe == 'streaky-mix':
-        bump_node.inputs['Distance'].default_value = random.uniform(0.0001, 0.0005)
-    else:
-        bump_node.inputs['Distance'].default_value = random.uniform(0.001, 0.004)
-    
-    links.new(noise_node.outputs['Fac'], bump_node.inputs['Height'])
-    links.new(bump_node.outputs['Normal'], principled.inputs['Normal'])
+    # Hammered surface bump (affects glossy and translucent). Disabled
+    # (use_bump=False) for the assembled-pair benchmark (report 014): its
+    # procedural noise is evaluated in per-object space, so the relief would NOT
+    # correspond between the flat-sheet capture and the 2x2 pieces cut from it --
+    # and relief glints are lighting-dependent (a separate realism axis, like
+    # shadows). Turning it off keeps the rendered appearance == the authored T,h
+    # by construction, which is exactly what that benchmark's purity requires.
+    if use_bump:
+        noise_node = nodes.new('ShaderNodeTexNoise')
+        noise_node.inputs['Scale'].default_value = 50.0
+        bump_node = nodes.new('ShaderNodeBump')
+
+        # Streaky glass is generally smoother/less bumpy
+        if recipe == 'streaky-mix':
+            bump_node.inputs['Distance'].default_value = random.uniform(0.0001, 0.0005)
+        else:
+            bump_node.inputs['Distance'].default_value = random.uniform(0.001, 0.004)
+
+        links.new(noise_node.outputs['Fac'], bump_node.inputs['Height'])
+        links.new(bump_node.outputs['Normal'], principled.inputs['Normal'])
     
     glass_obj.data.materials.append(mat)
     
