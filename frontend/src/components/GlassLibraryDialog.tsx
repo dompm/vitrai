@@ -433,7 +433,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
         }}>
           Images &copy; by their respective manufacturers. Visit official catalogs:{' '}
           <a href="https://shop.bullseyeglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Bullseye</a> •{' '}
-          <a href="https://www.oceansideartglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Oceanside</a> •{' '}
+          <a href="https://www.oceansideglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Oceanside</a> •{' '}
           <a href="https://wissmachglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Wissmach</a> •{' '}
           <a href="https://www.youghioghenyglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Youghiogheny</a>
         </div>
