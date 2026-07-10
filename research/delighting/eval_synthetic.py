@@ -62,6 +62,16 @@ CLASS_MAP = {
     "dark-deep": "dark-opaque",
     "dark-ruby": "dark-opaque",
     "dark-slate": "dark-opaque",
+    # Report 022: five gap recipes (021 §5), class mapping per that report's
+    # brief -- cathedral-blue/red are the same hammered-cathedral family as
+    # green/amber; saturated-opalescent is the FIRST opalescent-class
+    # recipe; streaky-fine-texture/dark-textured are texture-detail variants
+    # of the wispy/dark-opaque families.
+    "cathedral-blue": "cathedral-clear",
+    "cathedral-red": "cathedral-clear",
+    "saturated-opalescent": "opalescent",
+    "streaky-fine-texture": "wispy",
+    "dark-textured": "dark-opaque",
 }
 
 
@@ -156,6 +166,16 @@ def eval_sample(sample, size, exclude_marks=True):
     vt = valid[..., None] * np.ones((1, 1, 3), bool)
     dT = np.abs(T - gtT_r)
     dh = np.abs(h - gth_r)
+
+    # Report 022 task D: self-reconstruction MAE alongside the GT-comparison
+    # metrics above, so a single eval_synthetic.py run over new recipes
+    # reports both numbers extract.py's own CLI would (process()'s
+    # recon_mae_srgb255), without a second pass over the same samples.
+    I_hat, _Bq = extract.reconstruct(m["L"], T, h, m["R"])
+    recon_err = np.abs(extract.lin_to_srgb(np.clip(I_hat, 0, 1)) - extract.lin_to_srgb(np.clip(lin, 0, 1)))
+    recon_clean = valid[..., None] * np.ones((1, 1, 3), bool)  # marks only; no specular mask here (mark_region="none")
+    recon_mae_srgb255 = float(recon_err[recon_clean].mean() * 255)
+
     res = {
         "sample": os.path.basename(sample),
         "class_label": label,
@@ -172,6 +192,7 @@ def eval_sample(sample, size, exclude_marks=True):
         "h_mean_gt": float(gth_r[valid].mean()),
         "T_anchor_k": m["k"],
         "T_raw_p99": m["raw_p99"],
+        "recon_mae_srgb255": recon_mae_srgb255,
     }
     arrays = {"photo_lin": lin, "T": T, "gtT": gtT_r, "h": h, "gth": gth_r, "dT": dT}
     return res, arrays
@@ -268,6 +289,7 @@ def aggregate(rows):
             "T_mean_gt": [float(v) for v in gt],
             "h_mean_ext": float(np.mean([r["h_mean_ext"] for r in rs])),
             "h_mean_gt": float(np.mean([r["h_mean_gt"] for r in rs])),
+            "recon_mae_srgb255": float(np.mean([r["recon_mae_srgb255"] for r in rs])),
         }
     return out
 
@@ -348,14 +370,14 @@ def main():
         json.dump(report, f, indent=2)
 
     # markdown summary table
-    lines = ["| recipe | n | T_mae | T_p95 | h_mae | h_p95 | T_mean_ext | T_mean_gt | h_ext | h_gt |",
-             "|---|---|---|---|---|---|---|---|---|---|"]
+    lines = ["| recipe | n | T_mae | T_p95 | h_mae | h_p95 | T_mean_ext | T_mean_gt | h_ext | h_gt | recon_mae_srgb255 |",
+             "|---|---|---|---|---|---|---|---|---|---|---|"]
     for label, v in summary.items():
         te = ",".join(f"{x:.2f}" for x in v["T_mean_ext"])
         tg = ",".join(f"{x:.2f}" for x in v["T_mean_gt"])
         lines.append(f"| {label} | {v['n']} | {v['T_mae']:.3f} | {v['T_p95']:.3f} | "
                      f"{v['h_mae']:.3f} | {v['h_p95']:.3f} | {te} | {tg} | "
-                     f"{v['h_mean_ext']:.2f} | {v['h_mean_gt']:.2f} |")
+                     f"{v['h_mean_ext']:.2f} | {v['h_mean_gt']:.2f} | {v['recon_mae_srgb255']:.2f} |")
     md = "\n".join(lines)
     with open(os.path.join(args.out, "summary_table.md"), "w") as f:
         f.write(md + "\n")

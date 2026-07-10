@@ -151,48 +151,78 @@ def image_appearance_stats(path):
 # WITHOUT the bpy-dependent save/render calls. seed=42 matches the script's
 # own default. Recipe list: 5 original + 3 dark-family (report 017).
 # ---------------------------------------------------------------------------
-def generate_noise(size, scale, seed, octaves=1):
-    np.random.seed(seed)
-    base_res = max(1, int(size / scale))
-    low_freq = np.random.rand(base_res, base_res)
-    zoom_factor = size / base_res
-    noise_img = zoom(low_freq, zoom_factor, order=3)
-    noise_img = noise_img[:size, :size]
+def generate_noise(size, scale, seed, octaves=1, persistence=0.55, lacunarity=6.0):
+    """Mirrors generate_synthetic.py's generate_noise EXACTLY (report 022 --
+    octaves was declared but unused there; fixed in both files together so
+    this grounding script stays an apples-to-apples re-derivation of the
+    real recipe code, not a stale copy). octaves=1 is byte-identical to the
+    pre-022 single-frequency behavior."""
+    def _band(band_scale, band_seed):
+        np.random.seed(band_seed)
+        base_res = max(1, int(size / band_scale))
+        low_freq = np.random.rand(base_res, base_res)
+        zoom_factor = size / base_res
+        img = zoom(low_freq, zoom_factor, order=3)
+        return img[:size, :size]
+
+    octaves = max(1, int(octaves))
+    total = np.zeros((size, size), dtype=np.float64)
+    amp_sum = 0.0
+    amp = 1.0
+    band_scale = float(scale)
+    for i in range(octaves):
+        total += amp * _band(max(1.0, band_scale), seed + i * 7919)
+        amp_sum += amp
+        amp *= persistence
+        band_scale /= lacunarity
+
+    noise_img = total / amp_sum
     noise_img = (noise_img - noise_img.min()) / (noise_img.max() - noise_img.min() + 1e-8)
     return noise_img
+
+
+# Report 022: per-family octave params, identical to generate_synthetic.py's
+# create_glass_textures() constants -- keep both files in sync.
+_CATHEDRAL_OCT = dict(octaves=4, persistence=0.6, lacunarity=6.0)
+_OPALESCENT_OCT = dict(octaves=4, persistence=0.5, lacunarity=5.6)
+_WISPY_OCT = dict(octaves=3, persistence=0.5, lacunarity=6.0)
+_DARK_OCT = dict(octaves=4, persistence=0.6, lacunarity=6.0)
 
 
 def recipe_T(recipe, size=512, seed=42):
     """Returns the recipe's authored linear-light T array, (size,size,3)."""
     np.random.seed(seed)
     if recipe == "cathedral-green":
-        base_color = np.array([0.15, 0.55, 0.20])
-        noise = generate_noise(size, 200, seed)
+        # Report 022: desaturated from [0.15,0.55,0.20] (Lab C=50.5) to the
+        # real cathedral-clear median chroma (28.7), same L/hue.
+        base_color = np.array([0.269, 0.5054, 0.2916])
+        noise = generate_noise(size, 200, seed, **_CATHEDRAL_OCT)
         noise_scaled = (noise * 0.2) - 0.1
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
     elif recipe == "cathedral-amber":
-        base_color = np.array([0.75, 0.45, 0.08])
-        noise = generate_noise(size, 200, seed)
+        # Report 022: desaturated from [0.75,0.45,0.08] (Lab C=55.8) to 28.7.
+        base_color = np.array([0.6424, 0.4664, 0.2347])
+        noise = generate_noise(size, 200, seed, **_CATHEDRAL_OCT)
         noise_scaled = (noise * 0.2) - 0.1
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
     elif recipe == "dark-opaque":
         base_color = np.array([0.03, 0.035, 0.03])
-        noise = generate_noise(size, 50, seed)
+        noise = generate_noise(size, 50, seed, **_DARK_OCT)
         noise_scaled = (noise * 0.01) - 0.005
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
     elif recipe == "dark-deep":
         base_color = np.array([0.0039, 0.0039, 0.0041])
-        noise = generate_noise(size, 50, seed)
+        noise = generate_noise(size, 50, seed, **_DARK_OCT)
         noise_scaled = (noise * 0.0012) - 0.0006
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
     elif recipe == "dark-ruby":
         base_color = np.array([0.0143, 0.0023, 0.0027])
-        noise = generate_noise(size, 50, seed)
+        noise = generate_noise(size, 50, seed, **_DARK_OCT)
         noise_scaled = (noise * 0.0043) - 0.0021
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
     elif recipe == "dark-slate":
         base_color = np.array([0.0593, 0.0660, 0.0732])
-        noise = generate_noise(size, 50, seed)
+        noise = generate_noise(size, 50, seed, **_DARK_OCT)
         noise_scaled = (noise * 0.020) - 0.010
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
     elif recipe == "streaky-mix":
@@ -202,20 +232,60 @@ def recipe_T(recipe, size=512, seed=42):
         color1 = np.array([0.9, 0.9, 0.95])
         color2 = np.array([0.3, 0.5, 0.8])
         T = color1 * mask[..., None] + color2 * (1 - mask[..., None])
+        # Report 022: additive fine-detail overlay (the hard-thresholded
+        # streak mask swamps a multiplicative overlay, see generate_synthetic.py).
+        h0 = T.shape[0]
+        detail = generate_noise(size, 60, seed + 901, octaves=4, persistence=0.6, lacunarity=6.0)
+        detail_scaled = (detail * 0.8) - 0.4
+        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
     elif recipe == "wispy-white":
-        noise = generate_noise(size, 150, seed)
-        mask = generate_noise(size, 50, seed + 1)
+        noise = generate_noise(size, 150, seed, **_WISPY_OCT)
+        mask = generate_noise(size, 50, seed + 1, **_WISPY_OCT)
         wisp = np.clip((noise * mask) * 2.0, 0, 1)
         base_color = np.array([0.85, 0.87, 0.92])
         wisp_color = np.array([0.55, 0.55, 0.55])
         T = base_color * (1 - wisp[..., None]) + wisp_color * wisp[..., None]
+    # ---- Report 022: five gap recipes (021 §5) ----------------------------
+    elif recipe == "cathedral-blue":
+        base_color = np.array([0.0, 0.174, 0.450])
+        noise = generate_noise(size, 200, seed, **_CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+    elif recipe == "cathedral-red":
+        base_color = np.array([0.503, 0.043, 0.110])
+        noise = generate_noise(size, 200, seed, **_CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+    elif recipe == "saturated-opalescent":
+        base_color = np.array([0.602, 0.172, 0.416])
+        noise = generate_noise(size, 200, seed, **_OPALESCENT_OCT)
+        noise_scaled = (noise * 0.2) - 0.1
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+    elif recipe == "streaky-fine-texture":
+        base_color = np.array([0.549, 0.145, 0.125])
+        streak = generate_noise(size, 250, seed)
+        streak_stretched = zoom(streak[:size // 10, :], (10, 1), order=3)[:size, :size]
+        streak_mod = (streak_stretched - 0.5) * 0.3
+        h0 = streak_mod.shape[0]
+        T = np.clip(base_color * (1 + streak_mod[..., None]), 0, 1)
+        detail = generate_noise(size, 45, seed + 902, octaves=4, persistence=0.6, lacunarity=6.0)
+        detail_scaled = (detail * 0.2) - 0.1
+        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
+    elif recipe == "dark-textured":
+        base_color = np.array([0.012, 0.021, 0.021])
+        noise = generate_noise(size, 50, seed, **_DARK_OCT)
+        noise_scaled = (noise * 0.020) - 0.010
+        T = np.clip(base_color + noise_scaled[..., None], 0, 1)
     else:
         raise ValueError(recipe)
     return T.astype(np.float64)
 
 
 RECIPES = ["cathedral-green", "cathedral-amber", "dark-opaque", "dark-deep",
-           "dark-ruby", "dark-slate", "streaky-mix", "wispy-white"]
+           "dark-ruby", "dark-slate", "streaky-mix", "wispy-white",
+           # Report 022: five gap recipes (021 §5)
+           "cathedral-blue", "cathedral-red", "saturated-opalescent",
+           "streaky-fine-texture", "dark-textured"]
 # rough family->extractor-class mapping, for placing recipes on the same
 # coverage map as the real per-class distributions
 RECIPE_CLASS = {
@@ -223,6 +293,10 @@ RECIPE_CLASS = {
     "dark-opaque": "dark-opaque", "dark-deep": "dark-opaque",
     "dark-ruby": "dark-opaque", "dark-slate": "dark-opaque",
     "streaky-mix": "wispy", "wispy-white": "wispy",
+    # Report 022: five gap recipes, class mapping per the report brief.
+    "cathedral-blue": "cathedral-clear", "cathedral-red": "cathedral-clear",
+    "saturated-opalescent": "opalescent",
+    "streaky-fine-texture": "wispy", "dark-textured": "dark-opaque",
 }
 
 
