@@ -1,0 +1,300 @@
+{
+  "cases": [
+    {
+      "case": "seed41",
+      "seed": 41,
+      "metrics": [
+        {
+          "name": "single-frame learned B",
+          "renderer_recon_mae": 0.00868571427417919,
+          "T_mae": 0.11474457383155823,
+          "T_lum_mae": 0.21506349742412567,
+          "B_mae": 0.18940292298793793,
+          "preview_lum_cv": 0.11235246965809526,
+          "T_highfreq_corr_with_bg": 0.2723300222041864,
+          "disp_epe_px": 3.43520450592041,
+          "disp_corr_x": 0.09688716046137825,
+          "disp_corr_y": 0.09879406369280463
+        },
+        {
+          "name": "two-frame shared B with known shift",
+          "renderer_recon_mae": 0.0018428830080665648,
+          "T_mae": 0.1003454402089119,
+          "T_lum_mae": 0.1914151906967163,
+          "B_mae": 0.16211864352226257,
+          "preview_lum_cv": 0.13798657214755594,
+          "T_highfreq_corr_with_bg": 0.02723949211277049,
+          "disp_epe_px": 3.2033283710479736,
+          "disp_corr_x": 0.37959634423748395,
+          "disp_corr_y": 0.2987566012937357
+        }
+      ],
+      "config": {
+        "out": "research/delighting/results/differentiable_sheet_motion_sweep",
+        "size": 144,
+        "seed": 41,
+        "ambient": 0.12,
+        "leak": 0.88,
+        "max_disp": 10.0,
+        "shift_x": 19.0,
+        "shift_y": -11.0,
+        "t_low_res": 26,
+        "disp_low_res": 54,
+        "b_low_res": 72,
+        "steps_joint": 850,
+        "steps_motion": 1250,
+        "lr_t": 0.08,
+        "lr_d": 0.05,
+        "lr_b": 0.035,
+        "t_tv": 0.01,
+        "b_tv": 0.0015,
+        "disp_tv": 0.004,
+        "disp_lap": 0.004,
+        "disp_mag": 0.001,
+        "log_every": 625,
+        "sweep": true,
+        "sweep_seeds": "41,42,43,44",
+        "cpu": false,
+        "device": "mps",
+        "elapsed_s": 3.2145962715148926,
+        "shifts": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            19.0,
+            -11.0
+          ]
+        ]
+      }
+    },
+    {
+      "case": "seed42",
+      "seed": 42,
+      "metrics": [
+        {
+          "name": "single-frame learned B",
+          "renderer_recon_mae": 0.009098425565753132,
+          "T_mae": 0.11831527203321457,
+          "T_lum_mae": 0.22118088603019714,
+          "B_mae": 0.20751996338367462,
+          "preview_lum_cv": 0.1108385247322737,
+          "T_highfreq_corr_with_bg": 0.38143995340189946,
+          "disp_epe_px": 3.5768938064575195,
+          "disp_corr_x": 0.13379103358344593,
+          "disp_corr_y": -0.005812730300812326
+        },
+        {
+          "name": "two-frame shared B with known shift",
+          "renderer_recon_mae": 0.0018046125769615173,
+          "T_mae": 0.10286135971546173,
+          "T_lum_mae": 0.1976715326309204,
+          "B_mae": 0.16932184994220734,
+          "preview_lum_cv": 0.12043790350708486,
+          "T_highfreq_corr_with_bg": 0.07134312443532534,
+          "disp_epe_px": 3.2989184856414795,
+          "disp_corr_x": 0.3531191426902196,
+          "disp_corr_y": 0.2868878849965331
+        }
+      ],
+      "config": {
+        "out": "research/delighting/results/differentiable_sheet_motion_sweep",
+        "size": 144,
+        "seed": 42,
+        "ambient": 0.12,
+        "leak": 0.88,
+        "max_disp": 10.0,
+        "shift_x": 19.0,
+        "shift_y": -11.0,
+        "t_low_res": 26,
+        "disp_low_res": 54,
+        "b_low_res": 72,
+        "steps_joint": 850,
+        "steps_motion": 1250,
+        "lr_t": 0.08,
+        "lr_d": 0.05,
+        "lr_b": 0.035,
+        "t_tv": 0.01,
+        "b_tv": 0.0015,
+        "disp_tv": 0.004,
+        "disp_lap": 0.004,
+        "disp_mag": 0.001,
+        "log_every": 625,
+        "sweep": true,
+        "sweep_seeds": "41,42,43,44",
+        "cpu": false,
+        "device": "mps",
+        "elapsed_s": 2.5150251388549805,
+        "shifts": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            19.0,
+            -11.0
+          ]
+        ]
+      }
+    },
+    {
+      "case": "seed43",
+      "seed": 43,
+      "metrics": [
+        {
+          "name": "single-frame learned B",
+          "renderer_recon_mae": 0.008579199842642993,
+          "T_mae": 0.11206863820552826,
+          "T_lum_mae": 0.21018844842910767,
+          "B_mae": 0.18267743289470673,
+          "preview_lum_cv": 0.10909357457339354,
+          "T_highfreq_corr_with_bg": 0.3499794349845441,
+          "disp_epe_px": 3.6089224815368652,
+          "disp_corr_x": 0.13537386753723257,
+          "disp_corr_y": -0.014603074198225943
+        },
+        {
+          "name": "two-frame shared B with known shift",
+          "renderer_recon_mae": 0.0017533765058033168,
+          "T_mae": 0.09787233173847198,
+          "T_lum_mae": 0.18773384392261505,
+          "B_mae": 0.1547708809375763,
+          "preview_lum_cv": 0.1266188070994861,
+          "T_highfreq_corr_with_bg": 0.013993834500622826,
+          "disp_epe_px": 3.2773540019989014,
+          "disp_corr_x": 0.3327023105125523,
+          "disp_corr_y": 0.2498328914891275
+        }
+      ],
+      "config": {
+        "out": "research/delighting/results/differentiable_sheet_motion_sweep",
+        "size": 144,
+        "seed": 43,
+        "ambient": 0.12,
+        "leak": 0.88,
+        "max_disp": 10.0,
+        "shift_x": 19.0,
+        "shift_y": -11.0,
+        "t_low_res": 26,
+        "disp_low_res": 54,
+        "b_low_res": 72,
+        "steps_joint": 850,
+        "steps_motion": 1250,
+        "lr_t": 0.08,
+        "lr_d": 0.05,
+        "lr_b": 0.035,
+        "t_tv": 0.01,
+        "b_tv": 0.0015,
+        "disp_tv": 0.004,
+        "disp_lap": 0.004,
+        "disp_mag": 0.001,
+        "log_every": 625,
+        "sweep": true,
+        "sweep_seeds": "41,42,43,44",
+        "cpu": false,
+        "device": "mps",
+        "elapsed_s": 2.456279993057251,
+        "shifts": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            19.0,
+            -11.0
+          ]
+        ]
+      }
+    },
+    {
+      "case": "seed44",
+      "seed": 44,
+      "metrics": [
+        {
+          "name": "single-frame learned B",
+          "renderer_recon_mae": 0.009736635547596961,
+          "T_mae": 0.1178818866610527,
+          "T_lum_mae": 0.22129246592521667,
+          "B_mae": 0.20318734645843506,
+          "preview_lum_cv": 0.11302563085824983,
+          "T_highfreq_corr_with_bg": 0.34544550118830913,
+          "disp_epe_px": 3.4915590286254883,
+          "disp_corr_x": 0.27890775924844174,
+          "disp_corr_y": 0.1482132819431042
+        },
+        {
+          "name": "two-frame shared B with known shift",
+          "renderer_recon_mae": 0.0018400205299258232,
+          "T_mae": 0.10609525442123413,
+          "T_lum_mae": 0.2023223340511322,
+          "B_mae": 0.17770375311374664,
+          "preview_lum_cv": 0.12967208225600999,
+          "T_highfreq_corr_with_bg": 0.019001743642795957,
+          "disp_epe_px": 3.2999508380889893,
+          "disp_corr_x": 0.4099575883152772,
+          "disp_corr_y": 0.29849645450888423
+        }
+      ],
+      "config": {
+        "out": "research/delighting/results/differentiable_sheet_motion_sweep",
+        "size": 144,
+        "seed": 44,
+        "ambient": 0.12,
+        "leak": 0.88,
+        "max_disp": 10.0,
+        "shift_x": 19.0,
+        "shift_y": -11.0,
+        "t_low_res": 26,
+        "disp_low_res": 54,
+        "b_low_res": 72,
+        "steps_joint": 850,
+        "steps_motion": 1250,
+        "lr_t": 0.08,
+        "lr_d": 0.05,
+        "lr_b": 0.035,
+        "t_tv": 0.01,
+        "b_tv": 0.0015,
+        "disp_tv": 0.004,
+        "disp_lap": 0.004,
+        "disp_mag": 0.001,
+        "log_every": 625,
+        "sweep": true,
+        "sweep_seeds": "41,42,43,44",
+        "cpu": false,
+        "device": "mps",
+        "elapsed_s": 2.5920798778533936,
+        "shifts": [
+          [
+            0.0,
+            0.0
+          ],
+          [
+            19.0,
+            -11.0
+          ]
+        ]
+      }
+    }
+  ],
+  "summary": {
+    "single-frame learned B": {
+      "T_mae_mean": 0.11575259268283844,
+      "T_mae_std": 0.002534208007146106,
+      "B_mae_mean": 0.19569691643118858,
+      "preview_lum_cv_mean": 0.11132754995550308,
+      "T_highfreq_corr_with_bg_mean": 0.33729872794473476,
+      "disp_epe_px_mean": 3.528144955635071,
+      "n": 4
+    },
+    "two-frame shared B with known shift": {
+      "T_mae_mean": 0.10179359652101994,
+      "T_mae_std": 0.00304622114795647,
+      "B_mae_mean": 0.1659787818789482,
+      "preview_lum_cv_mean": 0.12867884125253423,
+      "T_highfreq_corr_with_bg_mean": 0.03289454867287865,
+      "disp_epe_px_mean": 3.269887924194336,
+      "n": 4
+    }
+  }
+}

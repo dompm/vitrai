@@ -40,6 +40,9 @@ background from one image reconstructs but remains ambiguous.
 `022-two-frame-background-ambiguity.md` tests shared `T,D` over two unknown
 backgrounds; it helps only marginally, so extra frames need stronger B/D/T
 priors or motion constraints.
+`023-known-motion-background-constraint.md` adds a known-shift shared-background
+constraint; it reduces background leakage in `T` sharply but still needs a
+material scale/color prior.
 
 ## Layout
 
@@ -59,6 +62,7 @@ train_catalog_leak_cleaner.py  weak neural cleaner trained from catalog sheets w
 luma_quotient_prior.py  deterministic quotient baseline that falsifies weak learned luma cleanup
 differentiable_sheet_inverse.py  tiny renderer/optimizer for T + background B + displacement D
 differentiable_sheet_twoframe.py  two-observation identifiability test for shared T,D and learned B_i
+differentiable_sheet_motion.py  known-shift shared-background inverse-rendering test
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -130,6 +134,10 @@ python3 differentiable_sheet_inverse.py --sweep \
 # two-frame ambiguity test: shared T,D over two learned backgrounds
 python3 differentiable_sheet_twoframe.py --sweep \
   --out results/differentiable_sheet_twoframe_sweep
+
+# known-shift motion constraint: shared T,D,B across two shifted observations
+python3 differentiable_sheet_motion.py --sweep \
+  --out results/differentiable_sheet_motion_sweep
 ```
 
 manifest.json format (keys are filenames inside the folder):

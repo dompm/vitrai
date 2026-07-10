@@ -1,6 +1,6 @@
 # Glass de-lighting research — living state doc
 
-Last updated 2026-07-09. This consolidates the research arc so any session (or teammate) can
+Last updated 2026-07-10. This consolidates the research arc so any session (or teammate) can
 resume. Companion docs in this folder: `synthetic-glass-data-spec.md` (the data-gen brief),
 `synthetic-generator-review.md` / `synthetic-validation-findings.md` / `synthetic-generator-feedback-2.md`
 (reviews of the generator). Numbered iteration reports live in `../reports/`.
@@ -274,6 +274,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   do not break the factorization if per-frame `B_i` is too free. Next renderer bets need stronger
   background priors, height-field-constrained displacement, known/semi-known backgrounds, or a motion
   model tying frames together.
+- 023 known-motion background constraint: two observations share the same unknown `B`, `T`, and `D`,
+  with a known background sampling shift. This improves the right leakage metric: T-bg high-frequency
+  correlation 0.337 -> 0.033 and T-MAE 0.1158 -> 0.1018, but recovered `T` is still globally
+  biased/dark. Conclusion: known motion carries real information, but material scale/color and a
+  height-field prior are still needed.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -309,6 +314,8 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - After report 022, do not assume "two photos" is enough. Test constrained variants: known/semi-known
   background pattern, same background with modeled sheet motion, and displacement as gradient of a
   height field rather than free optical flow.
+- After report 023, prioritize motion-constrained multi-frame optimization plus material scale prior
+  and height-field `D`; known motion reduces leakage but does not recover absolute material color.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

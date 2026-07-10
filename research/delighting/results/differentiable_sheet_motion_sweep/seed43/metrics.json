@@ -1,0 +1,114 @@
+{
+  "case": "seed43",
+  "claim": "Known relative motion with shared B may reduce T/B ambiguity.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_motion_sweep",
+    "size": 144,
+    "seed": 43,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "shift_x": 19.0,
+    "shift_y": -11.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_joint": 850,
+    "steps_motion": 1250,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "log_every": 625,
+    "sweep": true,
+    "sweep_seeds": "41,42,43,44",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 2.456279993057251,
+    "shifts": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        19.0,
+        -11.0
+      ]
+    ]
+  },
+  "metrics": [
+    {
+      "name": "single-frame learned B",
+      "renderer_recon_mae": 0.008579199842642993,
+      "T_mae": 0.11206863820552826,
+      "T_lum_mae": 0.21018844842910767,
+      "B_mae": 0.18267743289470673,
+      "preview_lum_cv": 0.10909357457339354,
+      "T_highfreq_corr_with_bg": 0.3499794349845441,
+      "disp_epe_px": 3.6089224815368652,
+      "disp_corr_x": 0.13537386753723257,
+      "disp_corr_y": -0.014603074198225943
+    },
+    {
+      "name": "two-frame shared B with known shift",
+      "renderer_recon_mae": 0.0017533765058033168,
+      "T_mae": 0.09787233173847198,
+      "T_lum_mae": 0.18773384392261505,
+      "B_mae": 0.1547708809375763,
+      "preview_lum_cv": 0.1266188070994861,
+      "T_highfreq_corr_with_bg": 0.013993834500622826,
+      "disp_epe_px": 3.2773540019989014,
+      "disp_corr_x": 0.3327023105125523,
+      "disp_corr_y": 0.2498328914891275
+    }
+  ],
+  "logs": {
+    "single": [
+      {
+        "step": 0,
+        "loss": 0.02194720320403576,
+        "recon": 0.02187938243150711,
+        "disp_abs": 0.0,
+        "B_tv": 0.014735713601112366
+      },
+      {
+        "step": 625,
+        "loss": 0.0014748130924999714,
+        "recon": 0.0010914558079093695,
+        "disp_abs": 1.2007572650909424,
+        "B_tv": 0.0599793940782547
+      },
+      {
+        "step": 849,
+        "loss": 0.0014677848666906357,
+        "recon": 0.001089796656742692,
+        "disp_abs": 1.187106966972351,
+        "B_tv": 0.05944281443953514
+      }
+    ],
+    "motion": [
+      {
+        "step": 0,
+        "loss": 0.02416224218904972,
+        "recon": 0.02410614863038063,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 625,
+        "loss": 0.0024075203109532595,
+        "recon": 0.0018138086888939142,
+        "disp_abs": 1.3852652311325073
+      },
+      {
+        "step": 1249,
+        "loss": 0.0023455519694834948,
+        "recon": 0.0017644009785726666,
+        "disp_abs": 1.3672536611557007
+      }
+    ]
+  }
+}
