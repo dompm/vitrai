@@ -102,6 +102,26 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   (difficulty 2), now confirmed on REAL glass not just Cycles. Biggest gap = learned T·B
   separation, not solder/illuminant. Capture ask to make fidelity testable: shoot one sheet,
   cut a piece from a known region, assemble+backlight, shoot the result.
+- 015 (branch `research/delighting-corpus`) characterized the ~3,200-image catalog corpus:
+  82.8% metadata-classifiable, lighting geometry NOT uniformly backlit (per-manufacturer
+  triage), VLM class prior only 30.6% accurate at scale, and the extractor breadth test
+  found a catastrophic anchor blowup (`T_anchor_k`=880 on a texture-free saturated swatch).
+- 016 (branch `research/delighting-anchor`) made the absolute-scale anchor robust to class
+  error, in two layers. (1) Sanity gate, default-on: k outside (0.05, 5.0) means the T
+  assembly degenerated (conf collapse -> diffusion fill from nothing -> T==0); rebuild T
+  from R, re-anchor, flag `anchor_fallback`. Zero regressions; the k=880 corpus case goes
+  recon MAE 83 -> 0.5. (2) Continuous anchor (`--anchor continuous`): class-free
+  image-statistics estimate of the absolute scale (fit only on synthetic GT), class prior
+  demoted to regularizer via an adaptive log-space blend. Class-error injection eval
+  (every synthetic sample under all 4 priors, `eval_class_injection.py`): wrong-class
+  T-MAE 0.399 -> 0.226, worst brightness error 9.73x -> 3.80x, dark-as-cathedral
+  3.5x-too-bright -> 1.9x, correct-class cost +0.005 and the real 9-sheet library
+  visually unchanged. Metrics now always carry `anchor_scale_disagree` (image-vs-class
+  target ratio; >2 = review flag — caught two corpus registry-noise images with zero
+  library false positives). Recommendation: gate everywhere; continuous anchor as default
+  for VLM/metadata-classed runs, class anchor for human-verified manifests. Wrong-class
+  h/assembly corruption remains open (the anchor fixes scale only); the estimator's dark
+  end is calibrated by one recipe family (more dark seeds = highest-value data add).
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
