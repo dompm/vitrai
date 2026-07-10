@@ -29,8 +29,11 @@ suncatcher failure and should not distract from inverse rendering.
 `017-catalog-leak-cleaner.md` turns the catalog into weak clean-material
 supervision for a neural leakage-field cleaner; it improves brightness
 consistency modestly but does not solve chroma/background separation.
-`018-luma-leakage-field.md` adds a safer luma-only cleanup mode that preserves
-uploaded glass hue while reducing broad brightness leakage.
+`018-luma-leakage-field.md` splits luma correction from chroma correction.
+`019-luma-quotient-prior.md` shows a simple log-luminance quotient beats the
+weak neural luma cleaner, so learned cleanup must beat that baseline.
+`020-initial-bets-audit.md` resets the high-risk track toward test-time
+optimization and explicit transparent-background disentanglement.
 
 ## Layout
 
@@ -47,6 +50,7 @@ catalog_texture_audit.py  compare priors against scraped manufacturer catalog te
 catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
 learned_prior_gate.py  negative/limited learned gate probe using catalog negatives + synthetic leaks
 train_catalog_leak_cleaner.py  weak neural cleaner trained from catalog sheets with synthetic leakage
+luma_quotient_prior.py  deterministic quotient baseline that falsifies weak learned luma cleanup
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -107,6 +111,9 @@ python3 learned_prior_gate.py
   --out results/catalog_leak_cleaner_smooth --steps 900 --smooth-residual 33
 ./.venv/bin/python train_catalog_leak_cleaner.py \
   --out results/catalog_leak_cleaner_luma --steps 900 --smooth-residual 33 --output-mode luma
+
+# quotient baseline every learned luma cleanup now has to beat
+python3 luma_quotient_prior.py
 ```
 
 manifest.json format (keys are filenames inside the folder):

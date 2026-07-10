@@ -249,8 +249,19 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - 018 luma-only leakage field: added `--output-mode luma`, where the network may only apply a smooth
   scalar exposure field (`output = input * field`) and cannot repaint hue/chroma. It is weaker than
   RGB smooth-field cleanup (after fixed `T/h`: lum-CV 0.318 -> 0.291 instead of 0.261), but keeps hue
-  stable (1.7 -> 1.7 instead of RGB smooth-field's 2.1). Product read: this is a safer default assist
-  for "uneven backlight/background brightness" because it preserves uploaded glass color provenance.
+  stable (1.7 -> 1.7 instead of RGB smooth-field's 2.1). Research read: luma-only is a controlled
+  ablation showing that brightness-field correction and chroma/background disentanglement are
+  separate problems.
+- 019 luma quotient falsification: a deterministic log-luminance quotient beats both neural cleanup
+  runs on the real suncatcher (fixed `T/h` -> quotient alpha=1.0: dE 10.12 -> 3.18, lum-CV 0.318 ->
+  0.056, hue unchanged at 1.7). This reframes reports 017-018 as a useful weak-neural failure: do
+  not spend high-risk neural capacity rediscovering smooth exposure correction. The next model needs
+  explicit background/refraction/chroma separation.
+- 020 initial bets audit: Bet A (GlassNet) was partially tested on toy synthetic held-out lighting;
+  Bet B (test-time neural optimization) is still untried; Bet C (transparent background
+  disentanglement) has only been attacked indirectly through priors/quotients; Bet D is parked as
+  too product-shaped for the current reset. Next bold move: differentiable sheet renderer with `T`,
+  displacement/relief, background layer `B`, and renderer recomposition loss.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -278,11 +289,10 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   let a prettier invented relief map masquerade as measured glass.
 - Use the scraped manufacturer catalog as a weak material prior: learn which spatial variation is
   likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
-- For learned leakage/prior strength, use the smooth-field representation from report 017 and train
-  on better positives from real cross-lighting/capture pairs or synthetic renders that reproduce
-  garden/window leakage through hammered cathedral glass.
-- Split luminance leakage from chroma leakage explicitly: report 018 suggests a safe luma head can
-  run with weak supervision, but any chroma head needs confidence and better paired/rendered data.
+- Treat the luma quotient from report 019 as the baseline every learned cleanup must beat.
+- Stop training catalog-only cleanup models; move to explicit transparent-background disentanglement.
+- Bet B/C next: differentiable sheet renderer / test-time optimization over `T`, relief/displacement,
+  background layer `B`, and illumination, then distill if the per-sheet optimizer works.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
