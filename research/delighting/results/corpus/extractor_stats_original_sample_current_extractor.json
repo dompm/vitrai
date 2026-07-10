@@ -1,0 +1,519 @@
+{
+  "pool_source": "015 original triage_sample.json (uncleaned corpus, same 57-image pool)",
+  "extractor": "current extract.py on research/delighting-021 (post report 016/017/020 anchor-gate changes)",
+  "all_metrics": [
+    {
+      "file": "bullseye-0013200030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.9962583269805481,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.6304013259278725,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0013200031fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.8162076099993385,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0014140030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.7934592850023234,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0011400031f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 2.8194098877859295,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0001000071ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 2.7118654959338477,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.984079066190486,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0000130030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 0.13039342952527372,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.029226057317205,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0001000073f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 3.170606611994198,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.9254938174553733,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0001610050f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.24594762821191188,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0268439618772953,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0002030030ffull.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.6496022681115537,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0696879723495503,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0002360050f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.10280868529482005,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0498506673471477,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0003370030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.3508784685533198,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0624630428784236,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0003050030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.4990804231595711,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0641416053523092,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-0032030030f1010.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.872247430403548,
+      "T_anchor_k": 0.9560864937145344,
+      "T_raw_p99": 1.0554455978278763,
+      "anchor_fallback": false
+    },
+    {
+      "file": "bullseye-60105b0030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.7637126187581332,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0282361997629548,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of121rr.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.32984242256409024,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2269539562586653,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of142s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.8414848972064194,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 2.319378761200413,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of3172s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.12924624672219204,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.1816500618510288,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of5386w.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.7663053767932555,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 3.739945661341712,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of100girid6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.61366782214658,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2608288283996525,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of1009w6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 0.6510747756906543,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.3812591625759294,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of1009sirid.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 1.944961234816105,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of1009sirid6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 1.944961234816105,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of606783cc6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 1.8588423404585532,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.113756117475416,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of209s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.09839268048908809,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0209015201045515,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of603483cc6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 1.5050592410735277,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.168381598735383,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of60079s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.12809430933796023,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0631420938661345,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of22872s.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.03599278483385427,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0171832026276588,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of31902s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.2639349733575047,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0821074984235477,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-of81854s6x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.18848470198889833,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.038885703330277,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-ofr23.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.688304308285404,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.0348438446967752,
+      "anchor_fallback": false
+    },
+    {
+      "file": "oceanside-ofr926x12.jpg",
+      "manufacturer": "oceanside",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 5.007759174813163,
+      "T_anchor_k": 0.9537894730026876,
+      "T_raw_p99": 1.3505033228040444,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yu586x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 1.0700003901231843,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 2.069036473357339,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-y5506sp.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.27284544649692144,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.388162042317677,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yd9007x9.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 4.915491893311555,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-y1165sp.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.5986822240268674,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-y4004hs6x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.6407269437733967,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.6086749324861087,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-y6647rg.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 4.947482143826439,
+      "T_anchor_k": 0.8805138757372064,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yu00366x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.6838038976539865,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0450720020450455,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yu00786x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.331353482747915,
+      "T_anchor_k": 0.8801656905936774,
+      "T_raw_p99": 1.078883147310791,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yd0097x9.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 9.431537510968543,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.1171751660067946,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yf5501.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 0.9500381624041336,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.155501049496417,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yuf6061256x12.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.9643782168233757,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.3046614813723918,
+      "anchor_fallback": false
+    },
+    {
+      "file": "youghiogheny-yuf606125.jpg",
+      "manufacturer": "youghiogheny",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.9643782168233757,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.3046614813723918,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf32105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.22381972149040247,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.146537390492482,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wi418classic.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 0.370664678544329,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.2197049447606598,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-w18h.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "cathedral-clear",
+      "recon_mae_srgb255": 5.8631967932142715,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 4.749606851712348,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf38105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 2.4211269069579906,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 2.301389024642217,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wblacki.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "dark-opaque",
+      "recon_mae_srgb255": 5.2213483698944065,
+      "T_anchor_k": 0.2,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf40lum105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 3.078242194292619,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.3540852098482288,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf35105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 2.0815576025040747,
+      "T_anchor_k": 0.8804890628552161,
+      "T_raw_p99": 1.0640009994605624,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf31105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.040025781865391644,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.0168215992209224,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wf40105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 0.4646134397022677,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.4802913884556077,
+      "anchor_fallback": true
+    },
+    {
+      "file": "wissmach-wf10lum105.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "opalescent",
+      "recon_mae_srgb255": 10.969318627479842,
+      "T_anchor_k": 0.88,
+      "T_raw_p99": 1.5,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wiwo101irid.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 7.954012842455797,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.4742162401288084,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wiwo703.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 2.101960949455441,
+      "T_anchor_k": 0.9500353077819862,
+      "T_raw_p99": 1.1960165778491905,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wiwo702.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 31.74153759584155,
+      "T_anchor_k": 0.9503005077957061,
+      "T_raw_p99": 1.2192559001034053,
+      "anchor_fallback": false
+    },
+    {
+      "file": "wissmach-wiwo118irid.jpg",
+      "manufacturer": "wissmach",
+      "extractor_class": "wispy",
+      "recon_mae_srgb255": 15.806887432741764,
+      "T_anchor_k": 0.95,
+      "T_raw_p99": 1.7523713028102628,
+      "anchor_fallback": false
+    }
+  ]
+}

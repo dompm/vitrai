@@ -1,0 +1,177 @@
+{
+ "cathedral-blue": {
+  "why": "Cathedral-clear recipes cover only green (h~146deg) and amber (h~84deg); real cathedral-clear spans a chroma-weighted hue range of ~32-331deg (nearly the whole wheel) -- blue cathedral glass (a real, common Bullseye/Youghiogheny product line) has zero synthetic representation.",
+  "target": {
+   "L": 45,
+   "C": 45,
+   "hue_deg": 255
+  },
+  "cls": "cathedral-clear",
+  "nearest_real_exemplars": [
+   {
+    "file": "wissmach-wf20lum105.jpg",
+    "manufacturer": "Wissmach",
+    "L_median": 41.60956841212499,
+    "C_median": 48.44112862064985,
+    "hue_deg": 278.98377099841866,
+    "hf_energy_frac": 0.04016257123217831
+   },
+   {
+    "file": "wissmach-wi341dr.jpg",
+    "manufacturer": "Wissmach",
+    "L_median": 54.73417634065245,
+    "C_median": 49.241306851499274,
+    "hue_deg": 268.2868578195328,
+    "hf_energy_frac": 0.01633403460601092
+   },
+   {
+    "file": "wissmach-wf16lum105.jpg",
+    "manufacturer": "Wissmach",
+    "L_median": 50.623632966769264,
+    "C_median": 41.77365651827797,
+    "hue_deg": 280.0045060720464,
+    "hf_energy_frac": 0.05944705126194853
+   }
+  ]
+ },
+ "cathedral-red": {
+  "why": "Same recipe-hue gap as above, opposite side of the wheel: no red/ruby cathedral-clear recipe (existing dark-ruby is the dark-opaque family, h_haze~0.20, not a clear transmissive red).",
+  "target": {
+   "L": 45,
+   "C": 55,
+   "hue_deg": 10
+  },
+  "cls": "cathedral-clear",
+  "nearest_real_exemplars": [
+   {
+    "file": "oceanside-of152s.jpg",
+    "manufacturer": "Oceanside",
+    "L_median": 38.91759655193462,
+    "C_median": 59.61916863415405,
+    "hue_deg": 20.211626497971626,
+    "hf_energy_frac": 0.049121277555914396
+   },
+   {
+    "file": "bullseye-0011220031f1010.jpg",
+    "manufacturer": "Bullseye",
+    "L_median": 46.91612019471407,
+    "C_median": 47.55446285613804,
+    "hue_deg": 357.93453370918536,
+    "hf_energy_frac": 0.03084366131352141
+   },
+   {
+    "file": "bullseye-0013320050f1010.jpg",
+    "manufacturer": "Bullseye",
+    "L_median": 50.10889544506763,
+    "C_median": 50.569098700072416,
+    "hue_deg": 351.9393892695622,
+    "hf_energy_frac": 0.36535695471125845
+   }
+  ]
+ },
+ "saturated-opalescent": {
+  "why": "No recipe combines high haze (h>=0.5) with real chroma: wispy-white is the only high-haze recipe and it is near-neutral (C~2). Real opalescent glass (a whole extractor class, ~21% of the clean corpus) is milky AND colorful (median C~32, up to 83) -- entirely unrepresented as a haze x chroma combo.",
+  "target": {
+   "L": 60,
+   "C": 45,
+   "hue_deg": 340
+  },
+  "cls": "opalescent",
+  "nearest_real_exemplars": [
+   {
+    "file": "bullseye-0003010030f1010.jpg",
+    "manufacturer": "Bullseye",
+    "L_median": 52.943556857183026,
+    "C_median": 49.25840388939204,
+    "hue_deg": 2.641267591685632,
+    "hf_energy_frac": 0.07356940104963879
+   },
+   {
+    "file": "youghiogheny-yd5007x9.jpg",
+    "manufacturer": "Youghiogheny",
+    "L_median": 44.73463618579321,
+    "C_median": 55.67644788398592,
+    "hue_deg": 8.749850305442582,
+    "hf_energy_frac": 0.005110274510093694
+   },
+   {
+    "file": "wissmach-wf40lum105.jpg",
+    "manufacturer": "Wissmach",
+    "L_median": 63.9072857640375,
+    "C_median": 38.13998526429934,
+    "hue_deg": 27.866255250275827,
+    "hf_energy_frac": 0.03081522053365798
+   }
+  ]
+ },
+ "streaky-fine-texture": {
+  "why": "streaky-mix's hf_energy_frac (0.0016) is far below real wispy's median (0.0166) and its p95 (0.0734) -- real streaky/marbled glass has much finer, sharper-edged mixing than the cubic-interpolated blend mask the recipe uses (this is also 015 Sec3's #3 failure mode: the extractor loses structure on exactly this kind of real glass). Also only one hue pair (white/blue) exists; picking a high-hf, warm-hue exemplar covers both gaps at once.",
+  "target": {
+   "L": 55,
+   "C": 40,
+   "hue_deg": 30
+  },
+  "cls": "wispy",
+  "nearest_real_exemplars": [
+   {
+    "file": "bullseye-0023110030f1010.jpg",
+    "manufacturer": "Bullseye",
+    "L_median": 40.01657797032508,
+    "C_median": 42.30236797129746,
+    "hue_deg": 11.866246097577413,
+    "hf_energy_frac": 0.046253736995683595
+   },
+   {
+    "file": "oceanside-of31902s.jpg",
+    "manufacturer": "Oceanside",
+    "L_median": 60.69432782637958,
+    "C_median": 42.857933140575675,
+    "hue_deg": 71.40990007591955,
+    "hf_energy_frac": 0.06395072486193021
+   },
+   {
+    "file": "oceanside-ofr9512x12.jpg",
+    "manufacturer": "Oceanside",
+    "L_median": 33.26839378731947,
+    "C_median": 39.44958354079532,
+    "hue_deg": 22.767369304102225,
+    "hf_energy_frac": 0.03944622762009187
+   }
+  ]
+ },
+ "dark-textured": {
+  "why": "All 4 dark recipes use the same near-flat T-noise (hf_energy_frac~0.0016); real dark-opaque's hf median is 0.11, with several images (mostly Bullseye black-opalescent) above 0.3 -- clear surface structure visible through near-black glass that no dark recipe currently has any T-space texture for.",
+  "target": {
+   "L": 15,
+   "C": 5,
+   "hue_deg": 200
+  },
+  "cls": "dark-opaque",
+  "nearest_real_exemplars": [
+   {
+    "file": "oceanside-of1009s.jpg",
+    "manufacturer": "Oceanside",
+    "L_median": 1.5086412990302875,
+    "C_median": 0.6898675328549912,
+    "hue_deg": 174.38374838044564,
+    "hf_energy_frac": 0.3691295202709964
+   },
+   {
+    "file": "bullseye-0001000043f1010.jpg",
+    "manufacturer": "Bullseye",
+    "L_median": 20.684997548757313,
+    "C_median": 1.9858567230807596,
+    "hue_deg": 127.76563665023399,
+    "hf_energy_frac": 0.5015872592016138
+   },
+   {
+    "file": "wissmach-wblack.jpg",
+    "manufacturer": "Wissmach",
+    "L_median": 9.227127805196176,
+    "C_median": 4.1374217453289015,
+    "hue_deg": 125.35062564484603,
+    "hf_energy_frac": 0.25011592508531877
+   }
+  ]
+ }
+}
