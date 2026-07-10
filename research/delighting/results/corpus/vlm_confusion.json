@@ -1,0 +1,372 @@
+{
+  "n_sample": 36,
+  "n_ok": 36,
+  "n_correct": 11,
+  "overall_accuracy": 0.3055555555555556,
+  "confusion_matrix": {
+    "opalescent": {
+      "opalescent": 3,
+      "wispy": 4,
+      "cathedral-clear": 5,
+      "dark-opaque": 0
+    },
+    "wispy": {
+      "opalescent": 2,
+      "wispy": 5,
+      "cathedral-clear": 5,
+      "dark-opaque": 0
+    },
+    "cathedral-clear": {
+      "opalescent": 3,
+      "wispy": 6,
+      "cathedral-clear": 3,
+      "dark-opaque": 0
+    },
+    "dark-opaque": {
+      "opalescent": 0,
+      "wispy": 0,
+      "cathedral-clear": 0,
+      "dark-opaque": 0
+    }
+  },
+  "per_class_accuracy": {
+    "opalescent": {
+      "n": 12,
+      "accuracy": 0.25
+    },
+    "wispy": {
+      "n": 12,
+      "accuracy": 0.4166666666666667
+    },
+    "cathedral-clear": {
+      "n": 12,
+      "accuracy": 0.25
+    }
+  },
+  "rows": [
+    {
+      "file": "bullseye-002964ca30fhalf.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Wispy/Streaky",
+      "name": "Warm White, True Blue 2-Color Mix, Cascade, 3 mm, Fusible",
+      "gt_class": "wispy",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "wissmach-wi197d.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Opalescent",
+      "name": "Dark Blue, Medium Green Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "wissmach-wf32105.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Cathedral",
+      "name": "96 COE Olive Green and White",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "opalescent",
+      "match": false
+    },
+    {
+      "file": "youghiogheny-yf10436x12.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Fern Green, White Streaky LTD",
+      "gt_class": "wispy",
+      "vlm_class": "wispy",
+      "match": true
+    },
+    {
+      "file": "wissmach-wi703ll.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Wispy/Streaky",
+      "name": "Blue and Purple Streaky",
+      "gt_class": "wispy",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of5332s6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Cathedral",
+      "name": "96 COE Topaz Blue",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "cathedral-clear",
+      "match": true
+    },
+    {
+      "file": "wissmach-wf14lum105.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Opalescent",
+      "name": "96 COE Reactive Blue Opal Luminescent",
+      "gt_class": "opalescent",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of83351s6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Cathedral",
+      "name": "96 COE White, Sky Blue",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "bullseye-0033340030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Wispy/Streaky",
+      "name": "Cranberry Pink, Gold Purple, White 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+      "gt_class": "wispy",
+      "vlm_class": "opalescent",
+      "match": false
+    },
+    {
+      "file": "youghiogheny-y6600sp6x12.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Cathedral",
+      "name": "Turquoise Ice Stipple",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "cathedral-clear",
+      "match": true
+    },
+    {
+      "file": "bullseye-0011200051fhalf.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Cathedral",
+      "name": "Yellow Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "youghiogheny-y1077rg6x12.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Opalescent",
+      "name": "White Opal with Bubblegum Pink, Gold Pink",
+      "gt_class": "opalescent",
+      "vlm_class": "opalescent",
+      "match": true
+    },
+    {
+      "file": "oceanside-of3891s.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Pale Gray, White Wispy",
+      "gt_class": "wispy",
+      "vlm_class": "wispy",
+      "match": true
+    },
+    {
+      "file": "youghiogheny-y6010sp.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Cathedral",
+      "name": "Light Blue Ice Stipple",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "opalescent",
+      "match": false
+    },
+    {
+      "file": "wissmach-wwo25.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Wispy/Streaky",
+      "name": "Copper Canyon Wispy Opal",
+      "gt_class": "wispy",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "bullseye-0001440050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Opalescent",
+      "name": "Teal Green Opalescent, Thin-rolled, 2 mm, Fusible",
+      "gt_class": "opalescent",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of24074s6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Opalescent",
+      "name": "96 COE Lilac Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "opalescent",
+      "match": true
+    },
+    {
+      "file": "youghiogheny-yuf606125.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Grenadine and White Streaky",
+      "gt_class": "wispy",
+      "vlm_class": "wispy",
+      "match": true
+    },
+    {
+      "file": "youghiogheny-yf806.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Cathedral",
+      "name": "96 COE Clear and Cobalt",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "oceanside-of3492s.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Light Purple with White Wispy",
+      "gt_class": "wispy",
+      "vlm_class": "wispy",
+      "match": true
+    },
+    {
+      "file": "bullseye-0031160030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Wispy/Streaky",
+      "name": "Clear, Turquoise Blue, White 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+      "gt_class": "wispy",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "wissmach-wf24105.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Cathedral",
+      "name": "96 COE Superior Blue and Crystal",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "wissmach-w221dr.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Cathedral",
+      "name": "Navy Double Rolled",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "cathedral-clear",
+      "match": true
+    },
+    {
+      "file": "bullseye-0001380050fhalf.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Opalescent",
+      "name": "Marzipan Striker Opalescent, Thin-rolled, 2 mm, Fusible",
+      "gt_class": "opalescent",
+      "vlm_class": "opalescent",
+      "match": true
+    },
+    {
+      "file": "bullseye-0011140051fhalf.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Cathedral",
+      "name": "Deep Royal Blue Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "bullseye-0018160030fhalf.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Cathedral",
+      "name": "Turquoise Blue Tint, Double-rolled, 3 mm, Fusible",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "opalescent",
+      "match": false
+    },
+    {
+      "file": "wissmach-wiwo85.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Wispy/Streaky",
+      "name": "Sky Blue with Purple and White Wispy",
+      "gt_class": "wispy",
+      "vlm_class": "wispy",
+      "match": true
+    },
+    {
+      "file": "youghiogheny-y3601hs6x12.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Opalescent",
+      "name": "Lavender Opal, White High Strike",
+      "gt_class": "opalescent",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "bullseye-0002220050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "category": "Opalescent",
+      "name": "Avocado Green Opalescent, Thin-rolled, 2 mm, Fusible",
+      "gt_class": "opalescent",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of23375s6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Opalescent",
+      "name": "96 COE Mariner Blue Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of31805s.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Light Amber Lamp Mix",
+      "gt_class": "wispy",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of3671s6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Cathedral",
+      "name": "96 COE Yellow, White",
+      "gt_class": "cathedral-clear",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "wissmach-wf23105.jpg",
+      "manufacturer": "Wissmach",
+      "category": "Opalescent",
+      "name": "96 COE Superior Blue and White Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "youghiogheny-yf5500.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Opalescent",
+      "name": "96 COE Marigold Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "cathedral-clear",
+      "match": false
+    },
+    {
+      "file": "oceanside-of606181cc6x12.jpg",
+      "manufacturer": "Oceanside",
+      "category": "Opalescent",
+      "name": "96 COE Meadowlark Pearl Opal",
+      "gt_class": "opalescent",
+      "vlm_class": "wispy",
+      "match": false
+    },
+    {
+      "file": "youghiogheny-yf1043.jpg",
+      "manufacturer": "Youghiogheny",
+      "category": "Wispy/Streaky",
+      "name": "96 COE Fern Green, White Streaky LTD",
+      "gt_class": "wispy",
+      "vlm_class": "opalescent",
+      "match": false
+    }
+  ]
+}
