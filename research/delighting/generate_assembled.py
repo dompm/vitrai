@@ -75,6 +75,15 @@ IBL_2_VARIANTS = [
     {"name": "rot90_evp1",  "z_rot": 0.60 + math.radians(90),  "ev": +1.0},
 ]
 
+# Report 014b: a UNIFORM white backlight of KNOWN strength, i.e. the app's
+# realistic first relight mode (a flat controllable illuminant -- virtual
+# lightbox + warmth), not IBL relighting. Copied from generate_synthetic.py's
+# `setup_scene(hdri_path=None)` validate-mode pattern (NOT imported: that file
+# is being edited concurrently by another agent) -- black world + a dedicated
+# white emissive plane behind the glass. Because the target strength is known
+# exactly, relight = T * UNIFORM_STRENGTH: no illuminant-estimation confound.
+UNIFORM_STRENGTH = 1.0
+
 
 # ------------------------------------------------------------------ scene ops
 def common_render_setup(scene):
@@ -121,6 +130,41 @@ def set_lighting(wmap, wbg, z_rot, ev):
     wmap.inputs['Rotation'].default_value[0] = XTILT
     wmap.inputs['Rotation'].default_value[2] = z_rot
     wbg.inputs['Strength'].default_value = 2.0 ** ev
+
+
+def build_world_uniform(scene, strength=UNIFORM_STRENGTH):
+    """Uniform white backlight of KNOWN strength: black world (no HDRI) + a
+    dedicated white emissive plane behind the glass (+Y), copied from
+    generate_synthetic.py's validate-mode `setup_scene(hdri_path=None)` (not
+    imported -- see module docstring). No rotation/EV knobs: the point is a
+    single controllable constant, matching the app's flat-lightbox relight."""
+    world = scene.world or bpy.data.worlds.new("World")
+    scene.world = world
+    world.use_nodes = True
+    n = world.node_tree.nodes
+    lk = world.node_tree.links
+    n.clear()
+    wout = n.new('ShaderNodeOutputWorld')
+    wbg = n.new('ShaderNodeBackground')
+    wbg.inputs['Color'].default_value = (0.0, 0.0, 0.0, 1.0)
+    wbg.inputs['Strength'].default_value = 0.0
+    lk.new(wbg.outputs['Background'], wout.inputs['Surface'])
+
+    bpy.ops.mesh.primitive_plane_add(size=50.0, location=(0, 2.0, 0), rotation=(math.radians(90), 0, 0))
+    backlight = bpy.context.active_object
+    backlight.name = "UniformBacklight"
+    m = bpy.data.materials.new(name="UniformBacklightMat")
+    m.use_nodes = True
+    nodes = m.node_tree.nodes
+    links = m.node_tree.links
+    nodes.clear()
+    emission = nodes.new('ShaderNodeEmission')
+    emission.inputs['Color'].default_value = (1.0, 1.0, 1.0, 1.0)
+    emission.inputs['Strength'].default_value = strength
+    out = nodes.new('ShaderNodeOutputMaterial')
+    links.new(emission.outputs['Emission'], out.inputs['Surface'])
+    backlight.data.materials.append(m)
+    return backlight
 
 
 def add_camera(scene):
@@ -263,11 +307,15 @@ def piece_layout(pj):
     return pieces
 
 
-def build_flat_scene(scene, hdri_path, recipe, sample_dir, seed):
+def build_flat_scene(scene, hdri_path, recipe, sample_dir, seed, uniform=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     common_render_setup(scene)
-    wmap, wbg = build_world_hdri(scene, hdri_path)
+    if uniform:
+        build_world_uniform(scene)
+        wmap, wbg = None, None
+    else:
+        wmap, wbg = build_world_hdri(scene, hdri_path)
     bpy.ops.mesh.primitive_plane_add(size=SHEET_SIZE, location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
     glass = bpy.context.active_object
     glass.name = "GlassSheet"
@@ -275,14 +323,22 @@ def build_flat_scene(scene, hdri_path, recipe, sample_dir, seed):
     add_dark_wall()
     img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
     create_glass_material(glass, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=False)
-    return scene, glass, cam, wmap, wbg, (img_T, img_h, img_mark)
+    # NB: render_ground_truths' signature was extended upstream (img_height,
+    # img_normal added) after report 014 was authored; pass all 5 so the caller
+    # matches the current generate_synthetic.py (not edited here -- see module
+    # docstring).
+    return scene, glass, cam, wmap, wbg, (img_T, img_h, img_mark, img_height, img_normal)
 
 
-def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces):
+def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces, uniform=False):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     common_render_setup(scene)
-    wmap, wbg = build_world_hdri(scene, hdri_path)
+    if uniform:
+        build_world_uniform(scene)
+        wmap, wbg = None, None
+    else:
+        wmap, wbg = build_world_hdri(scene, hdri_path)
     cam = add_camera(scene)
     add_dark_wall()
     add_lead_strips()
@@ -325,6 +381,23 @@ def process_material(recipe, gclass, hdri_path, out_root, seed):
     print("  render C (assembled, IBL_1)...")
     render_sample(sample_dir, "renderC_")
 
+    # --- UNIFORM-TARGET renders (report 014b, maintainer request): the app's
+    # realistic first relight mode is a FLAT controllable illuminant (virtual
+    # lightbox + warmth), not IBL relighting. RENDER A_U is the raw-copy-baseline
+    # world (flat sheet under the same uniform light -- so a raw baseline exists
+    # in the SAME lighting world as the truth); RENDER U is the assembled truth.
+    # Same camera/projection as the IBL scenes (CAM_DIST fixed) -> `pieces`
+    # (UV rects, src/dest bboxes) is reused unchanged.
+    scene, glass_u, cam_u, _, _, imgs_u = build_flat_scene(
+        scene=None, hdri_path=hdri_path, recipe=recipe, sample_dir=sample_dir, seed=seed, uniform=True)
+    print("  render A_U (flat sheet, uniform)...")
+    render_sample(sample_dir, "renderAU_")
+
+    scene, cam_u2, _, _ = build_assembled_scene(
+        scene, hdri_path, recipe, sample_dir, seed, pieces, uniform=True)
+    print("  render U (assembled, uniform) -- the 014b relight truth...")
+    render_sample(sample_dir, "renderU_")
+
     meta = {
         "recipe": recipe, "glass_class": gclass, "seed": seed,
         "resolution": RES, "cam_dist": CAM_DIST, "sheet_size": SHEET_SIZE,
@@ -335,11 +408,16 @@ def process_material(recipe, gclass, hdri_path, out_root, seed):
             "xtilt": XTILT,
             "IBL_1": IBL_1,
             "IBL_2_variants": IBL_2_VARIANTS,
+            "uniform_strength": UNIFORM_STRENGTH,
         },
         "renders": {
             "A": "renderA_photo_linear.exr (flat sheet, IBL_1) -- extractor input",
             "B": {v["name"]: f"renderB_{v['name']}_photo_linear.exr (assembled, IBL_2)" for v in IBL_2_VARIANTS},
             "C": "renderC_photo_linear.exr (assembled, IBL_1) -- assembly-model check",
+            "A_U": ("renderAU_photo_linear.exr (flat sheet, uniform backlight strength="
+                     f"{UNIFORM_STRENGTH}) -- raw-copy baseline world for 014b"),
+            "U": ("renderU_photo_linear.exr (assembled, uniform backlight strength="
+                   f"{UNIFORM_STRENGTH}) -- 014b RELIGHT TRUTH (known-constant target)"),
         },
         "pieces": pieces,
         "blender_version": bpy.app.version_string,
