@@ -1,0 +1,218 @@
+[
+  {
+    "label": "cathedral-amber",
+    "seed": 701,
+    "n_lightings": 2,
+    "raw_invariance": 0.15643936327824337,
+    "quotient_alone_invariance": 0.15532687549264146,
+    "classical_invariance": 0.23612278187518676,
+    "hybrid_invariance": 0.17173396229921511
+  },
+  {
+    "label": "cathedral-blue",
+    "seed": 708,
+    "n_lightings": 2,
+    "raw_invariance": 0.058878761262169954,
+    "quotient_alone_invariance": 0.02963456824132231,
+    "classical_invariance": 0.19467299995592535,
+    "hybrid_invariance": 0.144024902405693
+  },
+  {
+    "label": "cathedral-blue",
+    "seed": 808,
+    "n_lightings": 2,
+    "raw_invariance": 0.09739646867397433,
+    "quotient_alone_invariance": 0.10842778393197887,
+    "classical_invariance": 0.11858910213590149,
+    "hybrid_invariance": 0.11523928036617728
+  },
+  {
+    "label": "cathedral-green",
+    "seed": 800,
+    "n_lightings": 2,
+    "raw_invariance": 0.1464608680070098,
+    "quotient_alone_invariance": 0.10323107329798736,
+    "classical_invariance": 0.13404982211952943,
+    "hybrid_invariance": 0.19799266158349588
+  },
+  {
+    "label": "cathedral-red",
+    "seed": 709,
+    "n_lightings": 2,
+    "raw_invariance": 0.05998251410957985,
+    "quotient_alone_invariance": 0.026023690409131515,
+    "classical_invariance": 0.03733759888812274,
+    "hybrid_invariance": 0.09209244393884801
+  },
+  {
+    "label": "cathedral-red",
+    "seed": 809,
+    "n_lightings": 2,
+    "raw_invariance": 0.11400063954515757,
+    "quotient_alone_invariance": 0.1346812366600757,
+    "classical_invariance": 0.21639301039338416,
+    "hybrid_invariance": 0.23712432111338017
+  },
+  {
+    "label": "dark-deep",
+    "seed": 703,
+    "n_lightings": 2,
+    "raw_invariance": 0.018534400239117163,
+    "quotient_alone_invariance": 0.017202842361762193,
+    "classical_invariance": 0.03424829599309271,
+    "hybrid_invariance": 0.07249422637958652
+  },
+  {
+    "label": "dark-deep",
+    "seed": 803,
+    "n_lightings": 2,
+    "raw_invariance": 0.010195980086282226,
+    "quotient_alone_invariance": 0.008067937371716816,
+    "classical_invariance": 0.06947516056213877,
+    "hybrid_invariance": 0.040281941978251225
+  },
+  {
+    "label": "dark-opaque",
+    "seed": 702,
+    "n_lightings": 2,
+    "raw_invariance": 0.04076912569196337,
+    "quotient_alone_invariance": 0.04245886443178089,
+    "classical_invariance": 0.06015500242117343,
+    "hybrid_invariance": 0.08848876828104013
+  },
+  {
+    "label": "dark-opaque",
+    "seed": 802,
+    "n_lightings": 2,
+    "raw_invariance": 0.016969741157990183,
+    "quotient_alone_invariance": 0.016764170536778436,
+    "classical_invariance": 0.020650728660940386,
+    "hybrid_invariance": 0.011624277546447207
+  },
+  {
+    "label": "dark-ruby",
+    "seed": 704,
+    "n_lightings": 2,
+    "raw_invariance": 0.023037264583370833,
+    "quotient_alone_invariance": 0.02196780330778071,
+    "classical_invariance": 0.009186308000230993,
+    "hybrid_invariance": 0.011414844692900146
+  },
+  {
+    "label": "dark-ruby",
+    "seed": 804,
+    "n_lightings": 2,
+    "raw_invariance": 0.014380193214177902,
+    "quotient_alone_invariance": 0.01511006986676322,
+    "classical_invariance": 0.01437068530090533,
+    "hybrid_invariance": 0.058244107481179426
+  },
+  {
+    "label": "dark-slate",
+    "seed": 705,
+    "n_lightings": 2,
+    "raw_invariance": 0.06157799115860202,
+    "quotient_alone_invariance": 0.024671936394066396,
+    "classical_invariance": 0.045404497869707516,
+    "hybrid_invariance": 0.025694329621093838
+  },
+  {
+    "label": "dark-slate",
+    "seed": 805,
+    "n_lightings": 2,
+    "raw_invariance": 0.027404835159771716,
+    "quotient_alone_invariance": 0.03198105487753689,
+    "classical_invariance": 0.0338123660620687,
+    "hybrid_invariance": 0.02571930896847164
+  },
+  {
+    "label": "dark-textured",
+    "seed": 712,
+    "n_lightings": 2,
+    "raw_invariance": 0.027969258281519607,
+    "quotient_alone_invariance": 0.02606191078057844,
+    "classical_invariance": 0.024084691044637674,
+    "hybrid_invariance": 0.02693011360661796
+  },
+  {
+    "label": "dark-textured",
+    "seed": 812,
+    "n_lightings": 2,
+    "raw_invariance": 0.039795652773830584,
+    "quotient_alone_invariance": 0.021078197758118342,
+    "classical_invariance": 0.048704627489434556,
+    "hybrid_invariance": 0.07734277193187065
+  },
+  {
+    "label": "saturated-opalescent",
+    "seed": 710,
+    "n_lightings": 2,
+    "raw_invariance": 0.03944731330202043,
+    "quotient_alone_invariance": 0.037171448735971405,
+    "classical_invariance": 0.06314222079965186,
+    "hybrid_invariance": 0.07241143519323948
+  },
+  {
+    "label": "saturated-opalescent",
+    "seed": 810,
+    "n_lightings": 2,
+    "raw_invariance": 0.13022923090508962,
+    "quotient_alone_invariance": 0.14212630171726046,
+    "classical_invariance": 0.07735346413423112,
+    "hybrid_invariance": 0.30713857187794363
+  },
+  {
+    "label": "streaky-fine-texture",
+    "seed": 711,
+    "n_lightings": 2,
+    "raw_invariance": 0.05152695123297643,
+    "quotient_alone_invariance": 0.027335927753531643,
+    "classical_invariance": 0.08589315426182875,
+    "hybrid_invariance": 0.07150173199438817
+  },
+  {
+    "label": "streaky-fine-texture",
+    "seed": 811,
+    "n_lightings": 2,
+    "raw_invariance": 0.11435756088166689,
+    "quotient_alone_invariance": 0.10910368056660034,
+    "classical_invariance": 0.09318112262885454,
+    "hybrid_invariance": 0.4637182962193176
+  },
+  {
+    "label": "streaky-mix",
+    "seed": 706,
+    "n_lightings": 2,
+    "raw_invariance": 0.13888907848503954,
+    "quotient_alone_invariance": 0.1107829186459461,
+    "classical_invariance": 0.10967386036174315,
+    "hybrid_invariance": 0.0705745875672157
+  },
+  {
+    "label": "streaky-mix",
+    "seed": 806,
+    "n_lightings": 2,
+    "raw_invariance": 0.29641584214063826,
+    "quotient_alone_invariance": 0.3321018704907024,
+    "classical_invariance": 0.12305769641985806,
+    "hybrid_invariance": 0.554876742258296
+  },
+  {
+    "label": "wispy-white",
+    "seed": 707,
+    "n_lightings": 2,
+    "raw_invariance": 0.27729800375718544,
+    "quotient_alone_invariance": 0.2158745445620473,
+    "classical_invariance": 0.08610959901984226,
+    "hybrid_invariance": 0.17900571233066045
+  },
+  {
+    "label": "wispy-white",
+    "seed": 807,
+    "n_lightings": 2,
+    "raw_invariance": 0.1953570802194789,
+    "quotient_alone_invariance": 0.1045013512371037,
+    "classical_invariance": 0.11819845065737758,
+    "hybrid_invariance": 0.3672456424522332
+  }
+]
