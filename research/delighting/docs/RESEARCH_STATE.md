@@ -269,6 +269,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   also learned from one image, reconstruction stays excellent while `T` remains bad (hard T-MAE
   0.1182). Conclusion: the representation is right, but single-image `B` is not identifiable without
   extra constraints/prior/captures.
+- 022 two-frame ambiguity: shared `T,D` over two different learned backgrounds helps only marginally
+  (T-MAE 0.1161 single-frame learned-B -> 0.1128 two-frame shared `T,D`). Extra observations alone
+  do not break the factorization if per-frame `B_i` is too free. Next renderer bets need stronger
+  background priors, height-field-constrained displacement, known/semi-known backgrounds, or a motion
+  model tying frames together.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -301,6 +306,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - Bet B/C next after report 021: add extra information or priors that make `B` identifiable. Best
   candidates: two-frame shifted-background capture, stronger natural-image/background prior, or
   known-background/light-table synthetic curriculum before distillation.
+- After report 022, do not assume "two photos" is enough. Test constrained variants: known/semi-known
+  background pattern, same background with modeled sheet motion, and displacement as gradient of a
+  height field rather than free optical flow.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

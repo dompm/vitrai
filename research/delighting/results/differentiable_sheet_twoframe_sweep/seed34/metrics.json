@@ -1,0 +1,127 @@
+{
+  "case": "seed34",
+  "claim": "Two observations with shared T,D should reduce single-image T/B ambiguity.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_twoframe_sweep",
+    "size": 144,
+    "seed": 34,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_joint": 850,
+    "steps_twoframe": 1100,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "log_every": 550,
+    "sweep": true,
+    "sweep_seeds": "31,32,33,34",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 3.9712350368499756
+  },
+  "metrics": [
+    {
+      "name": "single-frame learned B",
+      "renderer_recon_mae": 0.005587676714640111,
+      "T_mae": 0.11555727571249008,
+      "T_lum_mae": 0.2164832204580307,
+      "B_mae": 0.20024465024471283,
+      "preview_lum_cv": 0.10421193450210937,
+      "T_highfreq_corr_with_bg_frame1": 0.3228322165787087,
+      "T_highfreq_corr_with_bg_frame2": 0.042017564079148,
+      "disp_epe_px": 3.3468017578125,
+      "disp_corr_x": 0.2912708225742401,
+      "disp_corr_y": 0.17221767550805792
+    },
+    {
+      "name": "two-frame shared T,D learned B",
+      "renderer_recon_mae": 0.0012384402216412127,
+      "T_mae": 0.11361871659755707,
+      "T_lum_mae": 0.2116122841835022,
+      "B_mae": 0.19713129103183746,
+      "preview_lum_cv": 0.10700446581300994,
+      "T_highfreq_corr_with_bg_frame1": 0.1183656140302041,
+      "T_highfreq_corr_with_bg_frame2": 0.16031660894304794,
+      "disp_epe_px": 3.238389015197754,
+      "disp_corr_x": 0.23644897414219096,
+      "disp_corr_y": 0.2161133127364724
+    }
+  ],
+  "logs": {
+    "single_frame1": [
+      {
+        "step": 0,
+        "loss": 0.02065800130367279,
+        "recon": 0.02059292048215866,
+        "disp_abs": 0.0,
+        "B_tv": 0.014067687094211578
+      },
+      {
+        "step": 550,
+        "loss": 0.0014840568182989955,
+        "recon": 0.001098157837986946,
+        "disp_abs": 1.16481351852417,
+        "B_tv": 0.0630471408367157
+      },
+      {
+        "step": 849,
+        "loss": 0.001471399562433362,
+        "recon": 0.0010931560536846519,
+        "disp_abs": 1.1461482048034668,
+        "B_tv": 0.06221029534935951
+      }
+    ],
+    "single_frame2": [
+      {
+        "step": 0,
+        "loss": 0.020387321710586548,
+        "recon": 0.020318549126386642,
+        "disp_abs": 0.0,
+        "B_tv": 0.015434937551617622
+      },
+      {
+        "step": 550,
+        "loss": 0.0016071527497842908,
+        "recon": 0.0011504023568704724,
+        "disp_abs": 1.2498807907104492,
+        "B_tv": 0.0683850571513176
+      },
+      {
+        "step": 849,
+        "loss": 0.0015931797679513693,
+        "recon": 0.001141357352025807,
+        "disp_abs": 1.2471879720687866,
+        "B_tv": 0.06779544055461884
+      }
+    ],
+    "twoframe": [
+      {
+        "step": 0,
+        "loss": 0.020934222266077995,
+        "recon": 0.020876452326774597,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 550,
+        "loss": 0.0016538257477805018,
+        "recon": 0.0012583860661834478,
+        "disp_abs": 1.0857425928115845
+      },
+      {
+        "step": 1099,
+        "loss": 0.001635745633393526,
+        "recon": 0.0012462520971894264,
+        "disp_abs": 1.0809516906738281
+      }
+    ]
+  }
+}
