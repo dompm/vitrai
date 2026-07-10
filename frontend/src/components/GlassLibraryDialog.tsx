@@ -423,6 +423,20 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
             </>
           )}
         </div>
+        <div className="glass-library-footer" style={{
+          padding: '16px 24px',
+          borderTop: '1px solid var(--hairline-2)',
+          textAlign: 'center',
+          fontSize: '11px',
+          color: 'var(--text-dim)',
+          background: 'rgba(0, 0, 0, 0.1)'
+        }}>
+          Images &copy; by their respective manufacturers. Visit official catalogs:{' '}
+          <a href="https://shop.bullseyeglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Bullseye</a> •{' '}
+          <a href="https://www.oceansideartglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Oceanside</a> •{' '}
+          <a href="https://wissmachglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Wissmach</a> •{' '}
+          <a href="https://www.youghioghenyglass.com/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>Youghiogheny</a>
+        </div>
       </div>
     </div>
   );
