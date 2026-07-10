@@ -165,12 +165,27 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   now defaults to `auto` — `continuous` when the class came from the VLM/fallback path,
   `class` when a human set it via `--class`/manifest `class_override` — implementing this
   report's recommendation exactly; the gate stays default-on everywhere as before.
-- 017 (branch `research/delighting-017`) widened the continuous anchor's dark-end
-  calibration: added three new dark-family synthetic recipes (`dark-deep` very-dark
-  neutral, `dark-ruby` dark-tinted/strongly-colored, `dark-slate` medium-dark) spanning
-  both sides of the original single dark-opaque recipe, refit the estimator, and added
-  a first cross-lighting (capture-invariance) metric across all recipes. See report
-  017 for LORO before/after, the class-injection re-check, and the invariance table.
+- 017 (branch `research/delighting-017`, `017-dark-calibration-invariance.md` — number
+  collides with the Intern track's catalog-leak-cleaner 017) widened the continuous
+  anchor's dark-end calibration and added the long-queued capture-invariance metric.
+  Three new dark recipes (`dark-deep` gt-p99 0.055, `dark-ruby` 0.13 strongly tinted,
+  `dark-slate` 0.31) bracket dark-opaque (0.216); refit with floor T_LO 0.10->0.04
+  (dark-deep sat below the old floor): LORO worst 4.29x -> 3.37x with held-out darks
+  now predicted dark instead of ~0.9-bright; injection worst wrong-class brightness
+  17.1x (class anchor on the new darks!) vs 4.15x (old fit) -> 3.90x (new), dark-deep
+  wrong-class 3.4x -> 2.1x, original five recipes at noise level; the continuous anchor
+  now BEATS the class anchor under the correct class on the widened set (0.103 vs 0.107
+  T-MAE) because one T_ANCHOR point per class cannot span a darkness family; library
+  byte-identical (default path), blue.jpg 0.002 luminance under forced continuous.
+  NEW metric `eval_cross_lighting.py` (same authored glass, N lightings, pairwise map
+  difference): dark family under oracle class is highly invariant (T 0.02-0.06);
+  cathedral is capture-DEPENDENT beyond its accuracy error (0.18-0.20 vs 0.14-0.15
+  GT-MAE — the T·B leak varies per lighting, the north-star problem now has an
+  invariance number); honest cost found: per-photo t_img variance breaks group
+  consistency on mid/dark glass under the vlm-free continuous path (dark-opaque
+  invariance 0.036 class-anchored -> 0.280 continuous) — class anchor is consistently
+  wrong, continuous is averagely right; `auto` default stands, but "estimate the scale
+  once per sheet, not once per photo" is a measured follow-up.
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -223,7 +238,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
-- Add the **consistency** metric to the eval (same seed across lightings).
+- ~~Add the **consistency** metric to the eval (same seed across lightings).~~ DONE, report 017
+  (`eval_cross_lighting.py`); follow-up opened there: stabilize the continuous anchor's t_img
+  across captures of the same sheet (per-sheet, not per-photo, scale estimation).
 - Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
 - For GlassNet: generate many material seeds per class, then evaluate a held-out-material split;
   current neural result only proves held-out-lighting consistency.
