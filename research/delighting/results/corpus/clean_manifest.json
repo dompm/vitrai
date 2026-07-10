@@ -1,31 +1,41 @@
 {
- "definition": "THE canonical clean corpus for delighting research (report 021). = 015 registry-recoverable images MINUS sge-* MINUS 019 quarantine (all reason codes) MINUS hash-duplicates (one canonical file per SHA-256 content hash). Every future experiment against the catalog corpus should load this file, not re-derive its own filter.",
+ "definition": "THE canonical clean corpus for delighting research (report 021, recovered-image addition in report 024). = 015 registry-recoverable images MINUS sge-* MINUS 019 quarantine (all reason codes) MINUS hash-duplicates (one canonical file per SHA-256 content hash) PLUS 024's recovered -v2 re-fetches. Every future experiment against the catalog corpus should load this file, not re-derive its own filter.",
  "n_registry_recoverable_start": 2853,
- "n_clean": 1274,
+ "n_clean": 1281,
  "exclusions": {
   "sge_prefix": 0,
   "quarantine_all_reason_codes": 124,
   "hash_duplicate_files_dropped": 1455
  },
+ "report_024_recovered_v2_added": 7,
+ "report_024_recovered_ids": [
+  "bullseye-0000090030f1010",
+  "bullseye-0000090050f1010",
+  "bullseye-0010090050f1010",
+  "bullseye-0010150031f1010",
+  "bullseye-0010150051f1010",
+  "bullseye-0010160031f1010",
+  "bullseye-0010160051f1010"
+ ],
  "cross_sku_duplicate_groups": 66,
  "sensitivity_if_product_on_white_kept": 2778,
  "counts_by_manufacturer": {
-  "Bullseye": 510,
+  "Bullseye": 517,
   "Oceanside": 281,
   "Wissmach": 217,
   "Youghiogheny": 266
  },
  "counts_by_class": {
-  "opalescent": 272,
+  "opalescent": 274,
   "wispy": 163,
   "dark-opaque": 39,
-  "cathedral-clear": 800
+  "cathedral-clear": 805
  },
  "counts_by_manufacturer_class": {
-  "Bullseye|opalescent": 72,
+  "Bullseye|opalescent": 74,
   "Bullseye|wispy": 91,
   "Bullseye|dark-opaque": 26,
-  "Bullseye|cathedral-clear": 321,
+  "Bullseye|cathedral-clear": 326,
   "Oceanside|dark-opaque": 3,
   "Oceanside|cathedral-clear": 172,
   "Oceanside|opalescent": 54,
@@ -40,11 +50,65 @@
   "Youghiogheny|dark-opaque": 5
  },
  "counts_by_confidence": {
-  "high": 1079,
+  "high": 1086,
   "medium": 64,
   "low": 131
  },
  "images": [
+  {
+   "file": "bullseye-0000090030f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Opalescent",
+   "name": "Reactive Cloud Opalescent, Double-rolled, 3 mm, Fusible",
+   "extractor_class": "opalescent",
+   "confidence": "high",
+   "rule": "category:Opalescent",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0000090030f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0000090030f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0000090030f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0000090030f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/reactive-cloud-opalescent-double-rolled-3-mm-fusible",
+    "image_position_picked": 2,
+    "flagger_verdict": [
+     "clean"
+    ],
+    "human_verification_caveat": "the picked image (position 2) is a genuine photo of the product sheet (~85% of frame, edge-to-edge, consistent corners) but includes a small 4-tile reaction-demo insert in the upper-left corner -- not a pure clean sheet, but materially correct vs. the pure test-fire lead photo it replaces. A center-crop color/texture extractor would not touch the corner insert."
+   }
+  },
+  {
+   "file": "bullseye-0000090050f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Opalescent",
+   "name": "Reactive Cloud Opalescent, Thin-rolled, 2 mm, Fusible",
+   "extractor_class": "opalescent",
+   "confidence": "high",
+   "rule": "category:Opalescent",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0000090050f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0000090050f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0000090050f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0000090050f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/reactive-cloud-opalescent-thin-rolled-2-mm-fusible",
+    "image_position_picked": 2,
+    "flagger_verdict": [
+     "clean"
+    ],
+    "human_verification_caveat": "same hybrid sheet+corner-demo composite style as 0000090030 (same product line, other size variant)."
+   }
+  },
   {
    "file": "bullseye-0000240030f1010.jpg",
    "manufacturer": "Bullseye",
@@ -2174,6 +2238,33 @@
    ]
   },
   {
+   "file": "bullseye-0010090050f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Cathedral",
+   "name": "Reactive Ice Transparent, Thin-rolled, 2 mm, Fusible",
+   "extractor_class": "cathedral-clear",
+   "confidence": "high",
+   "rule": "category:Cathedral",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0010090050f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0010090050f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0010090050f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0010090050f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/reactive-ice-transparent-thin-rolled-2-mm-fusible",
+    "image_position_picked": 2,
+    "flagger_verdict": [
+     "clean"
+    ],
+    "human_verification_caveat": null
+   }
+  },
+  {
    "file": "bullseye-0010090051f1010.jpg",
    "manufacturer": "Bullseye",
    "category": "Cathedral",
@@ -2191,6 +2282,114 @@
    "group_registry_ids": [
     "bullseye-0010090051f1010"
    ]
+  },
+  {
+   "file": "bullseye-0010150031f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Cathedral",
+   "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+   "extractor_class": "cathedral-clear",
+   "confidence": "high",
+   "rule": "category:Cathedral",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0010150031f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0010150031f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0010150031f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0010150031f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+    "image_position_picked": 4,
+    "flagger_verdict": [
+     "product_on_white"
+    ],
+    "human_verification_caveat": null
+   }
+  },
+  {
+   "file": "bullseye-0010150051f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Cathedral",
+   "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+   "extractor_class": "cathedral-clear",
+   "confidence": "high",
+   "rule": "category:Cathedral",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0010150051f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0010150051f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0010150051f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0010150051f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
+    "image_position_picked": 4,
+    "flagger_verdict": [
+     "product_on_white"
+    ],
+    "human_verification_caveat": null
+   }
+  },
+  {
+   "file": "bullseye-0010160031f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Cathedral",
+   "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+   "extractor_class": "cathedral-clear",
+   "confidence": "high",
+   "rule": "category:Cathedral",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0010160031f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0010160031f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0010160031f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0010160031f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+    "image_position_picked": 4,
+    "flagger_verdict": [
+     "product_on_white"
+    ],
+    "human_verification_caveat": null
+   }
+  },
+  {
+   "file": "bullseye-0010160051f1010-v2.jpg",
+   "manufacturer": "Bullseye",
+   "category": "Cathedral",
+   "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+   "extractor_class": "cathedral-clear",
+   "confidence": "high",
+   "rule": "category:Cathedral",
+   "match_kind": "recovered-v2",
+   "registry_id": "bullseye-0010160051f1010",
+   "group_size": 1,
+   "group_members": [
+    "bullseye-0010160051f1010-v2.jpg"
+   ],
+   "group_registry_ids": [
+    "bullseye-0010160051f1010"
+   ],
+   "report_024_provenance": {
+    "old_file": "bullseye-0010160051f1010.jpg",
+    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
+    "image_position_picked": 4,
+    "flagger_verdict": [
+     "product_on_white"
+    ],
+    "human_verification_caveat": null
+   }
   },
   {
    "file": "bullseye-0010190051f1010.jpg",
