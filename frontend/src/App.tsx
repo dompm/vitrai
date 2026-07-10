@@ -21,6 +21,15 @@ import { DEFAULT_PROJECT } from './defaultProject';
 import type { ToolId } from './components/Toolbar';
 import './App.css';
 
+function shortenLabel(label: string): string {
+  const clean = label.replace(/^\[[^\]]+\]\s*/, '');
+  const words = clean.split(/\s+/);
+  if (words.length <= 4) return clean;
+  const sku = words[0];
+  const rest = words.slice(1, 4).join(' ');
+  return `${sku} ${rest}...`;
+}
+
 interface SheetTabProps {
   sheet: GlassSheet;
   isActive: boolean;
@@ -145,7 +154,7 @@ function SheetTab({
           style={{ background: sheet.swatch ?? 'var(--text-dim)' }}
           aria-hidden="true"
         />
-        <span className="sheet-tab-label">{sheet.label}</span>
+        <span className="sheet-tab-label" title={sheet.label}>{shortenLabel(sheet.label)}</span>
         {canDelete && (
           <span
             className="sheet-tab-close"
@@ -205,7 +214,7 @@ function SheetTab({
                             className="sheet-tab-menu-item"
                             onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllTo(s.id); }}
                           >
-                            <span className="sheet-tab-menu-label">{s.label}</span>
+                            <span className="sheet-tab-menu-label" title={s.label}>{shortenLabel(s.label)}</span>
                             <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
                           </button>
                         ))
@@ -241,7 +250,7 @@ function SheetTab({
                           className="sheet-tab-menu-item"
                           onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllFromSrc(s.id); }}
                         >
-                          <span className="sheet-tab-menu-label">{s.label}</span>
+                          <span className="sheet-tab-menu-label" title={s.label}>{shortenLabel(s.label)}</span>
                           <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
                         </button>
                       ))}
