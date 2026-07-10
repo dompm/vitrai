@@ -83,7 +83,7 @@ def designs(sweep=False):
 def main():
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--data", required=True)
+    ap.add_argument("--data", action="append", required=True, help="repeatable; multiple dirs are pooled")
     ap.add_argument("--out", default=os.path.join(HERE, "results", "class_injection"))
     ap.add_argument("--size", type=int, default=700)
     ap.add_argument("--sweep", action="store_true")
@@ -92,7 +92,8 @@ def main():
     D = designs(args.sweep)
 
     rows = []
-    samples = sorted(d for d in glob.glob(os.path.join(args.data, "*")) if os.path.isdir(d))
+    samples = sorted(d for data_dir in args.data for d in glob.glob(os.path.join(data_dir, "*"))
+                      if os.path.isdir(d))
     for s in samples:
         mp = os.path.join(s, "meta.json")
         if not os.path.exists(mp):

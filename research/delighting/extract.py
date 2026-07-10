@@ -291,20 +291,29 @@ def milkiness(rgb_like, r_tex):
     return bright * smooth * desat
 
 
-def estimate_anchor_scale(lin):
-    """Continuous, class-free absolute-scale estimate t_img (report 016): the
-    predicted p99 transmittance of the sheet, from raw-photo statistics only.
-    See the ANCHOR_* constants comment for model, features, fit and limits."""
+def anchor_features(lin):
+    """Raw, class-free feature triplet for the continuous anchor (report 016):
+    [log p95(luminance), luminance-gated mean saturation, lit-pixel fraction].
+    Split out from estimate_anchor_scale so report 017's refit script
+    (fit_anchor.py) computes features identically to the shipped estimator
+    instead of duplicating the math."""
     Y = lum(lin)
     mx, mn = lin.max(axis=-1), lin.min(axis=-1)
     sat = (mx - mn) / (mx + 1e-6)
     wlit = smoothstep(Y, 0.10, 0.30)
     sat_lit = float((sat * wlit).sum() / (wlit.sum() + 1e-6)) if wlit.sum() > 1 else 0.0
-    x = np.array([
+    return np.array([
         float(np.log(max(np.percentile(Y, 95), 1e-3))),
         sat_lit,
         float(wlit.mean()),
     ])
+
+
+def estimate_anchor_scale(lin):
+    """Continuous, class-free absolute-scale estimate t_img (report 016): the
+    predicted p99 transmittance of the sheet, from raw-photo statistics only.
+    See the ANCHOR_* constants comment for model, features, fit and limits."""
+    x = anchor_features(lin)
     s = ANCHOR_COEF[0] + float(np.dot(ANCHOR_COEF[1:], (x - ANCHOR_FEAT_MU) / ANCHOR_FEAT_SD))
     return ANCHOR_T_LO + (ANCHOR_T_HI - ANCHOR_T_LO) / (1.0 + np.exp(-s))
 
