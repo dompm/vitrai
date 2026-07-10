@@ -597,7 +597,52 @@ def luminance_envelope(Y):
     return np.maximum(env, 1e-3)
 
 
-def estimate_illumination(lin, glass_class, W):
+# Report 026 (main-track synthesis of the intern track's report 019 finding):
+# a second, OPTIONAL way to build the "env" scalar field inside
+# estimate_illumination, selected by --illum quotient. Report 019 found that
+#   output = input * exp(-alpha * (smooth_logY - median(smooth_logY)))
+# beats the classical fixed-T/h baseline on the real-suncatcher position-
+# sensitivity harness by a wide margin (dE 3.18 vs 10.12 at the time, refreshed
+# in report 026 to 2.38 vs 9.30 post-023/025 -- the classical baseline improved
+# a lot too, but the quotient's win holds). QUOTIENT_ALPHA is her winning
+# value; QUOTIENT_SIGMA_FRAC generalizes her fixed sigma=34px (tuned at the
+# suncatcher harness's SHEET_SIZE=1400 working resolution) to extract.py's own
+# configurable --size, scaling the Gaussian blur radius proportionally
+# (34/1400 = 0.0243) so the same *relative* smoothing applies regardless of
+# working resolution.
+QUOTIENT_ALPHA = 1.0
+QUOTIENT_SIGMA_FRAC = 0.0243
+
+
+def luminance_envelope_quotient(Y, alpha=QUOTIENT_ALPHA):
+    """Report 019's deterministic log-luminance quotient, reframed as an
+    illumination ENVELOPE (a positive scalar field divided out of the input),
+    so it can be swapped in for luminance_envelope()'s percentile-filter
+    envelope while everything downstream (chroma field, marks, haze,
+    assemble_T, anchor) is untouched -- see estimate_illumination's `illum`
+    parameter.
+
+      out = in * exp(-alpha * (low - median(low)))
+          = in / exp(alpha * (low - median(low)))     <- this ratio IS `env`
+
+    A single Gaussian blur of log-luminance, global median re-centering, no
+    hotspot-aware max(base, peak) term. That is a deliberate scope cut from
+    luminance_envelope's report-004 hotspot recovery, not an oversight -- see
+    report 026's semantics discussion for what this costs on a compact
+    backlight hotspot."""
+    H_, W_ = Y.shape
+    sigma = max(5.0, QUOTIENT_SIGMA_FRAC * max(H_, W_))
+    Yc = np.clip(Y, 1e-5, None)
+    logY = np.log(Yc)
+    low = gauss(logY.astype(np.float32), sigma).astype(np.float64)
+    lo_p, hi_p = np.percentile(Yc, 4), np.percentile(Yc, 97)
+    valid = (Yc > lo_p) & (Yc < hi_p)
+    target_low = float(np.median(low[valid])) if valid.any() else float(np.median(low))
+    log_env = np.clip(alpha * (low - target_low), np.log(0.35), np.log(2.8))
+    return np.maximum(np.exp(log_env), 1e-3)
+
+
+def estimate_illumination(lin, glass_class, W, illum="classical"):
     """L = smooth luminance envelope x low-order chroma field.
 
     The luminance envelope is a large-window high-percentile filter: since T<=1
@@ -608,10 +653,15 @@ def estimate_illumination(lin, glass_class, W):
     color gradients are removed. For cathedral-clear / dark-opaque the sheet is
     assumed uniformly tinted, the illuminant is taken as neutral and all color
     stays in T (single-photo tint/illuminant ambiguity, resolved by class prior).
-    """
+
+    illum: 'classical' (DEFAULT, report 002/004's percentile envelope, byte-
+    identical to every prior report) or 'quotient' (report 026: swap ONLY the
+    envelope for report 019's log-luminance quotient; the chroma field below,
+    and everything downstream of estimate_illumination -- marks, haze,
+    assemble_T, anchor -- is unchanged)."""
     Y = lum(lin)
     H_, W_ = Y.shape
-    env = luminance_envelope(Y)
+    env = luminance_envelope_quotient(Y) if illum == "quotient" else luminance_envelope(Y)
 
     # --- chroma field
     chroma = np.ones_like(lin)
@@ -884,7 +934,8 @@ def load_linear(path, corners, size):
     return srgb_to_lin(np.asarray(img).astype(np.float64) / 255.0)
 
 
-def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_t_img=None):
+def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_t_img=None,
+                  illum="classical"):
     """Core map computation (pipeline steps 1-4) on a linear-RGB image.
     Returns a dict of the intermediate/output arrays. process() adds metrics
     and file output on top; the harness reuses the maps directly.
@@ -900,12 +951,19 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_
     place of this photo's own `estimate_anchor_scale(lin)` so several
     photos of the same physical sheet share one scale instead of each
     deriving its own. None (default) reproduces the exact single-photo
-    report 016/017 behaviour byte-for-byte."""
+    report 016/017 behaviour byte-for-byte.
+
+    illum: 'classical' (DEFAULT, byte-identical to every prior report) or
+    'quotient' (report 026: the intern track's report 019 log-luminance
+    quotient supplies the smooth illumination-envelope removal in place of
+    the classical percentile envelope; chroma handling, marks, haze,
+    absolute anchor are all the SAME code as the classical path -- see
+    estimate_illumination)."""
     W = lin.shape[1]
     # 1. speculars
     lin_ns, spec_mask = suppress_speculars(lin, glass_class, W)
     # 2. illumination + ratio
-    L = estimate_illumination(lin_ns, glass_class, W)
+    L = estimate_illumination(lin_ns, glass_class, W, illum=illum)
     R = lin_ns / np.maximum(L, 1e-4)
     # 3. markings. Repair by diffusion fill, NOT Telea: Telea leaves a tinted
     # smudge that the saturation/chroma cues downstream re-detect as content
@@ -963,18 +1021,19 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_
             "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99,
             "anchor_fallback": anchor_fallback, "anchor_mode": anchor,
             "anchor_target": (None if target is None else float(target)),
-            "anchor_t_img": t_img}
+            "anchor_t_img": t_img, "illum_mode": illum}
 
 
 def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown",
-            anchor="class", sheet_t_img=None):
+            anchor="class", sheet_t_img=None, illum="classical"):
     """mark_region: 'unknown' (global conservative detector), 'none' (skip
     mark handling), or a 3x3 grid cell name (targeted aggressive detector).
     sheet_t_img: see extract_maps -- pooled per-sheet continuous-anchor scale
-    (report 020), None by default (single-photo behaviour, unchanged)."""
+    (report 020), None by default (single-photo behaviour, unchanged).
+    illum: see extract_maps -- 'classical' (default) or 'quotient' (report 026)."""
     name = os.path.splitext(os.path.basename(path))[0]
     lin = load_linear(path, corners, size)
-    m = extract_maps(lin, glass_class, mark_region, anchor=anchor, sheet_t_img=sheet_t_img)
+    m = extract_maps(lin, glass_class, mark_region, anchor=anchor, sheet_t_img=sheet_t_img, illum=illum)
     lin_ns, spec_mask, L, R = m["lin_ns"], m["spec_mask"], m["L"], m["R"]
     mark_mask, h, T, conf = m["mark_mask"], m["h"], m["T"], m["conf"]
 
@@ -1012,6 +1071,7 @@ def process(path, glass_class, corners, out_dir, size, debug=False, mark_region=
         "anchor_t_img": m["anchor_t_img"],
         "anchor_scale_disagree": float(max(m["anchor_t_img"] / T_ANCHOR[glass_class][1],
                                            T_ANCHOR[glass_class][1] / m["anchor_t_img"])),
+        "illum_mode": m["illum_mode"],
     }
 
     # 6. outputs
@@ -1073,6 +1133,12 @@ def main():
                          "is ~30%-reliable in the wild, report 015 -- and 'class' when a human "
                          "set it via --class or manifest class_override)")
     ap.add_argument("--debug", action="store_true", help="save intermediate masks/fields")
+    ap.add_argument("--illum", choices=("classical", "quotient"), default="classical",
+                    help="illumination-stage envelope: 'classical' (DEFAULT, byte-identical to "
+                         "every prior report) or 'quotient' (report 026: swap in the intern "
+                         "track's report 019 log-luminance quotient for ONLY the smooth-"
+                         "envelope removal; chroma handling, marks, haze, and the absolute "
+                         "anchor are unchanged -- see estimate_illumination)")
     args = ap.parse_args()
 
     def classify(p, entry=None):
@@ -1145,12 +1211,14 @@ def main():
             cls, human_cls = classify(p, entry)
             process(p, cls, entry.get("corners"),
                     args.out, args.size, args.debug, mark_region=marks(p, entry),
-                    anchor=resolve_anchor(human_cls), sheet_t_img=sheet_t_img_by_file.get(f))
+                    anchor=resolve_anchor(human_cls), sheet_t_img=sheet_t_img_by_file.get(f),
+                    illum=args.illum)
     elif len(args.input) == 1:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None
         cls, human_cls = classify(args.input[0])
         process(args.input[0], cls, corners, args.out, args.size, args.debug,
-                mark_region=marks(args.input[0]), anchor=resolve_anchor(human_cls))
+                mark_region=marks(args.input[0]), anchor=resolve_anchor(human_cls),
+                illum=args.illum)
     else:
         # Report 020: several explicit photo paths on the command line = one
         # sheet-group (multi-photo entry point). All photos share ONE class
@@ -1169,7 +1237,8 @@ def main():
               f"pooled t_img={sheet_t_img:.4f}")
         for p in args.input:
             process(p, cls, corners, args.out, args.size, args.debug,
-                    mark_region=marks(p), anchor=anchor, sheet_t_img=sheet_t_img)
+                    mark_region=marks(p), anchor=anchor, sheet_t_img=sheet_t_img,
+                    illum=args.illum)
 
 
 if __name__ == "__main__":
