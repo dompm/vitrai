@@ -671,15 +671,16 @@ def estimate_illumination(lin, glass_class, W):
         # away the glass's own color instead. The clamp ramps the allowed
         # chroma deviation from CHROMA_DEV_MAX (near-unclamped, matches the
         # old unconditional 0.4-2.5 clip above -- zero change below
-        # CHROMA_SAT_LO) down to CHROMA_DEV_MIN (near-neutral, minimal
-        # correction) as raw_sheet_saturation crosses the band -- a smooth
+        # CHROMA_SAT_LO) down to CHROMA_DEV_MIN (=1.0, fully neutral: no
+        # correction at all) as raw_sheet_saturation crosses the band -- a smooth
         # ramp, not a hard class-level switch, so a sheet's own measured
         # color decides its own trust, not just its class label. Verified
         # on render_022 (report 023 sec 1): wispy-white/streaky-mix T_mae
         # unchanged to 3 decimal places (both sit below CHROMA_SAT_LO, ramp
         # = 0 -> byte-identical chroma field to the unclamped fit);
-        # saturated-opalescent T_mae 0.206 -> ~0.12, a*/b* deviation from
-        # GT 100-109% -> 21-46%.
+        # saturated-opalescent T_mae 0.206 -> 0.098, a* deviation from GT
+        # ~100% -> 12.5%; streaky-fine-texture T_mae 0.279 -> 0.159, a*
+        # deviation ~90-95% -> 5-26%.
         rsat = raw_sheet_saturation(lin, Y)
         ramp = float(np.clip((rsat - CHROMA_SAT_LO) / (CHROMA_SAT_HI - CHROMA_SAT_LO), 0.0, 1.0))
         dev_max = CHROMA_DEV_MAX + (CHROMA_DEV_MIN - CHROMA_DEV_MAX) * ramp

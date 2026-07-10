@@ -293,11 +293,11 @@ iteration's scope).
 **Pass, with an intentional, disclosed default-path change** (per the brief's explicit nuance: the
 color-constancy fix MAY legitimately alter library outputs if justified).
 
-- **Continuous-anchor-only refit** (§4.2's `ANCHOR_FEAT_MU/SD/COEF`): verified the library's
-  `anchor_t_img` / metrics move only in the free QA-signal sense reports 016/017/020 already documented
-  — the DEFAULT (class-anchor) path's `T_mean_rgb`/`h_mean` for every sheet is driven only by
-  `extract.py`'s color-constancy and `T_ANCHOR` changes below, not by this refit (the continuous-anchor
-  constants only enter inference under `--anchor continuous`, never on the default path).
+- **Continuous-anchor-only refit** (§4.2's `ANCHOR_FEAT_MU/SD/COEF`): isolated by patching ONLY these
+  three constants into the pre-023 (`a3fc07a`) `extract.py` and re-running the library batch —
+  **`T_mean_rgb`/`h_mean` are byte-identical to the pre-023 baseline on all 9 sheets** (verified
+  directly, not assumed; the continuous-anchor constants only enter inference under
+  `--anchor continuous`, never on the default class-anchor path).
 - **Color-constancy fix + `T_ANCHOR["cathedral-clear"]` change**: DOES alter the library's default
   path, as expected. `results/library_023/before_after_contact_sheet.jpg` — one row per sheet,
   `original | T before (022 extract.py) | T after (023 extract.py)`. Per-sheet `T_mean_rgb`/`h_mean`
