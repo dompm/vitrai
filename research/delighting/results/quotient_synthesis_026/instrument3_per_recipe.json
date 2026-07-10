@@ -1,0 +1,80 @@
+{
+  "cathedral-amber": {
+    "raw": 37.13541021959673,
+    "quotient_alone": 21.02330862633032,
+    "classical": 16.66711374776652,
+    "hybrid": 19.556294250891984
+  },
+  "cathedral-blue": {
+    "raw": 21.67482276355908,
+    "quotient_alone": 15.753856006029261,
+    "classical": 16.69886495654703,
+    "hybrid": 16.59845435396703
+  },
+  "cathedral-green": {
+    "raw": 46.249045754485216,
+    "quotient_alone": 18.50066208607401,
+    "classical": 20.300949013747715,
+    "hybrid": 29.213411698967153
+  },
+  "cathedral-red": {
+    "raw": 43.57299235082443,
+    "quotient_alone": 27.49247626706555,
+    "classical": 18.533975851068522,
+    "hybrid": 41.504081373704516
+  },
+  "dark-deep": {
+    "raw": 15.685577361604555,
+    "quotient_alone": 7.271516170857836,
+    "classical": 36.89752782341,
+    "hybrid": 16.723029074925094
+  },
+  "dark-opaque": {
+    "raw": 19.873058492909934,
+    "quotient_alone": 10.031282768407152,
+    "classical": 10.863969089619328,
+    "hybrid": 18.465507313180375
+  },
+  "dark-ruby": {
+    "raw": 12.77600262337528,
+    "quotient_alone": 6.9057670299896765,
+    "classical": 16.933306798639716,
+    "hybrid": 16.09624923446067
+  },
+  "dark-slate": {
+    "raw": 22.121201802457353,
+    "quotient_alone": 12.08646058163106,
+    "classical": 27.915271666954418,
+    "hybrid": 24.914787057256845
+  },
+  "dark-textured": {
+    "raw": 15.405897069703327,
+    "quotient_alone": 7.790868243029404,
+    "classical": 7.373453437620357,
+    "hybrid": 11.37600454986137
+  },
+  "saturated-opalescent": {
+    "raw": 27.946578365175835,
+    "quotient_alone": 15.168681702162178,
+    "classical": 15.334495127112996,
+    "hybrid": 25.405399289926166
+  },
+  "streaky-fine-texture": {
+    "raw": 30.599725478429132,
+    "quotient_alone": 16.077692149199443,
+    "classical": 23.240683439306046,
+    "hybrid": 42.85766232277605
+  },
+  "streaky-mix": {
+    "raw": 50.60951897028299,
+    "quotient_alone": 26.736684878387358,
+    "classical": 17.88919487369822,
+    "hybrid": 41.58011578404092
+  },
+  "wispy-white": {
+    "raw": 45.22148005606538,
+    "quotient_alone": 18.38235665199742,
+    "classical": 8.00530368289576,
+    "hybrid": 56.73157064648126
+  }
+}

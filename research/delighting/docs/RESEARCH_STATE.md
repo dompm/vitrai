@@ -262,6 +262,29 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   not fixed: a broader pre-existing (not 023-introduced) haze-accuracy gap on dark-slate/
   streaky-mix/wispy-white/dark-deep, visible now that units are honest — candidate for a
   dedicated future haze-tuning pass.
+- 026 (branch `research/delighting-026`, `026-quotient-synthesis.md`) cross-track synthesis:
+  stress-tested the intern track's report 019 log-luminance quotient against the main pipeline.
+  Refreshed her suncatcher benchmark with the CURRENT (post-023/025) extractor: fixed `T/h` dE
+  10.12->9.30 (023/025 closed ~72% of the raw-vs-relit gap and flipped hue_std from worse-than-raw
+  to better), but classical STILL doesn't beat raw-copy's dE, and the quotient's win holds
+  (3.18->2.38, still far ahead). Added `extract.py --illum {classical,quotient}` (default
+  unchanged, byte-identical to 15 decimals on the library): `quotient` swaps ONLY the smooth
+  illumination envelope for report 019's removal; chroma fit/marks/haze/anchor are the same code.
+  Scored raw / quotient-alone / classical / hybrid on all four standing instruments (13-recipe
+  synthetic T_mae+h_mae, preview-invariance, cross-lighting invariance, real suncatcher): the
+  hybrid does NOT dominate broadly — it matches quotient-alone's big win only on cathedral-clear
+  (haze inert there, which is also the real suncatcher's own class, an important scoping caveat),
+  but REGRESSES classical everywhere haze/chroma correction engages (h_mae macro-avg 0.154->0.403,
+  cross-lighting invariance 0.093->0.148) because the classical haze/anchor code was implicitly
+  tuned against the classical envelope's percentile-based absolute referencing, which the
+  quotient's median-recentered referencing breaks. Quotient-alone (no material model, same
+  exposure-match hack raw-copy gets) is a genuinely strong fast-preview normalizer, beating
+  classical's macro preview-invariance (15.6 vs 18.2) and cross-lighting invariance (0.082 vs
+  0.093) on the synthetic suite. Verdict: quotient and material model serve different product
+  surfaces (fast preview normalization vs full relight with haze/absolute-scale/mark-removal),
+  not one replacing the other; the specific envelope-swap hybrid is not the right integration
+  depth for a unified default. No PR, not shipped; `--illum quotient` stays research-only pending
+  a dedicated haze/anchor retune for that convention (flagged, not attempted).
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -368,6 +391,13 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - Use the scraped manufacturer catalog as a weak material prior: learn which spatial variation is
   likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
 - Treat the luma quotient from report 019 as the baseline every learned cleanup must beat.
+  Report 026 confirms this baseline survives the current (post-023/025) classical extractor and
+  extends it: as a standalone fast-preview normalizer (no material model) it also beats the
+  CLASSICAL extractor on macro preview-invariance and cross-lighting invariance across the
+  13-recipe synthetic suite — but a naive hybrid (swap it in as the classical envelope) regresses
+  haze/anchor accuracy everywhere except cathedral-clear, because that machinery was tuned
+  against the classical envelope's specific referencing convention. A real hybrid needs a
+  dedicated haze/anchor retune for the quotient's convention, not attempted yet.
 - Stop training catalog-only cleanup models; move to explicit transparent-background disentanglement.
 - Bet B/C next: differentiable sheet renderer / test-time optimization over `T`, relief/displacement,
   background layer `B`, and illumination, then distill if the per-sheet optimizer works.

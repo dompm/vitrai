@@ -1,0 +1,316 @@
+{
+  "instrument1_suncatcher_position_sensitivity": {
+    "raw": {
+      "mean_dE": 8.979592495300619,
+      "lum_cv": 0.4067300623337866,
+      "hue_std_deg": 1.4947704119378924
+    },
+    "quotient_alone": {
+      "mean_dE": 2.4377816992369006,
+      "lum_cv": 0.07254737299968426,
+      "hue_std_deg": 1.1631633314853007
+    },
+    "classical": {
+      "mean_dE": 9.300766779610427,
+      "lum_cv": 0.3057055734391414,
+      "hue_std_deg": 1.204881810611558
+    },
+    "hybrid": {
+      "mean_dE": 2.449848817895232,
+      "lum_cv": 0.07204980148412043,
+      "hue_std_deg": 1.1588752437198107
+    }
+  },
+  "instrument2_synthetic_per_recipe": {
+    "cathedral-amber": {
+      "n": 3,
+      "raw_T_mae_unscaled": 0.5103552072178655,
+      "quotient_alone_T_mae_unscaled": 0.5208422753948723,
+      "quotient_alone_T_mae_oraclescale": 0.09464436750369087,
+      "classical_T_mae": 0.11594461221883244,
+      "classical_h_mae": 0.041036839142518065,
+      "hybrid_T_mae": 0.1378097750568602,
+      "hybrid_h_mae": 0.030119678586108787
+    },
+    "cathedral-blue": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.2872957868462942,
+      "quotient_alone_T_mae_unscaled": 0.29138841876046145,
+      "quotient_alone_T_mae_oraclescale": 1.190572121353075,
+      "classical_T_mae": 0.1369016488611142,
+      "classical_h_mae": 0.030120299518099344,
+      "hybrid_T_mae": 0.1309153246987877,
+      "hybrid_h_mae": 0.03015997157585909
+    },
+    "cathedral-green": {
+      "n": 3,
+      "raw_T_mae_unscaled": 0.4787035022938628,
+      "quotient_alone_T_mae_unscaled": 0.5053077323367613,
+      "quotient_alone_T_mae_oraclescale": 0.1437153354303182,
+      "classical_T_mae": 0.1753609404963683,
+      "classical_h_mae": 0.025522978314615558,
+      "hybrid_T_mae": 0.22914142363997983,
+      "hybrid_h_mae": 0.030158204273910083
+    },
+    "cathedral-red": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.3550751118604906,
+      "quotient_alone_T_mae_unscaled": 0.3712901420694802,
+      "quotient_alone_T_mae_oraclescale": 0.23732004907941737,
+      "classical_T_mae": 0.13085479848699974,
+      "classical_h_mae": 0.028218959756919598,
+      "hybrid_T_mae": 0.2218731068817214,
+      "hybrid_h_mae": 0.03015995143847717
+    },
+    "dark-deep": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.037600631800113304,
+      "quotient_alone_T_mae_unscaled": 0.03803967850428283,
+      "quotient_alone_T_mae_oraclescale": 0.01001825046403057,
+      "classical_T_mae": 0.09230283816671031,
+      "classical_h_mae": 0.15531406517227497,
+      "hybrid_T_mae": 0.03145019747268876,
+      "hybrid_h_mae": 0.6783125865489036
+    },
+    "dark-opaque": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.1313389466984461,
+      "quotient_alone_T_mae_unscaled": 0.1356867154251385,
+      "quotient_alone_T_mae_oraclescale": 0.04518340431124397,
+      "classical_T_mae": 0.05851807066452672,
+      "classical_h_mae": 0.11938594306580498,
+      "hybrid_T_mae": 0.08825388039557253,
+      "hybrid_h_mae": 0.6699049094901062
+    },
+    "dark-ruby": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.03928709484328523,
+      "quotient_alone_T_mae_unscaled": 0.03855808837459902,
+      "quotient_alone_T_mae_oraclescale": 0.009447378229261078,
+      "classical_T_mae": 0.04046297993442415,
+      "classical_h_mae": 0.056522765557336874,
+      "hybrid_T_mae": 0.027585357262881353,
+      "hybrid_h_mae": 0.7649966683866972
+    },
+    "dark-slate": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.20274498606126276,
+      "quotient_alone_T_mae_unscaled": 0.20151581112738792,
+      "quotient_alone_T_mae_oraclescale": 0.038026842180962125,
+      "classical_T_mae": 0.12994933956810048,
+      "classical_h_mae": 0.26079230515888596,
+      "hybrid_T_mae": 0.14076953329316944,
+      "hybrid_h_mae": 0.8232885694822393
+    },
+    "dark-textured": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.0961754069838156,
+      "quotient_alone_T_mae_unscaled": 0.09930805370370782,
+      "quotient_alone_T_mae_oraclescale": 0.028205518708816497,
+      "classical_T_mae": 0.027627757473503115,
+      "classical_h_mae": 0.10139731595722357,
+      "hybrid_T_mae": 0.03774533131035927,
+      "hybrid_h_mae": 0.6479587555359714
+    },
+    "saturated-opalescent": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.5222031797081623,
+      "quotient_alone_T_mae_unscaled": 0.5164076266558213,
+      "quotient_alone_T_mae_oraclescale": 0.16403135763759308,
+      "classical_T_mae": 0.10485182321634853,
+      "classical_h_mae": 0.2872653434805665,
+      "hybrid_T_mae": 0.14960539663718175,
+      "hybrid_h_mae": 0.30101458153108573
+    },
+    "streaky-fine-texture": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.37681919251213736,
+      "quotient_alone_T_mae_unscaled": 0.38145255976057735,
+      "quotient_alone_T_mae_oraclescale": 0.07623346916919274,
+      "classical_T_mae": 0.15398618708529124,
+      "classical_h_mae": 0.28938821686733285,
+      "hybrid_T_mae": 0.16905123266036004,
+      "hybrid_h_mae": 0.27503143595106694
+    },
+    "streaky-mix": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.5004504120734107,
+      "quotient_alone_T_mae_unscaled": 0.5343266255729295,
+      "quotient_alone_T_mae_oraclescale": 0.2240192215997761,
+      "classical_T_mae": 0.1642631834033437,
+      "classical_h_mae": 0.31151582811107914,
+      "hybrid_T_mae": 0.3182605002644681,
+      "hybrid_h_mae": 0.3270812959803429
+    },
+    "wispy-white": {
+      "n": 4,
+      "raw_T_mae_unscaled": 0.6270418512409247,
+      "quotient_alone_T_mae_unscaled": 0.6539078312518647,
+      "quotient_alone_T_mae_oraclescale": 0.14582884015495048,
+      "classical_T_mae": 0.07411472131978988,
+      "classical_h_mae": 0.3015507267398277,
+      "hybrid_T_mae": 0.23613175331777383,
+      "hybrid_h_mae": 0.6354604709729763
+    }
+  },
+  "instrument3_preview_invariance_per_recipe": {
+    "cathedral-amber": {
+      "raw": 37.13541021959673,
+      "quotient_alone": 21.02330862633032,
+      "classical": 16.66711374776652,
+      "hybrid": 19.556294250891984
+    },
+    "cathedral-blue": {
+      "raw": 21.67482276355908,
+      "quotient_alone": 15.753856006029261,
+      "classical": 16.69886495654703,
+      "hybrid": 16.59845435396703
+    },
+    "cathedral-green": {
+      "raw": 46.249045754485216,
+      "quotient_alone": 18.50066208607401,
+      "classical": 20.300949013747715,
+      "hybrid": 29.213411698967153
+    },
+    "cathedral-red": {
+      "raw": 43.57299235082443,
+      "quotient_alone": 27.49247626706555,
+      "classical": 18.533975851068522,
+      "hybrid": 41.504081373704516
+    },
+    "dark-deep": {
+      "raw": 15.685577361604555,
+      "quotient_alone": 7.271516170857836,
+      "classical": 36.89752782341,
+      "hybrid": 16.723029074925094
+    },
+    "dark-opaque": {
+      "raw": 19.873058492909934,
+      "quotient_alone": 10.031282768407152,
+      "classical": 10.863969089619328,
+      "hybrid": 18.465507313180375
+    },
+    "dark-ruby": {
+      "raw": 12.77600262337528,
+      "quotient_alone": 6.9057670299896765,
+      "classical": 16.933306798639716,
+      "hybrid": 16.09624923446067
+    },
+    "dark-slate": {
+      "raw": 22.121201802457353,
+      "quotient_alone": 12.08646058163106,
+      "classical": 27.915271666954418,
+      "hybrid": 24.914787057256845
+    },
+    "dark-textured": {
+      "raw": 15.405897069703327,
+      "quotient_alone": 7.790868243029404,
+      "classical": 7.373453437620357,
+      "hybrid": 11.37600454986137
+    },
+    "saturated-opalescent": {
+      "raw": 27.946578365175835,
+      "quotient_alone": 15.168681702162178,
+      "classical": 15.334495127112996,
+      "hybrid": 25.405399289926166
+    },
+    "streaky-fine-texture": {
+      "raw": 30.599725478429132,
+      "quotient_alone": 16.077692149199443,
+      "classical": 23.240683439306046,
+      "hybrid": 42.85766232277605
+    },
+    "streaky-mix": {
+      "raw": 50.60951897028299,
+      "quotient_alone": 26.736684878387358,
+      "classical": 17.88919487369822,
+      "hybrid": 41.58011578404092
+    },
+    "wispy-white": {
+      "raw": 45.22148005606538,
+      "quotient_alone": 18.38235665199742,
+      "classical": 8.00530368289576,
+      "hybrid": 56.73157064648126
+    }
+  },
+  "instrument4_cross_lighting_per_recipe": {
+    "cathedral-amber": {
+      "raw": 0.15643936327824337,
+      "quotient_alone": 0.15532687549264146,
+      "classical": 0.23612278187518676,
+      "hybrid": 0.17173396229921511
+    },
+    "cathedral-blue": {
+      "raw": 0.07813761496807214,
+      "quotient_alone": 0.06903117608665059,
+      "classical": 0.1566310510459134,
+      "hybrid": 0.12963209138593512
+    },
+    "cathedral-green": {
+      "raw": 0.1464608680070098,
+      "quotient_alone": 0.10323107329798736,
+      "classical": 0.13404982211952943,
+      "hybrid": 0.19799266158349588
+    },
+    "cathedral-red": {
+      "raw": 0.08699157682736872,
+      "quotient_alone": 0.08035246353460361,
+      "classical": 0.12686530464075346,
+      "hybrid": 0.1646083825261141
+    },
+    "dark-deep": {
+      "raw": 0.014365190162699694,
+      "quotient_alone": 0.012635389866739503,
+      "classical": 0.051861728277615746,
+      "hybrid": 0.05638808417891887
+    },
+    "dark-opaque": {
+      "raw": 0.028869433424976776,
+      "quotient_alone": 0.029611517484279662,
+      "classical": 0.040402865541056904,
+      "hybrid": 0.05005652291374367
+    },
+    "dark-ruby": {
+      "raw": 0.01870872889877437,
+      "quotient_alone": 0.018538936587271966,
+      "classical": 0.011778496650568161,
+      "hybrid": 0.03482947608703978
+    },
+    "dark-slate": {
+      "raw": 0.044491413159186866,
+      "quotient_alone": 0.028326495635801644,
+      "classical": 0.039608431965888105,
+      "hybrid": 0.02570681929478274
+    },
+    "dark-textured": {
+      "raw": 0.0338824555276751,
+      "quotient_alone": 0.02357005426934839,
+      "classical": 0.03639465926703611,
+      "hybrid": 0.052136442769244305
+    },
+    "saturated-opalescent": {
+      "raw": 0.08483827210355502,
+      "quotient_alone": 0.08964887522661594,
+      "classical": 0.07024784246694149,
+      "hybrid": 0.18977500353559157
+    },
+    "streaky-fine-texture": {
+      "raw": 0.08294225605732167,
+      "quotient_alone": 0.068219804160066,
+      "classical": 0.08953713844534164,
+      "hybrid": 0.26761001410685287
+    },
+    "streaky-mix": {
+      "raw": 0.2176524603128389,
+      "quotient_alone": 0.22144239456832424,
+      "classical": 0.1163657783908006,
+      "hybrid": 0.31272566491275583
+    },
+    "wispy-white": {
+      "raw": 0.23632754198833217,
+      "quotient_alone": 0.1601879478995755,
+      "classical": 0.10215402483860991,
+      "hybrid": 0.27312567739144683
+    }
+  }
+}
