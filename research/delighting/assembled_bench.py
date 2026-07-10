@@ -33,6 +33,20 @@ Metrics (inside piece masks, eroded a few px):
     FLOOR = the same-size-region variance of the AUTHORED gt_T directly.
  3. Visual panels: RENDER B | relit | raw, per material; + a drag-test strip.
 
+Report 014b (maintainer request): ALSO run the same extract-from-RENDER-A
+pipeline against a UNIFORM white backlight target of KNOWN strength (RENDER U /
+RENDER A_U from generate_assembled.py) -- the app's realistic first relight mode
+is a FLAT controllable illuminant (lightbox + warmth), not IBL relighting, and
+014's rotated-IBL truth let the unmodeled-illuminant colour dominate absolute
+fidelity (see the module docstring's I2_hat note). Because the uniform target's
+strength is KNOWN exactly, relight = T * KNOWN constant -- no illuminant
+estimation at all -- so fidelity there isolates EXTRACTION quality. Raw-copy
+baseline uses a single GLOBAL (scalar) exposure match to U's level, derived from
+the extractor's own recovered RENDER-A brightness (no U/A_U pixel read). Also
+reports an "oracle-input" ceiling: extract straight from RENDER A_U (already
+under the target light) instead of RENDER A -- the pure extraction-only floor,
+with no capture/target domain gap. See run_uniform().
+
 Run: /usr/bin/python3 assembled_bench.py --data assembled_data --out results/assembled
 """
 import argparse
@@ -225,20 +239,83 @@ def run_material(sample_dir, out_dir):
         panels[var["name"]] = (B, comp_relit, comp_raw)
 
     # 2. DRAG TEST -- 9 UV source positions, luminance CV vs grain floor
-    results["drag"] = drag_test(A, T, gtT, L_mean, pj, meta, variants[0], ev1)
+    gEV0 = 2.0 ** (variants[0]["ev"] - ev1)
+    results["drag"] = drag_test(A, T, gtT, gEV0, L_mean * gEV0, pj, meta)
 
     # 3. panels
-    make_panels(out_dir, recipe, panels, A, T, gtT, L_mean, pj, meta, variants[0], ev1)
+    make_panels(out_dir, recipe, panels, A, T, gtT, gEV0, L_mean * gEV0, pj, meta)
+
+    # --- UNIFORM-TARGET condition (report 014b, maintainer request). The app's
+    # realistic first relight mode is a FLAT controllable illuminant (virtual
+    # lightbox + warmth), not IBL relighting; and report 014 sec.3 showed the
+    # rotated-IBL truth's unmodeled-illuminant colour dominates absolute error.
+    # A uniform target is KNOWN exactly -> relight = T * KNOWN constant, no
+    # illuminant-estimation confound at all: fidelity isolates EXTRACTION quality.
+    u_path = os.path.join(sample_dir, "renderU_photo_linear.exr")
+    if os.path.exists(u_path):
+        results["uniform"] = run_uniform(sample_dir, out_dir, recipe, gclass, A, T, L_mean,
+                                         gtT, pieces, shape, umask, smask)
     return results
 
 
-def drag_test(A, T, gtT, L_mean, pj, meta, var, ev1):
+def run_uniform(sample_dir, out_dir, recipe, gclass, A, T, L_mean, gtT, pieces, shape, umask, smask):
+    """The uniform-target condition (report 014b). Pipeline = extract T,h from the
+    ORIGINAL RENDER A (the IBL_1 "phone photo" -- the realistic input) -> composite
+    -> relight with the KNOWN uniform illuminant I_U -> compare to RENDER U.
+    Raw-copy baseline = pieces sampled from RENDER A pixels, ONE global (scalar,
+    not per-channel) exposure match to U's KNOWN level -- mirrors the honest
+    gEV=2^(ev2-ev1) used for the IBL variants, generalised to "known target level
+    / extractor's own recovered capture level" (uses no pixel of U or A_U).
+    Also reports the "oracle-input" diagnostic ceiling: extract straight from
+    RENDER A_U (the flat sheet ALREADY under the target uniform light -- no
+    capture/target domain gap at all), showing the pure extraction floor."""
+    AU = load_exr(os.path.join(sample_dir, "renderAU_photo_linear.exr"))
+    U = load_exr(os.path.join(sample_dir, "renderU_photo_linear.exr"))
+    meta = json.load(open(os.path.join(sample_dir, "meta.json")))
+    strength = meta["lighting"]["uniform_strength"]
+    I_U = np.array([strength, strength, strength])
+
+    raw_unit = [crop(A, p["src_bbox_px"]) for p in pieces]   # appearance under IBL_1
+    T_unit = [crop(T, p["src_bbox_px"]) for p in pieces]     # intrinsic, extracted from A
+
+    # single GLOBAL (scalar) exposure match: A's own recovered brightness -> U's
+    # KNOWN level. No per-channel colour correction (raw doesn't get free colour
+    # fixing, only a brightness match) and no pixel of U/A_U is read.
+    r_scalar = float(strength / max(lum(L_mean[None, None])[0, 0], 1e-6))
+    comp_raw_u = build_composite([r * r_scalar for r in raw_unit], pieces, shape)
+    comp_relit_u = build_composite([I_U * t for t in T_unit], pieces, shape)
+
+    # oracle-INPUT ceiling: extract from A_U itself (already under the target light).
+    m_u = extract.extract_maps(AU, gclass, mark_region="none")
+    T_oracle_in = m_u["T"]
+    T_oracle_unit = [crop(T_oracle_in, p["src_bbox_px"]) for p in pieces]
+    comp_relit_oracle_in = build_composite([I_U * t for t in T_oracle_unit], pieces, shape)
+
+    out = {
+        "strength": strength,
+        "r_scalar": r_scalar,
+        "raw_honest_mae255": mae255(comp_raw_u, U, umask),
+        "relit_honest_mae255": mae255(comp_relit_u, U, umask),
+        "relit_oracle_input_mae255": mae255(comp_relit_oracle_in, U, umask),
+        "T_mae_vs_authored_from_AU": float(np.abs(T_oracle_in - gtT)[smask].mean()),
+    }
+
+    # drag test under the uniform target -- the purest form of the maintainer's
+    # idea: even light -> only texture should vary.
+    out["drag"] = drag_test(A, T, gtT, r_scalar, I_U, meta["projection"], meta)
+
+    make_uniform_panels(out_dir, recipe, U, comp_relit_u, comp_raw_u,
+                        A, T, gtT, r_scalar, I_U, meta["projection"], meta)
+    return out
+
+
+def drag_test(A, T, gtT, gEV, I2_hat, pj, meta):
     """Re-source a single piece window from a 3x3 grid of UV positions; report the
     dispersion (luminance CV; Lab dE to centroid) of the piece-mean across the 9,
-    for RAW (photo under IBL_1, EV-matched), RELIT (I2_hat*T), and the GRAIN FLOOR
-    (authored gt_T -- the irreducible texture variation). Win: relit ~ grain, raw high."""
-    gEV = 2.0 ** (var["ev"] - ev1)
-    I2_hat = L_mean * gEV
+    for RAW (photo under IBL_1, EV-matched by `gEV`), RELIT (`I2_hat`*T), and the
+    GRAIN FLOOR (authored gt_T -- the irreducible texture variation). Win: relit
+    ~ grain, raw high. `gEV`/`I2_hat` are supplied by the caller so this one
+    function serves both the IBL-variant drag test and the uniform-target one."""
     s = meta["layout"]["piece_half"]
     half_uv = 2 * s  # UV half-width of a piece window
     centers = np.linspace(pj["u_lo"] + half_uv + 0.01, pj["u_hi"] - half_uv - 0.01, 3)
@@ -278,21 +355,10 @@ def show(lin, sz=300):
     return cv2.resize(a, (sz, sz), interpolation=cv2.INTER_AREA)
 
 
-def make_panels(out_dir, recipe, panels, A, T, gtT, L_mean, pj, meta, var, ev1):
-    os.makedirs(out_dir, exist_ok=True)
-    # assembly panel: truth | relit | raw for the headline IBL_2 variant
-    vname = list(panels.keys())[0]
-    B, relit, raw = panels[vname]
-    row = np.concatenate([
-        label(show(B), f"RENDER B truth ({vname})"),
-        label(show(relit), "relit composite"),
-        label(show(raw), "raw-copy composite"),
-    ], axis=1)
-    Image.fromarray(row).save(os.path.join(out_dir, f"panel_{recipe}.jpg"), quality=90)
-
-    # drag strip: one piece at 9 positions, raw row vs relit row vs grain row
-    gEV = 2.0 ** (var["ev"] - ev1)
-    I2_hat = L_mean * gEV
+def make_drag_strip(out_dir, fname, A, T, gtT, gEV, I2_hat, pj, meta):
+    """One piece re-sourced at 9 UV positions: raw row vs relit row vs grain-floor
+    row. `gEV`/`I2_hat` parametrise the raw exposure-match and the relight
+    illuminant so this serves both the IBL-variant and uniform-target strips."""
     s = meta["layout"]["piece_half"]
     half_uv = 2 * s
     centers = np.linspace(pj["u_lo"] + half_uv + 0.01, pj["u_hi"] - half_uv - 0.01, 3)
@@ -308,7 +374,34 @@ def make_panels(out_dir, recipe, panels, A, T, gtT, L_mean, pj, meta, var, ev1):
         label(np.concatenate(relit_row, 1), "relit @9 positions"),
         label(np.concatenate(grain_row, 1), "grain floor (authored T) @9"),
     ], axis=0)
-    Image.fromarray(strip).save(os.path.join(out_dir, f"drag_{recipe}.jpg"), quality=90)
+    Image.fromarray(strip).save(os.path.join(out_dir, fname), quality=90)
+
+
+def make_panels(out_dir, recipe, panels, A, T, gtT, gEV, I2_hat, pj, meta):
+    os.makedirs(out_dir, exist_ok=True)
+    # assembly panel: truth | relit | raw for the headline IBL_2 variant
+    vname = list(panels.keys())[0]
+    B, relit, raw = panels[vname]
+    row = np.concatenate([
+        label(show(B), f"RENDER B truth ({vname})"),
+        label(show(relit), "relit composite"),
+        label(show(raw), "raw-copy composite"),
+    ], axis=1)
+    Image.fromarray(row).save(os.path.join(out_dir, f"panel_{recipe}.jpg"), quality=90)
+    make_drag_strip(out_dir, f"drag_{recipe}.jpg", A, T, gtT, gEV, I2_hat, pj, meta)
+
+
+def make_uniform_panels(out_dir, recipe, U, comp_relit_u, comp_raw_u, A, T, gtT, gEV, I2_hat, pj, meta):
+    """truth-U | relit | raw panel + a drag strip under the uniform target --
+    the purest form of the maintainer's drag idea: even light -> texture only."""
+    os.makedirs(out_dir, exist_ok=True)
+    row = np.concatenate([
+        label(show(U), "RENDER U truth (uniform)"),
+        label(show(comp_relit_u), "relit composite"),
+        label(show(comp_raw_u), "raw-copy composite"),
+    ], axis=1)
+    Image.fromarray(row).save(os.path.join(out_dir, f"panel_uniform_{recipe}.jpg"), quality=90)
+    make_drag_strip(out_dir, f"drag_uniform_{recipe}.jpg", A, T, gtT, gEV, I2_hat, pj, meta)
 
 
 def main():

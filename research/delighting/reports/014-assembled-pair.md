@@ -7,6 +7,10 @@ extractor `extract.py` @ the fixed classical (report 009). Deliverables:
 `results/assembled/{panel_*, drag_*, metrics.json}`, this report. Renders
 gitignored. **No PR.**
 
+**§8 update (014b, 2026-07-09, branch `research/delighting-uniform` off
+`research/delighting`):** adds a uniform-target condition per the maintainer's
+request. See §8.
+
 This is the maintainer's proposed purest end-to-end metric. Report 013 (the real
 suncatcher) could only measure *consistency*, because its assets are **mismatched
 glass** with no ground truth — its §6 named the missing capture exactly: "photograph
@@ -53,6 +57,15 @@ construction, and absolute relight fidelity becomes measurable.
   shift. An oracle per-channel gain fit to RENDER B (labelled cheating) cuts wispy's
   absolute MAE **23→4.3** — i.e. ~80% of the honest absolute error is the unmodeled
   global illuminant, shared equally by raw and relit.
+- **§8 (014b, maintainer request): remove that confound with a UNIFORM target —
+  and the absolute-fidelity verdict FLIPS.** The rotated-IBL truth above baked an
+  unmodeled illuminant into "absolute fidelity"; the app's actual first relight
+  mode is a flat controllable illuminant, not IBL relighting. Rendering the truth
+  under a uniform white backlight of KNOWN strength removes the illuminant
+  confound entirely (relight = T × known constant), and **relit now BEATS raw-copy
+  for BOTH materials**: wispy **16.6 → 6.8** MAE, cathedral **35.6 → 26.4** MAE.
+  Raw loses because it now carries IBL_1's baked directional gradient into a
+  flat-lit world — visibly so in the panels (§8).
 
 ## 1. Method
 
@@ -258,22 +271,153 @@ fidelity. The two facts are consistent: relit's value is that its error is the S
 wherever you drag from (≈ grain floor), while raw's error is low at the true spot
 and high everywhere else.
 
-## 8. Files
+**Scope note (superseded in part by §8):** the raw-beats-relit finding above is
+specific to the rotated-IBL truth, whose colour shift is deliberately unmodeled
+(§3, §6). Under the product's own realistic target — a uniform controllable
+illuminant — §8 shows the verdict flips: relit beats raw on absolute fidelity too.
+
+## 8. 014b — Uniform target (maintainer request)
+
+**Motivation.** RENDER B's rotated IBL implicitly assumes IBL relighting in the
+app; the app's realistic first relight mode is instead a **flat controllable
+illuminant** (virtual lightbox + warmth). §3 also showed the unmodeled-illuminant
+colour shift dominates absolute fidelity under the rotated IBL, confounding the
+raw-vs-relit comparison. A uniform target removes that confound entirely: the
+target is a KNOWN constant, so `relight = T × known constant` and fidelity
+isolates **extraction quality**, not illuminant-estimation quality. The
+rotated-IBL variants (§2–§7) remain in the generator/bench as the stress test;
+the uniform target is the new product-aligned headline condition.
+
+**Setup.** `generate_assembled.py` now also renders, per material (same seeds/
+textures, `use_bump=False`, same camera/projection as §1 so `pieces` is reused
+unchanged): **RENDER A_U** — the flat sheet under a uniform white backlight of
+known strength 1.0 (black world + a dedicated emissive plane behind the glass,
+the `--validate`-mode pattern from `generate_synthetic.py`, copied rather than
+imported since that file has a concurrent editor on another branch); **RENDER
+U** — the assembled piece under the same uniform light = the new RELIGHT TRUTH.
+`assembled_bench.py`'s `run_uniform()` runs the SAME extractor on the SAME
+RENDER A (the IBL_1 "phone photo" — the realistic input, no change to the
+extraction step) → composite → relight with the known uniform illuminant `I_U =
+(1,1,1)` → compare to RENDER U. Raw-copy baseline: pieces sampled from RENDER
+A's pixels, ONE global **scalar** exposure match (not per-channel — raw gets a
+brightness match, not free colour correction) derived from the extractor's own
+recovered RENDER-A brightness `r = strength / lum(<L_A>)`; no pixel of U or A_U
+is read. Also reported: an **oracle-input** diagnostic ceiling — extract
+straight from RENDER A_U itself (already under the target light, so there is no
+capture/target domain gap at all) — showing the pure extraction-only floor.
+
+### 8.1 Fidelity — composite vs RENDER U (the uniform truth)
+
+Piece-mask MAE, sRGB/255. `oracle-input` = extract from A_U instead of A
+(diagnostic ceiling, not part of the honest pipeline). Lower is better.
+
+| material | raw (honest) | **relit (honest, from A)** | relit oracle-input (from A_U) |
+|---|---|---|---|
+| cathedral-green | 35.6 | **26.4** | 30.3 |
+| wispy-white | 16.6 | **6.8** | 1.6 |
+
+**The verdict flips: relit now beats raw-copy on absolute fidelity, for both
+materials.**
+
+- **Wispy (product case): the clean win, and honest ≈ near-ceiling.** Raw carries
+  IBL_1's baked directional gradient (bluer top, warmer bottom — see §8.3) into a
+  scene that should be perfectly flat; relit removes it (16.6→6.8, a 59%
+  reduction). The oracle-input ceiling (1.6) shows most of the remaining honest
+  error is the capture→target **domain gap** (extracting from an IBL-lit photo
+  vs a uniformly-lit one), not the extractor's core competence — extracting from
+  a uniformly-lit input very nearly reproduces the uniformly-lit truth.
+- **Cathedral (the hard case): also a real win, but a shallower one.** 35.6→26.4
+  (26% reduction) — smaller than wispy's, and the oracle-input ceiling (30.3) is
+  *worse* than the honest number here (26.4), an inversion worth being honest
+  about: cathedral's extractor T carries the transmitted see-through landscape
+  (§4, §6), and that structure is present whether extracted from A or A_U, so
+  "closer domain match" does not buy the clean win it does for wispy. The
+  T-vs-authored MAE actually **rises** slightly when extracted from A_U (0.182)
+  vs from A (0.134) — a uniformly-lit capture is not automatically an easier
+  extraction target for a transmissive glass whose class-prior anchoring assumes
+  some directional envelope. Net effect: relit still wins, by less, for a
+  different reason (raw's error is dominated by the wrong light *shape*
+  everywhere; relit's is dominated by a wrong-but-constant see-through cast).
+- **Reading the two materials together:** the maintainer's expectation holds for
+  wispy outright, and cathedral improves rather than contradicts it — the
+  transmissive hard case just shows a smaller, structurally different win, fully
+  consistent with §3/§4/§6's documented see-through-separation limit.
+
+### 8.2 Drag test under the uniform target
+
+Same 9-position re-sourcing as §4, now scored against the uniform target's own
+brighter absolute level (Lab dE is level-dependent; luminance CV is
+gain-invariant so it matches §4 exactly by construction).
+
+| material | measure | raw | **relit** | grain floor |
+|---|---|---|---|---|
+| wispy-white | luminance CV | 0.141 | **0.050** | 0.027 |
+| wispy-white | Lab dE (to centroid) | 10.04 | **1.91** | 0.92 |
+| cathedral-green | luminance CV | 0.292 | **0.140** | 0.0085 |
+| cathedral-green | Lab dE | 19.22 | 19.78 | 0.28 |
+
+Luminance CV is identical to §4 (as it must be — a global gain cancels out of a
+coefficient of variation). Lab dE is the purest form of the maintainer's drag
+idea, now under the product's own relight mode: wispy's relit dE (1.91) sits
+close to the grain floor (0.92) and far below raw (10.04); cathedral's relit dE
+is essentially unmoved from raw (19.78 vs 19.22), the same see-through residual
+as §4 — even light, texture-only dragging works for the opalescent case, not yet
+for the transmissive one.
+
+### 8.3 Own-eyes read of the panels
+
+- **`panel_uniform_wispy-white.jpg`** (truth-U | relit | raw): the truth is a
+  flat, even, slightly warm-white 2×2. **Relit matches it closely** — near-even
+  brightness across all four pieces, correct milky-white cast. **Raw visibly
+  fails**: the top row reads cool blue-grey, the bottom row reads warm
+  yellow-green — IBL_1's directional sky gradient baked straight into a scene
+  that is supposed to be perfectly flat. This is the single clearest image in
+  either report: de-light+relight now beats raw copy **by eye**, not just by
+  MAE.
+- **`panel_uniform_cathedral-green.jpg`**: the truth is a flat mint green. Both
+  relit and raw show the transmitted sky/cloud/field landscape (top squares
+  bluish with cloud texture, bottom squares yellow-green field) — neither
+  matches the flat truth well, and they look similar to each other. This is the
+  honest counter-image for the hard case: the MAE win (26.4 vs 35.6) is real but
+  subtler than it looks, because both share the same see-through-residual
+  failure mode; raw's extra loss is concentrated in the wrong overall light
+  *shape*, which the eye reads as an overall wash more than a swap of scene
+  content.
+- **`drag_uniform_wispy-white.jpg`** is the money shot for 014b: the **raw** row
+  swings from yellow-green (near the field) through pale green to blue-white
+  (near the sky) across the 9 positions; the **relit** row is uniformly
+  off-white, tracking the flat **grain-floor** row almost exactly. Even light,
+  same source glass, only texture varies — the maintainer's drag idea in its
+  purest form.
+- **`drag_uniform_cathedral-green.jpg`** is the same honest counter as §5's
+  `drag_cathedral-green.jpg`: the **grain-floor** row is flat mint green, but
+  both raw and relit rows still swing green→blue across positions, because the
+  transmitted landscape lives in the extracted T regardless of which light it
+  was extracted under.
+
+## 9. Files
 
 - `generate_assembled.py` — the `--assembled` generator (RENDER A/B/C + GT, FOV-correct
   projection, per-piece UV rects, meta.json). Imports from `generate_synthetic.py`;
-  the only edit there is a `use_bump` flag on `create_glass_material`.
+  the only edit there is a `use_bump` flag on `create_glass_material`. 014b adds
+  RENDER U / RENDER A_U (uniform backlight, `build_world_uniform`) to the same run.
 - `assembled_bench.py` — extract → composite → honest relight → fidelity + drag +
-  panels; oracle-gain attribution; self-documenting header.
+  panels; oracle-gain attribution; self-documenting header. 014b adds
+  `run_uniform()` (uniform-target fidelity + oracle-input ceiling + drag +
+  panels).
 - `results/assembled/panel_{cathedral-green,wispy-white}.jpg` — truth | relit | raw.
 - `results/assembled/drag_{cathedral-green,wispy-white}.jpg` — one piece @9 positions,
   raw / relit / grain-floor rows.
+- `results/assembled/panel_uniform_{cathedral-green,wispy-white}.jpg` — 014b:
+  truth-U | relit | raw under the uniform target.
+- `results/assembled/drag_uniform_{cathedral-green,wispy-white}.jpg` — 014b drag
+  strip under the uniform target.
 - `results/assembled/metrics.json` — all fidelity, drag, assembly-control, oracle,
-  T-accuracy numbers.
+  T-accuracy numbers; 014b numbers under each material's `uniform` key.
 - Gitignored: `assembled_data/` (the EXR/PNG renders + textures), regenerated by the
   generator.
 
-## 9. Environment / provenance
+## 10. Environment / provenance
 
 - **Blender 5.0.1** official macOS arm64 portable (`~/Applications/Blender-5.0.1.app`),
   headless Cycles on Apple M4 Metal, 96 samples + OpenImageDenoise, 1024² Standard
