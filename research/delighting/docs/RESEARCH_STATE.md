@@ -1,6 +1,6 @@
 # Glass de-lighting research — living state doc
 
-Last updated 2026-07-09. This consolidates the research arc so any session (or teammate) can
+Last updated 2026-07-10. This consolidates the research arc so any session (or teammate) can
 resume. Companion docs in this folder: `synthetic-glass-data-spec.md` (the data-gen brief),
 `synthetic-generator-review.md` / `synthetic-validation-findings.md` / `synthetic-generator-feedback-2.md`
 (reviews of the generator). Numbered iteration reports live in `../reports/`.
@@ -56,7 +56,11 @@ Textures-first (T,h authored as images, fed to shader → GT by construction), `
 shadow on/off pairs (for the hand-shadow problem OP-1), mullion/frame toggle, multi-lighting per seed.
 Generator: `../generate_synthetic.py` (now in-house via `bpy` in a uv env). 5 recipes: cathedral-green,
 cathedral-amber, dark-opaque, streaky-mix, wispy-white; report 017 adds three dark-family recipes
-(dark-deep, dark-ruby, dark-slate) to widen the absolute-scale anchor's dark-end calibration. As of
+(dark-deep, dark-ruby, dark-slate) to widen the absolute-scale anchor's dark-end calibration;
+report 022 adds five real-corpus gap recipes (cathedral-blue, cathedral-red, saturated-opalescent
+-- the first opalescent-class recipe -- streaky-fine-texture, dark-textured), implements the
+previously-dead multi-octave texture detail, and grounds all 13 recipes inside the real
+per-class chroma/texture bands (021/022 appearance grounding). As of
 Intern-track report 010 (`010-material-v2-representation.md` — do not confuse with the same-numbered
 main-track `010-neural-shadow.md`), the generator starts
 Material-v2 by exporting authored `height` and derived `normal` maps, and using that height to drive
@@ -186,6 +190,24 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   invariance 0.036 class-anchored -> 0.280 continuous) — class anchor is consistently
   wrong, continuous is averagely right; `auto` default stands, but "estimate the scale
   once per sheet, not once per photo" is a measured follow-up.
+- 022 (branch `research/delighting-022`, `022-recipe-realism.md`) closed 021's two measured
+  synthetic-realism gaps and its five recipe proposals. generate_noise's dead `octaves` param
+  implemented (real fBm blending; octaves=1 byte-identical), per-family octave params tuned
+  against the real per-class hf medians: ALL 13 recipes' hf + chroma now inside the real
+  p5-p95 bands (before: all 8 sat below every class's p5); cathedral desaturated to the real
+  median (C 50-56 -> 28.7, same L/hue); five gap recipes added from 021 §5 (cathedral-blue/red,
+  saturated-opalescent -- FIRST opalescent-class recipe -- streaky-fine-texture, dark-textured).
+  Validate gate 13/13 at few-percent MAE. Extractor (untouched) on the new renders: 0 anchor
+  fallbacks, existing recipes hold their 017 baselines under 12-42x more texture,
+  dark-textured is the best recipe of all (T_mae 0.023); honest breaks where predicted --
+  saturation collapse on saturated-opalescent/streaky-fine-texture (009's desaturation trade
+  was tuned on near-neutral wispy-white only) and class-anchor overscale on the darker
+  cathedral-blue/red (rendered p99 0.715-0.75 vs the 0.95 cathedral anchor). ANCHOR_*/T_ANCHOR
+  refit on the new recipe statistics is the named follow-up, NOT done there (one change at a
+  time). Unit finding: the 017 authored->rendered sRGB-shaped transform applies to gt_h too
+  (rendered = srgb_encode(authored h), measured exactly), so 021's authored-unit haze targets
+  overshoot in rendered/extractor units -- haze-authoring units need an explicit decision
+  before the next haze pass.
 - 020 (branch `research/delighting-020`, `020-per-sheet-scale.md`) closed both of 017's named
   follow-ups, and found they compound: `extract.estimate_anchor_scale_sheet` pools several
   photos of the SAME sheet's continuous-anchor `t_img` via MEDIAN (product entry points: a
@@ -278,6 +300,12 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   percentile fallback gate); only validated/shipped in combination with per-sheet pooling —
   see report 020 SS2.3/SS3.1 for why it is not a safe ship in isolation.
 - Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
+- Refit `T_ANCHOR`/`ANCHOR_*` on the 022 recipe statistics (they were fit on the old 8
+  recipes; report 022 §5 measures the resulting overscale on cathedral-blue/red).
+- Fix the 009 desaturation trade for SATURATED wispy/opal glass (022 §5: saturated-opalescent
+  and streaky-fine-texture collapse to near-neutral — first GT evidence, was an evidence hole).
+- Decide haze-authoring units (022 §6 note 1: rendered gt_h = srgb_encode(authored h), so
+  authored-unit targets from 021 overshoot in extractor/rendered units).
 - For GlassNet: generate many material seeds per class, then evaluate a held-out-material split;
   current neural result only proves held-out-lighting consistency.
 - Render a v2 synthetic batch and add a Material-v2 preview metric that scores background
