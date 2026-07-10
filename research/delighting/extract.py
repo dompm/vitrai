@@ -757,10 +757,13 @@ def main():
                     help="skip the default VLM class call (use --class / manifest override, else 'wispy')")
     ap.add_argument("--mark-region", default=None,
                     help="'none', 'unknown', or a 3x3 cell (e.g. bottom-right)")
-    ap.add_argument("--anchor", choices=("class", "continuous"), default="class",
-                    help="absolute-scale anchor: 'class' (class-prior target, report 003/009) "
-                         "or 'continuous' (image-statistics estimate with the class prior as "
-                         "regularizer, report 016)")
+    ap.add_argument("--anchor", choices=("auto", "class", "continuous"), default="auto",
+                    help="absolute-scale anchor: 'class' (class-prior target, report 003/009), "
+                         "'continuous' (image-statistics estimate with the class prior as "
+                         "regularizer, report 016), or 'auto' (DEFAULT, report 016 sign-off: "
+                         "'continuous' when the class came from the VLM/fallback -- that path "
+                         "is ~30%-reliable in the wild, report 015 -- and 'class' when a human "
+                         "set it via --class or manifest class_override)")
     ap.add_argument("--debug", action="store_true", help="save intermediate masks/fields")
     args = ap.parse_args()
 
@@ -772,19 +775,24 @@ def main():
         # asked of the VLM -- a stale default can no longer beat the classifier
         # (that is what misclassified white.jpg in 002).
         if args.glass_class:
-            return args.glass_class
+            return args.glass_class, True
         override = (entry or {}).get("class_override")
         if override:
-            return override
+            return override, True
         if not args.no_vlm:
             try:
                 from vlm_classify import classify_glass
                 c = classify_glass(p)
                 print(f"  VLM class for {os.path.basename(p)}: {c}")
-                return c
+                return c, False
             except Exception as e:
                 print(f"  VLM class failed ({e}); falling back to 'wispy'")
-        return "wispy"
+        return "wispy", False
+
+    def resolve_anchor(human_class):
+        if args.anchor != "auto":
+            return args.anchor
+        return "class" if human_class else "continuous"
 
     def marks(p, entry=None):
         # Mark region is human-only (report 003/004): the VLM hallucinates marks
@@ -802,13 +810,15 @@ def main():
                 continue
             entry = manifest.get(f, {})
             p = os.path.join(args.input, f)
-            process(p, classify(p, entry), entry.get("corners"),
+            cls, human_cls = classify(p, entry)
+            process(p, cls, entry.get("corners"),
                     args.out, args.size, args.debug, mark_region=marks(p, entry),
-                    anchor=args.anchor)
+                    anchor=resolve_anchor(human_cls))
     else:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None
-        process(args.input, classify(args.input), corners, args.out, args.size, args.debug,
-                mark_region=marks(args.input), anchor=args.anchor)
+        cls, human_cls = classify(args.input)
+        process(args.input, cls, corners, args.out, args.size, args.debug,
+                mark_region=marks(args.input), anchor=resolve_anchor(human_cls))
 
 
 if __name__ == "__main__":
