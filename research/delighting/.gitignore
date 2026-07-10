@@ -23,3 +23,5 @@ test*.exr
 .DS_Store
 __pycache__/
 dark_calibration_data/
+realpairs/crawl_log.txt
+realpairs/results/census_images/
