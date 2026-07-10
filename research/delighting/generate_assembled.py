@@ -147,9 +147,17 @@ def add_dark_wall():
 
 def projection(cam):
     """Pinhole map for the (jitter-free) camera at glass depth y=0.
-    Returns visible half-extents and the visible UV window (u = 2*X + 0.5)."""
+    Returns visible half-extents and the visible UV window (u = 2*X + 0.5).
+
+    NB: for sensor_fit='AUTO' the FIT axis is the horizontal (sensor_width) when
+    res_x >= res_y, and the vertical FOV of the actual render scales by the pixel
+    aspect -- so cam.data.angle_y (which is derived from sensor_height=24mm, not
+    the render aspect) is NOT the true rendered vertical FOV for a square image.
+    Verified empirically (report 014): a square render shows a SQUARE world
+    region, i.e. vis_half_z == vis_half_x, not the 0.096 that angle_y implies.
+    We therefore derive vhz from vhx and the pixel aspect."""
     vhx = CAM_DIST * math.tan(cam.data.angle_x / 2.0)
-    vhz = CAM_DIST * math.tan(cam.data.angle_y / 2.0)
+    vhz = vhx * (RES / RES)  # square render -> square world region; general: *res_y/res_x
     return {
         "vis_half_x": vhx, "vis_half_z": vhz,
         "u_lo": 0.5 - 2 * vhx, "u_hi": 0.5 + 2 * vhx,
