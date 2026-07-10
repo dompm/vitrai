@@ -189,10 +189,19 @@ ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
 # healthy extractions); as disagreement grows toward TAU1, shift up to
 # ANCHOR_BLEND_WMAX of the way (in log space) to the image estimate. Constants
 # tuned on the synthetic class-error-injection eval (eval_class_injection.py).
+# Report 020 refit: MU/SD/COEF refit on the SAME 35-sample/8-recipe set as
+# report 017 (T_LO/T_HI unchanged) after the sat_lit ADAPTIVE-GATE fix above
+# -- fit_anchor.py, same ridge-in-logit-space method, extended to reuse
+# extract.anchor_features so fit and inference are identical by
+# construction. Only sat_lit's mu/sd/coefficient move (0.238821->0.339133,
+# 0.221127->0.197783, 1.28039->1.55464): the other two features and their
+# coefficients are within noise of report 017's values, as expected since
+# the fix only changes sat_lit's value on 12 of the 35 fit samples (all in
+# the dark family) where the old absolute gate was degenerate.
 ANCHOR_T_LO, ANCHOR_T_HI = 0.04, 0.98
-ANCHOR_FEAT_MU = np.array([-1.98505, 0.238821, 0.241629])
-ANCHOR_FEAT_SD = np.array([1.16796, 0.221127, 0.327259])
-ANCHOR_COEF = np.array([0.0933926, 1.28039, 0.412618, 0.542164])
+ANCHOR_FEAT_MU = np.array([-1.98505, 0.339133, 0.241629])
+ANCHOR_FEAT_SD = np.array([1.16796, 0.197783, 0.327259])
+ANCHOR_COEF = np.array([0.0933926, 1.55464, 0.260738, 0.476681])
 ANCHOR_BLEND_TAU0, ANCHOR_BLEND_TAU1, ANCHOR_BLEND_WMAX = 1.5, 3.0, 0.85
 
 
@@ -304,17 +313,56 @@ def milkiness(rgb_like, r_tex):
     return bright * smooth * desat
 
 
+# Report 020: sat_lit's ADAPTIVE fallback gate, used only when the absolute
+# gate below is degenerate (see anchor_features). Percentile band, not a
+# fixed choice: measured to be insensitive to the exact numbers (dark-opaque
+# sat_lit_adapt 0.182/0.199/0.175/0.195 for (80,97)/(90,99)/(70,95)/(85,99.5)
+# respectively) -- the point is "the brightest fraction of THIS photo",
+# whatever absolute luminance that happens to be, not the exact fraction.
+SAT_LIT_FALLBACK_PLO, SAT_LIT_FALLBACK_PHI = 80, 97
+
+
 def anchor_features(lin):
     """Raw, class-free feature triplet for the continuous anchor (report 016):
     [log p95(luminance), luminance-gated mean saturation, lit-pixel fraction].
     Split out from estimate_anchor_scale so report 017's refit script
     (fit_anchor.py) computes features identically to the shipped estimator
-    instead of duplicating the math."""
+    instead of duplicating the math.
+
+    Report 020 fix (dim-capture blindness): the absolute luminance gate
+    below (smoothstep(Y, 0.10, 0.30)) is what report 017 measured as
+    completely blind on dim captures -- ALL 9 dark-family renders in that
+    report had sat_lit==0, because no pixel in a dim photo ever crosses
+    0.10 luminance, so a strongly-tinted dark sheet (dark-ruby) and a
+    neutral one (dark-deep) were statistically indistinguishable on this
+    feature, exactly where tint would help separate them. Fix: when the
+    absolute gate excludes (nearly) everything -- the SAME condition that
+    used to just return 0.0 -- fall back to a gate relative to THIS
+    photo's OWN brightest pixels (percentile-based, not a fixed luminance)
+    so saturation is measured on the brightest available pixels of a dim
+    capture instead of on nothing. `lit_frac` (the third feature, "how much
+    of the sheet transmits at all") deliberately keeps the absolute gate
+    unchanged -- reading near-zero there on a dim capture is itself real,
+    useful signal (report 016's original "lit-pixel fraction" cue), so
+    making it adaptive would destroy the exact information this fix is
+    trying to recover for sat_lit. On any capture where the absolute gate
+    was already non-degenerate (every one of the original 5 recipes, and
+    most dark-opaque lightings too) this is a no-op: same code path,
+    same numbers, as report 016/017."""
     Y = lum(lin)
     mx, mn = lin.max(axis=-1), lin.min(axis=-1)
     sat = (mx - mn) / (mx + 1e-6)
     wlit = smoothstep(Y, 0.10, 0.30)
-    sat_lit = float((sat * wlit).sum() / (wlit.sum() + 1e-6)) if wlit.sum() > 1 else 0.0
+    if wlit.sum() > 1:
+        sat_lit = float((sat * wlit).sum() / (wlit.sum() + 1e-6))
+    else:
+        p_lo = np.percentile(Y, SAT_LIT_FALLBACK_PLO)
+        p_hi = np.percentile(Y, SAT_LIT_FALLBACK_PHI)
+        lo2, hi2 = min(p_lo, p_hi), max(p_lo, p_hi)
+        if hi2 - lo2 < 1e-6:
+            hi2 = lo2 + 1e-6
+        wlit2 = smoothstep(Y, lo2, hi2)
+        sat_lit = float((sat * wlit2).sum() / (wlit2.sum() + 1e-9))
     return np.array([
         float(np.log(max(np.percentile(Y, 95), 1e-3))),
         sat_lit,
@@ -329,6 +377,48 @@ def estimate_anchor_scale(lin):
     x = anchor_features(lin)
     s = ANCHOR_COEF[0] + float(np.dot(ANCHOR_COEF[1:], (x - ANCHOR_FEAT_MU) / ANCHOR_FEAT_SD))
     return ANCHOR_T_LO + (ANCHOR_T_HI - ANCHOR_T_LO) / (1.0 + np.exp(-s))
+
+
+# ---- Per-SHEET scale pooling (report 020) -----------------------------
+# Report 017 measured an honest cost of the continuous anchor: t_img is
+# estimated per PHOTO, so the SAME physical sheet gets a different absolute
+# scale under every capture, and the continuous path's cross-lighting
+# invariance breaks on mid/dark glass (dark-opaque invariance T 0.036
+# class-anchored -> 0.280 continuous) even though it is on average more
+# accurate than the class anchor. "Class anchor is consistently wrong,
+# continuous is averagely right" -- but in the PRODUCT a sheet is one
+# physical entity, so when several photos of the SAME sheet are available
+# (the synthetic multi-lighting groups are exactly this; a real user who
+# shoots one sheet under 2-3 lightings/angles is the product case) there is
+# no reason to let each photo re-derive its own scale independently.
+def estimate_anchor_scale_sheet(lins):
+    """Pool several photos of the SAME sheet into ONE continuous-anchor
+    scale estimate, used for all of them.
+
+    Aggregate = MEDIAN of the per-photo t_img estimates (`estimate_anchor_
+    scale` applied independently to each photo), not a mean -- even a
+    geometric/log-space one. Justification: the estimator's own documented
+    failure mode is that a SINGLE unlucky photo (a specular hotspot
+    inflating p95(luminance), an underexposed capture, a crop that catches
+    mostly shadowed glass) can push one photo's raw-statistics reading far
+    from the sheet's true scale while its siblings agree; the median
+    tolerates up to floor((N-1)/2) such outlier photos without being
+    dragged toward them, at zero extra machinery. A precision-weighted mean
+    would need a per-photo uncertainty/confidence model to weight by, and
+    none exists (there is no ground truth to calibrate one against, and
+    report 016/017's whole ethos is not to invent an unmeasured knob) --
+    the median is the assumption-free robust statistic available today.
+    Because the feature->t_img map is a monotonic sigmoid, taking the
+    median of the final t_img values is exactly equal to taking it in
+    feature- or log-space -- median commutes with any monotonic transform
+    -- so no separate log-space bookkeeping is needed.
+
+    N=1 is the identity (median of one element is that element), so a
+    single-photo call is byte-identical to calling `estimate_anchor_scale`
+    directly -- pooling is strictly additive, never a behaviour change
+    when only one photo is given."""
+    ts = np.array([estimate_anchor_scale(lin) for lin in lins], dtype=np.float64)
+    return float(np.median(ts))
 
 
 def blend_anchor_target(t_class, t_img):
@@ -612,7 +702,7 @@ def load_linear(path, corners, size):
     return srgb_to_lin(np.asarray(img).astype(np.float64) / 255.0)
 
 
-def extract_maps(lin, glass_class, mark_region="unknown", anchor="class"):
+def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_t_img=None):
     """Core map computation (pipeline steps 1-4) on a linear-RGB image.
     Returns a dict of the intermediate/output arrays. process() adds metrics
     and file output on top; the harness reuses the maps directly.
@@ -621,7 +711,14 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class"):
     (report 016: class-free image-statistics estimate, class prior as
     regularizer via blend_anchor_target), or 'none' (research/eval only:
     return the UNANCHORED maps, k=1, so an eval harness can apply and
-    compare anchor designs itself)."""
+    compare anchor designs itself).
+
+    sheet_t_img: optional pre-computed PER-SHEET continuous-anchor scale
+    (report 020, `estimate_anchor_scale_sheet`) -- when given, used in
+    place of this photo's own `estimate_anchor_scale(lin)` so several
+    photos of the same physical sheet share one scale instead of each
+    deriving its own. None (default) reproduces the exact single-photo
+    report 016/017 behaviour byte-for-byte."""
     W = lin.shape[1]
     # 1. speculars
     lin_ns, spec_mask = suppress_speculars(lin, glass_class, W)
@@ -653,7 +750,7 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class"):
     # (report 016 flags the corpus images whose metadata class contradicts the
     # photo -- e.g. a "dark-opaque" registry row whose photo is a front-lit
     # iridescent coating -- at ratio > 2 with no false hits on the library).
-    t_img = float(estimate_anchor_scale(lin))
+    t_img = float(estimate_anchor_scale(lin)) if sheet_t_img is None else float(sheet_t_img)
     if anchor == "continuous":
         target = blend_anchor_target(target, t_img)
     # raw_p99: p99 of the un-clipped transmittance before assemble_T's [0,1] clip
@@ -688,12 +785,14 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class"):
 
 
 def process(path, glass_class, corners, out_dir, size, debug=False, mark_region="unknown",
-            anchor="class"):
+            anchor="class", sheet_t_img=None):
     """mark_region: 'unknown' (global conservative detector), 'none' (skip
-    mark handling), or a 3x3 grid cell name (targeted aggressive detector)."""
+    mark handling), or a 3x3 grid cell name (targeted aggressive detector).
+    sheet_t_img: see extract_maps -- pooled per-sheet continuous-anchor scale
+    (report 020), None by default (single-photo behaviour, unchanged)."""
     name = os.path.splitext(os.path.basename(path))[0]
     lin = load_linear(path, corners, size)
-    m = extract_maps(lin, glass_class, mark_region, anchor=anchor)
+    m = extract_maps(lin, glass_class, mark_region, anchor=anchor, sheet_t_img=sheet_t_img)
     lin_ns, spec_mask, L, R = m["lin_ns"], m["spec_mask"], m["L"], m["R"]
     mark_mask, h, T, conf = m["mark_mask"], m["h"], m["T"], m["conf"]
 
@@ -770,7 +869,12 @@ def process(path, glass_class, corners, out_dir, size, debug=False, mark_region=
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("input", help="photo file or folder (batch mode)")
+    ap.add_argument("input", nargs="+",
+                     help="photo file, folder (batch mode), or SEVERAL photo files of the SAME "
+                          "sheet (report 020 per-sheet scale pooling: see estimate_anchor_scale_sheet "
+                          "-- the continuous anchor's scale is estimated once for the whole group "
+                          "instead of once per photo). A single path (file or folder) is the "
+                          "original single-photo/batch behaviour, byte-identical.")
     ap.add_argument("--glass-class", "--class", dest="glass_class", choices=CLASSES, default=None)
     ap.add_argument("--corners", help="x0,y0,x1,y1 crop of the glass region (original pixels)")
     ap.add_argument("--out", default="results")
@@ -822,25 +926,68 @@ def main():
         # conservative global detector ('unknown').
         return (entry or {}).get("mark_region") or args.mark_region or "unknown"
 
-    if os.path.isdir(args.input):
+    if len(args.input) == 1 and os.path.isdir(args.input[0]):
+        in_dir = args.input[0]
         manifest = {}
-        mpath = os.path.join(args.input, "manifest.json")
+        mpath = os.path.join(in_dir, "manifest.json")
         if os.path.exists(mpath):
             manifest = json.load(open(mpath))
-        for f in sorted(os.listdir(args.input)):
-            if not f.lower().endswith((".jpg", ".jpeg", ".png", ".webp")):
+        files = [f for f in sorted(os.listdir(in_dir)) if f.lower().endswith((".jpg", ".jpeg", ".png", ".webp"))]
+
+        # Report 020: per-sheet scale pooling. An optional manifest
+        # `sheet_id` groups several files as photos of the SAME physical
+        # sheet; the continuous anchor pools their scale estimates into
+        # ONE number (estimate_anchor_scale_sheet) instead of each file
+        # deriving its own. Files with no sheet_id (the default -- every
+        # existing manifest) are solo groups of size 1, for which pooling
+        # is the identity: sheet_t_img stays None and the code path below
+        # is EXACTLY the pre-020 per-file behaviour, byte-identical.
+        groups = {}
+        for f in files:
+            sid = manifest.get(f, {}).get("sheet_id")
+            groups.setdefault(sid if sid is not None else f"\0solo\0{f}", []).append(f)
+        sheet_t_img_by_file = {}
+        for sid, fs in groups.items():
+            if len(fs) < 2:
                 continue
+            lins = [load_linear(os.path.join(in_dir, f), manifest.get(f, {}).get("corners"), args.size)
+                    for f in fs]
+            pooled = estimate_anchor_scale_sheet(lins)
+            print(f"  sheet '{sid}': pooled t_img={pooled:.4f} from {len(fs)} photos {fs}")
+            for f in fs:
+                sheet_t_img_by_file[f] = pooled
+
+        for f in files:
             entry = manifest.get(f, {})
-            p = os.path.join(args.input, f)
+            p = os.path.join(in_dir, f)
             cls, human_cls = classify(p, entry)
             process(p, cls, entry.get("corners"),
                     args.out, args.size, args.debug, mark_region=marks(p, entry),
-                    anchor=resolve_anchor(human_cls))
-    else:
+                    anchor=resolve_anchor(human_cls), sheet_t_img=sheet_t_img_by_file.get(f))
+    elif len(args.input) == 1:
         corners = [int(v) for v in args.corners.split(",")] if args.corners else None
-        cls, human_cls = classify(args.input)
-        process(args.input, cls, corners, args.out, args.size, args.debug,
-                mark_region=marks(args.input), anchor=resolve_anchor(human_cls))
+        cls, human_cls = classify(args.input[0])
+        process(args.input[0], cls, corners, args.out, args.size, args.debug,
+                mark_region=marks(args.input[0]), anchor=resolve_anchor(human_cls))
+    else:
+        # Report 020: several explicit photo paths on the command line = one
+        # sheet-group (multi-photo entry point). All photos share ONE class
+        # (a physical sheet has one class) and ONE pooled continuous-anchor
+        # scale; each still gets its own output maps.
+        for p in args.input:
+            if os.path.isdir(p):
+                ap.error(f"{p} is a directory; mixing folders with multiple file "
+                          f"arguments is not supported")
+        corners = [int(v) for v in args.corners.split(",")] if args.corners else None
+        cls, human_cls = classify(args.input[0])
+        anchor = resolve_anchor(human_cls)
+        lins = [load_linear(p, corners, args.size) for p in args.input]
+        sheet_t_img = estimate_anchor_scale_sheet(lins)
+        print(f"  sheet group ({len(args.input)} photos): class={cls} anchor={anchor} "
+              f"pooled t_img={sheet_t_img:.4f}")
+        for p in args.input:
+            process(p, cls, corners, args.out, args.size, args.debug,
+                    mark_region=marks(p), anchor=anchor, sheet_t_img=sheet_t_img)
 
 
 if __name__ == "__main__":

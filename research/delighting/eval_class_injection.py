@@ -94,11 +94,22 @@ def main():
     rows = []
     samples = sorted(d for data_dir in args.data for d in glob.glob(os.path.join(data_dir, "*"))
                       if os.path.isdir(d))
+
+    # Report 020: per-sheet scale pooling, re-run through the injection harness.
+    # First pass: load every sample's photo + per-photo t_img once, and group by
+    # (label, seed) -- the same "same authored glass, several photos" grouping
+    # eval_cross_lighting.py uses -- so a "continuous_persheet" design can reuse
+    # the GROUP's pooled t_img (estimate_anchor_scale_sheet) instead of each
+    # sample's own. This directly answers whether per-sheet pooling keeps
+    # 016/017's wrong-class robustness (the win condition for report 020 task A).
+    info = {}
+    groups = {}
     for s in samples:
         mp = os.path.join(s, "meta.json")
         if not os.path.exists(mp):
             continue
-        label = json.load(open(mp)).get("class_label")
+        meta = json.load(open(mp))
+        label = meta.get("class_label")
         oracle = CLASS_MAP.get(label)
         photo = clean_photo_path(s)
         gtT = load_gt_T(s)
@@ -106,7 +117,23 @@ def main():
             continue
         lin = extract.load_linear(photo, None, args.size)
         t_img = float(extract.estimate_anchor_scale(lin))
-        gt_scale = float(np.percentile(gtT, 99))
+        info[s] = dict(label=label, oracle=oracle, lin=lin, t_img=t_img, gtT=gtT,
+                        gt_scale=float(np.percentile(gtT, 99)))
+        groups.setdefault((label, meta.get("seed")), []).append(s)
+
+    sheet_t_img = {}
+    for (label, seed), ss in groups.items():
+        pooled = extract.estimate_anchor_scale_sheet([info[s]["lin"] for s in ss])
+        for s in ss:
+            sheet_t_img[s] = pooled
+
+    for s in samples:
+        if s not in info:
+            continue
+        label, oracle, lin, t_img, gtT, gt_scale = (
+            info[s]["label"], info[s]["oracle"], info[s]["lin"], info[s]["t_img"],
+            info[s]["gtT"], info[s]["gt_scale"])
+        s_t_img = sheet_t_img[s]
 
         for cls in extract.CLASSES:
             m = extract.extract_maps(lin, cls, mark_region="none", anchor="none")
@@ -120,7 +147,9 @@ def main():
             vt = valid[..., None] * np.ones((1, 1, 3), bool)
             gt_lum = float(extract.lum(gtT_r)[valid].mean())
 
-            for name, fn in D.items():
+            all_designs = dict(D)
+            all_designs["continuous_persheet"] = lambda tc, ti: extract.blend_anchor_target(tc, s_t_img)
+            for name, fn in all_designs.items():
                 target = fn(extract.T_ANCHOR[cls][1], t_img)
                 T, k, fb = apply_anchor(T_pre, R, target)
                 mae = float(np.abs(T - gtT_r)[vt].mean())
@@ -128,7 +157,8 @@ def main():
                 rows.append(dict(sample=os.path.basename(s), label=label,
                                  oracle_class=oracle, assumed_class=cls,
                                  correct=cls == oracle, design=name,
-                                 t_img=t_img, gt_scale=gt_scale,
+                                 t_img=(s_t_img if name == "continuous_persheet" else t_img),
+                                 gt_scale=gt_scale,
                                  anchor_target=target, k=k, gate_fired=fb,
                                  T_mae=mae, T_lum_ratio=lum_ratio))
             done = [r for r in rows if r["sample"] == os.path.basename(s) and r["assumed_class"] == cls]
@@ -145,8 +175,9 @@ def main():
                           for r in sel)))
 
     labels = sorted({r["label"] for r in rows})
+    report_designs = list(D) + ["continuous_persheet"]  # report 020: sheet-pooled design
     lines = []
-    for name in D:
+    for name in report_designs:
         lines.append(f"\n### design = {name}\n")
         lines.append("| recipe (oracle) | " + " | ".join(
             f"as {c}" for c in extract.CLASSES) + " |")
@@ -165,7 +196,7 @@ def main():
     lines.append("\n### summary: mean T_mae (mean lum-ratio error)\n")
     lines.append("| design | correct class | wrong class | worst wrong-class lum-ratio |")
     lines.append("|---|---|---|---|")
-    for name in D:
+    for name in report_designs:
         cor = [r for r in rows if r["design"] == name and r["correct"]]
         wrn = [r for r in rows if r["design"] == name and not r["correct"]]
         cm, _, _ = agg(cor)

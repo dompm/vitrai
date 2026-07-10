@@ -186,6 +186,23 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   invariance 0.036 class-anchored -> 0.280 continuous) — class anchor is consistently
   wrong, continuous is averagely right; `auto` default stands, but "estimate the scale
   once per sheet, not once per photo" is a measured follow-up.
+- 020 (branch `research/delighting-020`, `020-per-sheet-scale.md`) closed both of 017's named
+  follow-ups, and found they compound: `extract.estimate_anchor_scale_sheet` pools several
+  photos of the SAME sheet's continuous-anchor `t_img` via MEDIAN (product entry points: a
+  multi-file CLI call, or a manifest `sheet_id` key in batch mode; N=1 is the identity, so
+  single-photo behaviour is byte-identical). Cross-lighting invariance recovers almost all the
+  way to the class-anchored floor: dark-opaque T 0.280 (per-photo, reproduced) -> 0.045
+  (per-sheet, shipped) vs oracle's 0.036. Separately, `sat_lit`'s luminance gate (blind on
+  every dim capture per 017) gained an adaptive percentile fallback exactly when the old
+  absolute gate is degenerate (12/35 samples, all dark-family; 0 library/bright-recipe
+  features change) — dark-ruby's tint goes from indistinguishable-from-neutral (sat_lit 0.0)
+  to clearly separated (0.66-0.71 vs dark-deep's 0.06-0.20); refit shipped, 9-sheet library
+  byte-identical on the default path (18/18 md5). Honest finding: the sat_lit refit ALONE
+  (no pooling) is a mixed bag — dark-ruby's own correct-class T-MAE worsens and both the
+  injection worst-case (3.90x->5.22x) and LORO (3.37x->3.47x) regress, all traced to one
+  outlier photo's per-photo estimate; per-sheet pooling exactly fixes this (the shipped
+  combination posts worst-case 3.90x->3.30x and LORO 3.37x->2.28x, both BETTER than 017,
+  not just recovered) — the two fixes were designed to be shipped together, not separately.
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -239,8 +256,16 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
 - **High-contrast background separation** for transmissive glass — the north-star hard case.
 - ~~Add the **consistency** metric to the eval (same seed across lightings).~~ DONE, report 017
-  (`eval_cross_lighting.py`); follow-up opened there: stabilize the continuous anchor's t_img
-  across captures of the same sheet (per-sheet, not per-photo, scale estimation).
+  (`eval_cross_lighting.py`).
+- ~~Stabilize the continuous anchor's t_img across captures of the same sheet (per-sheet, not
+  per-photo, scale estimation).~~ DONE, report 020 (`estimate_anchor_scale_sheet`, median
+  pooling; dark-opaque invariance 0.280->0.045 vs oracle's 0.036). Follow-up opened there:
+  the product needs a way to assign sheet identity to grouped uploads (manifest `sheet_id` /
+  multi-file CLI exist as mechanism, but the upload-flow UX decision is open); wrong-class `h`
+  corruption (016 SS5.2) is untouched by scale pooling and remains open.
+- ~~Fix `sat_lit`'s dim-capture blindness (016 SS5.2 / 017 note 3).~~ DONE, report 020 (adaptive
+  percentile fallback gate); only validated/shipped in combination with per-sheet pooling —
+  see report 020 SS2.3/SS3.1 for why it is not a safe ship in isolation.
 - Keep **preview-invariance** as a first-class product metric next to `T/h` ground-truth MAE.
 - For GlassNet: generate many material seeds per class, then evaluate a held-out-material split;
   current neural result only proves held-out-lighting consistency.

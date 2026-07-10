@@ -11,14 +11,24 @@ extractor should de-light every lighting of the same sheet to (nearly) the
 same map; the residual pairwise disagreement is exactly the pain the product
 is trying to remove (report RESEARCH_STATE's "Success metric").
 
-Two columns, both reachable through extract.py's real `--anchor auto` default
-(commit 896c2d7):
-  oracle      glass_class = the correct (GT) class, anchor='class' -- what a
-              human-verified manifest / --class override gets.
-  continuous  glass_class = 'wispy' (extract.py's own documented fallback
-              when --no-vlm and no override), anchor='continuous' -- what a
-              real batch/corpus run gets when the class source is unreliable
-              (report 015: VLM 30.6%). This is the "vlm-free continuous path".
+Three columns, all reachable through extract.py's real `--anchor auto`
+default (commit 896c2d7):
+  oracle               glass_class = the correct (GT) class, anchor='class'
+                       -- what a human-verified manifest / --class override
+                       gets.
+  continuous           glass_class = 'wispy' (extract.py's own documented
+                       fallback when --no-vlm and no override), anchor=
+                       'continuous' -- what a real batch/corpus run gets
+                       when the class source is unreliable (report 015: VLM
+                       30.6%). This is the "vlm-free continuous path", and
+                       it estimates t_img PER PHOTO.
+  continuous_persheet  identical to `continuous` except the anchor's t_img
+                       is pooled ACROSS the group (extract.estimate_anchor_
+                       scale_sheet, report 020) before extracting any of
+                       them -- the per-sheet scale mode, evaluated on
+                       exactly the multi-lighting groups this harness
+                       already builds (same authored glass, several
+                       photos == this report's product scenario).
 
 Per (recipe, seed) group: every unordered pair of lightings' extracted T (and
 h) are compared, mean-abs-difference over all pixels (marks excluded via the
@@ -51,6 +61,13 @@ DESIGNS = {
     # name -> (glass_class fed to extract_maps, anchor mode)
     "oracle": None,          # resolved per-sample to the GT class, anchor='class'
     "continuous": ("wispy", "continuous"),
+    # Report 020: identical to "continuous" (same fallback class, same
+    # anchor mode) EXCEPT the continuous anchor's t_img is pooled across
+    # every lighting in the (recipe,seed) group -- estimate_anchor_scale_
+    # sheet -- instead of estimated independently per photo. This is the
+    # per-sheet scale mode's own invariance metric: a real multi-lighting
+    # group IS several photos of the same sheet.
+    "continuous_persheet": ("wispy", "continuous"),
 }
 
 
@@ -74,7 +91,7 @@ def group_samples(data_dirs):
     return groups
 
 
-def extract_one(sample, size, design):
+def extract_one(sample, size, design, sheet_t_img=None):
     oracle = CLASS_MAP[json.load(open(os.path.join(sample, "meta.json"))).get("class_label")]
     photo = clean_photo_path(sample)
     lin = extract.load_linear(photo, None, size)
@@ -82,8 +99,17 @@ def extract_one(sample, size, design):
         m = extract.extract_maps(lin, oracle, mark_region="none", anchor="class")
     else:
         cls, anchor = DESIGNS[design]
-        m = extract.extract_maps(lin, cls, mark_region="none", anchor=anchor)
+        m = extract.extract_maps(lin, cls, mark_region="none", anchor=anchor, sheet_t_img=sheet_t_img)
     return m["T"], m["h"]
+
+
+def group_pooled_t_img(samples, size):
+    """Report 020: pool the continuous anchor's per-photo t_img across every
+    lighting of one (recipe,seed) group -- the synthetic stand-in for
+    'several photos of the same sheet' -- into one scale (estimate_anchor_
+    scale_sheet, median across photos)."""
+    lins = [extract.load_linear(clean_photo_path(s), None, size) for s in samples]
+    return extract.estimate_anchor_scale_sheet(lins)
 
 
 def main():
@@ -106,9 +132,10 @@ def main():
         mark = load_gt_mask(samples[0], "gt_mark_mask.png")
 
         for design in DESIGNS:
+            sheet_t_img = group_pooled_t_img(samples, args.size) if design == "continuous_persheet" else None
             maps = []  # (T, h, gtT_r, gth_r, valid)
             for s in samples:
-                T, h = extract_one(s, args.size, design)
+                T, h = extract_one(s, args.size, design, sheet_t_img=sheet_t_img)
                 H, W = h.shape
                 gtT = load_gt_T(s)
                 gth = load_gt_h(s)
