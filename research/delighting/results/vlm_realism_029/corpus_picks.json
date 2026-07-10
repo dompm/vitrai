@@ -1,0 +1,90 @@
+[
+  {
+    "class": "cathedral-clear",
+    "manufacturer": "Bullseye",
+    "name": "Light Sky Blue Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+    "file": "bullseye-0014140051f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "cathedral-clear",
+    "manufacturer": "Bullseye",
+    "name": "Medium Amber Transparent, Thin-rolled, 2 mm, Fusible",
+    "file": "bullseye-0011370050f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "cathedral-clear",
+    "manufacturer": "Bullseye",
+    "name": "AUTUMN: Orange, Yellow, and Red on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+    "file": "bullseye-0041110000ffull.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "cathedral-clear",
+    "manufacturer": "Bullseye",
+    "name": "Spring Green Transparent, Double-rolled, 3 mm, Fusible",
+    "file": "bullseye-0014260030f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "opalescent",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Medium Blue Opal",
+    "file": "oceanside-of23072s.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "opalescent",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Pastel Green Opal",
+    "file": "oceanside-of22272s.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "opalescent",
+    "manufacturer": "Bullseye",
+    "name": "Dark Forest Green Opalescent, Double-rolled, 3 mm, Fusible",
+    "file": "bullseye-0001410030f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "wispy",
+    "manufacturer": "Bullseye",
+    "name": "Clear, Black 2-Color Mix, Single-rolled, 3 mm, Fusible",
+    "file": "bullseye-0021000000f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "wispy",
+    "manufacturer": "Bullseye",
+    "name": "White, Salmon Pink Opal 2-Color Mix, Double-rolled, 3 mm, Fusible",
+    "file": "bullseye-0023050030f1010.jpg",
+    "exists": true,
+    "confidence": "high"
+  },
+  {
+    "class": "dark-opaque",
+    "manufacturer": "Wissmach",
+    "name": "Black Opal Iridescent",
+    "file": "wissmach-wblacki.jpg",
+    "exists": true,
+    "confidence": "medium"
+  },
+  {
+    "class": "dark-opaque",
+    "manufacturer": "Bullseye",
+    "name": "Black Opalescent, Prismatic Texture, 3 mm, Fusible",
+    "file": "bullseye-0001000047f1010.jpg",
+    "exists": true,
+    "confidence": "medium"
+  }
+]
