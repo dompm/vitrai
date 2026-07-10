@@ -57,6 +57,11 @@ CLASS_MAP = {
     "dark-opaque": "dark-opaque",
     "wispy-white": "wispy",
     "streaky-mix": "wispy",
+    # Report 017: dark-family calibration top-up (all oracle-class dark-opaque --
+    # same family of dense rolled glass, different absolute darkness/tint).
+    "dark-deep": "dark-opaque",
+    "dark-ruby": "dark-opaque",
+    "dark-slate": "dark-opaque",
 }
 
 

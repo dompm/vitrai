@@ -85,7 +85,11 @@ def generate_relief_height(recipe, size, seed):
     if recipe in ("cathedral-green", "cathedral-amber"):
         height = hammered
         bump_distance = rng.uniform(0.0016, 0.0045)
-    elif recipe == "dark-opaque":
+    elif recipe in ("dark-opaque", "dark-deep", "dark-ruby", "dark-slate"):
+        # Report 017: the three new dark-family recipes (very-dark neutral,
+        # dark-tinted, medium-dark) share dark-opaque's hammered-relief
+        # statistics -- same family of dense rolled glass at different
+        # absolute darkness/tint, not a different surface finish.
         height = 0.65 * hammered + 0.35 * generate_noise(size, scale=28, seed=seed + 104)
         bump_distance = rng.uniform(0.0010, 0.0030)
     elif recipe == "streaky-mix":
@@ -177,7 +181,47 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
         noise_scaled = (noise * 0.01) - 0.005
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.3, dtype=np.float32)
-        
+
+    # ---- Report 017: dark-family top-up (anchor's dark end was calibrated
+    # by dark-opaque alone). Base colors below are LINEAR authored values
+    # chosen from the measured (not assumed) authored->rendered transform:
+    # the renderer's gt_T/photo pipeline applies an sRGB-shaped encode
+    # between the authored linear texture and what lands in gt_T.exr /
+    # the photo (measured directly against synthetic_data_v2's dark-opaque:
+    # authored [0.03,0.035,0.03] -> rendered gt_T p99 0.216, matching
+    # srgb_encode(0.04) almost exactly -- see report 017 for the check
+    # against a second recipe). Base colors here are chosen by INVERTING
+    # that measured encode so the three new recipes land at the intended
+    # RENDERED p99 targets (flattened-array percentile, T_ANCHOR's own
+    # convention -- for a tinted recipe this is the dominant channel's
+    # percentile, not the perceptual luminance).
+    elif recipe == 'dark-deep':
+        # very-dark neutral, target rendered p99 (all channels) ~= 0.05
+        base_color = np.array([0.0039, 0.0039, 0.0041])
+        noise = generate_noise(size, scale=50, seed=seed)
+        noise_scaled = (noise * 0.0012) - 0.0006
+        T = np.clip(base_color + noise_scaled[..., None], 0, 1)
+        h = np.full((size, size), 0.30, dtype=np.float32)
+
+    elif recipe == 'dark-ruby':
+        # dark-tinted, strong color: target rendered p99 (dominant/R
+        # channel) ~= 0.12, with G/B held well below for real chroma
+        # (not a near-neutral dark like dark-opaque).
+        base_color = np.array([0.0143, 0.0023, 0.0027])
+        noise = generate_noise(size, scale=50, seed=seed)
+        noise_scaled = (noise * 0.0043) - 0.0021
+        T = np.clip(base_color + noise_scaled[..., None], 0, 1)
+        h = np.full((size, size), 0.20, dtype=np.float32)
+
+    elif recipe == 'dark-slate':
+        # medium-dark, blue-grey: target rendered p99 (dominant/B channel)
+        # ~= 0.30, bracketing dark-opaque's 0.216 from above.
+        base_color = np.array([0.0593, 0.0660, 0.0732])
+        noise = generate_noise(size, scale=50, seed=seed)
+        noise_scaled = (noise * 0.020) - 0.010
+        T = np.clip(base_color + noise_scaled[..., None], 0, 1)
+        h = np.full((size, size), 0.15, dtype=np.float32)
+
     elif recipe == 'streaky-mix':
         noise = generate_noise(size, scale=250, seed=seed)
         from scipy.ndimage import zoom
@@ -742,7 +786,8 @@ def parse_args():
 def main():
     args = parse_args()
     
-    recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white']
+    recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white',
+               'dark-deep', 'dark-ruby', 'dark-slate']
     
     os.makedirs(args.out, exist_ok=True)
     hdri_path = download_polyhaven_hdri(args.out)
