@@ -36,6 +36,22 @@ in this order:
      `fuzzy-size-variant` one, tie-broken by shortest-then-lexicographic
      filename for determinism. All group members (and every registry id
      that maps to the group) are recorded for traceability.
+  5. PLUS report 024's recovered `-v2` images: 019 Patch #1 executed as a
+     one-off targeted re-fetch (`refetch_contaminated.py`) replaced the
+     test-fire-tile lead photo for a subset of the quarantined Bullseye
+     reactive/Alchemy SKUs with a real sheet photo fetched from a later
+     position on the live product page, saved as a NEW file (`<id>-v2.jpg`,
+     original left untouched) and recorded in `refetch_manifest.json` --
+     NOT written back into `glass_swatch_registry.json` (owned by the
+     scraper agent). This step reads that manifest, if present, and adds
+     one clean_manifest row per recovered id, inheriting the ORIGINAL
+     registry row's category/name (the image changed, the product/SKU
+     didn't) and reusing 015 census.py's own `map_class()` for
+     extractor_class/confidence/rule -- the same function that classified
+     every other row in this manifest, so recovered rows are not a special
+     case downstream. `match_kind: "recovered-v2"` distinguishes them for
+     traceability. A no-op if `refetch_manifest.json` doesn't exist (this
+     manifest still builds standalone).
 
 Output: results/corpus/clean_manifest.json --
   {
@@ -67,6 +83,10 @@ REGISTRY_PATH = os.path.join(REPO_ROOT, "frontend", "public", "assets", "glass_s
 RESULTS_DIR = os.path.join(HERE, "..", "results", "corpus")
 PER_IMAGE_CLASS = os.path.join(RESULTS_DIR, "per_image_class.json")
 QUARANTINE = os.path.join(RESULTS_DIR, "swatch_quarantine.json")
+REFETCH_MANIFEST = os.path.join(RESULTS_DIR, "refetch_manifest.json")
+
+sys.path.insert(0, HERE)
+from census import map_class  # noqa: E402  -- reuse 015's own category->extractor_class rule
 
 
 def sha256_of(path):
@@ -183,6 +203,51 @@ def main():
     print(f"  of which {len(cross_sku_groups)} groups span >1 registry id "
           f"(cross-SKU photo reuse, 019 Sec 5 generalized)")
 
+    # --- Step 5: add report 024's recovered -v2 images (no-op if absent) ---
+    reg_by_id = {r["id"]: r for r in registry}
+    n_recovered_added = 0
+    recovered_ids_added = []
+    if os.path.exists(REFETCH_MANIFEST):
+        refetch = json.load(open(REFETCH_MANIFEST))
+        for r in refetch.get("recovered", []):
+            old_id = r["old_id"]
+            new_file = r["new_file"]
+            row = reg_by_id.get(old_id)
+            if row is None:
+                print(f"  WARNING: refetch manifest id {old_id} not in current registry, skipping")
+                continue
+            p = os.path.join(CATALOG_DIR, new_file)
+            if not os.path.exists(p):
+                print(f"  WARNING: recovered file {new_file} not found on disk, skipping")
+                continue
+            cls, conf, rule = map_class(row.get("category"), row.get("name", ""))
+            clean_images.append({
+                "file": new_file,
+                "manufacturer": row["manufacturer"],
+                "category": row.get("category"),
+                "name": row.get("name"),
+                "extractor_class": cls,
+                "confidence": conf,
+                "rule": rule,
+                "match_kind": "recovered-v2",
+                "registry_id": old_id,
+                "group_size": 1,
+                "group_members": [new_file],
+                "group_registry_ids": [old_id],
+                "report_024_provenance": {
+                    "old_file": r["old_file"],
+                    "product_url": r["product_url"],
+                    "image_position_picked": r["image_position_picked"],
+                    "flagger_verdict": r["flagger_verdict"],
+                    "human_verification_caveat": r["human_verification_caveat"],
+                },
+            })
+            n_recovered_added += 1
+            recovered_ids_added.append(old_id)
+        print(f"\nafter report 024 recovered-v2 addition: +{n_recovered_added} -> {len(clean_images)}")
+    else:
+        print(f"\nno refetch_manifest.json found at {REFETCH_MANIFEST} -- skipping recovered-v2 addition")
+
     # --- summary counts ---
     counts_by_mfr = collections.Counter(c["manufacturer"] for c in clean_images)
     counts_by_class = collections.Counter(c["extractor_class"] for c in clean_images)
@@ -200,11 +265,13 @@ def main():
         print(f"  {c:8s} {n:5d}")
 
     out = {
-        "definition": "THE canonical clean corpus for delighting research (report 021). "
+        "definition": "THE canonical clean corpus for delighting research (report 021, "
+                       "recovered-image addition in report 024). "
                        "= 015 registry-recoverable images MINUS sge-* MINUS 019 quarantine "
                        "(all reason codes) MINUS hash-duplicates (one canonical file per "
-                       "SHA-256 content hash). Every future experiment against the catalog "
-                       "corpus should load this file, not re-derive its own filter.",
+                       "SHA-256 content hash) PLUS 024's recovered -v2 re-fetches. Every "
+                       "future experiment against the catalog corpus should load this "
+                       "file, not re-derive its own filter.",
         "n_registry_recoverable_start": len(per_image),
         "n_clean": len(clean_images),
         "exclusions": {
@@ -212,6 +279,8 @@ def main():
             "quarantine_all_reason_codes": n_quarantine_hit,
             "hash_duplicate_files_dropped": n_duplicate_dropped,
         },
+        "report_024_recovered_v2_added": n_recovered_added,
+        "report_024_recovered_ids": recovered_ids_added,
         "cross_sku_duplicate_groups": len(cross_sku_groups),
         "sensitivity_if_product_on_white_kept": n_sensitivity,
         "counts_by_manufacturer": dict(counts_by_mfr),
