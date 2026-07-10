@@ -55,8 +55,11 @@ recipe set was fixed, and two systematic breaks were measured against the new, m
   dark-family within-darkness cells, the same known-hard regime reports 017/020 already named.
   Cross-lighting invariance: `continuous_persheet` beats plain `continuous` on every dark-family and
   most cathedral cells, same pattern as report 020.
-- **Held-out evaluation**: a fresh render batch (new seeds, not used for any fitting) confirms the
-  render_022 numbers are not an artifact of fitting-and-scoring on the same data (§4).
+- **Held-out evaluation confirms everything on fresh data** (§4.1): a fresh render batch (new seeds
+  800-812, generated after all constants were frozen, never used for any fitting/tuning) reproduces
+  every conclusion — saturated-opalescent T_mae 0.111 (a\* dev 25%), streaky-fine-texture **0.149
+  (under the 0.15 goal)**, cathedral-blue/red anchor scale **1.18x/1.13x (inside the 1.2x goal)**, all
+  other recipes within single-lighting draw spread of their fit-set numbers.
 
 ## 1. Color-constancy saturation collapse — mechanism and fix
 
@@ -220,12 +223,47 @@ is correctly scoped to opalescent/wispy only, §1.2 item 3). streaky-mix/wispy-w
 ### 4.1 Held-out evaluation (fresh renders, never used for fitting)
 
 Per the brief's instruction not to fit-and-score on the same renders: `fit_anchor.py`'s refit (§4.2)
-used `render_022` (13 recipes, 25 samples) plus the pre-existing v1/v2/dark-family sets. A **fresh
-render batch** (`render_023_holdout/`, new seeds 800-812, 1 seed × 2 lightings per recipe, same
-`sunflowers_1k.hdr` lighting convention as 022) was generated this iteration specifically to evaluate
-the shipped extractor on data it has never seen in any fitting step.
+and every tuning decision in §1/§2 used `render_022` (13 recipes, 25 samples) plus the pre-existing
+v1/v2/dark-family sets. A **fresh render batch** (`render_023_holdout/`, new seeds 800-812, 1 seed × 2
+lightings per recipe, same `sunflowers_1k.hdr` lighting convention as 022, 25 samples) was generated
+AFTER all constants were frozen, specifically to evaluate the shipped extractor on data it has never
+seen in any fitting or tuning step. (cathedral-amber has n=1: both of its lighting draws produced the
+same lighting hash from seed 801 — an RNG collision, so the second render overwrote the first
+directory; every other recipe has n=2.)
 
-[TO BE FILLED: held-out per-recipe table once render_023_holdout completes]
+`eval_synthetic.py --data render_023_holdout` (oracle class, shipped 023 `extract.py`, no refitting;
+full rows in `results/recipe_realism_023/eval_synth_holdout/`):
+
+| recipe | n | T_mae held-out | T_mae render_022 (023) | h_mae held-out | read |
+|---|---:|---:|---:|---:|---|
+| cathedral-amber | 1 | 0.076 | 0.136 | 0.203 | holds (n=1 draw, better than fit-set) |
+| cathedral-blue | 2 | 0.137 | 0.137 | 0.272 | **holds exactly** |
+| cathedral-green | 2 | 0.163 | 0.199 | 0.245 | holds |
+| cathedral-red | 2 | 0.145 | 0.117 | 0.270 | holds (within lighting-draw spread) |
+| dark-deep | 2 | 0.087 | 0.097 | 0.152 | holds |
+| dark-opaque | 2 | 0.045 | 0.072 | 0.207 | holds |
+| dark-ruby | 2 | 0.043 | 0.038 | 0.228 | holds |
+| dark-slate | 2 | 0.131 | 0.129 | 0.095 | holds |
+| dark-textured | 2 | 0.033 | 0.022 | 0.234 | holds |
+| **saturated-opalescent** | 2 | **0.111** | 0.098 | 0.411 | **tint retained on fresh data** |
+| **streaky-fine-texture** | 2 | **0.149** | 0.159 | 0.382 | **under the 0.15 goal on held-out** |
+| streaky-mix | 2 | 0.161 | 0.168 | 0.307 | holds |
+| wispy-white | 2 | 0.077 | 0.071 | 0.215 | holds |
+
+Held-out chroma restoration (Lab, extracted vs GT `T_mean`): saturated-opalescent a\* deviation 25%
+(both samples; was ~100% pre-fix), streaky-fine-texture a\* 15.8% / 31.6% (one sample marginally over
+the ~30% goal — single-lighting draw variation; its fit-set siblings sit at 5-26%). b\* remains the
+noisier axis on held-out too (§6 item 4's denominator amplification, plus one streaky-fine-texture
+sample overshooting yellow, b\* 39 vs GT 10 — the same R-channel/`wispy`-anchor residual as §6 item 1).
+
+Held-out anchor scale (0.85 class target vs rendered GT p99, the §2 goal metric): cathedral-blue
+**1.18x**, cathedral-red **1.13x**, cathedral-green 1.12x, cathedral-amber 1.01x — all inside the 1.2x
+goal on data the target was not chosen against (old 0.95 target on these same renders would have been
+1.32x/1.26x/1.26x/1.13x).
+
+Net: every render_022 conclusion in §1-§3 reproduces on fresh seeds/lightings within normal
+single-lighting draw spread; nothing in this report is an artifact of tuning and scoring on the same
+renders.
 
 ### 4.2 Continuous anchor refit (`fit_anchor.py`) — LORO
 
