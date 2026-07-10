@@ -1599,12 +1599,9 @@ export function ResultPanel({
                 aria-label={t('lampSymmetryTooltip')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9" strokeDasharray="2 2" />
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 3v6" />
-                  <path d="M12 15v6" />
-                  <path d="M3 12h6" />
-                  <path d="M15 12h6" />
+                  <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="3 2" />
+                  <path d="M 5,7 L 10,12 L 5,17 Z" />
+                  <path d="M 19,7 L 14,12 L 19,17 Z" />
                 </svg>
               </button>
               <ToolTooltip

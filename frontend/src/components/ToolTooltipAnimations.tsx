@@ -12,10 +12,10 @@ const ANGLES = [0, 60, 120, 180, 240, 300];
 const CT = 22, CB = 88, CL = 81, CR = 139;
 
 // Idle / selected palette
-const IF  = 'rgba(59,130,246,0.12)';  // petal idle fill
-const CF  = 'rgba(59,130,246,0.52)';  // center fill  (solid)
-const IS  = '#818cf8';                 // idle stroke
-const SS  = '#2563eb';                 // selected stroke
+const IF  = 'rgba(142, 136, 122, 0.08)';  // brand sand/frosted fill (soft)
+const CF  = 'rgba(142, 136, 122, 0.40)';  // brand sand/frosted center (semi-solid)
+const IS  = '#23201a';                 // dark charcoal/solder line (matches --text-bright)
+const SS  = '#c08a1f';                 // brand amber highlight (matches --amber)
 
 /* ── Tiny render helpers ─────────────────────────────────────────────────── */
 
@@ -57,7 +57,7 @@ export function SelectAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* 5 idle petals (all except angle 120°) */}
       {[0, 60, 180, 240, 300].map(a => <Petal key={a} a={a} />)}
@@ -116,17 +116,20 @@ export function BoxAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* 5 idle petals (all except top petal at 0°) */}
       {[60, 120, 180, 240, 300].map(a => <Petal key={a} a={a} />)}
 
-      {/* Top petal (0°) — larger outline when box is drawn (SAM result) */}
+      {/* Top petal (0°) — larger outline and rich fill when box is drawn (SAM result) */}
       <ellipse
         cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
         transform="rotate(0, 110, 55)"
         fill={IF} stroke={IS} strokeWidth="1.5" strokeLinejoin="round"
       >
+        <animate attributeName="fill"
+          values={`${IF};${IF};rgba(142, 136, 122, 0.28);rgba(142, 136, 122, 0.28);${IF}`}
+          keyTimes={KT_P} dur={dur} repeatCount="indefinite" />
         <animate attributeName="stroke"
           values={`${IS};${IS};${SS};${SS};${IS}`}
           keyTimes={KT_P} dur={dur} repeatCount="indefinite" />
@@ -138,32 +141,42 @@ export function BoxAnimation() {
       {/* Center stays idle */}
       <Center />
 
-      {/* Amber detection box — draws via stroke-dashoffset — 6 keyTimes → 5 splines */}
-      <rect x={bx} y={by} width={bw} height={bh}
-        fill="rgba(245,158,11,0.05)" stroke="#f59e0b" strokeWidth="1.6"
-        strokeDasharray={`${perim}`} strokeLinecap="round">
-        <animate attributeName="stroke-dashoffset"
-          values={`${perim};${perim};0;0;${perim};${perim}`}
-          keyTimes="0; 0.22; 0.44; 0.80; 0.92; 1"
+      {/* Amber detection box — expands dynamically as the cursor drags */}
+      <rect x={bx} y={by} fill="rgba(245,158,11,0.05)" stroke="#f59e0b" strokeWidth="1.6" strokeLinecap="round">
+        <animate attributeName="width"
+          values={`0; 0; ${bw}; ${bw}; 0; 0`}
+          keyTimes="0; 0.12; 0.44; 0.80; 0.92; 1"
+          dur={dur} repeatCount="indefinite" calcMode="spline"
+          keySplines="0,0,1,1; 0.4,0,0.2,1; 0,0,1,1; 0.4,0,0.2,1; 0,0,1,1" />
+        <animate attributeName="height"
+          values={`0; 0; ${bh}; ${bh}; 0; 0`}
+          keyTimes="0; 0.12; 0.44; 0.80; 0.92; 1"
           dur={dur} repeatCount="indefinite" calcMode="spline"
           keySplines="0,0,1,1; 0.4,0,0.2,1; 0,0,1,1; 0.4,0,0.2,1; 0,0,1,1" />
         <animate attributeName="opacity"
-          values="0;0;1;1;0;0"
-          keyTimes="0; 0.20; 0.24; 0.80; 0.92; 1"
+          values="0; 1; 1; 1; 0; 0"
+          keyTimes="0; 0.12; 0.44; 0.80; 0.92; 1"
           dur={dur} repeatCount="indefinite" />
       </rect>
 
-      {/* Amber crosshair — sweeps top-left to bottom-right of box — 5 keyTimes → 4 splines */}
-      <g transform={`translate(${bx},${by})`}>
+      {/* Amber crosshair — sweeps top-left to bottom-right of box */}
+      <g>
         <animateTransform
           attributeName="transform" type="translate"
-          values={`${bx},${by}; ${bx+bw},${by+bh}; ${bx+bw},${by+bh}; ${bx+bw},${by+bh}; ${bx+bw},${by+bh}`}
-          keyTimes="0; 0.20; 0.44; 0.80; 1"
+          values={`
+            ${bx},${by};
+            ${bx},${by};
+            ${bx+bw},${by+bh};
+            ${bx+bw},${by+bh};
+            ${bx},${by};
+            ${bx},${by}
+          `}
+          keyTimes="0; 0.12; 0.44; 0.80; 0.92; 1"
           dur={dur} repeatCount="indefinite" calcMode="spline"
-          keySplines="0.4,0,0.2,1; 0,0,1,1; 0,0,1,1; 0,0,1,1" />
+          keySplines="0,0,1,1; 0.4,0,0.2,1; 0,0,1,1; 0.4,0,0.2,1; 0,0,1,1" />
         <g>
           <animate attributeName="opacity"
-            values="1;1;0;0;1" keyTimes="0;0.20;0.28;0.96;1"
+            values="0;0;1;1;0;0" keyTimes="0;0.10;0.12;0.80;0.92;1"
             dur={dur} repeatCount="indefinite" />
           <line x1="-8" y1="0" x2="-3" y2="0" stroke="#f59e0b" strokeWidth="1.5" />
           <line x1="3"  y1="0" x2="8"  y2="0" stroke="#f59e0b" strokeWidth="1.5" />
@@ -184,8 +197,11 @@ export function DetectAllAnimation() {
 
   // All 7 pieces share the same highlight timing
   const KT = '0; 0.28; 0.35; 0.72; 0.85; 1';
+  const fillAnim = `${IF};${IF};rgba(142, 136, 122, 0.28);rgba(142, 136, 122, 0.28);${IF};${IF}`;
   const strokeAnim = `${IS};${IS};${SS};${SS};${IS};${IS}`;
   const swAnim = '1.5;1.5;5;5;1.5;1.5';
+
+  const centerFillAnim = `${CF};${CF};rgba(142, 136, 122, 0.55);rgba(142, 136, 122, 0.55);${CF};${CF}`;
 
   const AnimPetal = ({ a }: { a: number }) => (
     <ellipse
@@ -193,6 +209,7 @@ export function DetectAllAnimation() {
       transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
       fill={IF} stroke={IS} strokeWidth="1.5" strokeLinejoin="round"
     >
+      <animate attributeName="fill" values={fillAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
       <animate attributeName="stroke"  values={strokeAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
       <animate attributeName="stroke-width" values={swAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
     </ellipse>
@@ -200,13 +217,14 @@ export function DetectAllAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* All 6 petals — animate together */}
       {ANGLES.map(a => <AnimPetal key={a} a={a} />)}
 
       {/* Center — same timing */}
       <circle cx={FC.x} cy={FC.y} r={FCR} fill={CF} stroke={IS} strokeWidth="1.5">
+        <animate attributeName="fill" values={centerFillAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
         <animate attributeName="stroke"  values={strokeAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
         <animate attributeName="stroke-width" values={swAnim} keyTimes={KT} dur={dur} repeatCount="indefinite" />
       </circle>
@@ -267,7 +285,7 @@ export function CropAnimation() {
 
     if (axis === 'y') {
       return (
-        <line x1={fixed1} x2={fixed2} stroke="#818cf8" strokeWidth="1.2">
+        <line x1={fixed1} x2={fixed2} stroke="#c08a1f" strokeWidth="1.2">
           <animate attributeName="y1" values={posVals} keyTimes={posKT} calcMode="spline" keySplines={posSpline} dur={dur} repeatCount="indefinite" />
           <animate attributeName="y2" values={posVals} keyTimes={posKT} calcMode="spline" keySplines={posSpline} dur={dur} repeatCount="indefinite" />
           <animate attributeName="opacity" values={`0;0;1;1;0;0`} keyTimes={opKT} dur={dur} repeatCount="indefinite" />
@@ -275,7 +293,7 @@ export function CropAnimation() {
       );
     }
     return (
-      <line y1={fixed1} y2={fixed2} stroke="#818cf8" strokeWidth="1.2">
+      <line y1={fixed1} y2={fixed2} stroke="#c08a1f" strokeWidth="1.2">
         <animate attributeName="x1" values={posVals} keyTimes={posKT} calcMode="spline" keySplines={posSpline} dur={dur} repeatCount="indefinite" />
         <animate attributeName="x2" values={posVals} keyTimes={posKT} calcMode="spline" keySplines={posSpline} dur={dur} repeatCount="indefinite" />
         <animate attributeName="opacity" values={`0;0;1;1;0;0`} keyTimes={opKT} dur={dur} repeatCount="indefinite" />
@@ -288,7 +306,7 @@ export function CropAnimation() {
   function Overlay({ x, y, w, h, appearAt }: OverlayProps) {
     const oKT = `0; ${appearAt}; ${appearAt + 0.02}; ${0.82}; ${FADE_END}; 1`;
     return (
-      <rect x={x} y={y} width={w} height={h} fill="rgba(148,163,184,0.50)">
+      <rect x={x} y={y} width={w} height={h} fill="rgba(35, 32, 26, 0.42)">
         <animate attributeName="opacity" values="0;0;1;1;0;0" keyTimes={oKT} dur={dur} repeatCount="indefinite" />
       </rect>
     );
@@ -296,7 +314,7 @@ export function CropAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#f8f9fb" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* The image being cropped */}
       <IdleFlower />
@@ -326,7 +344,7 @@ export function MeasureAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       <IdleFlower />
 
@@ -406,33 +424,43 @@ export function InspectAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
       
-      {/* Pattern Image (always visible) */}
-      <IdleFlower />
-      
-      {/* Pieces layer - fades out and in */}
-      <g>
-        <animate attributeName="opacity"
-          values="1;1;0;0;1;1"
-          keyTimes={KT} dur={dur} repeatCount="indefinite" />
-        
-        {/* Slightly offset "glass" petals over the original ones */}
+      {/* Raw colorful pattern image (source photo always visible underneath) */}
+      <g opacity="0.6">
         {ANGLES.map(a => (
           <ellipse
             key={a}
             cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
             transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
-            fill="rgba(59,130,246,0.3)" stroke="#1d4ed8" strokeWidth="1.8"
+            fill="rgba(142, 136, 122, 0.35)"
           />
         ))}
-        <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(59,130,246,0.5)" stroke="#1d4ed8" strokeWidth="1.8" />
+        <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(192, 138, 31, 0.45)" />
       </g>
       
-      {/* Eye icon overlay - flashes when active */}
+      {/* Digital vector trace lines - fades out to allow inspection of photo */}
+      <g>
+        <animate attributeName="opacity"
+          values="1;1;0.05;0.05;1;1"
+          keyTimes={KT} dur={dur} repeatCount="indefinite" />
+        
+        {/* Dark lead outlines of the traced pieces */}
+        {ANGLES.map(a => (
+          <ellipse
+            key={a}
+            cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
+            transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
+            fill="none" stroke="#1a1a1a" strokeWidth="1.6"
+          />
+        ))}
+        <circle cx={FC.x} cy={FC.y} r={FCR} fill="none" stroke="#1a1a1a" strokeWidth="1.6" />
+      </g>
+      
+      {/* Eye icon overlay - active when trace lines are hidden */}
       <g transform="translate(195, 12) scale(0.8)">
-        <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" fill="none" stroke="#1d4ed8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-        <circle cx="8" cy="8" r="2.5" fill="#1d4ed8" />
+        <path d="M1 8s3-5.5 7-5.5 7 5.5 7 5.5-3 5.5-7 5.5-7-5.5-7-5.5z" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx="8" cy="8" r="2.5" fill="#c08a1f" />
         <animate attributeName="opacity"
           values="0.3;0.3;1;1;0.3;0.3"
           keyTimes={KT} dur={dur} repeatCount="indefinite" />
@@ -450,7 +478,7 @@ export function PanAnimation() {
   
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
       
       {/* Pattern Image that gets moved */}
       <g>
@@ -493,13 +521,13 @@ export function PenAnimation() {
   
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
       
       {/* Target shape boundary that highlights on completion */}
-      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(59, 130, 246, 0.08)" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3 3" />
+      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(192, 138, 31, 0.04)" stroke="#8a8270" strokeWidth="1.2" strokeDasharray="3 3" />
       
       {/* Growing polygon segments */}
-      <polyline points="" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+      <polyline points="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
         <animate attributeName="points"
           values={`
             ${p1.x},${p1.y};
@@ -516,22 +544,22 @@ export function PenAnimation() {
       
       {/* Vertex handles */}
       {/* Node 1 */}
-      <circle cx={p1.x} cy={p1.y} r="3.5" fill="#10b981" stroke="#2563eb" strokeWidth="1">
+      <circle cx={p1.x} cy={p1.y} r="3.5" fill="#f59e0b" stroke="#c08a1f" strokeWidth="1">
         <animate attributeName="opacity" values="0;1;1;1;1;1;1" keyTimes="0;0.10;0.35;0.50;0.70;0.85;1" dur={dur} repeatCount="indefinite" />
       </circle>
       
       {/* Node 2 */}
-      <circle cx={p2.x} cy={p2.y} r="3" fill="#ffffff" stroke="#2563eb" strokeWidth="1">
+      <circle cx={p2.x} cy={p2.y} r="3" fill="#ffffff" stroke="#c08a1f" strokeWidth="1">
         <animate attributeName="opacity" values="0;0;0;1;1;1;1" keyTimes="0;0.10;0.30;0.45;0.70;0.85;1" dur={dur} repeatCount="indefinite" />
       </circle>
       
       {/* Node 3 */}
-      <circle cx={p3.x} cy={p3.y} r="3" fill="#ffffff" stroke="#2563eb" strokeWidth="1">
+      <circle cx={p3.x} cy={p3.y} r="3" fill="#ffffff" stroke="#c08a1f" strokeWidth="1">
         <animate attributeName="opacity" values="0;0;0;0;0;1;1" keyTimes="0;0.10;0.30;0.45;0.65;0.80;1" dur={dur} repeatCount="indefinite" />
       </circle>
 
       {/* Finished shape highlight */}
-      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(59, 130, 246, 0.3)" stroke="#2563eb" strokeWidth="3" opacity="0">
+      <polygon points={`${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`} fill="rgba(192, 138, 31, 0.14)" stroke="#c08a1f" strokeWidth="3" opacity="0">
         <animate attributeName="opacity" values="0;0;0;0;0;1;1" keyTimes="0;0.10;0.30;0.45;0.65;0.85;1" dur={dur} repeatCount="indefinite" />
       </polygon>
       
@@ -571,13 +599,13 @@ export function PencilAnimation() {
   const dur = '3s';
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
       
       {/* Target closed curved path */}
-      <path d="M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75" fill="rgba(59, 130, 246, 0.08)" stroke="#818cf8" strokeWidth="1.5" strokeDasharray="3 3" />
+      <path d="M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75" fill="rgba(192, 138, 31, 0.04)" stroke="#8a8270" strokeWidth="1.2" strokeDasharray="3 3" />
       
       {/* Growing path representing freehand draw */}
-      <path d="" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+      <path d="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
         <animate attributeName="d"
           values="
             M 60,75;
@@ -630,34 +658,34 @@ export function SolderAnimation() {
   const KT  = '0; 0.45; 0.55; 1';
   const SPL = '0.4,0,0.2,1; 0,0,1,1; 0.4,0,0.2,1';
   const SW  = '1.5;6;6;1.5';
-  const SOLDER = '#3f3f46';
+  const SOLDER = '#1a1a1a';
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* Glass petals — the solder outline pulses thick → thin */}
       {ANGLES.map(a => (
         <ellipse key={a}
           cx={FC.x} cy={FC.y - FO} rx={FRX} ry={FRY}
           transform={`rotate(${a}, ${FC.x}, ${FC.y})`}
-          fill="rgba(59,130,246,0.16)" stroke={SOLDER} strokeWidth="1.5" strokeLinejoin="round">
+          fill="rgba(142, 136, 122, 0.08)" stroke={SOLDER} strokeWidth="1.5" strokeLinejoin="round">
           <animate attributeName="stroke-width" values={SW} keyTimes={KT} dur={dur}
             repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
         </ellipse>
       ))}
-      <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(59,130,246,0.4)" stroke={SOLDER} strokeWidth="1.5">
+      <circle cx={FC.x} cy={FC.y} r={FCR} fill="rgba(142, 136, 122, 0.35)" stroke={SOLDER} strokeWidth="1.5">
         <animate attributeName="stroke-width" values={SW} keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
 
       {/* Thickness slider */}
-      <line x1="74" y1="100" x2="146" y2="100" stroke="#cbd5e1" strokeWidth="3" strokeLinecap="round" />
-      <line x1="74" y1="100" x2="146" y2="100" stroke="#f59e0b" strokeWidth="3" strokeLinecap="round" strokeDasharray="72">
+      <line x1="74" y1="100" x2="146" y2="100" stroke="rgba(40, 30, 15, 0.14)" strokeWidth="3" strokeLinecap="round" />
+      <line x1="74" y1="100" x2="146" y2="100" stroke="#c08a1f" strokeWidth="3" strokeLinecap="round" strokeDasharray="72">
         <animate attributeName="stroke-dashoffset" values="71;1;1;71" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </line>
-      <circle cy="100" r="5" fill="#ffffff" stroke="#f59e0b" strokeWidth="2">
+      <circle cy="100" r="5" fill="#ffffff" stroke="#c08a1f" strokeWidth="2">
         <animate attributeName="cx" values="75;145;145;75" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
@@ -670,61 +698,100 @@ export function SolderAnimation() {
    all facets at once
    ═══════════════════════════════════════════════════════════════════════════ */
 export function SymmetryAnimation() {
-  const dur = '4s';
-  const cx = 110, cy = 55;
-  const R = 40;   // facet boundary radius
-  const r = 22;   // drawn-mark orbit radius
-  const angs = [-90, -30, 30, 90, 150, 210];
-  const pt = (ang: number, rad: number) => {
-    const t = (ang * Math.PI) / 180;
-    return { x: cx + rad * Math.cos(t), y: cy + rad * Math.sin(t) };
-  };
-  const top = pt(-90, r);
-  const SPRING = '0,0,1,1; 0.3,1.3,0.4,1; 0,0,1,1; 0,0,1,1; 0,0,1,1';
+  const dur = '4.5s';
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
-      {/* Facet boundary + radial spokes */}
-      <circle cx={cx} cy={cy} r={R} fill="none" stroke="#c7d2fe" strokeWidth="1.2" strokeDasharray="3 3" />
-      {angs.map(a => {
-        const e = pt(a, R);
-        return <line key={a} x1={cx} y1={cy} x2={e.x} y2={e.y} stroke="#c7d2fe" strokeWidth="1" />;
-      })}
-      <circle cx={cx} cy={cy} r="2.5" fill="#818cf8" />
+      {/* 3 side-by-side trapezoidal lamp facets */}
+      <polygon points="42,20 70,20 80,75 32,75" fill="rgba(148,163,184,0.04)" stroke="rgba(40, 30, 15, 0.18)" strokeWidth="1.2" />
+      <polygon points="96,20 124,20 134,75 86,75" fill="rgba(148,163,184,0.04)" stroke="rgba(40, 30, 15, 0.18)" strokeWidth="1.2" />
+      <polygon points="150,20 178,20 188,75 140,75" fill="rgba(148,163,184,0.04)" stroke="rgba(40, 30, 15, 0.18)" strokeWidth="1.2" />
 
-      {/* Drawn mark in the top facet */}
-      <circle cx={top.x} cy={top.y} r="5" fill="#2563eb" stroke="#fff" strokeWidth="1.5">
-        <animate attributeName="opacity" values="0;0;1;1;0;0"
-          keyTimes="0;0.16;0.26;0.86;0.94;1" dur={dur} repeatCount="indefinite" />
-        <animate attributeName="r" values="0;0;5;5;5;0"
-          keyTimes="0;0.16;0.27;0.86;0.94;1" dur={dur} repeatCount="indefinite"
-          calcMode="spline" keySplines={SPRING} />
-      </circle>
+      {/* Segment 1: Growing drawn line on middle facet */}
+      <polyline points="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <animate attributeName="points"
+          values="
+            86,75;
+            86,75 86,75;
+            86,75 90,55;
+            86,75 90,55 90,55;
+            86,75 90,55 130,55;
+            86,75 90,55 130,55 130,55;
+            86,75 90,55 130,55 134,75;
+            86,75 90,55 130,55 134,75 86,75;
+            86,75 90,55 130,55 134,75 86,75
+          "
+          keyTimes="0; 0.10; 0.22; 0.32; 0.44; 0.54; 0.66; 0.76; 1"
+          dur={dur} repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;1;1;1;1;1;1;1;0" keyTimes="0;0.10;0.22;0.32;0.44;0.54;0.66;0.76;1" dur={dur} repeatCount="indefinite" />
+      </polyline>
 
-      {/* Replicated marks in the other five facets */}
-      {angs.slice(1).map(a => {
-        const p = pt(a, r);
-        return (
-          <circle key={a} cx={p.x} cy={p.y} r="4" fill="#60a5fa" stroke="#fff" strokeWidth="1.3">
-            <animate attributeName="opacity" values="0;0;1;1;0;0"
-              keyTimes="0;0.42;0.52;0.86;0.94;1" dur={dur} repeatCount="indefinite" />
-            <animate attributeName="r" values="0;0;4;4;4;0"
-              keyTimes="0;0.42;0.53;0.86;0.94;1" dur={dur} repeatCount="indefinite"
-              calcMode="spline" keySplines={SPRING} />
-          </circle>
-        );
-      })}
+      {/* Segment 2: Replicated drawn line on left facet */}
+      <polyline points="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <animate attributeName="points"
+          values="
+            32,75;
+            32,75 32,75;
+            32,75 36,55;
+            32,75 36,55 36,55;
+            32,75 36,55 76,55;
+            32,75 36,55 76,55 76,55;
+            32,75 36,55 76,55 80,75;
+            32,75 36,55 76,55 80,75 32,75;
+            32,75 36,55 76,55 80,75 32,75
+          "
+          keyTimes="0; 0.10; 0.22; 0.32; 0.44; 0.54; 0.66; 0.76; 1"
+          dur={dur} repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;1;1;1;1;1;1;1;0" keyTimes="0;0.10;0.22;0.32;0.44;0.54;0.66;0.76;1" dur={dur} repeatCount="indefinite" />
+      </polyline>
 
-      {/* Cursor drawing the first mark */}
+      {/* Segment 3: Replicated drawn line on right facet */}
+      <polyline points="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
+        <animate attributeName="points"
+          values="
+            140,75;
+            140,75 140,75;
+            140,75 144,55;
+            140,75 144,55 144,55;
+            140,75 144,55 184,55;
+            140,75 144,55 184,55 184,55;
+            140,75 144,55 184,55 188,75;
+            140,75 144,55 184,55 188,75 140,75;
+            140,75 144,55 184,55 188,75 140,75
+          "
+          keyTimes="0; 0.10; 0.22; 0.32; 0.44; 0.54; 0.66; 0.76; 1"
+          dur={dur} repeatCount="indefinite" />
+        <animate attributeName="opacity" values="1;1;1;1;1;1;1;1;0" keyTimes="0;0.10;0.22;0.32;0.44;0.54;0.66;0.76;1" dur={dur} repeatCount="indefinite" />
+      </polyline>
+
+      {/* Highlight of finished glass pieces (fades in on close) */}
+      <g opacity="0">
+        <animate attributeName="opacity" values="0;0;0;0;0;0;0;1;1;0" keyTimes="0;0.10;0.22;0.32;0.44;0.54;0.66;0.76;0.94;1" dur={dur} repeatCount="indefinite" />
+        <polygon points="32,75 36,55 76,55 80,75" fill="rgba(192, 138, 31, 0.14)" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" />
+        <polygon points="86,75 90,55 130,55 134,75" fill="rgba(192, 138, 31, 0.14)" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" />
+        <polygon points="140,75 144,55 184,55 188,75" fill="rgba(192, 138, 31, 0.14)" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" />
+      </g>
+
+      {/* Cursor drawing the piece on middle facet */}
       <g>
         <animateTransform attributeName="transform" type="translate"
-          values={`200,98; ${top.x - 1},${top.y + 1}; ${top.x - 1},${top.y + 1}; 200,98; 200,98`}
-          keyTimes="0;0.16;0.30;0.42;1" dur={dur} repeatCount="indefinite"
-          calcMode="spline" keySplines="0.4,0,0.2,1; 0,0,1,1; 0.4,0,0.2,1; 0,0,1,1" />
+          values="
+            150,95;
+            86,75;
+            90,55;
+            130,55;
+            134,75;
+            86,75;
+            150,95;
+            150,95
+          "
+          keyTimes="0; 0.10; 0.22; 0.44; 0.66; 0.76; 0.88; 1"
+          dur={dur} repeatCount="indefinite"
+          calcMode="spline" keySplines="0.4,0,0.2,1; 0.4,0,0.2,1; 0.4,0,0.2,1; 0.4,0,0.2,1; 0.4,0,0.2,1; 0.4,0,0.2,1; 0,0,1,1" />
         <g>
-          <animate attributeName="opacity" values="0;1;1;0;0" keyTimes="0;0.12;0.32;0.42;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0;1;1;1;1;1;1;0;0" keyTimes="0;0.05;0.22;0.44;0.66;0.76;0.82;0.88;1" dur={dur} repeatCount="indefinite" />
           <polygon points="0,0 0,14 3.5,10.5 6,16 8,15 5.5,9 10,9"
             fill="white" stroke="#1e293b" strokeWidth="0.8" strokeLinejoin="round" />
         </g>
@@ -741,35 +808,33 @@ export function ProfileAnimation() {
   const dur = '4s';
   const KT  = '0; 0.5; 1';
   const SPL = '0.4,0,0.2,1; 0.4,0,0.2,1';
-  const dNarrow = 'M 92,26 Q 88,57 80,86 L 140,86 Q 132,57 128,26 Z';
-  const dWide   = 'M 92,26 Q 66,57 80,86 L 140,86 Q 154,57 128,26 Z';
+  const dNarrow = 'M 92,26 L 88,57 L 80,86 L 140,86 L 132,57 L 128,26 Z';
+  const dWide   = 'M 92,26 L 72,57 L 80,86 L 140,86 L 148,57 L 128,26 Z';
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* Vertical axis of revolution */}
-      <line x1="110" y1="16" x2="110" y2="96" stroke="#c7d2fe" strokeWidth="1" strokeDasharray="3 3" />
+      <line x1="110" y1="16" x2="110" y2="96" stroke="rgba(40, 30, 15, 0.18)" strokeWidth="1" strokeDasharray="3 3" />
 
-      {/* Lamp body — silhouette bulges in and out */}
-      <path d={dNarrow} fill="rgba(59,130,246,0.16)" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round">
+      {/* Lamp body — silhouette bulges in and out with straight polyline segments */}
+      <path d={dNarrow} fill="rgba(192, 138, 31, 0.08)" stroke="#7a5512" strokeWidth="1.6" strokeLinejoin="round">
         <animate attributeName="d" values={`${dNarrow};${dWide};${dNarrow}`} keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </path>
 
       {/* Top + bottom rings */}
-      <ellipse cx="110" cy="26" rx="18" ry="4.5" fill="rgba(59,130,246,0.3)" stroke="#2563eb" strokeWidth="1.6" />
-      <ellipse cx="110" cy="86" rx="30" ry="6"   fill="rgba(59,130,246,0.3)" stroke="#2563eb" strokeWidth="1.6" />
+      <ellipse cx="110" cy="26" rx="18" ry="4.5" fill="rgba(192, 138, 31, 0.14)" stroke="#7a5512" strokeWidth="1.2" />
+      <ellipse cx="110" cy="86" rx="30" ry="6"   fill="rgba(192, 138, 31, 0.14)" stroke="#7a5512" strokeWidth="1.2" />
 
-      {/* Right control handle (dragged) + left mirror — placed on the curve
-          midpoint: B(0.5) = 0.25·P0 + 0.5·ctrl + 0.25·P2, not on the Bézier
-          control point itself */}
-      <circle cy="56.5" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
-        <animate attributeName="cx" values="133;144;133" keyTimes={KT} dur={dur}
+      {/* Right control handle (dragged) + left mirror — placed exactly on the joints */}
+      <circle cy="57" r="4.5" fill="#ffffff" stroke="#7a5512" strokeWidth="1.4">
+        <animate attributeName="cx" values="132;148;132" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
-      <circle cy="56.5" r="5" fill="#f59e0b" stroke="#fff" strokeWidth="1.6">
-        <animate attributeName="cx" values="87;76;87" keyTimes={KT} dur={dur}
+      <circle cy="57" r="4.5" fill="#ffffff" stroke="#7a5512" strokeWidth="1.4">
+        <animate attributeName="cx" values="88;72;88" keyTimes={KT} dur={dur}
           repeatCount="indefinite" calcMode="spline" keySplines={SPL} />
       </circle>
     </svg>
@@ -793,11 +858,11 @@ export function PackAnimation() {
 
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
-      <rect width="220" height="110" fill="#eff6ff" />
+      <rect width="220" height="110" fill="transparent" />
 
       {/* Glass sheet */}
       <rect x="14" y="12" width="190" height="86" rx="3"
-        fill="rgba(148,163,184,0.08)" stroke="#f59e0b" strokeWidth="1.4" strokeDasharray="4 3" />
+        fill="rgba(192, 138, 31, 0.04)" stroke="#c08a1f" strokeWidth="1.4" strokeDasharray="4 3" />
 
       {pieces.map((p, i) => (
         <g key={i}>
