@@ -1,0 +1,143 @@
+{
+  "claim": "Explicit background/refraction variables can keep scene leakage out of T better than raw RGB texture copying.",
+  "case": "easy_seed23",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_inverse_sweep_joint",
+    "size": 144,
+    "seed": 23,
+    "ambient": 0.2,
+    "leak": 0.72,
+    "max_disp": 5.5,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_no_disp": 300,
+    "steps_disp": 700,
+    "steps_joint": 750,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "log_every": 375,
+    "sweep": true,
+    "sweep_seeds": "21,22,23,24",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 1.5146749019622803
+  },
+  "metrics": [
+    {
+      "name": "raw RGB trap",
+      "renderer_recon_mae": 0.006787319667637348,
+      "T_mae": 0.15305587649345398,
+      "T_lum_mae": 0.26784926652908325,
+      "B_mae": 0.8134065270423889,
+      "T_highfreq_corr_with_bg": 0.9804094432561978,
+      "T_lowfreq_corr_with_bg": 0.9566585015105195,
+      "preview_lum_cv": 0.185316806355826,
+      "disp_epe_px": 1.9884507656097412,
+      "disp_corr_x": 0.0,
+      "disp_corr_y": 0.0
+    },
+    {
+      "name": "low-T/no-displacement (known B)",
+      "renderer_recon_mae": 0.004824135918170214,
+      "T_mae": 0.008175065740942955,
+      "T_lum_mae": 0.013590515591204166,
+      "B_mae": 0.0,
+      "T_highfreq_corr_with_bg": 0.18652424446346416,
+      "T_lowfreq_corr_with_bg": 0.0182054931900865,
+      "preview_lum_cv": 0.07289078251741636,
+      "disp_epe_px": 1.9884507656097412,
+      "disp_corr_x": 0.0,
+      "disp_corr_y": 0.0
+    },
+    {
+      "name": "low-T + displacement (known B)",
+      "renderer_recon_mae": 0.001780943595804274,
+      "T_mae": 0.005912309046834707,
+      "T_lum_mae": 0.009794892743229866,
+      "B_mae": 0.0,
+      "T_highfreq_corr_with_bg": 0.09547111459166038,
+      "T_lowfreq_corr_with_bg": 0.022988735567394093,
+      "preview_lum_cv": 0.07132039576721684,
+      "disp_epe_px": 1.5115840435028076,
+      "disp_corr_x": 0.598584812629633,
+      "disp_corr_y": 0.5482064539872388
+    },
+    {
+      "name": "low-T + displacement + learned B",
+      "renderer_recon_mae": 0.001139743602834642,
+      "T_mae": 0.10510867834091187,
+      "T_lum_mae": 0.1952490359544754,
+      "B_mae": 0.24718262255191803,
+      "T_highfreq_corr_with_bg": 0.34037110262049547,
+      "T_lowfreq_corr_with_bg": 0.9273162856251254,
+      "preview_lum_cv": 0.08352466910083609,
+      "disp_epe_px": 2.034827709197998,
+      "disp_corr_x": 0.15448871418232257,
+      "disp_corr_y": 0.1534850289808484
+    }
+  ],
+  "logs": {
+    "lowT_no_disp": [
+      {
+        "step": 0,
+        "loss": 0.005894695874303579,
+        "recon": 0.005844615399837494
+      },
+      {
+        "step": 299,
+        "loss": 0.004866442643105984,
+        "recon": 0.004824854899197817
+      }
+    ],
+    "lowT_disp": [
+      {
+        "step": 0,
+        "loss": 0.005894695874303579,
+        "recon": 0.005844615399837494,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 375,
+        "loss": 0.002147563500329852,
+        "recon": 0.001783641055226326,
+        "disp_abs": 0.6897054314613342
+      },
+      {
+        "step": 699,
+        "loss": 0.002150374697521329,
+        "recon": 0.0017850945005193353,
+        "disp_abs": 0.6908529996871948
+      }
+    ],
+    "joint_B_disp": [
+      {
+        "step": 0,
+        "loss": 0.016971351578831673,
+        "recon": 0.01691259816288948,
+        "disp_abs": 0.0,
+        "B_tv": 0.012739292345941067
+      },
+      {
+        "step": 375,
+        "loss": 0.0014994479715824127,
+        "recon": 0.001151831354945898,
+        "disp_abs": 0.48895135521888733,
+        "B_tv": 0.06334873288869858
+      },
+      {
+        "step": 749,
+        "loss": 0.0014930146280676126,
+        "recon": 0.0011503200512379408,
+        "disp_abs": 0.5002169013023376,
+        "B_tv": 0.0628877505660057
+      }
+    ]
+  }
+}

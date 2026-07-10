@@ -34,6 +34,9 @@ consistency modestly but does not solve chroma/background separation.
 weak neural luma cleaner, so learned cleanup must beat that baseline.
 `020-initial-bets-audit.md` resets the high-risk track toward test-time
 optimization and explicit transparent-background disentanglement.
+`021-differentiable-sheet-inverse.md` starts that renderer path: oracle known
+background plus displacement recovers clean material well, while learned
+background from one image reconstructs but remains ambiguous.
 
 ## Layout
 
@@ -51,6 +54,7 @@ catalog_prior_gate.py  score whether a sheet should receive catalog-prior assist
 learned_prior_gate.py  negative/limited learned gate probe using catalog negatives + synthetic leaks
 train_catalog_leak_cleaner.py  weak neural cleaner trained from catalog sheets with synthetic leakage
 luma_quotient_prior.py  deterministic quotient baseline that falsifies weak learned luma cleanup
+differentiable_sheet_inverse.py  tiny renderer/optimizer for T + background B + displacement D
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -114,6 +118,10 @@ python3 learned_prior_gate.py
 
 # quotient baseline every learned luma cleanup now has to beat
 python3 luma_quotient_prior.py
+
+# high-risk renderer sweep: explicit T + B + displacement inverse problem
+python3 differentiable_sheet_inverse.py --sweep \
+  --out results/differentiable_sheet_inverse_sweep_joint
 ```
 
 manifest.json format (keys are filenames inside the folder):

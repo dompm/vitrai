@@ -1,0 +1,163 @@
+{
+  "claim": "Explicit background/refraction variables can keep scene leakage out of T better than raw RGB texture copying.",
+  "case": "hard_seed21",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_inverse_sweep_joint",
+    "size": 144,
+    "seed": 21,
+    "ambient": 0.1,
+    "leak": 0.9,
+    "max_disp": 13.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_no_disp": 300,
+    "steps_disp": 1100,
+    "steps_joint": 1200,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "log_every": 375,
+    "sweep": true,
+    "sweep_seeds": "21,22,23,24",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 2.1661577224731445
+  },
+  "metrics": [
+    {
+      "name": "raw RGB trap",
+      "renderer_recon_mae": 0.0,
+      "T_mae": 0.1651730090379715,
+      "T_lum_mae": 0.2894960939884186,
+      "B_mae": 0.8112598061561584,
+      "T_highfreq_corr_with_bg": 0.9849630752649008,
+      "T_lowfreq_corr_with_bg": 0.9756580138984967,
+      "preview_lum_cv": 0.23146362436516282,
+      "disp_epe_px": 3.9518685340881348,
+      "disp_corr_x": 0.0,
+      "disp_corr_y": 0.0
+    },
+    {
+      "name": "low-T/no-displacement (known B)",
+      "renderer_recon_mae": 0.007684554439038038,
+      "T_mae": 0.019398415461182594,
+      "T_lum_mae": 0.0331026054918766,
+      "B_mae": 0.0,
+      "T_highfreq_corr_with_bg": 0.3182068397407936,
+      "T_lowfreq_corr_with_bg": -0.06121535093075394,
+      "preview_lum_cv": 0.06525353009429154,
+      "disp_epe_px": 3.9518685340881348,
+      "disp_corr_x": 0.0,
+      "disp_corr_y": 0.0
+    },
+    {
+      "name": "low-T + displacement (known B)",
+      "renderer_recon_mae": 0.0019180693197995424,
+      "T_mae": 0.010107536800205708,
+      "T_lum_mae": 0.01664990559220314,
+      "B_mae": 0.0,
+      "T_highfreq_corr_with_bg": 0.19306574812575333,
+      "T_lowfreq_corr_with_bg": 0.005429623916643269,
+      "preview_lum_cv": 0.06418223487361609,
+      "disp_epe_px": 2.736764430999756,
+      "disp_corr_x": 0.5943210009500209,
+      "disp_corr_y": 0.4549682984915508
+    },
+    {
+      "name": "low-T + displacement + learned B",
+      "renderer_recon_mae": 0.0010985475964844227,
+      "T_mae": 0.11739146709442139,
+      "T_lum_mae": 0.21987755596637726,
+      "B_mae": 0.1922827959060669,
+      "T_highfreq_corr_with_bg": 0.2632164593516324,
+      "T_lowfreq_corr_with_bg": 0.9505147634443587,
+      "preview_lum_cv": 0.09404140858704035,
+      "disp_epe_px": 4.052886962890625,
+      "disp_corr_x": 0.4470963387009424,
+      "disp_corr_y": 0.1518019681076167
+    }
+  ],
+  "logs": {
+    "lowT_no_disp": [
+      {
+        "step": 0,
+        "loss": 0.010211337357759476,
+        "recon": 0.010094748809933662
+      },
+      {
+        "step": 299,
+        "loss": 0.0077851261012256145,
+        "recon": 0.007684074342250824
+      }
+    ],
+    "lowT_disp": [
+      {
+        "step": 0,
+        "loss": 0.010211337357759476,
+        "recon": 0.010094748809933662,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 375,
+        "loss": 0.002421697834506631,
+        "recon": 0.0019482726929709315,
+        "disp_abs": 1.652916431427002
+      },
+      {
+        "step": 750,
+        "loss": 0.002429679501801729,
+        "recon": 0.0019532772712409496,
+        "disp_abs": 1.67608642578125
+      },
+      {
+        "step": 1099,
+        "loss": 0.002407214604318142,
+        "recon": 0.0019270310876891017,
+        "disp_abs": 1.6885485649108887
+      }
+    ],
+    "joint_B_disp": [
+      {
+        "step": 0,
+        "loss": 0.020893113687634468,
+        "recon": 0.020829301327466965,
+        "disp_abs": 0.0,
+        "B_tv": 0.014250406995415688
+      },
+      {
+        "step": 375,
+        "loss": 0.001572085777297616,
+        "recon": 0.0011387120466679335,
+        "disp_abs": 1.5779669284820557,
+        "B_tv": 0.06540922820568085
+      },
+      {
+        "step": 750,
+        "loss": 0.0015379285905510187,
+        "recon": 0.001122748013585806,
+        "disp_abs": 1.5338572263717651,
+        "B_tv": 0.06422276794910431
+      },
+      {
+        "step": 1125,
+        "loss": 0.0015188285615295172,
+        "recon": 0.0011115764500573277,
+        "disp_abs": 1.505054235458374,
+        "B_tv": 0.06320460885763168
+      },
+      {
+        "step": 1199,
+        "loss": 0.0015246581751853228,
+        "recon": 0.0011186207411810756,
+        "disp_abs": 1.5005733966827393,
+        "B_tv": 0.0630636215209961
+      }
+    ]
+  }
+}
