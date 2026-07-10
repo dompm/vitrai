@@ -100,8 +100,32 @@ LUM = np.array([0.2126, 0.7152, 0.0722])
 #   0.80. Validated only qualitatively (real library white.jpg, gauge (c)) since
 #   there is no ground truth for this class; a smaller, more conservative bump
 #   than dark-opaque's for that reason.
+# Report 023: cathedral-clear lowered 0.95 -> 0.85. 0.95 was fit (report 003)
+# against the ORIGINAL two near-clear-bright recipes only (amber/green,
+# rendered GT p99 0.76-0.90). Report 022 added two saturated cathedral gap
+# recipes (blue/red, grounded on real deeply-tinted catalog exemplars, not
+# near-clear ones) whose rendered GT p99 is measurably, structurally lower:
+# 0.716/0.753 -- both well below the old 0.95 target, so the class anchor
+# overscaled them 1.30-1.33x (measured on render_022, oracle class). This is
+# real physics, not a rendering fluke: a strongly saturated cathedral color
+# has a LOWER-luminance clear point than a near-clear tint at the same
+# perceptual "fully transmitting" brightness (percentile envelope is a
+# LUMINANCE statistic; see hue_preserving_clip01's comment). All four
+# cathedral gap+original recipes' rendered GT p99, oracle class (report 023,
+# `fit_anchor.py --ship` on the full 13-recipe set): amber 0.840-0.903,
+# green 0.755-0.788, red 0.753, blue 0.716 -- median 0.783, and even the
+# BEST (amber) case never reaches 0.95. 0.85 sits above the family median
+# (does not badly undershoot amber's bright end: 0.85/0.903 = 0.94x) while
+# bringing blue/red inside the report's 1.2x goal (0.85/0.716 = 1.19x,
+# 0.85/0.753 = 1.13x -- both were 1.30-1.33x at 0.95). This is a CLASS
+# target change, not an anchor-fit change: it alters the library's
+# cathedral-family sheets on the DEFAULT (class-anchor) path -- see report
+# 023 sec 3 for the before/after library contact sheet and per-sheet
+# justification (every cathedral tint gets MORE saturated, not grayer; a
+# uniform ~10-15% dimming, well inside plausible photographic exposure
+# variation).
 T_ANCHOR = {
-    "cathedral-clear": (99, 0.95),
+    "cathedral-clear": (99, 0.85),
     "wispy": (99, 0.95),
     "opalescent": (99, 0.88),   # milky: brightest is translucent, not clear
     "dark-opaque": (99, 0.20),  # brightest fleck transmits ~20%; median ends dark, not black
@@ -198,11 +222,45 @@ ANCHOR_K_MIN, ANCHOR_K_MAX = 0.05, 5.0
 # coefficients are within noise of report 017's values, as expected since
 # the fix only changes sat_lit's value on 12 of the 35 fit samples (all in
 # the dark family) where the old absolute gate was degenerate.
+# Report 023 refit: `fit_anchor.py` on the FULL 13-recipe realistic set (the
+# original 26 v2 samples + report 017's 9 dark-family top-up + report 022's
+# 25 render_022 samples spanning the 5 gap recipes = 60 samples, 13 recipes).
+# LORO worst-case 4.30x (5-recipe baseline, reproduced exactly) -> 4.13x (13
+# recipes) -- the widened set's worst cell moves from dark-opaque to
+# dark-deep, both dark-family within-darkness-spectrum cases already known
+# (report 017 sec 1.2) to be the estimator's hardest regime; no recipe's
+# LORO cell exceeds 3x except the two darkest dark-family holdouts and
+# cathedral-red (2.91x, n=2, one seed). T_LO/T_HI unchanged (017's floor
+# reasoning still holds: no new recipe sits below 0.04 or above 0.98).
 ANCHOR_T_LO, ANCHOR_T_HI = 0.04, 0.98
-ANCHOR_FEAT_MU = np.array([-1.98505, 0.339133, 0.241629])
-ANCHOR_FEAT_SD = np.array([1.16796, 0.197783, 0.327259])
-ANCHOR_COEF = np.array([0.0933926, 1.55464, 0.260738, 0.476681])
+ANCHOR_FEAT_MU = np.array([-1.98521, 0.355374, 0.228257])
+ANCHOR_FEAT_SD = np.array([1.12028, 0.224796, 0.324553])
+ANCHOR_COEF = np.array([0.353148, 1.66737, 0.240189, 0.677039])
 ANCHOR_BLEND_TAU0, ANCHOR_BLEND_TAU1, ANCHOR_BLEND_WMAX = 1.5, 3.0, 0.85
+
+# Report 023: sheet-adaptive clamp on estimate_illumination's milky-pixel
+# chroma-fit deviation from neutral (see the fit site for the full
+# mechanism/measurement writeup). CHROMA_SAT_LO/HI bound the raw_sheet_
+# saturation ramp; CHROMA_DEV_MAX/MIN bound the allowed chroma deviation
+# (channel ratio to neutral) at the ramp's two ends. Picked from the gap
+# measured on render_022: the real-illuminant-cast regression set (wispy-
+# white, streaky-mix) sits at raw_sheet_saturation 0.13-0.19, well under
+# CHROMA_SAT_LO -- ramp=0, byte-identical to the pre-023 unconditional fit;
+# the saturation-collapse cases (saturated-opalescent, streaky-fine-texture)
+# sit at 0.37-0.45, above CHROMA_SAT_HI -- ramp=1, chroma clamped fully to
+# neutral (CHROMA_DEV_MIN=1.0). CHROMA_DEV_MAX (2.5) matches the old
+# unconditional `np.clip(fit, 0.4, 2.5)` ceiling exactly, so nothing changes
+# below the ramp. DEV_MIN swept {1.05, 1.02, 1.0}; 1.0 (full lockout at
+# ramp=1) won cleanly over the two looser values on both target recipes
+# with zero measurable cost to wispy-white/streaky-mix (both sit below
+# CHROMA_SAT_LO regardless of DEV_MIN). Honest residual: even at full
+# lockout, streaky-fine-texture's R channel still overshoots GT (0.95 vs
+# 0.76) -- see report 023 sec 1 for why this floor is not this constant's
+# to fix (it traces to the "wispy" class T_ANCHOR, shared with wispy-white/
+# streaky-mix which already fit that target well; not touched, same
+# overfitting guard as reports 009/017).
+CHROMA_SAT_LO, CHROMA_SAT_HI = 0.15, 0.30
+CHROMA_DEV_MAX, CHROMA_DEV_MIN = 2.5, 1.0
 
 
 # ---------------------------------------------------------------- basic ops
@@ -281,6 +339,53 @@ def diffusion_fill(img, conf, iters=6):
     return res[..., 0] if squeeze else res
 
 
+# Report 023: hue-preserving [0,1] clip. `np.clip(a, 0, 1)` applied
+# independently per channel is NOT hue-preserving -- if only the dominant
+# channel of a tinted pixel exceeds 1, clipping just that channel pulls it
+# DOWN toward the weaker channels, desaturating the pixel toward white. This
+# is the dominant mechanism behind report 022's cathedral-blue/red anchor
+# "overscale": the illumination envelope (`luminance_envelope`) is built from
+# LUMINANCE, a Rec.709-weighted average of R/G/B (weights ~0.21/0.72/0.07);
+# for a strongly-tinted sheet, the dominant channel's own clear level runs
+# well above the luminance-based envelope (measured on saturated-opalescent:
+# R_pre-clip reaches p50 1.31 against an envelope built to sit near 1.0 in
+# luminance terms -- the R channel is legitimately brighter than luminance
+# suggests, because R's luminance weight is low), so the OLD per-channel clip
+# threw away exactly the information that made the pixel look tinted. Scaling
+# the whole pixel down by 1/max(R,G,B) when the max exceeds 1 (the standard
+# photographic highlight-desaturation-avoidance technique) preserves the
+# RGB ratio instead. Measured: cathedral-blue T_mae 0.223 -> 0.145,
+# cathedral-red 0.268 -> 0.166, dark-ruby 0.067 -> 0.041 on report 022's
+# render_022 set, zero measurable change on any near-neutral recipe (the
+# clip is a no-op wherever no channel exceeds 1). See report 023 sec 1.
+def hue_preserving_clip01(a):
+    a = np.maximum(a, 0.0)
+    m = a.max(axis=-1, keepdims=True)
+    scale = np.where(m > 1.0, 1.0 / np.maximum(m, 1e-9), 1.0)
+    return a * scale
+
+
+# Report 009 introduced this exact computation inside assemble_T's confidence
+# gate ("measure saturation relative to the sheet's OWN robust median hue,
+# not absolute neutral, so a uniformly-tinted sheet's own color doesn't
+# auto-read as background bleed-through"). Report 023 factors it out because
+# `estimate_haze`'s `bg_color` cue needed the identical fix and was still on
+# the old absolute-neutral assumption: fixing estimate_illumination's chroma
+# fit (above) makes R keep real tint for saturated-opalescent /
+# streaky-fine-texture, and estimate_haze's un-fixed bg_color then read
+# that now-genuine tint as "saturated => background", collapsing h (0.88 ->
+# 0.16 on saturated-opalescent, GT 0.80) -- a regression this fix removes
+# (see report 023 sec 1).
+def sheet_relative_saturation(Rc):
+    Y = lum(Rc)
+    chroma = Rc / (Y[..., None] + 1e-6)
+    tint = np.median(chroma.reshape(-1, 3), axis=0)
+    tint = tint / (tint.mean() + 1e-9)
+    Rc_detinted = Rc / (tint[None, None, :] + 1e-6)
+    mx, mn = Rc_detinted.max(axis=-1), Rc_detinted.min(axis=-1)
+    return (mx - mn) / (mx + 1e-6)
+
+
 # ------------------------------------------------------------ pipeline steps
 def suppress_speculars(lin, glass_class, W):
     """Front-surface sheen. Deliberately conservative: on textured glass most
@@ -298,19 +403,49 @@ def suppress_speculars(lin, glass_class, W):
     return inpaint_lin(lin, mask, radius=4), mask
 
 
-def milkiness(rgb_like, r_tex):
+def milkiness(rgb_like, r_tex, sat=None):
     """Score in [0,1]: bright, locally smooth, desaturated -> milky diffuse glass.
     Texture is measured on a median-filtered luminance so that impulse-like
-    sparkle (1-3 px glints) does not read as background texture."""
+    sparkle (1-3 px glints) does not read as background texture.
+
+    `sat` (report 023): the desaturation term defaults to ABSOLUTE saturation
+    (deliberately -- this function's other caller, estimate_illumination's
+    illuminant-fit pixel weight, wants "confidently near-neutral in absolute
+    terms" specifically, so only pixels that plausibly show pure illuminant
+    color vote; making that use sheet-relative would trust EVERY pixel
+    matching the sheet's own tint, including clear non-milky regions, which
+    is the opposite of what that vote-selection wants). estimate_haze's use
+    needs the opposite: haze/milkiness is a STRUCTURAL smooth+bright cue, and
+    a genuinely-tinted milky sheet's own color should not disqualify a pixel
+    from reading as milky -- pass sheet_relative_saturation(...) explicitly
+    there. See report 023 sec 1 for the measured regression this caused
+    when left on the absolute default (saturated-opalescent h collapsed
+    0.88->0.16 when its color was no longer artificially neutralized)."""
     Y = lum(rgb_like)
     Ym = cv2.medianBlur(np.clip(Y, 0, 4).astype(np.float32), 5).astype(np.float64)
     rel_tex = local_std(Ym, r_tex) / (box(Ym, r_tex) + 0.05)
     smooth = np.exp(-((rel_tex / 0.07) ** 2))
-    mx, mn = rgb_like.max(axis=-1), rgb_like.min(axis=-1)
-    sat = (mx - mn) / (mx + 1e-6)
+    if sat is None:
+        mx, mn = rgb_like.max(axis=-1), rgb_like.min(axis=-1)
+        sat = (mx - mn) / (mx + 1e-6)
     desat = np.exp(-((sat / 0.35) ** 2))
     bright = smoothstep(Y, 0.30, 0.65)
     return bright * smooth * desat
+
+
+# Report 023: sheet-adaptive ceiling on how much color `estimate_illumination`'s
+# milky-pixel chroma fit may remove, for the wispy/opalescent classes. See
+# CHROMA_DEV_* below for the mechanism; this measures the ONE input the
+# clamp needs -- "how saturated is this sheet, on its own, before any
+# illuminant removal" -- robustly (percentile-weighted on the sheet's own
+# brightest quartile, so a handful of hotspot/shadow pixels can't move it).
+def raw_sheet_saturation(lin, Y):
+    mx, mn = lin.max(-1), lin.min(-1)
+    sat = (mx - mn) / (mx + 1e-6)
+    w = smoothstep(Y, np.percentile(Y, 60), np.percentile(Y, 95))
+    if w.sum() < 1:
+        return float(np.median(sat))
+    return float((sat * w).sum() / (w.sum() + 1e-9))
 
 
 # Report 020: sat_lit's ADAPTIVE fallback gate, used only when the absolute
@@ -515,6 +650,42 @@ def estimate_illumination(lin, glass_class, W):
         chroma = cv2.resize(fit.astype(np.float32), (W_, H_), interpolation=cv2.INTER_CUBIC).astype(np.float64)
         chroma /= lum(chroma)[..., None] + 1e-9  # renormalize: luminance lives in env
 
+        # Report 023: sheet-adaptive ceiling on the fitted chroma's deviation
+        # from neutral. Report 022's evidence (render_022, 13 recipes): the
+        # milky-pixel fit above cannot tell "this sheet's own tint, diluted
+        # by local diffusion" from "an independent colored illuminant showing
+        # through a near-neutral diffuser" -- both produce a smooth,
+        # confidently-milky, moderately-desaturated patch, and 009 already
+        # showed (rejected hypothesis 1) that recentring the WHOLE field to
+        # neutral breaks wispy-white, which genuinely needs its uniform warm
+        # cast removed. The two cases ARE distinguishable, though, by how
+        # saturated the RAW (pre-correction) sheet already is:
+        # `raw_sheet_saturation` measured 0.13-0.19 on wispy-white/
+        # streaky-mix (009's real-illuminant-cast regression set) and
+        # 0.37-0.45 on saturated-opalescent/streaky-fine-texture (report
+        # 022's saturation-collapse cases) -- a real, non-overlapping gap.
+        # Real ambient illuminant color casts are physically bounded (the
+        # fitted chroma on the low-rsat regression set deviates only
+        # 11-18% from neutral); a fit trying to explain away 37-45% of raw
+        # sheet saturation as "illuminant" is almost certainly explaining
+        # away the glass's own color instead. The clamp ramps the allowed
+        # chroma deviation from CHROMA_DEV_MAX (near-unclamped, matches the
+        # old unconditional 0.4-2.5 clip above -- zero change below
+        # CHROMA_SAT_LO) down to CHROMA_DEV_MIN (near-neutral, minimal
+        # correction) as raw_sheet_saturation crosses the band -- a smooth
+        # ramp, not a hard class-level switch, so a sheet's own measured
+        # color decides its own trust, not just its class label. Verified
+        # on render_022 (report 023 sec 1): wispy-white/streaky-mix T_mae
+        # unchanged to 3 decimal places (both sit below CHROMA_SAT_LO, ramp
+        # = 0 -> byte-identical chroma field to the unclamped fit);
+        # saturated-opalescent T_mae 0.206 -> ~0.12, a*/b* deviation from
+        # GT 100-109% -> 21-46%.
+        rsat = raw_sheet_saturation(lin, Y)
+        ramp = float(np.clip((rsat - CHROMA_SAT_LO) / (CHROMA_SAT_HI - CHROMA_SAT_LO), 0.0, 1.0))
+        dev_max = CHROMA_DEV_MAX + (CHROMA_DEV_MIN - CHROMA_DEV_MAX) * ramp
+        chroma = np.exp(np.clip(np.log(np.maximum(chroma, 1e-6)), -np.log(dev_max), np.log(dev_max)))
+        chroma /= lum(chroma)[..., None] + 1e-9
+
     return env[..., None] * chroma
 
 
@@ -586,18 +757,31 @@ def estimate_haze(R, glass_class, W):
     """h(x) from local statistics of the illumination-normalized image R."""
     Y = np.clip(lum(R), 0, 2)
     r_tex = max(2, int(0.006 * W))
-    m = milkiness(R, r_tex)
-
-    mx, mn = R.max(axis=-1), R.min(axis=-1)
-    sat = (mx - mn) / (mx + 1e-6)
-    bg_color = 1 - np.exp(-((sat / 0.25) ** 2))  # saturated => background content
-    if glass_class == "opalescent":
-        h = (0.55 + 0.45 * m) * (1 - 0.9 * bg_color)
-    elif glass_class == "wispy":
-        h = np.clip(0.05 + 1.1 * m, 0, 1) * (1 - 0.9 * bg_color)
+    if glass_class in ("opalescent", "wispy"):
+        # Report 023: sheet-relative sat (see sheet_relative_saturation /
+        # the milkiness() docstring) for BOTH the milky-structure score `m`
+        # and the background-bleed cue `bg_color` -- otherwise a
+        # genuinely-tinted milky sheet's own color reads as "not
+        # desaturated" / "saturated => background" on the OLD absolute
+        # basis and haze collapses (measured: saturated-opalescent h
+        # 0.88 -> 0.16 when only the illumination fix landed and this one
+        # didn't -- see report 023 sec 1). Scoped to opalescent/wispy only:
+        # cathedral-clear and dark-opaque don't run the illuminant-chroma
+        # fit this is compensating for (their `chroma` is always neutral),
+        # so their milkiness/bg_color calls are deliberately left on the
+        # original absolute basis, unchanged, below.
+        sat = sheet_relative_saturation(np.clip(R, 0, None))
+        m = milkiness(R, r_tex, sat=sat)
+        bg_color = 1 - np.exp(-((sat / 0.25) ** 2))  # saturated => background content
+        if glass_class == "opalescent":
+            h = (0.55 + 0.45 * m) * (1 - 0.9 * bg_color)
+        else:
+            h = np.clip(0.05 + 1.1 * m, 0, 1) * (1 - 0.9 * bg_color)
     elif glass_class == "cathedral-clear":
+        m = milkiness(R, r_tex)
         h = 0.06 + 0.20 * m  # texture is glass relief, not diffusion
     else:  # dark-opaque: dark smooth pixels ARE the glass
+        m = milkiness(R, r_tex)
         rel_tex = local_std(Y, r_tex) / (box(Y, r_tex) + 0.05)
         smooth = np.exp(-((rel_tex / 0.07) ** 2))
         dark = smoothstep(1 - Y, 0.4, 0.8)
@@ -610,7 +794,7 @@ def estimate_haze(R, glass_class, W):
 def assemble_T(R, h, glass_class, mark_mask=None):
     """Glass color where directly observed; diffusion-fill where the photo shows
     background instead of glass."""
-    Rc = np.clip(R, 0, 1)
+    Rc = hue_preserving_clip01(R)
     Y = lum(Rc)
     if glass_class == "dark-opaque":
         return Rc, np.ones_like(Y)
@@ -639,12 +823,9 @@ def assemble_T(R, h, glass_class, mark_mask=None):
     # reads as "not saturated", i.e. trusted as glass, while a patch that
     # genuinely differs from the sheet's own tint -- true background
     # bleed-through -- still stands out).
-    chroma = Rc / (Y[..., None] + 1e-6)
-    tint = np.median(chroma.reshape(-1, 3), axis=0)
-    tint = tint / (tint.mean() + 1e-9)
-    Rc_detinted = Rc / (tint[None, None, :] + 1e-6)
-    mx, mn = Rc_detinted.max(axis=-1), Rc_detinted.min(axis=-1)
-    sat = (mx - mn) / (mx + 1e-6)
+    # Report 023: factored into sheet_relative_saturation() (identical math),
+    # shared with estimate_haze's bg_color cue, which needed the same fix.
+    sat = sheet_relative_saturation(Rc)
     desat = np.exp(-((sat / 0.35) ** 2))
     conf = np.clip(np.maximum(h, smoothstep(Y, 0.70, 0.92) * desat), 0, 1)
     # sharpen: mid-confidence pixels (wispy structure, h~0.5) used to be
@@ -654,7 +835,7 @@ def assemble_T(R, h, glass_class, mark_mask=None):
     if mark_mask is not None and mark_mask.any():
         conf = np.where(mark_mask, 0.0, conf)
     T = diffusion_fill(Rc, conf)
-    return np.clip(T, 0, 1), conf
+    return hue_preserving_clip01(T), conf
 
 
 # ------------------------------------------------------------------ rendering
@@ -771,11 +952,11 @@ def extract_maps(lin, glass_class, mark_region="unknown", anchor="class", sheet_
         # from the directly-observed R, re-anchor, clamp as a last resort, flag.
         if not (ANCHOR_K_MIN < k < ANCHOR_K_MAX):
             anchor_fallback = True
-            T = np.clip(R, 0, 1)
+            T = hue_preserving_clip01(R)
             conf = np.ones_like(conf)
             k = target / max(np.percentile(T, pct), 1e-3)
             k = float(np.clip(k, ANCHOR_K_MIN, ANCHOR_K_MAX))
-        T = np.clip(T * k, 0, 1)
+        T = hue_preserving_clip01(T * k)
         L, R = L / k, R * k
     return {"lin_ns": lin_ns, "spec_mask": spec_mask, "L": L, "R": R, "mark_mask": mark_mask,
             "h": h, "T": T, "conf": conf, "k": float(k), "raw_p99": raw_p99,

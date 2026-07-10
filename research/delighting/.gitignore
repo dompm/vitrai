@@ -1,5 +1,6 @@
 .vlm_cache.json
 venv/
+.venv
 .venv/
 synthetic_data/
 synthetic_data_v2/
@@ -11,6 +12,8 @@ validate_data_check/
 validate_data_check_v2/
 validate_data_022/
 render_022/
+render_023_holdout/
+validate_data_023/
 debug_*.py
 test_save_render.py
 test*.png
