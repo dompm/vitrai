@@ -17,37 +17,40 @@ const COLOR_FAMILIES = [
 ];
 
 const getColorFamily = (name: string, sku: string): string => {
-  const n = name.toLowerCase();
   const s = sku.toUpperCase();
   
-  if (n.includes('clear') || n.includes('crystal') || n.includes('ice') || s.includes('ICE') || s.startsWith('W800') || s.startsWith('Y800') || s.startsWith('OF100ICE')) {
+  const match = (words: string[]) => {
+    return words.some(w => new RegExp(`\\b${w}\\b`, 'i').test(name));
+  };
+  
+  if (match(['clear', 'crystal', 'ice']) || s.includes('ICE') || s.startsWith('W800') || s.startsWith('Y800') || s.startsWith('OF100ICE')) {
     return 'Clear';
   }
-  if (n.includes('white') || n.includes('black') || n.includes('gray') || n.includes('grey') || n.includes('charcoal') || n.includes('pearl') || n.includes('silver') || n.includes('opal white') || n.includes('reactive cloud') || n.includes('platinum') || n.includes('opaline') || n.includes('pewter') || n.includes('ivory')) {
+  if (match(['white', 'black', 'gray', 'grey', 'charcoal', 'pearl', 'silver', 'opal white', 'reactive cloud', 'platinum', 'opaline', 'pewter', 'ivory', 'bone', 'alabaster', 'slate', 'smoke', 'coal', 'ebony', 'milk', 'snow', 'steel'])) {
     return 'Monochrome';
   }
-  if (n.includes('red') || n.includes('cherry') || n.includes('ruby') || n.includes('daredevil') || n.includes('grenadine') || n.includes('crimson') || n.includes('cinnabar') || n.includes('tomato') || n.includes('scarlet') || n.includes('rhubarb') || n.includes('carnelian') || n.includes('flame') || n.includes('tulip') || n.includes('wine')) {
+  if (match(['red', 'cherry', 'ruby', 'daredevil', 'grenadine', 'crimson', 'cinnabar', 'tomato', 'scarlet', 'rhubarb', 'carnelian', 'flame', 'tulip', 'wine', 'brick', 'garnet', 'cardinal', 'maroon', 'burgundy', 'begonia'])) {
     return 'Red';
   }
-  if (n.includes('orange') || n.includes('tangerine') || n.includes('persimmon') || n.includes('coral') || n.includes('peach')) {
+  if (match(['orange', 'tangerine', 'persimmon', 'coral', 'peach', 'pumpkin', 'apricot'])) {
     return 'Orange';
   }
-  if (n.includes('yellow') || n.includes('canary') || n.includes('lemon') || n.includes('marigold') || n.includes('french vanilla') || n.includes('marzipan') || n.includes('almond') || n.includes('citronelle') || n.includes('butterscotch') || n.includes('cream') || n.includes('custard') || n.includes('dandelion') || n.includes('flaxen') || n.includes('noble brass')) {
+  if (match(['yellow', 'canary', 'lemon', 'marigold', 'french vanilla', 'marzipan', 'almond', 'citronelle', 'butterscotch', 'cream', 'custard', 'dandelion', 'flaxen', 'noble brass', 'mustard', 'banana', 'straw', 'butter', 'vanilla', 'sunflower', 'ocher', 'ochre'])) {
     return 'Yellow';
   }
-  if (n.includes('green') || n.includes('lime') || n.includes('moss') || n.includes('sage') || n.includes('emerald') || n.includes('caribbean') || n.includes('aventurine') || n.includes('pine') || n.includes('artichoke') || n.includes('celadon') || n.includes('pea pod') || n.includes('jade') || n.includes('olive') || n.includes('fern') || n.includes('mint') || n.includes('chartreuse') || n.includes('olivine') || n.includes('asparagus')) {
+  if (match(['green', 'lime', 'moss', 'sage', 'emerald', 'caribbean', 'aventurine', 'pine', 'artichoke', 'celadon', 'pea pod', 'jade', 'olive', 'fern', 'mint', 'chartreuse', 'olivine', 'asparagus', 'clover', 'meadow', 'grass', 'foliage', 'avocado', 'lichen', 'basil', 'kiwi', 'seaweed', 'forest', 'viridian'])) {
     return 'Green';
   }
-  if (n.includes('blue') || n.includes('cobalt') || n.includes('sky') || n.includes('turquoise') || n.includes('indigo') || n.includes('teal') || n.includes('ocean') || n.includes('aqua') || n.includes('cyan') || n.includes('periwinkle') || n.includes('sapphire') || n.includes('navy') || n.includes('chambray') || n.includes('lagoon')) {
+  if (match(['blue', 'cobalt', 'sky', 'turquoise', 'indigo', 'teal', 'ocean', 'aqua', 'cyan', 'periwinkle', 'sapphire', 'navy', 'chambray', 'lagoon', 'sea', 'pacific', 'denim', 'edgewater'])) {
     return 'Blue';
   }
-  if (n.includes('purple') || n.includes('violet') || n.includes('plum') || n.includes('heather') || n.includes('amethyst') || n.includes('grape') || n.includes('lavender') || n.includes('lilac') || n.includes('eggplant') || n.includes('mauve')) {
+  if (match(['purple', 'violet', 'plum', 'heather', 'amethyst', 'grape', 'lavender', 'lilac', 'eggplant', 'mauve', 'wisteria', 'orchid', 'mulberry', 'boysenberry'])) {
     return 'Purple';
   }
-  if (n.includes('pink') || n.includes('rose') || n.includes('fuchsia') || n.includes('cranberry') || n.includes('gold pink') || n.includes('magenta')) {
+  if (match(['pink', 'rose', 'fuchsia', 'cranberry', 'gold pink', 'magenta'])) {
     return 'Pink';
   }
-  if (n.includes('brown') || n.includes('amber') || n.includes('bronze') || n.includes('chestnut') || n.includes('chocolate') || n.includes('wood') || n.includes('gold') || n.includes('cognac') || n.includes('caramel') || n.includes('tan') || n.includes('honey') || n.includes('umber') || n.includes('mink') || n.includes('khaki') || n.includes('coffee') || n.includes('champagne') || n.includes('sienna') || n.includes('copper') || n.includes('terra cotta')) {
+  if (match(['brown', 'amber', 'bronze', 'chestnut', 'chocolate', 'wood', 'gold', 'cognac', 'caramel', 'tan', 'honey', 'umber', 'mink', 'khaki', 'coffee', 'champagne', 'sienna', 'copper', 'terra cotta', 'terracotta', 'mahogany', 'sand', 'tiger eye', 'russet', 'rust'])) {
     return 'Brown';
   }
   
