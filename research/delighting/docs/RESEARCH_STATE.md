@@ -137,6 +137,14 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   under-call the real green suncatcher sheet (green raw 0.51, fixed `T/h` 0.33). Decision: useful
   negative result; do not sink time into catalog classifiers until positives look more like real
   cathedral see-through/background leakage.
+- 017 catalog leak cleaner: switched the catalog from judge to weak clean-material teacher. A tiny
+  neural cleaner trained on catalog crops with synthetic transmitted-background leakage improves
+  synthetic held-out MAE by ~20% and nudges the real suncatcher in the right direction. Best variant
+  is a smooth-residual representation: measured high-frequency relief stays from the uploaded sheet,
+  the network edits only broad leakage fields. On the real tutorial benchmark: raw+neural improves
+  dE 8.98 -> 8.02, fixed `T/h`+neural improves luminance-CV 0.318 -> 0.261, but the hand sheet
+  prior is still far stronger (1.90 dE / 0.060 lum-CV). Verdict: keep "measured relief + learned
+  smooth leakage field"; catalog-only supervision is not enough, especially for chroma leakage.
 
 
 ## Open problems / next
@@ -155,10 +163,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   let a prettier invented relief map masquerade as measured glass.
 - Use the scraped manufacturer catalog as a weak material prior: learn which spatial variation is
   likely real sheet texture vs capture/background leakage, especially for cathedral/hammered glass.
-- Replace the hand-built catalog prior gate with a learned contamination/prior-strength head trained
-  on catalog negatives plus synthetic background-leak positives.
-- For learned prior-strength, first build better positives from real cross-lighting/capture pairs or
-  synthetic renders that reproduce garden/window leakage through hammered cathedral glass.
+- For learned leakage/prior strength, use the smooth-field representation from report 017 and train
+  on better positives from real cross-lighting/capture pairs or synthetic renders that reproduce
+  garden/window leakage through hammered cathedral glass.
+- Split luminance leakage from chroma leakage explicitly; report 017 improves brightness before it
+  understands color.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

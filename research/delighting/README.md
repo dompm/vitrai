@@ -26,6 +26,9 @@ images to sanity-check a sheet-level prior for the right-side glass panel.
 is provenance-aware rather than automatic. `016-learned-prior-gate-negative.md`
 records that a first synthetic-positive learned gate under-calls the real
 suncatcher failure and should not distract from inverse rendering.
+`017-catalog-leak-cleaner.md` turns the catalog into weak clean-material
+supervision for a neural leakage-field cleaner; it improves brightness
+consistency modestly but does not solve chroma/background separation.
 
 ## Layout
 
@@ -41,6 +44,7 @@ sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppress
 catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
 catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
 learned_prior_gate.py  negative/limited learned gate probe using catalog negatives + synthetic leaks
+train_catalog_leak_cleaner.py  weak neural cleaner trained from catalog sheets with synthetic leakage
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -94,6 +98,11 @@ python3 catalog_prior_gate.py
 
 # learned gate probe; useful negative result, not a product model
 python3 learned_prior_gate.py
+
+# weak neural leakage-field cleaner; outputs baseline and smooth-residual result folders
+./.venv/bin/python train_catalog_leak_cleaner.py --steps 900
+./.venv/bin/python train_catalog_leak_cleaner.py \
+  --out results/catalog_leak_cleaner_smooth --steps 900 --smooth-residual 33
 ```
 
 manifest.json format (keys are filenames inside the folder):
