@@ -540,8 +540,17 @@ def main():
         if formula_key not in seen_formulas:
             seen_formulas.add(formula_key)
             
-            # Compute precalculated color family key using local cropped image path
+            # Prefer recovered -v2 image version from delighting-024 if present
             local_img_filename = os.path.basename(item['local_image'])
+            base_name, ext = os.path.splitext(local_img_filename)
+            v2_filename = f"{base_name}-v2{ext}"
+            v2_path = os.path.join(IMAGE_DIR, v2_filename)
+            
+            if os.path.exists(v2_path):
+                item['local_image'] = f"/assets/catalog_images/{v2_filename}"
+                local_img_filename = v2_filename
+                
+            # Compute precalculated color family key using local cropped image path
             local_img_path = os.path.join(IMAGE_DIR, local_img_filename)
             item['color_family'] = get_color_family_hybrid(item['name'], item['base_sku'], item['category'], local_img_path)
             
