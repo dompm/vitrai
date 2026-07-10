@@ -1,0 +1,23 @@
+VARIETY: baroque/rolling relief
+STRUCTURE: Large-scale rolling, wave-like surface relief pressed into an otherwise uniformly colored transmissive body; light catches the crests and troughs of broad undulations rather than fine texture.
+TILES: #000, #001, #003, #004
+
+VARIETY: granite/fine ripple relief
+STRUCTURE: Fine, all-over irregular pebbled surface relief, much smaller scale than the baroque waves, giving a dense water-like or hammered texture over a uniform pale body.
+TILES: #002
+
+VARIETY: crackle/cellular relief network
+STRUCTURE: Surface relief made of a dense network of raised, interlocking cell-like ridges (reptile-skin/crackle-glaze look) rather than soft rolling waves or soft pebbling; reads as a fine web across the whole tile.
+TILES: #008
+
+VARIETY: streaky/blotchy body color patches
+STRUCTURE: Body-level color variation in soft-edged, large irregular patches of differing tone within the same hue family (deep navy vs. pale powder blue), distinct from the surface relief that also overlays it.
+TILES: #001
+
+VARIETY: fracture-streamer
+STRUCTURE: Body pattern of thin, dark branching crack-like lines forming an irregular cell network over (or between) angular confetti-like glass chips on a clear/white base; color of the chips ranges from vivid (green, pink) to nearly colorless.
+TILES: #005, #006, #007
+
+VARIETY: iridized surface sheen
+STRUCTURE: A thin rainbow/metallic sheen sitting on top of the glass body, visually separate from and independent of the underlying fracture pattern, appearing as swirling oil-slick color shifts.
+TILES: #006

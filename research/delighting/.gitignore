@@ -23,3 +23,5 @@ test*.exr
 .DS_Store
 __pycache__/
 dark_calibration_data/
+results/variety_031/images/
+results/variety_031/recipes/*.png

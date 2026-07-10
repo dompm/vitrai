@@ -1,0 +1,80 @@
+[
+ {
+  "idx": 0,
+  "recipe": "cathedral-amber",
+  "dir": "cathedral-amber__seed701__light4228",
+  "sample_file": "00_cathedral-amber.png"
+ },
+ {
+  "idx": 1,
+  "recipe": "cathedral-blue",
+  "dir": "cathedral-blue__seed708__light1962",
+  "sample_file": "02_cathedral-blue.png"
+ },
+ {
+  "idx": 2,
+  "recipe": "cathedral-green",
+  "dir": "cathedral-green__seed700__light3142",
+  "sample_file": "04_cathedral-green.png"
+ },
+ {
+  "idx": 3,
+  "recipe": "cathedral-red",
+  "dir": "cathedral-red__seed709__light4409",
+  "sample_file": "05_cathedral-red.png"
+ },
+ {
+  "idx": 4,
+  "recipe": "dark-deep",
+  "dir": "dark-deep__seed703__light2535",
+  "sample_file": "07_dark-deep.png"
+ },
+ {
+  "idx": 5,
+  "recipe": "dark-opaque",
+  "dir": "dark-opaque__seed702__light1772",
+  "sample_file": "09_dark-opaque.png"
+ },
+ {
+  "idx": 6,
+  "recipe": "dark-ruby",
+  "dir": "dark-ruby__seed704__light3389",
+  "sample_file": "11_dark-ruby.png"
+ },
+ {
+  "idx": 7,
+  "recipe": "dark-slate",
+  "dir": "dark-slate__seed705__light0128",
+  "sample_file": "13_dark-slate.png"
+ },
+ {
+  "idx": 8,
+  "recipe": "dark-textured",
+  "dir": "dark-textured__seed712__light8185",
+  "sample_file": "15_dark-textured.png"
+ },
+ {
+  "idx": 9,
+  "recipe": "saturated-opalescent",
+  "dir": "saturated-opalescent__seed710__light1085",
+  "sample_file": "17_saturated-opalescent.png"
+ },
+ {
+  "idx": 10,
+  "recipe": "streaky-fine-texture",
+  "dir": "streaky-fine-texture__seed711__light6435",
+  "sample_file": "19_streaky-fine-texture.png"
+ },
+ {
+  "idx": 11,
+  "recipe": "streaky-mix",
+  "dir": "streaky-mix__seed706__light0215",
+  "sample_file": "21_streaky-mix.png"
+ },
+ {
+  "idx": 12,
+  "recipe": "wispy-white",
+  "dir": "wispy-white__seed707__light5494",
+  "sample_file": "23_wispy-white.png"
+ }
+]

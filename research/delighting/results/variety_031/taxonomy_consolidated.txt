@@ -1,0 +1,14 @@
+T1  smooth-cathedral -- flat, uniform transmissive color; no body or surface texture.
+T2  granite/fine-ripple surface relief -- fine, all-over irregular pebbled/wavy surface texture, water-like, small scale (mm-scale bumps).
+T3  baroque/rolling-wave surface relief -- large-scale rolling, elongated wave-like surface relief (cm-scale undulations), a coarser scale than T2 despite catalogs often naming both "textured/baroque".
+T4  crackle/faceted relief -- dense network of raised, sharp-edged ridges or angular facets (reptile-skin or shattered-ice look), visually distinct from T2/T3's smooth pebbling/waves.
+T5  dew-droplet/dimple relief -- discrete raindrop- or lens-shaped surface bumps scattered over a hazy body, a mid-scale relief between T2 and T3.
+T6  drapery fold -- large arc-shaped folds suggesting draped cloth, broad light/dark bands curving across the sheet.
+T7  ring/oval mottle -- dense overlapping circular or oval opaque/translucent blobs in the glass BODY, from crisp-ringed to looser marbled-blob substyles.
+T8  reactive color-cell mottle -- blotchy, roughly square/cellular color-reaction pattern in the BODY, distinct from T7's rounded blobs (a chemical reactive-strike pattern, not a mottle roll).
+T9  fracture/thread-crack streamer network -- thin, dark or colored, branching thread/crack-like lines meandering through the BODY.
+T10 confetti shard collage -- flat, angular, non-overlapping colored glass pieces embedded in a clear/white BODY (often co-occurs with T9's crack lines running through/between the shards).
+T11 seedy bubbles/inclusions -- small round bubbles or dot-like inclusions suspended in the glass BODY.
+T12 streaky/wispy color blend -- elongated color streaks partially blended into a translucent or semi-opaque BODY, marbled/flame/cloud-like, not fully mixed to a flat color.
+T13 iridized/dichroic surface sheen -- a thin rainbow/metallic film sitting ON TOP of the glass, visually independent of and layered over whatever BODY color/pattern is beneath.
+T14 opalescent-smooth/milky-frosted diffusion -- uniform milky opacity in the BODY, strongly diffusing, no discernible internal structure.

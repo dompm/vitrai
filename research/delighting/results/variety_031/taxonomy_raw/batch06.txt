@@ -1,0 +1,23 @@
+VARIETY: smooth flat cathedral
+STRUCTURE: Flat, uniform transmissive glass with no visible body mottling or surface relief — light gray/white and evenly translucent edge to edge.
+TILES: #054
+
+VARIETY: streaky/wispy color blend
+STRUCTURE: Body pattern of elongated, partially-blended color streaks (brown/turquoise, red/green/white, teal/blue, red/purple/white) drifting through a translucent or semi-opaque base, giving a smoky, marbled look rather than sharp stripes.
+TILES: #055, #057, #060, #061
+
+VARIETY: granite/ripple fine relief
+STRUCTURE: Fine, all-over irregular wavy-line surface relief (water-like pebbling) covering the whole tile, visible as dense short curvy strokes of light/dark contrast; sits on top of whatever body color is present.
+TILES: #056, #057, #058, #059, #060, #061
+
+VARIETY: iridized/dichroic surface sheen
+STRUCTURE: A metallic rainbow/gold sheen sitting on the surface, visually distinct from and layered over the underlying body color (dark blue-black in #056, near-white/clear in #058), giving an oily or nacreous glow.
+TILES: #056, #058
+
+VARIETY: drapery fold
+STRUCTURE: Large-scale rolling, arc-shaped folds suggesting draped cloth in the body/surface, distinct from the fine ripple texture in scale — broad light/dark bands curve across the tile rather than fine pebbling.
+TILES: #061
+
+VARIETY: fine stipple/speckle dot texture
+STRUCTURE: Small, discrete round dot- or frost-like specks scattered evenly across a color-graduated transparent body (purple fading to cyan/pink), distinct from the linear ripple-relief seen elsewhere — texture reads as scattered dots rather than connected wavy lines.
+TILES: #062
