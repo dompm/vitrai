@@ -49,7 +49,9 @@ state only if it can be initialized or inferred. `025-integrable-flow-projection
 projects free-flow displacement into a height-field warm start; it improves
 geometry/leakage modestly but still leaves a material-scale gap.
 `026-curl-regularized-flow.md` moves integrability into the optimizer; soft curl
-regularization is the strongest non-oracle renderer result so far.
+regularization is the strongest non-oracle geometry result so far.
+`027-curl-scale-prior-gauge.md` adds a weak mean material prior and collapses the
+remaining `T/B` scale-color gauge.
 
 ## Layout
 
@@ -73,6 +75,7 @@ differentiable_sheet_motion.py  known-shift shared-background inverse-rendering 
 differentiable_sheet_heightfield.py  height-field displacement prior vs free-flow D test
 differentiable_sheet_integrable_projection.py  free-flow warm start projected to integrable relief
 differentiable_sheet_curl_regularized.py  soft curl/integrability prior for free-flow D
+differentiable_sheet_curl_scale_prior.py  curl-regularized renderer with weak material mean prior
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -160,6 +163,10 @@ python3 differentiable_sheet_integrable_projection.py --sweep \
 # soft integrability prior inside free-flow optimization
 python3 differentiable_sheet_curl_regularized.py --sweep \
   --out results/differentiable_sheet_curl_regularized_sweep
+
+# curl-regularized renderer plus weak mean material transmittance/color prior
+python3 differentiable_sheet_curl_scale_prior.py --sweep \
+  --out results/differentiable_sheet_curl_scale_prior_sweep
 ```
 
 manifest.json format (keys are filenames inside the folder):

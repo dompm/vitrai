@@ -295,6 +295,12 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   curl weight 0.3 improves T-MAE 0.1033 -> 0.0990, B-MAE 0.1675 -> 0.1565, T-bg corr 0.045 ->
   0.026, and disp EPE 3.31 -> 2.72, with recon MAE only 0.00188 -> 0.00238. Conclusion: soft physics
   during optimization beats both cold height and after-the-fact projection.
+- 027 curl + material mean prior: add a weak mean transmittance/color prior on top of curl weight 0.3.
+  This collapses the remaining `T/B` gauge: no-prior T-MAE 0.0981, luma-oracle 0.0169, RGB-oracle
+  0.0136, deliberately biased RGB priors still ~0.03; B-MAE improves 0.1525 -> 0.0381 oracle and
+  ~0.057-0.068 biased. Recon MAE stays ~0.0021-0.0023, proving the prior selects the physical
+  factorization rather than merely improving reconstruction. Conclusion: the current best renderer
+  recipe is known/estimated motion + shared `B` + curl-regularized `D` + weak material mean prior.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -341,6 +347,10 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - After report 026, promote curl-regularized displacement to the main high-risk renderer path. Next:
   combine known motion + curl-regularized `D` + weak material scale/color prior; optionally project
   the curl-regularized flow to height afterward.
+- After report 027, replace oracle mean prior with a real noisy prior source: catalog/manufacturer
+  statistics, class-conditioned synthetic prior, user-selected family, or repeated sheet uploads.
+  Also sweep prior uncertainty; wrong-but-near priors helped, but badly wrong priors may damage
+  material identity.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
