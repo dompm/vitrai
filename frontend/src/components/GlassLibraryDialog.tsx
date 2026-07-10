@@ -77,39 +77,39 @@ interface Props {
 }
 
 const STARTER_SKUS = [
-  // 1. Clears & Neutrals (Monochrome)
-  '001101-0030-F-1010', // Bullseye Clear Double-Rolled
-  'OF200S',             // Oceanside Solid White Opal
-  '000113-0030-F-1010', // Bullseye White Opal
-  'OF1009S',            // Oceanside Solid Black Opal
-  '000100-0030-F-1010', // Bullseye Black Opal
-  
-  // 2. Red & Pinks
+  // 1. Red & Pinks
   'OF25072S',           // Oceanside Red Opal
   '000124-0030-F-1010', // Bullseye Red Opal
   '000301-0030-F-1010', // Bullseye Pink Opal
   
-  // 3. Orange & Yellows
+  // 2. Orange & Yellows
   '000125-0030-F-1010', // Bullseye Orange Opal
   'OF27072S',           // Oceanside Orange Opal
   'OF26072S',           // Oceanside Yellow Opal
   '000120-0030-F-1010', // Bullseye Canary Yellow Opal
   
-  // 4. Greens & Forest Hues
+  // 3. Greens & Forest Hues
   'OF22076S',           // Oceanside Dark Green Opal
   'OF22276S',           // Oceanside Emerald Green Opal
   '000141-0030-F-1010', // Bullseye Dark Forest Green Opal
   '000126-0030-F-1010', // Bullseye Spring Green Opal
   
-  // 5. Blues & Aquas
+  // 4. Blues & Aquas
   'OF23072S',           // Oceanside Medium Blue Opal
   '000114-0030-F-1010', // Bullseye Cobalt Blue Opal
   'OF23374S',           // Oceanside Turquoise Blue Opal
   
-  // 6. Purples & Violets
+  // 5. Purples & Violets
   'OF24074S',           // Oceanside Lilac Opal
   '001234-0030-F-1010', // Bullseye Violet Striker Transparent
-  'OF24072S'            // Oceanside Mauve Opal
+  'OF24072S',           // Oceanside Mauve Opal
+  
+  // 6. Clears & Neutrals (Monochrome)
+  '001101-0030-F-1010', // Bullseye Clear Double-Rolled
+  'OF200S',             // Oceanside Solid White Opal
+  '000113-0030-F-1010', // Bullseye White Opal
+  'OF1009S',            // Oceanside Solid Black Opal
+  '000100-0030-F-1010'  // Bullseye Black Opal
 ];
 
 const ITEMS_PER_PAGE = 40;
