@@ -6,7 +6,8 @@ import re
 from urllib.parse import urlparse
 from PIL import Image
 
-os.makedirs('frontend/public/assets/catalog_images', exist_ok=True)
+IMAGE_DIR = 'frontend/public/assets/catalog_images'
+os.makedirs(IMAGE_DIR, exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
 REGISTRY_FILE = 'frontend/public/assets/glass_swatch_registry.json'
@@ -45,7 +46,7 @@ def classify_glass(title, sku, manufacturer):
         return "Textured/Baroque"
         
     # 4. Wispy / Streaky
-    if any(term in title_lower for term in ['wispy', 'streaky', 'mix', 'blend', 'opal-art', 'fusers reserve', 'cream', 'mottle']):
+    if any(term in title_lower for term in ['wispy', 'streaky', 'mix', 'blend', 'opal-art', 'fusers reserve', 'mottle']):
         return "Wispy/Streaky"
         
     # 5. Opalescent
@@ -444,6 +445,83 @@ def main():
             if '6X12' in sku: return 1
             return 0
 
+    # Hybrid keyword + visual average color categorizer
+    import colorsys
+    def get_hsv_class(image_path, category):
+        if not os.path.exists(image_path):
+            return 'Other'
+        try:
+            with Image.open(image_path) as img:
+                img_small = img.resize((1, 1), Image.Resampling.BOX)
+                r, g, b = img_small.getpixel((0, 0))
+                rf, gf, bf = r/255.0, g/255.0, b/255.0
+                h, s, v = colorsys.rgb_to_hsv(rf, gf, bf)
+                h_deg = h * 360.0
+                if category == 'Cathedral' and s < 0.15:
+                    return 'Clear'
+                if s < 0.12:
+                    if v > 0.82: return 'Monochrome'
+                    if v < 0.18: return 'Monochrome'
+                    return 'Monochrome'
+                if 10 <= h_deg <= 48 and s < 0.65 and v < 0.70:
+                    return 'Brown'
+                if h_deg < 16 or h_deg >= 345:
+                    return 'Red'
+                if 16 <= h_deg < 46:
+                    return 'Orange'
+                if 46 <= h_deg < 68:
+                    return 'Yellow'
+                if 68 <= h_deg < 168:
+                    return 'Green'
+                if 168 <= h_deg < 258:
+                    return 'Blue'
+                if 258 <= h_deg < 312:
+                    return 'Purple'
+                if 312 <= h_deg < 345:
+                    return 'Pink'
+                return 'Other'
+        except Exception:
+            return 'Other'
+
+    import re
+    def get_color_family_hybrid(name, sku, category, image_path):
+        n = name.lower()
+        
+        # Word boundary checker helper
+        def has_word(words):
+            return any(re.search(r'\b' + re.escape(w) + r'\b', n) for w in words)
+            
+        # Define color keywords list for multi-color collision detection
+        keywords_by_family = {
+            'Clear': ['clear', 'crystal', 'ice'],
+            'Monochrome': ['white', 'black', 'gray', 'grey', 'charcoal', 'pearl', 'silver', 'opal white', 'reactive cloud', 'platinum', 'opaline', 'pewter', 'ivory', 'bone', 'alabaster', 'slate', 'smoke', 'coal', 'ebony', 'milk', 'snow', 'steel'],
+            'Red': ['red', 'cherry', 'ruby', 'daredevil', 'grenadine', 'crimson', 'cinnabar', 'tomato', 'scarlet', 'rhubarb', 'carnelian', 'flame', 'tulip', 'wine', 'brick', 'garnet', 'cardinal', 'maroon', 'burgundy', 'begonia', 'thunderbird'],
+            'Orange': ['orange', 'tangerine', 'persimmon', 'coral', 'peach', 'pumpkin', 'apricot'],
+            'Yellow': ['yellow', 'canary', 'lemon', 'marigold', 'french vanilla', 'marzipan', 'almond', 'citronelle', 'butterscotch', 'cream', 'custard', 'dandelion', 'flaxen', 'noble brass', 'mustard', 'banana', 'straw', 'butter', 'vanilla', 'sunflower', 'ocher', 'ochre'],
+            'Green': ['green', 'lime', 'moss', 'sage', 'emerald', 'caribbean', 'aventurine', 'pine', 'artichoke', 'celadon', 'pea pod', 'jade', 'olive', 'fern', 'mint', 'chartreuse', 'olivine', 'asparagus', 'clover', 'meadow', 'grass', 'foliage', 'avocado', 'lichen', 'basil', 'kiwi', 'seaweed', 'forest', 'viridian', 'celery', 'lemongrass', 'spring green', 'spring rain'],
+            'Blue': ['blue', 'cobalt', 'sky', 'turquoise', 'indigo', 'teal', 'ocean', 'aqua', 'cyan', 'periwinkle', 'sapphire', 'navy', 'chambray', 'lagoon', 'sea', 'pacific', 'denim', 'edgewater'],
+            'Purple': ['purple', 'violet', 'plum', 'heather', 'amethyst', 'grape', 'lavender', 'lilac', 'eggplant', 'mauve', 'wisteria', 'orchid', 'mulberry', 'boysenberry'],
+            'Pink': ['pink', 'rose', 'fuchsia', 'cranberry', 'gold pink', 'magenta'],
+            'Brown': ['brown', 'amber', 'bronze', 'chestnut', 'chocolate', 'wood', 'gold', 'cognac', 'caramel', 'tan', 'honey', 'umber', 'mink', 'khaki', 'coffee', 'champagne', 'sienna', 'copper', 'terra cotta', 'terracotta', 'mahogany', 'sand', 'tiger eye', 'russet', 'rust']
+        }
+        
+        # Check how many distinct color families are matched
+        matched = []
+        for family, kws in keywords_by_family.items():
+            if has_word(kws):
+                matched.append(family)
+                
+        # If it contains multiple color family keywords, it's a multi-color sheet (leak prevention)
+        if len(matched) > 1:
+            return 'Other'
+            
+        # Otherwise, return the matched family if there is exactly one
+        if len(matched) == 1:
+            return matched[0]
+            
+        # Fallback to visual color analysis
+        return get_hsv_class(image_path, category)
+
     # Sort so that preferred items come first
     registry_sorted = sorted(registry, key=get_preference_score)
     
@@ -461,6 +539,12 @@ def main():
         formula_key = (mfg, formula_id)
         if formula_key not in seen_formulas:
             seen_formulas.add(formula_key)
+            
+            # Compute precalculated color family key using local cropped image path
+            local_img_filename = os.path.basename(item['local_image'])
+            local_img_path = os.path.join(IMAGE_DIR, local_img_filename)
+            item['color_family'] = get_color_family_hybrid(item['name'], item['base_sku'], item['category'], local_img_path)
+            
             deduped.append(item)
             
     # Sort alphabetically by manufacturer and base SKU

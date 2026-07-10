@@ -68,6 +68,7 @@ interface SwatchItem {
   real_world_height_in: number;
   original_width_px: number;
   original_height_px: number;
+  color_family?: string;
 }
 
 interface Props {
@@ -151,7 +152,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
 
     // Color filter
     if (colorFilter !== 'All') {
-      result = result.filter(item => getColorFamily(item.name, item.base_sku) === colorFilter);
+      result = result.filter(item => (item.color_family ?? getColorFamily(item.name, item.base_sku)) === colorFilter);
     }
 
     return result;
