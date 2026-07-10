@@ -1,0 +1,13 @@
+{
+  "call_id": "c05_satopal_v_corpus",
+  "truth_label": "ours_vs_real",
+  "images": [
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/ours/saturated-opalescent.jpg",
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/corpus/oceanside-of23072s.jpg"
+  ],
+  "model": "sonnet",
+  "elapsed_s": 30.1,
+  "returncode": 0,
+  "stdout": "OBSERVATIONS:\n- Image 1, category 5 (lighting): there is a hard, straight horizontal seam roughly 70% down the frame where the color/brightness abruptly shifts from mauve to reddish-brown. Real backlit sheet glass produces continuous gradients from angle-of-view/thickness change, not a razor-edge discontinuity \u2014 this reads like two gradient layers or a render pass boundary.\n- Image 1, category 2 (texture): the ripple pattern is a set of near-parallel diagonal striations with very regular spacing and near-identical wavelength across the whole frame, both above and below the seam. Real rolled/hand-poured opalescent glass shows irregular, non-repeating waviness; this looks like a tiled or procedural wave/noise function.\n- Image 1, category 1 (reflections): no localized bright spot or soft veil is visible anywhere on the surface \u2014 brightness is fully explained by the backlight gradient alone, with zero front-surface specular contribution, which is unusual for a glossy glass surface photographed indoors.\n- Image 2, category 4 (edge/rim): the left cut edge shows a genuine thickness-darkened rim \u2014 a dark line bordered by a thin brighter sliver with a faint purple color fringe, consistent with light refracting through the glass's cut face.\n- Image 2, category 1 (reflections): a soft, diffuse brighter patch sits in the upper-left-of-center area with a gradual, irregular falloff \u2014 consistent with a broad indoor light source reflecting/veiling off the front surface rather than being programmatically uniform.\n- Image 2, category 2 (texture): fine mottling is irregular and non-repeating, with no discernible periodicity, unlike image 1's striations.\n\nVERDICT: Image 1 synthetic -- the hard horizontal lighting seam combined with the regularly-spaced, repeating diagonal wave texture and total absence of any front-surface specular highlight are strong procedural-rendering signatures not seen in image 2.",
+  "stderr": ""
+}

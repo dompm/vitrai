@@ -1,0 +1,513 @@
+[
+  {
+    "call_id": "c01_amber_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "cathedral-amber.jpg",
+      "bullseye-0011370050f1010.jpg"
+    ],
+    "elapsed_s": 17.1,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- the repeating, tiled ripple/lattice waviness pattern combined with a uniformly soft, gradient-only backlight and total absence of camera grain across the whole frame is not consistent with a real macro photograph of rolled glass.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 2: The rippled/hammered texture shows regular, repeating diamond/lattice-like undulation patterns (visible especially in the upper-left and upper-right quadrants) that tile with unnatural periodicity \u2014 real hand-rolled cathedral glass waviness is more irregular and non-repeating.",
+      "Image 1, category 5: The lit region forms a smooth, soft-edged bright patch in the lower-center that fades outward in a very even radial gradient with no localized hotspot or directional falloff \u2014 reads as a diffuse/synthetic backlight rather than a real light source's uneven falloff.",
+      "Image 1, category 6: The entire frame is uniformly soft/blurred with no sharp micro-detail anywhere, and no visible grain/sensor noise even in the brighter areas \u2014 real camera captures of glass close-ups typically retain at least fine grain in well-exposed regions.",
+      "Image 2, category 2: Fine texture is dominated by small circular bubble-like inclusions with soft dark rims, consistent with real hand-blown glass (bullseye/seedy glass) bubble artifacts \u2014 these vary irregularly in size and spacing, which is consistent with authentic glass casting.",
+      "Image 2, category 3: Color/opacity is very flat and uniform across the whole sheet, with almost no thickness-driven density variation apart from the bubbles themselves \u2014 this reads slightly toward a uniform tint, though it's plausible for a consistently-rolled sheet glass product.",
+      "Image 2, category 6: No discernible sensor grain or noise texture across the flat yellow field, and no exposure rolloff variation \u2014 the field is extremely smooth/clean."
+    ]
+  },
+  {
+    "call_id": "c02_red_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "cathedral-red.jpg",
+      "bullseye-0041110000ffull.jpg"
+    ],
+    "elapsed_s": 52.7,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its texture is too spatially regular and its shading/color layers appear decoupled (bump relief independent of the color gradient), plus the uniform, grain-free blur with a mismatched crisp surface mark is inconsistent with real camera optics.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 2: the raised texture forms an almost perfectly repeating lattice of round/hex bumps with constant spacing and amplitude \u2014 real rolled cathedral glass ripple is irregular in pitch and height; this looks like a tiled/procedural bump pattern.",
+      "Image 1, category 3: the embossed bumps carry only a grayscale shading value (lighter on bump crests, darker in troughs) that sits uniformly on top of the purple\u2192red gradient, rather than the gradient itself bending or intensifying with local thickness \u2014 the color layer and the relief layer look decoupled, as if a normal map were composited over a flat tint rather than both arising from one physical surface.",
+      "Image 1, category 6: the entire frame is uniformly soft with no visible grain, no chromatic fringing at any bump edge, and no local sharp plane anywhere except the scribbled black mark \u2014 that mark has a hard, crisp edge while the glass right behind it is mushy, which is inconsistent with a single camera focus/DOF falloff (a real lens would keep marker-on-surface and near-surface texture in comparable focus).",
+      "Image 2, category 1: each embedded air bubble carries its own small distinct specular highlight dot, consistent with many tiny curved real-glass/air interfaces each catching the light source independently \u2014 hard to fake procedurally at this density and consistency.",
+      "Image 2, category 2/3: the orange chip in the center has an irregular, feathered translucent bleed trailing downward with no sharp boundary, and color saturation visibly deepens where chips overlap or thicken \u2014 both consistent with real fused-glass pigment migration under heat.",
+      "Image 2, category 6: the white background shows faint fine-grained mottling (sensor/backlight-panel noise) and the black cames/wires have slightly uneven width and soft ink-bleed edges rather than vector-perfect lines."
+    ]
+  },
+  {
+    "call_id": "c03_darkopaque_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "dark-opaque.jpg",
+      "bullseye-0001000047f1010.jpg"
+    ],
+    "elapsed_s": 29.9,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- it shows a texture-mapped normal-ripple over a flat color gradient with no specular highlight and no sensor grain, while image 2 shows irregular, grain-textured specular response consistent with a real photograph.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 1: across the entire visible surface there is no discrete reflected highlight or environment veil \u2014 the frame is a pure two-tone gradient (blue-grey top to olive-brown bottom) with zero localized bright spot, which is atypical for a photographed glossy glass surface under any studio setup.",
+      "Image 1, category 2: the fine surface texture reads as a soft, low-frequency undulating blob pattern that repeats at roughly the same scale and contrast across the whole frame, with no sharper high-frequency speckle or pitting mixed in \u2014 consistent with a single-octave procedural noise rather than the layered, uneven grain of rolled glass.",
+      "Image 1, category 3: the color gradient (top-to-bottom) does not vary locally with the texture bumps \u2014 the ripples show geometric shading (light/dark from implied normal variation) but the underlying hue stays locked to the same smooth gradient, as if a normal-map ripple were laid over a flat color ramp rather than color changing with actual local thickness.",
+      "Image 1, category 6: no visible sensor grain or noise anywhere in the flat gradient regions \u2014 the tonal transitions are unusually smooth/banding-free for a JPEG of a dim glass surface.",
+      "Image 2, category 1: each vertical rib carries a bright specular highlight line, and the highlight width/brightness varies irregularly rib-to-rib and along each rib's length \u2014 consistent with a real grazing light source catching an uneven rolled surface.",
+      "Image 2, category 6: the dark valleys between ribs show visible fine speckle/grain noise, and the highlight lines have soft, unevenly blurred edges \u2014 both consistent with real camera sensor noise and optical softness.",
+      "Image 2, category 4: rib edges show small irregular waviness (not perfectly straight/parallel), consistent with hand-rolled reeded glass."
+    ]
+  },
+  {
+    "call_id": "c04_wispy_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "wispy-white.jpg",
+      "bullseye-0021000000f1010.jpg"
+    ],
+    "elapsed_s": 20.8,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its texture is an overly smooth, low-frequency blotchy field lacking the fine rolled-glass grain, embedded bubbles, or sensor noise seen in image 2, and its blur/lighting look like a uniform post-process rather than optical falloff from a real lens and light source.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 2 (texture): the mottled cloudy texture is very low-frequency and smooth \u2014 soft blotchy gradients with no fine-grained micro-relief or rolled-glass ripple visible even at close crop; it reads like a soft blurred/painted noise field rather than glass surface grain.",
+      "Image 1, category 6 (optics): the whole frame including the background scribbles has uniform soft blur with no distinguishable focal plane \u2014 the black squiggly marks (grease pencil/marker lines) are blurred at the same softness as the glass texture behind them, suggesting a shallow-DOF or defocus applied uniformly rather than true camera focus falloff.",
+      "Image 1, category 5 (lighting): the bright hotspot in the upper-left corner falls off very smoothly and symmetrically with no directional streaking or environment shape \u2014 consistent with either but notably featureless, a single soft radial gradient.",
+      "Image 2, category 2 (texture): dense, high-frequency vertical waviness (rolling lines) with irregular spacing and amplitude, plus scattered small bright specks/bubbles (visible as tiny white dots and one ring-shaped inclusion near center-right) \u2014 consistent with real rolled/streaky glass and embedded bubbles.",
+      "Image 2, category 6 (noise/optics): fine sensor-level grain is visible in the dark region at left, and the small bubble inclusions have subtle bright specular pinpoints consistent with real light refracting through embedded glass defects.",
+      "Image 2, category 1 (reflections): the dark-to-light transition band shows soft directional sheen consistent with a physical light source behind/beside the sheet, with localized brighter streaks tracking the glass ripples rather than a flat gradient."
+    ]
+  },
+  {
+    "call_id": "c05_satopal_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "saturated-opalescent.jpg",
+      "oceanside-of23072s.jpg"
+    ],
+    "elapsed_s": 30.1,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- the hard horizontal lighting seam combined with the regularly-spaced, repeating diagonal wave texture and total absence of any front-surface specular highlight are strong procedural-rendering signatures not seen in image 2.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 5 (lighting): there is a hard, straight horizontal seam roughly 70% down the frame where the color/brightness abruptly shifts from mauve to reddish-brown. Real backlit sheet glass produces continuous gradients from angle-of-view/thickness change, not a razor-edge discontinuity \u2014 this reads like two gradient layers or a render pass boundary.",
+      "Image 1, category 2 (texture): the ripple pattern is a set of near-parallel diagonal striations with very regular spacing and near-identical wavelength across the whole frame, both above and below the seam. Real rolled/hand-poured opalescent glass shows irregular, non-repeating waviness; this looks like a tiled or procedural wave/noise function.",
+      "Image 1, category 1 (reflections): no localized bright spot or soft veil is visible anywhere on the surface \u2014 brightness is fully explained by the backlight gradient alone, with zero front-surface specular contribution, which is unusual for a glossy glass surface photographed indoors.",
+      "Image 2, category 4 (edge/rim): the left cut edge shows a genuine thickness-darkened rim \u2014 a dark line bordered by a thin brighter sliver with a faint purple color fringe, consistent with light refracting through the glass's cut face.",
+      "Image 2, category 1 (reflections): a soft, diffuse brighter patch sits in the upper-left-of-center area with a gradual, irregular falloff \u2014 consistent with a broad indoor light source reflecting/veiling off the front surface rather than being programmatically uniform.",
+      "Image 2, category 2 (texture): fine mottling is irregular and non-repeating, with no discernible periodicity, unlike image 1's striations."
+    ]
+  },
+  {
+    "call_id": "c06_streakymix_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "streaky-mix.jpg",
+      "bullseye-0023050030f1010.jpg"
+    ],
+    "elapsed_s": 20.9,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its texture is a single-frequency uniform noise field decoupled from color/brightness variation, and its light hotspot is too radially smooth/symmetric, both consistent with a procedural noise+gradient render rather than real glass optics.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 2 (texture): the fine mottling is a fairly uniform, isotropic speckle field of nearly constant grain size across the whole frame \u2014 no larger-scale waviness or streak variation in relief, just one frequency of noise repeated everywhere.",
+      "Image 1, category 3 (color/translucency): color is essentially monochrome (blue-grey) with brightness varying smoothly toward the upper-left hotspot, but there's no localized color-density banding tied to the texture pattern itself \u2014 the streaks (dark wire-like lines) sit on top of the texture rather than the texture itself carrying color variation.",
+      "Image 1, category 5 (lighting): the bright hotspot in the upper-left is very smooth and radially symmetric with a soft, almost Gaussian falloff \u2014 no irregular hot-spot shape or secondary glare/lobes that a real diffuse room light through glass typically produces.",
+      "Image 2, category 2 (texture): fine texture shows irregular, multi-scale mottling \u2014 blotchy patches of varying size intermixed with fine grain, consistent with real streaky/opalescent rolled glass.",
+      "Image 2, category 3 (color/translucency): color density clearly correlates with local streak structure \u2014 darker red-orange follows vein-like striations of the glass itself, i.e., color and texture are coupled the way real pigment-in-glass streaking behaves, not a flat tint plus overlay.",
+      "Image 2, category 1 (front-surface reflection): there's a distinct thin bright specular line/thread running vertically near the top-center with a slight kink and localized intensity change along its length \u2014 plausible for a real glancing highlight off an uneven rolled surface.",
+      "Image 2, category 6 (noise/optics): a small dark speck (dust/inclusion) is visible in the lower-right at low contrast with soft edges, consistent with a real camera capturing a physical imperfection rather than a rendered clean surface."
+    ]
+  },
+  {
+    "call_id": "c07_darkruby_v_corpus",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "dark-ruby.jpg",
+      "wissmach-wblacki.jpg"
+    ],
+    "elapsed_s": 34.2,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its blotch texture and brightness gradient behave like independent generic noise/vignette layers rather than a physically coupled light-through-texture interaction, and it lacks any specular highlight or camera grain.",
+    "n_observations": 5,
+    "observations": [
+      "Category 2 (texture): Image 1's mottling is isotropic blob noise \u2014 blotches are roughly uniform in size and randomly scattered with no directional bias, resembling a Perlin/reaction-diffusion pattern. Image 2's texture is clearly directional, with elongated streaks running roughly vertically/diagonally, consistent with the rolling process of real sheet glass.",
+      "Category 3 (color/translucency): Image 1's color transitions between light and dark blotches are uniformly soft-edged and low-frequency throughout the whole frame \u2014 every blotch has nearly identical edge softness. Image 2 shows a mix of sharp micro-transitions (small pinpoint bright flecks with crisp edges, e.g. near center and lower-right) alongside broader soft color washes, i.e. two different length scales of variation as you'd expect from texture-driven light scattering.",
+      "Category 1 (specularity): Image 1 has no discrete specular highlight anywhere in the frame \u2014 brightness only varies as a smooth low-frequency field. Image 2 has multiple small bright pinpoint glints (e.g. the sharp white dot left-of-center and near right edge) that look like actual reflected highlights catching surface bumps.",
+      "Category 5 (lighting): Image 1's brightness falls off smoothly from top to bottom in a way that is decoupled from the local blob texture \u2014 the blobs keep constant contrast against each other as the whole field darkens, as if a separate vignette/gradient layer was multiplied over a texture. Image 2's brightness variation tracks the texture itself (streaks get brighter/darker together), consistent with backlight passing through variable local thickness.",
+      "Category 6 (camera optics): Image 1 shows no visible sensor grain even in its darkest lower region, and all texture edges are soft/blurred with no crisp micro-detail anywhere. Image 2 has crisp fine detail and small sharp specks (possible bubbles/dust) coexisting with soft regions, more typical of real optics resolving actual surface relief."
+    ]
+  },
+  {
+    "call_id": "cal01_corpus_v_corpus",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "bullseye-0011370050f1010.jpg",
+      "bullseye-0041110000ffull.jpg"
+    ],
+    "elapsed_s": 55.0,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its bubble texture is too uniform (stamped-looking, no bright/dark ring optics) and the field is essentially noise-free, whereas Image 2 shows the irregular bubble optics, edge gradients, and sensor speckle expected of a real photograph.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 2/6: bubble inclusions are rendered as flat, uniformly-toned rings with almost no size/density variation across the frame \u2014 every bubble looks like the same soft-edged circle stamped at different scales, lacking the bright specular pinpoint + dark rim signature real backlit bubbles show.",
+      "Image 1, category 3: the yellow field has extremely low-frequency mottling (a few faint diagonal streaks) but is otherwise a near-flat tint; there's no fine-grained thickness noise between the streaks the way rolled cathedral glass usually shows under transmitted light.",
+      "Image 1, category 6: no visible sensor grain even in the flattest mid-tone regions \u2014 the yellow is essentially noise-free, which reads as unusually \"clean\" for a JPEG photo of a lit translucent surface.",
+      "Image 2, category 2: bubbles show a convincing bright-core/dark-ring \"donut\" shading that shifts subtly with each bubble's size and depth, and their spatial distribution is irregular/clustered rather than evenly scattered \u2014 consistent with real trapped-air optics.",
+      "Image 2, category 3: the orange/red chip edges show soft, irregular translucency gradients (especially the smeared streak in the center-left) that vary chip-to-chip, and the black wire inclusions have slightly uneven width and a faint halo where they meet the glass \u2014 both consistent with real fused/streamer glass under transmitted light.",
+      "Image 2, category 6: fine speckle noise is visible in the lighter background regions between chips, appropriate for a real photo at this exposure."
+    ]
+  },
+  {
+    "call_id": "cal02_corpus_v_corpus",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "bullseye-0021000000f1010.jpg",
+      "bullseye-0023050030f1010.jpg"
+    ],
+    "elapsed_s": 29.2,
+    "returncode": 0,
+    "verdict": "Both appear real -- each shows local optical irregularities (bubble refraction, coupled ream/color banding, irregular sensor grain) that are difficult to fake and don't read as procedural or uniform.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 2 (texture): the vertical striations vary irregularly in spacing, curvature, and darkness (e.g., the two dark near-parallel bands left-of-center diverge and thin unevenly toward the top) \u2014 consistent with real rolled-glass waviness rather than a repeating procedural pattern.",
+      "Image 1, category 6 (noise): the near-black region (upper left) shows fine irregular luminance grain rather than a flat black \u2014 consistent with real camera sensor noise at low signal level.",
+      "Image 1, category 3 (translucency): at least two small circular \"o\"-shaped marks (~x610,y345 and x860,y400) show a dark ring with a lighter core, i.e., a seed bubble refracting/redirecting light differently from the surrounding glass \u2014 a local optical event, not a painted-on dot.",
+      "Image 2, category 2 (texture): the central vertical mark has fine parallel ridulations resembling a reamy fold/pull line from hand-working the glass, with the color banding bending to follow the ridge rather than sitting on top of it \u2014 a sign the pigment gradient and physical relief are coupled, as in real glass.",
+      "Image 2, category 3 (color depth): the coral mottling has soft, cloud-like diffusion with variable edge sharpness (crisp near the vertical ream, blurred in open field) \u2014 consistent with real streaky/opalescent glass where pigment concentration tracks physical mixing depth, not a uniform tint plus haze layer.",
+      "Image 2, category 6 (noise): fine grain is visible in the light pink flat zones (lower right), and a tiny bright speck (~x718,y548) shows a small directional glint rather than a uniform dot, suggesting a physical surface imperfection catching light.",
+      "Neither image shows a hard/synthetic edge fringe, unnaturally uniform gradient, or texture that repeats/tiles."
+    ]
+  },
+  {
+    "call_id": "cal03_wild_v_wild",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "sheets_shelf.jpg",
+      "sheets_handblown.jpg"
+    ],
+    "elapsed_s": 17.6,
+    "returncode": 0,
+    "verdict": "Uncertain -- Image 2's flat, noise-free blue blobs and the oddly hard-edged rectangular highlight are suspicious, but image 2 is a close macro crop where uniform sharpness/low visible grain is also plausible for real streaky glass, so I can't confidently call it synthetic.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 1: multiple sheets show distinct soft-edged bright streak reflections running diagonally across their surfaces (e.g. the teal and pale-green sheets left-of-center), consistent with an overhead light source at an angle \u2014 highlight position varies plausibly sheet-to-sheet based on tilt.",
+      "Image 1, category 3: color saturation visibly deepens where sheets overlap or where thickness/folds occur (e.g. the dark blue sheet center-right shows lighter streaks where it curves away from the camera), indicating thickness-dependent color variation rather than flat tint.",
+      "Image 1, category 6: fine grain/sensor noise is visible in the wood dowel and shelf surfaces, with soft natural defocus on the rearmost sheets (background sheets are progressively blurrier), consistent with real camera depth-of-field falloff.",
+      "Image 2, category 1: there's a soft diffuse bright patch lower-center-right and a distinct hard-edged rectangular pale highlight lower-center that has an unnaturally crisp geometric (near-rectangular) boundary rather than following the glass's organic swirl pattern \u2014 this looks like a reflected object edge, but its sharp straight edges look more like a compositing artifact than an organic reflection.",
+      "Image 2, category 2: the color transitions between pink and blue blobs are extremely smooth airbrushed gradients with almost no fine-grained mottling/streaking texture at the pixel level \u2014 real hand-poured/streaky cathedral glass typically shows fibrous internal striations within color zones, which are largely absent here.",
+      "Image 2, category 3: the blue blobs have near-uniform flat saturation across their entire area with almost no internal tonal variation, unlike the pink region which does show some mottling \u2014 this inconsistency (one color textured, one color flat) is a plausible synthetic-texture tell.",
+      "Image 2, category 6: no visible sensor grain even at full resolution in the flat pink zones, and the image lacks any depth-of-field falloff cues (whole surface is uniformly sharp, but that's also plausible for a close flat macro shot so this is weaker evidence)."
+    ]
+  },
+  {
+    "call_id": "cal04_wild_v_wild",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "panel_lightbox.jpg",
+      "panel_green_bg_distortion.jpg"
+    ],
+    "elapsed_s": 48.0,
+    "returncode": 0,
+    "verdict": "Both appear real -- both show organic, non-repeating glass texture variation, plausible hand-soldered edge imperfections, and camera-consistent noise/DOF/exposure behavior with no signs of procedural smoothness or synthetic lighting uniformity.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 2/3: the green triangle glass pieces show classic streaky/wispy color variation (lighter and darker green bands following organic, non-repeating paths), consistent with real rolled cathedral glass rather than a uniform tint+haze.",
+      "Image 1, category 4: lead-came borders show visible solder-joint blobs with slightly uneven bead thickness and mild surface oxidation/dulling \u2014 irregular in a way that's tedious to fake procedurally.",
+      "Image 1, category 6: the white faux-fur backdrop has dense, high-frequency fiber noise and the ribbon edges show slight focus softness, both typical of a real macro product shot, not a clean render.",
+      "Image 1, category 5: consistent single-direction soft shadows under each ornament on the fur, matching one overhead/near light \u2014 physically coherent, if slightly flat (typical of flash/softbox product photography).",
+      "Image 2, category 3: the yellow \"hair\" panel is genuinely backlit by daylight, with mottled darker patches showing through unevenly \u2014 brightness correlates with visible internal texture rather than being a flat translucent overlay.",
+      "Image 2, category 6: background trees/fence are out of the suncatcher's focal plane (real depth-of-field falloff), and the sky near the top of the window shows blown/clipped highlights consistent with a real camera's dynamic range limit.",
+      "Image 2, category 4: copper-foil edges show a slightly wavy, hand-soldered bead with tarnish variation along its length rather than a uniform metallic strip."
+    ]
+  },
+  {
+    "call_id": "cal05_corpus_v_corpus_xclass",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "oceanside-of23072s.jpg",
+      "wissmach-wblacki.jpg"
+    ],
+    "elapsed_s": 53.8,
+    "returncode": 0,
+    "verdict": "Both appear real -- each image shows edge/rim, lighting falloff, and fine-grained texture/noise behavior that's difficult to fake and consistent with camera capture, with no signs of over-smooth or procedurally regular surfaces.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, category 4 (edge): the left edge shows a genuine thickness-darkened rim with a thin warm/magenta sliver right at the glass-to-background transition before it goes to shadow-dark \u2014 consistent with light refracting through the cut edge, not a hard synthetic silhouette line.",
+      "Image 1, category 5 (lighting): the brightness gradient is asymmetric (brighter upper-left quadrant, darker lower-right and along both visible edges), consistent with a single off-center soft light source falling off naturally rather than a flat, evenly-lit render.",
+      "Image 1, category 6 (noise): fine sensor/compression grain is visible throughout the mid-tone blue field, most noticeable in the lighter cloud-like patches \u2014 texture is not \"too clean.\"",
+      "Image 1, category 2 (texture): faint diagonal streak marks (~45\u00b0) are visible in the lighter areas, plausible roller/forming marks on cathedral glass rather than a uniform procedural tint.",
+      "Image 2, category 2 (texture): scattered small round dark specks of varying size and irregular placement (bubble inclusions) are visible across the surface \u2014 non-repeating, multi-scale, characteristic of real glass rather than a tiled/procedural noise pattern.",
+      "Image 2, category 3 (color/translucency): the iridescent hue shifts (blue\u2192gold\u2192magenta\u2192green) track tightly with the fine surface mottling/bump pattern, not a flat gradient laid over the texture \u2014 behavior consistent with angle-dependent thin-film interference on a physically bumpy surface.",
+      "Image 2, category 5 (lighting): the diagonal banding of hues sweeps continuously and asymmetrically across the frame (denser magenta/green cluster toward upper right) rather than being centered or radially symmetric, consistent with a raking real-world light source rather than a simple synthetic falloff.",
+      "Image 2, category 6 (noise): color transitions between hue bands are grainy/blended rather than flat-stepped, with no visible banding artifacts that would suggest a computed gradient."
+    ]
+  },
+  {
+    "call_id": "t01_cathedral_blue",
+    "truth_label": "ours_vs_real_vs_real",
+    "n_images": 3,
+    "images": [
+      "cathedral-blue.jpg",
+      "bullseye-0014140051f1010.jpg",
+      "sheets_waterglass_pair.jpg"
+    ],
+    "elapsed_s": 42.5,
+    "returncode": 0,
+    "verdict": "Image 1 -- it lacks any specular highlight/reflection, its ripple texture looks tiled/repetitive rather than organic, its color gradient looks like a flat overlay, and it shows no camera noise, unlike images 2 and 3 which show plausible reflections, irregular texture, and real sensor noise.",
+    "n_observations": 9,
+    "observations": [
+      "Img 1, category 1 (specularity): no specular highlight or reflected environment veil is visible anywhere on the surface \u2014 the whole sheet reads as flat, evenly-lit diffuse tint with zero glint, which is unusual for a glossy glass surface under any real light source.",
+      "Img 2, category 1: a soft diagonal brightness gradient runs from cool/dim (upper-left) to warm/bright (lower-right), consistent with a real soft veil/reflection sweeping across a glossy surface.",
+      "Img 3, category 1: the blue and red panes both show a recognizable reflected/refracted image of the house (window frames, roofline, chimney) bent by the glass ripple \u2014 strong real specular/transmissive interaction with the environment.",
+      "Img 1, category 2 (texture): the ripple relief has a near-constant wavelength and orientation repeating uniformly across the whole frame, with a look of a tiled/looping noise pattern rather than organic rolled-glass variation.",
+      "Img 2, category 2: fine texture is irregular and mottled, with scattered small dark pit/seed marks of varying size and spacing (some with faint short trailing streaks below them) \u2014 consistent with real glass seed inclusions.",
+      "Img 3, category 2: the distortion amplitude/frequency of the reflected house geometry visibly varies across the pane (tighter waves in some areas, flatter in others), matching how real waviness unevenly bends a scene.",
+      "Img 1, category 3 (translucency): the teal-to-olive color transition is a smooth, almost gradient-fill-like band across the middle of the frame, not obviously tied to local texture/thickness variation the way the ripples themselves are rendered.",
+      "Img 1, category 6 (optics): no visible sensor grain even in the darker lower region, and ripple edges are uniformly soft/blurred everywhere, rather than showing localized focus falloff.",
+      "Img 2, category 6: visible fine speckle/grain and small dot-like artifacts with subtle color fringing, consistent with real macro camera noise."
+    ]
+  },
+  {
+    "call_id": "t02_dark",
+    "truth_label": "ours_vs_real_vs_real",
+    "n_images": 3,
+    "images": [
+      "dark-ruby.jpg",
+      "wissmach-wblacki.jpg",
+      "panel_tungsten_backlit.jpg"
+    ],
+    "elapsed_s": 45.0,
+    "returncode": 0,
+    "verdict": "Image 1 (dark-ruby) appears computer-rendered \u2014 the combination of zero specular highlight, texture-independent lighting gradient, isotropic non-directional grain, absent sensor noise, and a sharp foreign-object edge sitting inside otherwise uniform blur is not consistent with a single real camera exposure. Images 2 and 3 show physically coupled texture/color/light behavior consistent with real photographs.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, category 1 (specularity): No discrete specular highlight or environment-reflection veil anywhere on the surface \u2014 the whole field is a soft, uniform radial glow with zero glint, unusual for glass held under any light source.",
+      "Image 1, category 2 (texture): The mottling is isotropic, rounded, low-frequency blobs with no fine-grain striae or directional grain \u2014 reads like smoothed/procedural noise rather than the elongated striations typical of rolled cathedral glass.",
+      "Image 1, category 3 (color/translucency): The light-to-dark transition (top-bright to bottom-dark) doesn't track the density of the mottled pattern \u2014 it behaves like a vignette/gradient laid over the texture rather than thickness-driven color variation.",
+      "Image 1, category 6 (optics): The small black hook shape near the top edge is crisply defined with sharp, clean edges, while the surrounding glass texture is uniformly heavily blurred \u2014 if this were real defocus, an object at similar depth should show comparable softness; the mismatch suggests a blur/haze applied to a base image rather than genuine lens defocus. Also no visible sensor grain anywhere in the frame.",
+      "Image 2, category 1/3: The iridescent color bands change precisely along the fine grain/striae lines (sharp color transitions co-located with texture edges), consistent with real thin-film interference depending on physical surface microstructure.",
+      "Image 2, category 6: Small round specks (bubble/dust inclusions) and fine chroma grain are visible at pixel level, consistent with a real macro photo.",
+      "Image 3, category 5: The glow behind the dragon's head falls off radially and asymmetrically exactly as expected from a single bulb behind textured glass, with per-facet specular streaks varying appropriately pane to pane.",
+      "Image 3, category 2: Visible waviness/striae in the green panes curve naturally with the glass's rolled texture, and reflections of real objects (mug, bottle) appear on the surface."
+    ]
+  },
+  {
+    "call_id": "t03_opalescent",
+    "truth_label": "ours_vs_real_vs_real",
+    "n_images": 3,
+    "images": [
+      "saturated-opalescent.jpg",
+      "oceanside-of23072s.jpg",
+      "panel_lightbox.jpg"
+    ],
+    "elapsed_s": 42.4,
+    "returncode": 0,
+    "verdict": "Image 1 is most likely synthetic \u2014 its texture blur is spatially uniform rather than optics-driven, and a perfectly sharp scratch sits inside that uniformly blurred field, an inconsistency real camera defocus wouldn't produce. Images 2 and 3 show edge/reflection/color-variation cues consistent with real photographs; I'm not fully certain about Image 2 given its low-detail flat surface, but I lean real.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, category 2 (texture): the entire frame is a uniform soft mottled blur with no crisp grain or ripple facets anywhere, even where in-plane elements should be sharp \u2014 the blur looks like generated noise smoothed with a large kernel rather than optical defocus of real rolled-glass texture.",
+      "Image 1, category 6 (optics): a thin black hairline crack/scratch in the lower-right is razor-sharp while the surrounding glass texture is heavily blurred on the same plane \u2014 real defocus would blur a surface scratch by the same amount as adjacent texture, so this mismatch suggests the line was composited separately.",
+      "Image 1, category 5 (lighting): the purple-to-warm-brown gradient across the frame is very smooth and linear with no localized specular highlight or falloff variation, reading more like a synthetic gradient fill than a backlit/room-lit glass sheet.",
+      "Image 2, category 4 (edge): the left and bottom physical edges show a thin darkened rim with a slight blue-to-gray color shift, consistent with real thickness-darkening/refraction at a glass edge.",
+      "Image 2, category 1 (reflections): no sharp specular highlight is visible, only a very broad, faint brighter patch in the upper-left \u2014 plausible as a soft diffuse veil reflection off a rolled-texture surface, though the surface is otherwise very flat/low-contrast for glass.",
+      "Image 3, category 1 (reflections): small, irregularly shaped specular highlights appear on the ornament facets, each differing in size/shape per piece \u2014 consistent with real point-light reflections off uneven glass surfaces.",
+      "Image 3, category 3 (color depth): the green glass shows streaky, mottled color variation with local thickness changes, not a flat tint \u2014 matches real streaky opalescent glass.",
+      "Image 3, category 4 (edges): the solder/lead came lines are unevenly tarnished with inconsistent highlight brightness, a realistic imperfection rather than a uniform procedural metal shader."
+    ]
+  },
+  {
+    "call_id": "t04_wispy_streaky",
+    "truth_label": "ours_vs_real_vs_real",
+    "n_images": 3,
+    "images": [
+      "streaky-mix.jpg",
+      "bullseye-0023050030f1010.jpg",
+      "sheets_handblown.jpg"
+    ],
+    "elapsed_s": 55.0,
+    "returncode": 0,
+    "verdict": "Image 1 is the most likely to be synthetic -- its noise is spatially/tonally uniform rather than signal-dependent, its hotspot gradient is too mathematically clean for a textured/streaky sheet, and it lacks any discrete specular reflection that the other two images both show. Moderate confidence, not certain.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 6 (noise/optics): the fine speckle grain has near-identical amplitude and spatial frequency everywhere \u2014 inside the blown-out hotspot, in the mid-tone sky area, and in the darker blue region alike. Real sensor noise (photon shot noise) should scale down as signal clips toward white and should look coarser/different in the darkest tones; here the grain reads as a uniform layer pasted over the whole frame regardless of local brightness.",
+      "Image 1, category 3/5: the bright hotspot has an almost perfectly smooth radial falloff. Since this is a streaky/waved glass sheet, real backlighting through its own surface irregularities should visibly warp and break up the highlight (denser/thinner bands, local brightness bumps tied to the waviness). Here the noise sits \"on top of\" a mathematically clean gradient rather than the gradient itself being modulated by the glass texture.",
+      "Image 1, category 1: no discrete specular reflection or environment glint is visible anywhere on the surface \u2014 only diffuse backlight. Images 2 and 3 both show it (see below), so its total absence here, combined with the too-clean gradient, is a second data point rather than just a lighting-setup difference.",
+      "Image 2, category 1: a sharp pinpoint white highlight near the left-center (~x=50,y=350) with a soft halation bloom around it \u2014 consistent with a real point light source specularly reflecting off a curved/uneven surface.",
+      "Image 2, category 3: the red streaks are irregular, branching, and vary in saturation with local density/thickness (denser near the crack-like seed line at top), matching how real striated glass transmits color unevenly.",
+      "Image 3, category 1: a large soft white reflection patch (bottom-center-right) with feathered, irregular edges plus smaller pinpoint glints elsewhere \u2014 plausible multi-source room reflection on a real curved/handblown surface.",
+      "Image 3, category 2: fine mottled texture with irregular scale variation (not a uniform repeating grain), consistent with authentic surface waviness."
+    ]
+  },
+  {
+    "call_id": "w01_amber_v_wild",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "cathedral-amber.jpg",
+      "sheets_waterglass_pair.jpg"
+    ],
+    "elapsed_s": 35.4,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- uniform frame-wide blur with no grain or focus falloff, a texture pattern too regular/periodic for real hammered glass, and a color gradient decoupled from the surface relief together point to a rendered/procedural origin.",
+    "n_observations": 6,
+    "observations": [
+      "Image 1, category 2 (texture): the hammered ripple pattern repeats as similarly-sized, similarly-oriented cellular blobs across the whole frame with no local variation in scale \u2014 real hand-rolled/hammered glass typically shows a mix of larger and smaller relief features and directional drag marks; here the relief reads as a tiled procedural noise pattern.",
+      "Image 1, category 3 (color/translucency): the blue-teal-to-amber color transition runs as a soft diagonal band that ignores the underlying ripple relief \u2014 bright and dark texture facets on both sides of the color boundary keep identical local saturation, which is inconsistent with color depending on glass thickness/path length.",
+      "Image 1, category 6 (optics): the entire frame carries one uniform low-pass blur with no focus falloff and no visible sensor grain even in the darker teal region \u2014 a real macro shot of glass would show grain in the shadow areas and at least slight focus variation across a non-flat rippled surface.",
+      "Image 1, category 4/6: the thin dark squiggle near the bottom is rendered at crisp, uniform-width, high-contrast edges while everything else in the frame is soft-blurred \u2014 a real scratch, hair, or dust fleck sitting on/behind the blurred glass would pick up the same defocus as its surroundings.",
+      "Image 2, category 1 (reflections): the top edges of both the red and blue panes show a distinct bright sky-toned specular streak that is sharper and narrower than the diffuse ambient light \u2014 a plausible discrete highlight from an actual light source direction.",
+      "Image 2, category 2/3 (texture/color): the blue pane's waviness varies irregularly in amplitude and direction, and the color darkens specifically in the thicker fold regions where the house image bends most \u2014 consistent with real absorption tied to path length through actual ripples."
+    ]
+  },
+  {
+    "call_id": "w02_darktextured_v_wild",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "dark-textured.jpg",
+      "sheets_shelf.jpg"
+    ],
+    "elapsed_s": 36.6,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic \u2014 its texture is isotropic/procedural-looking, shows a suspiciously symmetric vignette with zero specular highlight, and lacks any camera sensor grain despite the dark exposure.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, texture statistics: the mottling is made of round, similarly-sized soft-edged blobs with smooth continuous tonal transitions between them \u2014 no elongated/anisotropic streaks, no fine-grain sparkle. Real rolled/hammered glass shows directional, irregularly-scaled ripple structure; this looks like isotropic procedural (Perlin-style) noise.",
+      "Image 1, front-surface reflections: there is no localized highlight or environment veil anywhere on the visible surface \u2014 the whole frame is a flat gradient with zero specular event, which is unusual for a glossy glass surface photographed indoors.",
+      "Image 1, lighting plausibility: brightness falls off in a near-perfectly radial, symmetric pattern toward all four corners (classic vignette), rather than a one-directional falloff you'd expect from a single room light or window.",
+      "Image 1, noise & optics: despite being a dark, underexposed-looking capture (where real sensors show visible high-ISO grain), the tonal field is completely smooth/noise-free; the drawn mark's edges are slightly stair-stepped/aliased rather than photographically soft.",
+      "Image 2, front-surface reflections: thin bright specular streak lines are visible along the glossy sheets (e.g., on the dark blue and teal panels), consistent with a directional light source reflecting off a curved/rippled glass surface.",
+      "Image 2, texture statistics: the green and teal sheets show irregular, directional ripple/streak patterns of varying width and spacing \u2014 consistent with real rolled glass rather than a uniform procedural pattern.",
+      "Image 2, lighting plausibility: illumination is brighter from the upper right and falls off toward lower left across both the glass and the wood shelf/dowels, a single plausible light direction rather than a symmetric vignette.",
+      "Image 2, noise & optics: fine grain is visible in the wood shelf texture and shadow regions, consistent with real camera sensor noise at typical exposure."
+    ]
+  },
+  {
+    "call_id": "w03_streakyfine_v_wild",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "streaky-fine-texture.jpg",
+      "sheets_handblown.jpg"
+    ],
+    "elapsed_s": 37.1,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- it lacks any directional lighting/highlight cue and its texture reads as one uniform noise pass, and the dark mark shows blocky, non-photographic pixel edges, while Image 2 shows layered, irregular, lighting-consistent cues typical of a real photo.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, category 5 (lighting): the entire frame is essentially flat-uniform in brightness \u2014 no gradient, no highlight, no visible falloff toward any edge, consistent with a uniformly-lit render rather than a physical backlit/room-lit sheet.",
+      "Image 1, category 1: no front-surface specular highlight or environment veil is visible anywhere in frame \u2014 real glass surfaces almost always show at least a faint sheen or veil gradient even in a tight crop.",
+      "Image 1, category 6: the dark scribble mark in the lower-right has hard, blocky/stepped pixel edges rather than soft ink-bleed or camera-blur anti-aliasing \u2014 this looks like a rendered/vector line composited onto the texture, not something photographed through a lens.",
+      "Image 1, category 2: the reddish mottling is very uniform in blob scale and softness (looks like a single blurred noise octave) \u2014 real streaky glass usually shows a mix of sharp density boundaries and soft ones at varying scales.",
+      "Image 2, category 1: there's a soft, diffuse whitish highlight in the lower-center area with a plausible gradient falloff \u2014 consistent with a real reflected light source on a curved/uneven glass surface.",
+      "Image 2, category 3: the pink base color visibly varies in saturation/brightness following the streak pattern (denser pink near blob edges, washed out in open areas), and the blue blobs have irregular, unevenly feathered edges rather than uniform borders \u2014 consistent with real translucency variation.",
+      "Image 2, category 4: the top-right corner shows a brighter, slightly blue-shifted edge consistent with a physical sheet edge catching light/internal reflection.",
+      "Image 2, category 6: high-contrast blue/pink blob boundaries show faint color fringing, consistent with real lens chromatic aberration."
+    ]
+  },
+  {
+    "call_id": "w04_wispy_v_wild",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "wispy-white.jpg",
+      "panel_tungsten_backlit.jpg"
+    ],
+    "elapsed_s": 38.0,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its uniform blur with no fine glass texture, no chromatic aberration at a high-contrast edge, and a flat un-textured color gradient are inconsistent with a real macro photograph of glass.",
+    "n_observations": 8,
+    "observations": [
+      "Image 1, category 2 (texture): the entire pane shows only a soft, low-frequency blotchy haze with no fine-grained ripple, roller-line, or hammered relief visible anywhere in the frame \u2014 even in the brightest, most saturated region there's no micro-texture, just smooth tonal blur.",
+      "Image 1, category 6 (optics): the thin black thread/line running through the frame is high-contrast against a bright backlit field, yet its blurred edges show only neutral gray falloff \u2014 no purple/green chromatic fringing, which real lenses typically produce at such contrast edges under defocus.",
+      "Image 1, category 6 (optics): the blur level is uniform across the entire depth of the frame (near edge, far background, foreground line) rather than showing a smooth handoff between in-focus and out-of-focus zones \u2014 inconsistent with a real lens's depth-of-field falloff.",
+      "Image 1, category 3 (color depth): the warm-to-cool gradient (upper-left yellow to lower-right gray-green) is perfectly smooth and doesn't track any local structure \u2014 it reads as a flat gradient/haze laid over the surface rather than color changing with texture-driven thickness variation.",
+      "Image 1, category 4 (edge): the right-side dark vertical band transitions with a uniform soft gradient and no distinguishable rim highlight, refraction line, or thickness-darkening detail.",
+      "Image 2, category 1 (specularity): the lead came shows small, sharp glossy highlight speckles along its length (visible on the tail/body cames), consistent with a real point-source reflection on cylindrical metal.",
+      "Image 2, category 2 (texture): the green and gray glass panels show directional mottled/streaky texture that varies pane-to-pane, consistent with real rolled cathedral glass.",
+      "Image 2, category 6 (optics): faint sensor noise is visible in the darker cabinet/background areas, and there's slight motion blur on the hand at top \u2014 both realistic camera artifacts."
+    ]
+  },
+  {
+    "call_id": "w05_darkopaque_v_wild",
+    "truth_label": "ours_vs_real",
+    "n_images": 2,
+    "images": [
+      "dark-opaque.jpg",
+      "sheets_shelf.jpg"
+    ],
+    "elapsed_s": 28.0,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- it combines a perfectly regular procedural ripple texture, a flat single-source lighting gradient decoupled from that texture, and a complete absence of specular highlights or sensor noise, none of which match real glass/camera behavior seen in image 2.",
+    "n_observations": 8,
+    "observations": [
+      "(Cat 1, Img 1) No localized specular highlight anywhere in the frame \u2014 the surface only shows a broad, perfectly smooth luminance gradient with zero bright glint or environment reflection, even though the surface has visible relief.",
+      "(Cat 1, Img 2) Sheets show distinct, localized specular glints (e.g. the bright near-vertical streak on the turquoise sheet center-left, small point highlights along the metal dowels) consistent with a real light source reflecting off a curved/wavy surface.",
+      "(Cat 2, Img 1) The ripple texture is a near-perfectly regular, single-frequency wave pattern with uniform amplitude and spacing across the whole frame \u2014 reads as a tiled/procedural bump map rather than the irregular, multi-scale waviness real rolled glass shows.",
+      "(Cat 3, Img 1) The cool-grey-to-olive color shift is a smooth, independent gradient overlay that doesn't correlate with the ripple bumps underneath \u2014 brighter/darker texture peaks don't shift color the way real thickness-driven glass tinting would.",
+      "(Cat 5, Img 1) Illumination falls off as one clean top-to-bottom gradient with no secondary highlights, no room-light glints, no soft veil \u2014 reads as a single synthetic light rig rather than an ambient room environment.",
+      "(Cat 5, Img 2) Lighting shows multiple contributions \u2014 overhead highlights plus softer ambient fill reflected differently per sheet color/angle, consistent with a real room.",
+      "(Cat 6, Img 1) No visible sensor grain anywhere, even in the darker olive region; tonal transitions are banding-free and unnaturally smooth for a low-light capture.",
+      "(Cat 6, Img 2) Visible fine grain in the wood shelf/dowels and mild softness increase toward the lower shelf, consistent with real camera noise and depth falloff."
+    ]
+  },
+  {
+    "call_id": "x01_corpus_v_wild",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "bullseye-0014260030f1010.jpg",
+      "sheets_waterglass_pair.jpg"
+    ],
+    "elapsed_s": 46.1,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- its color/brightness stays flat and texture-decoupled with no chromatic aberration on hard bubble edges, unlike Image 2 which shows texture-coupled luminance, wavy reflection distortion, and edge/optics behavior typical of real glass.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1 (texture/color depth): the lime-green body color is essentially flat across the whole frame \u2014 no visible striation bands or brightness gradient tied to the rolling texture. Real hand-rolled sheet glass backlit like this typically shows streaky light/dark banding from thickness variation; here only the bubbles break up an otherwise uniform field.",
+      "Image 1 (noise/optics): the bubble edges are high-contrast dark rings on a saturated bright field, a classic spot for chromatic aberration in real macro photography, but every bubble edge is clean neutral-gray/black with no purple/green fringing.",
+      "Image 1 (lighting): illumination is perfectly even edge-to-edge with no falloff or hot spot, consistent with either a very well-diffused light table or a synthetic uniform environment \u2014 no distinguishing gradient either way.",
+      "Image 2 (front-surface reflection/texture): the blue sheet carries a clear reflected/refracted image of the house that is visibly warped into wavy bands (window frames bend and repeat), which is the signature optical fingerprint of real rolled/rippled glass distorting a reflection.",
+      "Image 2 (color depth/lighting): the red sheet has a bright diffuse highlight streak near the top-left that fades unevenly downward, with local darkening mottling tied to the visible surface waviness \u2014 brightness is coupled to texture rather than flat.",
+      "Image 2 (edge effect): the top physical edge of both sheets shows an irregular, slightly darker rim following the uneven hand-cut boundary, plausible for real glass.",
+      "Image 2 (optics): the reflected house detail is slightly softer/lower-contrast than the glass sheet's own surface plane, consistent with a real secondary focal/reflection plane rather than a single flat render pass."
+    ]
+  },
+  {
+    "call_id": "x02_corpus_v_wild",
+    "truth_label": "real_vs_real",
+    "n_images": 2,
+    "images": [
+      "oceanside-of22272s.jpg",
+      "panel_reflected_vs_transmitted.jpg"
+    ],
+    "elapsed_s": 44.5,
+    "returncode": 0,
+    "verdict": "Image 1 synthetic -- it lacks any sensor noise or organic glass texture and shows only a single structureless procedural-looking highlight gradient, while image 2 exhibits real camera grain, DOF falloff, and organic streak/mottle texture consistent with a genuine photograph.",
+    "n_observations": 7,
+    "observations": [
+      "Image 1, category 6 (noise/optics): the flat green midtones show no visible sensor grain at all \u2014 even in a JPEG-compressed macro shot, real cameras leave photon/read noise as fine speckling; here the tonal transitions are perfectly smooth with only faint quantization banding, which reads as a rendered gradient rather than a photographed surface.",
+      "Image 1, category 2 (texture): there is no waviness, ripple, or mottling anywhere in the frame \u2014 just a single smooth elliptical light-to-dark gradient. Real rolled/hand-poured glass retains organic low-frequency thickness variation even when defocused; this surface is texture-free.",
+      "Image 1, category 1 (reflection): the bright blob in the upper-left has a perfectly soft, structureless radial falloff with no hint of a light-source shape, window mullion, or room object \u2014 consistent with a procedural fresnel/highlight falloff rather than an actual bounced reflection of a real environment.",
+      "Image 1, category 3 (color depth): the color shifts as one continuous smooth gradient rather than the blotchy, piece-to-piece thickness variation seen in real cathedral glass \u2014 looks like a flat tint modulated by a single light falloff, not physically varying material.",
+      "Image 2, category 2 (texture): the blue swirled border shows genuine irregular streak widths and directions following the swirl pattern, and the green leaf glass has organic mottled patches \u2014 consistent with real rolled/streaky art glass.",
+      "Image 2, category 6 (noise/optics): the foreground plant leaf shows real depth-of-field falloff against the panel, and the dark background in the backlit shot shows visible shadow noise/grain consistent with a real low-light camera exposure.",
+      "Image 2, category 5 (lighting): the backlit half shows plausible single-source falloff (brighter center-top, darker corners) and color bleed onto the surrounding dark room, consistent with an actual lamp behind the panel."
+    ]
+  }
+]
