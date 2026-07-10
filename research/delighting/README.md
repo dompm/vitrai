@@ -48,6 +48,8 @@ but oracle-initialized height gives the best `T/B/D`, so relief is a promising
 state only if it can be initialized or inferred. `025-integrable-flow-projection.md`
 projects free-flow displacement into a height-field warm start; it improves
 geometry/leakage modestly but still leaves a material-scale gap.
+`026-curl-regularized-flow.md` moves integrability into the optimizer; soft curl
+regularization is the strongest non-oracle renderer result so far.
 
 ## Layout
 
@@ -70,6 +72,7 @@ differentiable_sheet_twoframe.py  two-observation identifiability test for share
 differentiable_sheet_motion.py  known-shift shared-background inverse-rendering test
 differentiable_sheet_heightfield.py  height-field displacement prior vs free-flow D test
 differentiable_sheet_integrable_projection.py  free-flow warm start projected to integrable relief
+differentiable_sheet_curl_regularized.py  soft curl/integrability prior for free-flow D
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -153,6 +156,10 @@ python3 differentiable_sheet_heightfield.py --sweep \
 # project free-flow displacement into an integrable height-field warm start
 python3 differentiable_sheet_integrable_projection.py --sweep \
   --out results/differentiable_sheet_integrable_projection_sweep
+
+# soft integrability prior inside free-flow optimization
+python3 differentiable_sheet_curl_regularized.py --sweep \
+  --out results/differentiable_sheet_curl_regularized_sweep
 ```
 
 manifest.json format (keys are filenames inside the folder):

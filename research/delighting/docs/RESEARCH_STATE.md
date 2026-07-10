@@ -290,6 +290,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   disp EPE 3.55 -> 3.01), but remains far from oracle-height (T-MAE 0.0985, height corr 0.778).
   Conclusion: staged projection is useful, but the next test should bake integrability into the
   optimizer or add a material scale prior.
+- 026 curl-regularized flow: bake integrability into the free-flow optimizer with
+  `lambda * mean(abs(curl(D/max_disp)))`. This is the strongest non-oracle renderer result so far:
+  curl weight 0.3 improves T-MAE 0.1033 -> 0.0990, B-MAE 0.1675 -> 0.1565, T-bg corr 0.045 ->
+  0.026, and disp EPE 3.31 -> 2.72, with recon MAE only 0.00188 -> 0.00238. Conclusion: soft physics
+  during optimization beats both cold height and after-the-fact projection.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -333,6 +338,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - After report 025, test free-flow with a curl/integrability penalty before projection, or combine
   projected relief with the material scale/color prior. Projection helps geometry but barely moves
   absolute material color.
+- After report 026, promote curl-regularized displacement to the main high-risk renderer path. Next:
+  combine known motion + curl-regularized `D` + weak material scale/color prior; optionally project
+  the curl-regularized flow to height afterward.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
