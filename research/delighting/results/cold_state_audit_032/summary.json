@@ -1,0 +1,177 @@
+{
+  "generated_at": "2026-07-10T19:27:19.833130+00:00",
+  "sources": {
+    "shop_products": "https://shop.bullseyeglass.com/products.json",
+    "striker_collection": "https://shop.bullseyeglass.com/collections/strikers",
+    "technical_api": "https://www.bullseyeglass.com/wp-json/wp/v2/posts",
+    "registry": "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json",
+    "clean_manifest": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/delight-data-quality/research/delighting/results/corpus/clean_manifest.json"
+  },
+  "store": {
+    "all_products": 2974,
+    "sheet_products": 633,
+    "sheet_image_count_histogram": {
+      "0": 2,
+      "1": 8,
+      "2": 322,
+      "3": 287,
+      "4": 11,
+      "5": 3
+    },
+    "multi_image_sheet_products": 623,
+    "striker_sheet_products": 144,
+    "striker_formulas": 60
+  },
+  "technical_pages": {
+    "all_wordpress_posts_fetched": 391,
+    "formula_pages": 239,
+    "striker_formulas": 62,
+    "cold_labeled_formulas": 146,
+    "fired_labeled_formulas": 110,
+    "cold_and_fired_labeled_formula_pairs": 33,
+    "cold_2mm_and_3mm_labeled_formula_pairs": 146
+  },
+  "vitrai_overlap": {
+    "registry_bullseye_formulas": 262,
+    "clean_manifest_bullseye_formulas": 250,
+    "clean_manifest_bullseye_rows": 509,
+    "clean_formulas_in_striker_collection": 58,
+    "clean_rows_in_striker_collection": 117,
+    "clean_formulas_with_official_cold_anchor": 142,
+    "clean_rows_with_official_cold_anchor": 266,
+    "clean_striker_formulas_with_official_cold_anchor": 53,
+    "clean_striker_rows_with_official_cold_anchor": 111
+  },
+  "image_state_probe": {
+    "candidate_triples": 27,
+    "evaluated_triples": 27,
+    "failures": 0,
+    "classification_counts": {
+      "ambiguous": 1,
+      "fired_closer": 26
+    },
+    "fired_closer_fraction": 0.963,
+    "cold_fired_delta_e": {
+      "median": 24.43,
+      "p75": 42.771,
+      "p90": 68.655,
+      "max": 88.527,
+      "above_10": 24,
+      "above_20": 20,
+      "above_40": 7
+    },
+    "clean_manifest_formulas_with_fired_closer_choice": 24,
+    "clean_manifest_rows_with_fired_closer_choice": 48
+  },
+  "thickness_probe": {
+    "candidate_clean_corpus_pairs": 144,
+    "evaluated_pairs": 143,
+    "failures": 1,
+    "decoded_exact_duplicate_pairs": 93,
+    "overall_all_pairs": {
+      "rows": 143,
+      "valid_rows": 143,
+      "beer_lambert_wins": 36,
+      "beer_lambert_win_fraction": 0.2517,
+      "median_optical_depth_ratio_3mm_over_2mm": 1.0,
+      "expected_optical_depth_ratio": 1.5,
+      "median_absorption_coefficient_relative_error": 0.4,
+      "median_beer_lambert_mae": 0.076,
+      "median_same_thickness_mae": 0.0
+    },
+    "overall_distinct_images": {
+      "rows": 50,
+      "valid_rows": 50,
+      "beer_lambert_wins": 36,
+      "beer_lambert_win_fraction": 0.72,
+      "median_optical_depth_ratio_3mm_over_2mm": 1.376,
+      "expected_optical_depth_ratio": 1.5,
+      "median_absorption_coefficient_relative_error": 0.354,
+      "median_beer_lambert_mae": 0.063,
+      "median_same_thickness_mae": 0.098
+    },
+    "by_registry_category": {
+      "Cathedral": {
+        "all": {
+          "rows": 34,
+          "valid_rows": 34,
+          "beer_lambert_wins": 8,
+          "beer_lambert_win_fraction": 0.2353,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.0,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.4,
+          "median_beer_lambert_mae": 0.072,
+          "median_same_thickness_mae": 0.0
+        },
+        "distinct_images": {
+          "rows": 10,
+          "valid_rows": 10,
+          "beer_lambert_wins": 8,
+          "beer_lambert_win_fraction": 0.8,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.448,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.347,
+          "median_beer_lambert_mae": 0.069,
+          "median_same_thickness_mae": 0.09
+        }
+      },
+      "Opalescent": {
+        "all": {
+          "rows": 57,
+          "valid_rows": 57,
+          "beer_lambert_wins": 18,
+          "beer_lambert_win_fraction": 0.3158,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.0,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.4,
+          "median_beer_lambert_mae": 0.08,
+          "median_same_thickness_mae": 0.0
+        },
+        "distinct_images": {
+          "rows": 25,
+          "valid_rows": 25,
+          "beer_lambert_wins": 18,
+          "beer_lambert_win_fraction": 0.72,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.367,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.345,
+          "median_beer_lambert_mae": 0.059,
+          "median_same_thickness_mae": 0.096
+        }
+      },
+      "Wispy/Streaky": {
+        "all": {
+          "rows": 52,
+          "valid_rows": 52,
+          "beer_lambert_wins": 10,
+          "beer_lambert_win_fraction": 0.1923,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.0,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.4,
+          "median_beer_lambert_mae": 0.079,
+          "median_same_thickness_mae": 0.0
+        },
+        "distinct_images": {
+          "rows": 15,
+          "valid_rows": 15,
+          "beer_lambert_wins": 10,
+          "beer_lambert_win_fraction": 0.6667,
+          "median_optical_depth_ratio_3mm_over_2mm": 1.342,
+          "expected_optical_depth_ratio": 1.5,
+          "median_absorption_coefficient_relative_error": 0.523,
+          "median_beer_lambert_mae": 0.108,
+          "median_same_thickness_mae": 0.125
+        }
+      }
+    },
+    "interpretation": "A Beer-Lambert win only means the 2 mm image predicts the 3 mm image better than copying 2 mm unchanged under this white-reference heuristic."
+  },
+  "limitations": [
+    "Delta-E is computed from robust center-crop median color, not radiometrically calibrated pixels.",
+    "The official images can depict different physical sheets and camera setups; labels establish material state, not pixel correspondence.",
+    "A four-delta-E nearest-state margin is an audit heuristic, not a learned classifier.",
+    "The affected-row count covers evaluated formulas only and is therefore a lower bound.",
+    "The thickness probe assumes the brightest image pixels approximate the light-table white reference and does not recover a camera response curve.",
+    "Nominal 2 mm/3 mm pairs are different physical sheets; only formula, gauge, and cold material state are shared."
+  ]
+}

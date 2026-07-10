@@ -1,0 +1,1450 @@
+{
+  "method": {
+    "eligible_clean_rows": 1145,
+    "selected_rows": 692,
+    "max_per_class": 250,
+    "sample_seed": 11,
+    "note": "Exact report-021 sample/exclusion/statistic protocol. The two scopes replace only the image source for selected Bullseye rows with an official cold sheet."
+  },
+  "baseline_per_class": {
+    "cathedral-clear": {
+      "n": 250,
+      "L_median": {
+        "mean": 61.22603890308096,
+        "std": 20.79174184366266,
+        "p5": 24.560594360065537,
+        "p50": 61.57356237459487,
+        "p95": 95.254408247423
+      },
+      "C_median": {
+        "mean": 34.14788170644539,
+        "std": 25.660601425222314,
+        "p5": 1.0291749668146084,
+        "p50": 30.999078846983075,
+        "p95": 81.70930985824083
+      },
+      "hue_circular_mean_deg": 42.77495039839898,
+      "hf_energy_frac": {
+        "mean": 0.0990701365457345,
+        "std": 0.12098648637682057,
+        "p5": 0.0056773225386487535,
+        "p50": 0.03534878954967069,
+        "p95": 0.3664520656843736
+      }
+    },
+    "dark-opaque": {
+      "n": 34,
+      "L_median": {
+        "mean": 18.12873747491599,
+        "std": 18.54750381840952,
+        "p5": 1.3219539668148328,
+        "p50": 9.645694673680204,
+        "p95": 53.68578452516945
+      },
+      "C_median": {
+        "mean": 10.01911050820142,
+        "std": 11.595512127210727,
+        "p5": 0.3844774946376611,
+        "p50": 3.953966054002641,
+        "p95": 33.93649126384626
+      },
+      "hue_circular_mean_deg": 280.8539214988323,
+      "hf_energy_frac": {
+        "mean": 0.13640994389901057,
+        "std": 0.12908280185065948,
+        "p5": 0.005770678899369219,
+        "p50": 0.11002352069711396,
+        "p95": 0.37032657376257566
+      }
+    },
+    "opalescent": {
+      "n": 250,
+      "L_median": {
+        "mean": 62.34406022221759,
+        "std": 18.33890228966826,
+        "p5": 32.27711614602503,
+        "p50": 62.31582122732459,
+        "p95": 92.00484379543678
+      },
+      "C_median": {
+        "mean": 35.684164688228336,
+        "std": 25.8824128244712,
+        "p5": 1.6342839580366366,
+        "p50": 31.84222451490879,
+        "p95": 83.66842461935184
+      },
+      "hue_circular_mean_deg": 85.2725642697604,
+      "hf_energy_frac": {
+        "mean": 0.06557425080327027,
+        "std": 0.09167411764723903,
+        "p5": 0.004981524189586133,
+        "p50": 0.020685969528399364,
+        "p95": 0.2590677317910889
+      }
+    },
+    "wispy": {
+      "n": 158,
+      "L_median": {
+        "mean": 55.66816382280369,
+        "std": 20.45829255130237,
+        "p5": 23.082499726831507,
+        "p50": 56.844702261197455,
+        "p95": 88.90802305784959
+      },
+      "C_median": {
+        "mean": 31.728457846203526,
+        "std": 20.44953184333559,
+        "p5": 4.582066734731454,
+        "p50": 28.514648525273945,
+        "p95": 71.00569615066247
+      },
+      "hue_circular_mean_deg": 63.8583796384824,
+      "hf_energy_frac": {
+        "mean": 0.026512852950388584,
+        "std": 0.028974003446351797,
+        "p5": 0.003509305262093232,
+        "p50": 0.016635888939437744,
+        "p95": 0.07341375456844598
+      }
+    }
+  },
+  "scopes": {
+    "proven_fired_choices": {
+      "scope": "proven_fired_choices",
+      "requested_formulas": 26,
+      "sampled_rows_replaced": 27,
+      "sampled_formulas_replaced": 22,
+      "paired_center_delta_e": {
+        "median": 36.244,
+        "p75": 63.775,
+        "p90": 75.974,
+        "max": 98.22
+      },
+      "corrected_per_class": {
+        "cathedral-clear": {
+          "n": 250,
+          "L_median": {
+            "mean": 61.795951224283286,
+            "std": 20.730776617114152,
+            "p5": 26.706487469490035,
+            "p50": 62.153401838436,
+            "p95": 95.254408247423
+          },
+          "C_median": {
+            "mean": 34.13821879013172,
+            "std": 26.389510205265612,
+            "p5": 1.0291749668146084,
+            "p50": 30.16634711481959,
+            "p95": 82.09557782641495
+          },
+          "hue_circular_mean_deg": 42.13370297718177,
+          "hf_energy_frac": {
+            "mean": 0.09245912127540577,
+            "std": 0.11634678926698008,
+            "p5": 0.0056773225386487535,
+            "p50": 0.03395813978649025,
+            "p95": 0.35071005738561534
+          }
+        },
+        "dark-opaque": {
+          "n": 34,
+          "L_median": {
+            "mean": 18.12873747491599,
+            "std": 18.54750381840952,
+            "p5": 1.3219539668148328,
+            "p50": 9.645694673680204,
+            "p95": 53.68578452516945
+          },
+          "C_median": {
+            "mean": 10.01911050820142,
+            "std": 11.595512127210727,
+            "p5": 0.3844774946376611,
+            "p50": 3.953966054002641,
+            "p95": 33.93649126384626
+          },
+          "hue_circular_mean_deg": 280.8539214988323,
+          "hf_energy_frac": {
+            "mean": 0.13640994389901057,
+            "std": 0.12908280185065948,
+            "p5": 0.005770678899369219,
+            "p50": 0.11002352069711396,
+            "p95": 0.37032657376257566
+          }
+        },
+        "opalescent": {
+          "n": 250,
+          "L_median": {
+            "mean": 63.18481791091744,
+            "std": 18.66603749720869,
+            "p5": 32.803731297736974,
+            "p50": 63.30269544445587,
+            "p95": 92.67085505230831
+          },
+          "C_median": {
+            "mean": 35.20283968051156,
+            "std": 26.16503785327907,
+            "p5": 1.6342839580366366,
+            "p50": 31.675964399588835,
+            "p95": 84.11349449781942
+          },
+          "hue_circular_mean_deg": 88.46321460929242,
+          "hf_energy_frac": {
+            "mean": 0.06050941365608617,
+            "std": 0.08697411876647292,
+            "p5": 0.004981524189586133,
+            "p50": 0.020195257170550825,
+            "p95": 0.22578317193759265
+          }
+        },
+        "wispy": {
+          "n": 158,
+          "L_median": {
+            "mean": 55.98010899789117,
+            "std": 20.48022525371957,
+            "p5": 23.082499726831507,
+            "p50": 57.246205194800055,
+            "p95": 88.90802305784959
+          },
+          "C_median": {
+            "mean": 32.05671949115505,
+            "std": 20.434184986066995,
+            "p5": 4.582066734731454,
+            "p50": 28.69042881584969,
+            "p95": 71.00569615066247
+          },
+          "hue_circular_mean_deg": 64.07429895607424,
+          "hf_energy_frac": {
+            "mean": 0.026533746872931106,
+            "std": 0.02895727973319572,
+            "p5": 0.0035478085579499644,
+            "p50": 0.016635888939437744,
+            "p95": 0.07341375456844598
+          }
+        }
+      },
+      "delta_from_baseline": {
+        "cathedral-clear": {
+          "n": 250,
+          "L_p50_delta": 0.5798394638411253,
+          "C_p50_delta": -0.8327317321634844,
+          "hf_p50_delta": -0.0013906497631804363,
+          "hue_circular_mean_delta": -0.6412474212172015
+        },
+        "dark-opaque": {
+          "n": 34,
+          "L_p50_delta": 0.0,
+          "C_p50_delta": 0.0,
+          "hf_p50_delta": 0.0,
+          "hue_circular_mean_delta": 0.0
+        },
+        "opalescent": {
+          "n": 250,
+          "L_p50_delta": 0.9868742171312803,
+          "C_p50_delta": -0.16626011531995388,
+          "hf_p50_delta": -0.0004907123578485398,
+          "hue_circular_mean_delta": 3.190650339532027
+        },
+        "wispy": {
+          "n": 158,
+          "L_p50_delta": 0.40150293360260036,
+          "C_p50_delta": 0.1757802905757444,
+          "hf_p50_delta": 0.0,
+          "hue_circular_mean_delta": 0.21591931759184035
+        }
+      },
+      "paired_rows": [
+        {
+          "file": "bullseye-0014220050f1010.jpg",
+          "registry_id": "bullseye-0014220050f1010",
+          "formula": "001422",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 82.91379867500217,
+          "cold_L": 88.4116852885298,
+          "baseline_C": 83.9532244239784,
+          "cold_C": 14.046638614739287,
+          "paired_center_delta_e": 98.21974187800976,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001422-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220050f1010.jpg",
+          "registry_id": "bullseye-0013220050f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 36.68796338507208,
+          "cold_L": 80.7922018187058,
+          "baseline_C": 58.66695759306242,
+          "cold_C": 83.11759562403645,
+          "paired_center_delta_e": 91.16089276484746,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013200051f1010.jpg",
+          "registry_id": "bullseye-0013200051f1010",
+          "formula": "001320",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 79.2997392286824,
+          "cold_L": 93.40999028929133,
+          "baseline_C": 78.1040619525248,
+          "cold_C": 2.7651172486605886,
+          "paired_center_delta_e": 85.37057199753336,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001320-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013340030f1010.jpg",
+          "registry_id": "bullseye-0013340030f1010",
+          "formula": "001334",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 18.00134046428191,
+          "cold_L": 39.09919630069276,
+          "baseline_C": 39.85147972120344,
+          "cold_C": 106.07745926270191,
+          "paired_center_delta_e": 69.71044528945127,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001334-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013110030f1010.jpg",
+          "registry_id": "bullseye-0013110030f1010",
+          "formula": "001311",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 46.06819900400099,
+          "cold_L": 83.75105466173187,
+          "baseline_C": 56.82655171733371,
+          "cold_C": 26.088795425515883,
+          "paired_center_delta_e": 66.25239464899855,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001311-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003340050f1010.jpg",
+          "registry_id": "bullseye-0003340050f1010",
+          "formula": "000334",
+          "extractor_class": "opalescent",
+          "baseline_L": 32.05681521245748,
+          "cold_L": 88.93495250602471,
+          "baseline_C": 40.79881608354939,
+          "cold_C": 17.251229026946323,
+          "paired_center_delta_e": 64.84961205921869,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000334-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003050030f1010.jpg",
+          "registry_id": "bullseye-0003050030f1010",
+          "formula": "000305",
+          "extractor_class": "opalescent",
+          "baseline_L": 55.28723987122133,
+          "cold_L": 95.23659587950306,
+          "baseline_C": 57.61697560835504,
+          "cold_C": 7.117610455029054,
+          "paired_center_delta_e": 64.8275531945688,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000305-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013320030f1010.jpg",
+          "registry_id": "bullseye-0013320030f1010",
+          "formula": "001332",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 43.07570974986276,
+          "cold_L": 75.5182131284248,
+          "baseline_C": 49.30530718771896,
+          "cold_C": 37.25531093425382,
+          "paired_center_delta_e": 62.7224608194199,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001332-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220031f1010.jpg",
+          "registry_id": "bullseye-0013220031f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 34.74334722948104,
+          "cold_L": 38.04795849069853,
+          "baseline_C": 55.50993561140137,
+          "cold_C": 78.86671594876654,
+          "paired_center_delta_e": 53.988372318366686,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003340030f1010.jpg",
+          "registry_id": "bullseye-0003340030f1010",
+          "formula": "000334",
+          "extractor_class": "opalescent",
+          "baseline_L": 28.08503421891958,
+          "cold_L": 78.01762555632828,
+          "baseline_C": 41.412443442456826,
+          "cold_C": 32.98130280473626,
+          "paired_center_delta_e": 53.253755259291225,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000334-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013050050f1010.jpg",
+          "registry_id": "bullseye-0013050050f1010",
+          "formula": "001305",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 69.0364312289093,
+          "cold_L": 62.86988425507843,
+          "baseline_C": 48.04727123960151,
+          "cold_C": 82.03628265702571,
+          "paired_center_delta_e": 41.64779498515006,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001305-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003320030f1010.jpg",
+          "registry_id": "bullseye-0003320030f1010",
+          "formula": "000332",
+          "extractor_class": "opalescent",
+          "baseline_L": 36.463070000084464,
+          "cold_L": 67.93729935047705,
+          "baseline_C": 41.124957346745475,
+          "cold_C": 17.929027895292478,
+          "paired_center_delta_e": 39.77997413138226,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000332-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0022500000f1010.jpg",
+          "registry_id": "bullseye-0022500000f1010",
+          "formula": "002250",
+          "extractor_class": "wispy",
+          "baseline_L": 33.182781957002874,
+          "cold_L": 68.63555567184324,
+          "baseline_C": 54.59544391965646,
+          "cold_C": 53.80838330392001,
+          "paired_center_delta_e": 38.2686627857372,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002250-0030-F_04-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0029710030f1010.jpg",
+          "registry_id": "bullseye-0029710030f1010",
+          "formula": "002971",
+          "extractor_class": "wispy",
+          "baseline_L": 33.457573921385034,
+          "cold_L": 25.790577461863705,
+          "baseline_C": 7.479938698721321,
+          "cold_C": 39.138879456611946,
+          "paired_center_delta_e": 36.24362539641666,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002971-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220051f1010.jpg",
+          "registry_id": "bullseye-0013220051f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 40.82985532772009,
+          "cold_L": 38.04795849069853,
+          "baseline_C": 53.26752865613768,
+          "cold_C": 78.86671594876654,
+          "paired_center_delta_e": 36.06046198894132,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003090030f1010.jpg",
+          "registry_id": "bullseye-0003090030f1010",
+          "formula": "000309",
+          "extractor_class": "opalescent",
+          "baseline_L": 35.337693055235036,
+          "cold_L": 14.315957655167427,
+          "baseline_C": 51.943428991966385,
+          "cold_C": 33.61824303381903,
+          "paired_center_delta_e": 30.461689772567663,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000309-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0022500030f1010.jpg",
+          "registry_id": "bullseye-0022500030f1010",
+          "formula": "002250",
+          "extractor_class": "wispy",
+          "baseline_L": 47.13399526334221,
+          "cold_L": 68.63555567184324,
+          "baseline_C": 32.81492354373194,
+          "cold_C": 53.80838330392001,
+          "paired_center_delta_e": 25.390747053737577,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002250-0030-F_04-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003200030f1010.jpg",
+          "registry_id": "bullseye-0003200030f1010",
+          "formula": "000320",
+          "extractor_class": "opalescent",
+          "baseline_L": 71.48214175432473,
+          "cold_L": 82.73192142666196,
+          "baseline_C": 80.53799743509016,
+          "cold_C": 84.19208497209934,
+          "paired_center_delta_e": 23.9464136652279,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000320-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003370030f1010.jpg",
+          "registry_id": "bullseye-0003370030f1010",
+          "formula": "000337",
+          "extractor_class": "opalescent",
+          "baseline_L": 52.22929782504889,
+          "cold_L": 37.49089908038915,
+          "baseline_C": 60.85538128021479,
+          "cold_C": 59.86401631992373,
+          "paired_center_delta_e": 23.701202539825964,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000337-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004350030f1010.jpg",
+          "registry_id": "bullseye-0004350030f1010",
+          "formula": "000435",
+          "extractor_class": "opalescent",
+          "baseline_L": 79.63734330062037,
+          "cold_L": 91.52220194596765,
+          "baseline_C": 21.667937564031927,
+          "cold_C": 3.573616848865825,
+          "paired_center_delta_e": 22.854189531339976,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000435-0030-F_03-e1766601679679-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003210030f1010.jpg",
+          "registry_id": "bullseye-0003210030f1010",
+          "formula": "000321",
+          "extractor_class": "opalescent",
+          "baseline_L": 66.11558304069915,
+          "cold_L": 76.77257691770691,
+          "baseline_C": 81.33723749213603,
+          "cold_C": 82.4552256744723,
+          "paired_center_delta_e": 21.424434744959047,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000321-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004340030f1010.jpg",
+          "registry_id": "bullseye-0004340030f1010",
+          "formula": "000434",
+          "extractor_class": "opalescent",
+          "baseline_L": 68.85834439111566,
+          "cold_L": 70.33348544277604,
+          "baseline_C": 20.364529588812232,
+          "cold_C": 37.991435540824625,
+          "paired_center_delta_e": 21.18957439546058,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000434-00300-F_03-e1766601625490-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003010030f1010.jpg",
+          "registry_id": "bullseye-0003010030f1010",
+          "formula": "000301",
+          "extractor_class": "opalescent",
+          "baseline_L": 52.943556857183026,
+          "cold_L": 72.08441783373452,
+          "baseline_C": 49.25840388939204,
+          "cold_C": 43.09394459560234,
+          "paired_center_delta_e": 20.814069420774224,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000301-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004310030f1010.jpg",
+          "registry_id": "bullseye-0004310030f1010",
+          "formula": "000431",
+          "extractor_class": "opalescent",
+          "baseline_L": 76.205712384201,
+          "cold_L": 88.06790478284613,
+          "baseline_C": 22.488497592166276,
+          "cold_C": 9.74965673893197,
+          "paired_center_delta_e": 20.600625457273313,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000431-0030-F_03-e1766601654626-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001260030f1010.jpg",
+          "registry_id": "bullseye-0001260030f1010",
+          "formula": "000126",
+          "extractor_class": "opalescent",
+          "baseline_L": 75.9095640768439,
+          "cold_L": 80.59332804778535,
+          "baseline_C": 79.6607791872405,
+          "cold_C": 91.68317386614243,
+          "paired_center_delta_e": 16.76349601796437,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000126-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013050030f1010.jpg",
+          "registry_id": "bullseye-0013050030f1010",
+          "formula": "001305",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 63.36364580282353,
+          "cold_L": 56.54996767256637,
+          "baseline_C": 68.25829194838786,
+          "cold_C": 80.25424930846516,
+          "paired_center_delta_e": 14.112881274252844,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001305-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003290030f1010.jpg",
+          "registry_id": "bullseye-0003290030f1010",
+          "formula": "000329",
+          "extractor_class": "opalescent",
+          "baseline_L": 43.8647280119077,
+          "cold_L": 40.62637974945285,
+          "baseline_C": 67.64469451312691,
+          "cold_C": 74.88026031340273,
+          "paired_center_delta_e": 10.400881234840474,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000329-0030-F_03-300x300.jpg"
+        }
+      ]
+    },
+    "all_labeled_strikers": {
+      "scope": "all_labeled_strikers",
+      "requested_formulas": 53,
+      "sampled_rows_replaced": 60,
+      "sampled_formulas_replaced": 49,
+      "paired_center_delta_e": {
+        "median": 30.641,
+        "p75": 62.857,
+        "p90": 72.551,
+        "max": 98.22
+      },
+      "corrected_per_class": {
+        "cathedral-clear": {
+          "n": 250,
+          "L_median": {
+            "mean": 62.786920315239755,
+            "std": 21.426027000314377,
+            "p5": 24.560594360065537,
+            "p50": 63.35618144417988,
+            "p95": 95.254408247423
+          },
+          "C_median": {
+            "mean": 33.262646599240625,
+            "std": 26.167579211678515,
+            "p5": 1.0291749668146084,
+            "p50": 28.966968495221717,
+            "p95": 82.36324740300869
+          },
+          "hue_circular_mean_deg": 49.3778589833106,
+          "hf_energy_frac": {
+            "mean": 0.08249694214172063,
+            "std": 0.10961187986898534,
+            "p5": 0.0056773225386487535,
+            "p50": 0.029233744379491965,
+            "p95": 0.33256992493058724
+          }
+        },
+        "dark-opaque": {
+          "n": 34,
+          "L_median": {
+            "mean": 18.12873747491599,
+            "std": 18.54750381840952,
+            "p5": 1.3219539668148328,
+            "p50": 9.645694673680204,
+            "p95": 53.68578452516945
+          },
+          "C_median": {
+            "mean": 10.01911050820142,
+            "std": 11.595512127210727,
+            "p5": 0.3844774946376611,
+            "p50": 3.953966054002641,
+            "p95": 33.93649126384626
+          },
+          "hue_circular_mean_deg": 280.8539214988323,
+          "hf_energy_frac": {
+            "mean": 0.13640994389901057,
+            "std": 0.12908280185065948,
+            "p5": 0.005770678899369219,
+            "p50": 0.11002352069711396,
+            "p95": 0.37032657376257566
+          }
+        },
+        "opalescent": {
+          "n": 250,
+          "L_median": {
+            "mean": 63.41799712946198,
+            "std": 18.886299287992234,
+            "p5": 32.803731297736974,
+            "p50": 63.47793296560422,
+            "p95": 93.19727349399543
+          },
+          "C_median": {
+            "mean": 35.33243978459552,
+            "std": 26.63219471560319,
+            "p5": 1.894544171599445,
+            "p50": 31.422971416323453,
+            "p95": 86.28546318898708
+          },
+          "hue_circular_mean_deg": 89.22429673992963,
+          "hf_energy_frac": {
+            "mean": 0.056238808917940204,
+            "std": 0.08428250001888993,
+            "p5": 0.004981524189586133,
+            "p50": 0.019787285725819625,
+            "p95": 0.22362103207584175
+          }
+        },
+        "wispy": {
+          "n": 158,
+          "L_median": {
+            "mean": 56.03708882764677,
+            "std": 20.50220521080768,
+            "p5": 23.082499726831507,
+            "p50": 57.246205194800055,
+            "p95": 89.17398134882573
+          },
+          "C_median": {
+            "mean": 32.12728660480294,
+            "std": 20.598487063292257,
+            "p5": 4.582066734731454,
+            "p50": 29.546026293713325,
+            "p95": 71.00569615066247
+          },
+          "hue_circular_mean_deg": 63.83089909377527,
+          "hf_energy_frac": {
+            "mean": 0.026434880363294975,
+            "std": 0.029017754392832055,
+            "p5": 0.0035478085579499644,
+            "p50": 0.01670838707104294,
+            "p95": 0.07341375456844598
+          }
+        }
+      },
+      "delta_from_baseline": {
+        "cathedral-clear": {
+          "n": 250,
+          "L_p50_delta": 1.7826190695850102,
+          "C_p50_delta": -2.0321103517613572,
+          "hf_p50_delta": -0.006115045170178725,
+          "hue_circular_mean_delta": 6.602908584911631
+        },
+        "dark-opaque": {
+          "n": 34,
+          "L_p50_delta": 0.0,
+          "C_p50_delta": 0.0,
+          "hf_p50_delta": 0.0,
+          "hue_circular_mean_delta": 0.0
+        },
+        "opalescent": {
+          "n": 250,
+          "L_p50_delta": 1.162111738279627,
+          "C_p50_delta": -0.41925309858533666,
+          "hf_p50_delta": -0.0008986838025797396,
+          "hue_circular_mean_delta": 3.9517324701692473
+        },
+        "wispy": {
+          "n": 158,
+          "L_p50_delta": 0.40150293360260036,
+          "C_p50_delta": 1.0313777684393806,
+          "hf_p50_delta": 7.249813160519619e-05,
+          "hue_circular_mean_delta": -0.02748054470711736
+        }
+      },
+      "paired_rows": [
+        {
+          "file": "bullseye-0014220050f1010.jpg",
+          "registry_id": "bullseye-0014220050f1010",
+          "formula": "001422",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 82.91379867500217,
+          "cold_L": 88.4116852885298,
+          "baseline_C": 83.9532244239784,
+          "cold_C": 14.046638614739287,
+          "paired_center_delta_e": 98.21974187800976,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001422-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011220031f1010.jpg",
+          "registry_id": "bullseye-0011220031f1010",
+          "formula": "001122",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 46.91612019471407,
+          "cold_L": 71.31540646710494,
+          "baseline_C": 47.55446285613804,
+          "cold_C": 82.36324740300869,
+          "paired_center_delta_e": 93.41073963753288,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001122-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220050f1010.jpg",
+          "registry_id": "bullseye-0013220050f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 36.68796338507208,
+          "cold_L": 80.7922018187058,
+          "baseline_C": 58.66695759306242,
+          "cold_C": 83.11759562403645,
+          "paired_center_delta_e": 91.16089276484746,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011200030f1010.jpg",
+          "registry_id": "bullseye-0011200030f1010",
+          "formula": "001120",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 84.59805462881745,
+          "cold_L": 93.30487164775447,
+          "baseline_C": 85.47749909911343,
+          "cold_C": 2.7651172486605886,
+          "paired_center_delta_e": 88.5827300441504,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001120-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013200051f1010.jpg",
+          "registry_id": "bullseye-0013200051f1010",
+          "formula": "001320",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 79.2997392286824,
+          "cold_L": 93.40999028929133,
+          "baseline_C": 78.1040619525248,
+          "cold_C": 2.7651172486605886,
+          "paired_center_delta_e": 85.37057199753336,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001320-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0010250031f1010.jpg",
+          "registry_id": "bullseye-0010250031f1010",
+          "formula": "001025",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 59.10579710544508,
+          "cold_L": 91.50979939895686,
+          "baseline_C": 78.30935535267747,
+          "cold_C": 70.61201646465551,
+          "paired_center_delta_e": 76.39593673170485,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001025-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011220051f1010.jpg",
+          "registry_id": "bullseye-0011220051f1010",
+          "formula": "001122",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 41.36772808945214,
+          "cold_L": 71.31540646710494,
+          "baseline_C": 68.97415161821365,
+          "cold_C": 82.36324740300869,
+          "paired_center_delta_e": 72.12376845393959,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001122-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013340030f1010.jpg",
+          "registry_id": "bullseye-0013340030f1010",
+          "formula": "001334",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 18.00134046428191,
+          "cold_L": 39.09919630069276,
+          "baseline_C": 39.85147972120344,
+          "cold_C": 106.07745926270191,
+          "paired_center_delta_e": 69.71044528945127,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001334-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0010250030f1010.jpg",
+          "registry_id": "bullseye-0010250030f1010",
+          "formula": "001025",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 62.14653120829921,
+          "cold_L": 91.50979939895686,
+          "baseline_C": 82.14409205591525,
+          "cold_C": 70.61201646465551,
+          "paired_center_delta_e": 69.06046942954993,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001025-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013110030f1010.jpg",
+          "registry_id": "bullseye-0013110030f1010",
+          "formula": "001311",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 46.06819900400099,
+          "cold_L": 83.75105466173187,
+          "baseline_C": 56.82655171733371,
+          "cold_C": 26.088795425515883,
+          "paired_center_delta_e": 66.25239464899855,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001311-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003340050f1010.jpg",
+          "registry_id": "bullseye-0003340050f1010",
+          "formula": "000334",
+          "extractor_class": "opalescent",
+          "baseline_L": 32.05681521245748,
+          "cold_L": 88.93495250602471,
+          "baseline_C": 40.79881608354939,
+          "cold_C": 17.251229026946323,
+          "paired_center_delta_e": 64.84961205921869,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000334-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003050030f1010.jpg",
+          "registry_id": "bullseye-0003050030f1010",
+          "formula": "000305",
+          "extractor_class": "opalescent",
+          "baseline_L": 55.28723987122133,
+          "cold_L": 95.23659587950306,
+          "baseline_C": 57.61697560835504,
+          "cold_C": 7.117610455029054,
+          "paired_center_delta_e": 64.8275531945688,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000305-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0010250050f1010.jpg",
+          "registry_id": "bullseye-0010250050f1010",
+          "formula": "001025",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 64.40328930464246,
+          "cold_L": 91.50979939895686,
+          "baseline_C": 81.78520264238564,
+          "cold_C": 70.61201646465551,
+          "paired_center_delta_e": 64.36061989113449,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001025-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011220050f1010.jpg",
+          "registry_id": "bullseye-0011220050f1010",
+          "formula": "001122",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 44.27858775920395,
+          "cold_L": 71.31540646710494,
+          "baseline_C": 75.67064520705934,
+          "cold_C": 82.36324740300869,
+          "paired_center_delta_e": 64.1737132732166,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001122-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012050031f1010.jpg",
+          "registry_id": "bullseye-0012050031f1010",
+          "formula": "001205",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 68.16546762404222,
+          "cold_L": 92.08612862562781,
+          "baseline_C": 56.073617285739566,
+          "cold_C": 7.315738531160766,
+          "paired_center_delta_e": 63.26018621640182,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001205-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013320030f1010.jpg",
+          "registry_id": "bullseye-0013320030f1010",
+          "formula": "001332",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 43.07570974986276,
+          "cold_L": 75.5182131284248,
+          "baseline_C": 49.30530718771896,
+          "cold_C": 37.25531093425382,
+          "paired_center_delta_e": 62.7224608194199,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001332-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012150051f1010.jpg",
+          "registry_id": "bullseye-0012150051f1010",
+          "formula": "001215",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 58.44729455762351,
+          "cold_L": 90.82934142478146,
+          "baseline_C": 48.167930439314475,
+          "cold_C": 13.886100656147102,
+          "paired_center_delta_e": 60.27146355423384,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001215-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220031f1010.jpg",
+          "registry_id": "bullseye-0013220031f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 34.74334722948104,
+          "cold_L": 38.04795849069853,
+          "baseline_C": 55.50993561140137,
+          "cold_C": 78.86671594876654,
+          "paired_center_delta_e": 53.988372318366686,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003340030f1010.jpg",
+          "registry_id": "bullseye-0003340030f1010",
+          "formula": "000334",
+          "extractor_class": "opalescent",
+          "baseline_L": 28.08503421891958,
+          "cold_L": 78.01762555632828,
+          "baseline_C": 41.412443442456826,
+          "cold_C": 32.98130280473626,
+          "paired_center_delta_e": 53.253755259291225,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000334-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011260050f1010.jpg",
+          "registry_id": "bullseye-0011260050f1010",
+          "formula": "001126",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 77.46029087628415,
+          "cold_L": 87.2159203057758,
+          "baseline_C": 78.83260526881932,
+          "cold_C": 34.138636689624036,
+          "paired_center_delta_e": 49.61901844300744,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001126-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011260051f1010.jpg",
+          "registry_id": "bullseye-0011260051f1010",
+          "formula": "001126",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 70.58987471050808,
+          "cold_L": 87.2159203057758,
+          "baseline_C": 70.44832846501082,
+          "cold_C": 34.138636689624036,
+          "paired_center_delta_e": 47.02381849019123,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001126-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013050050f1010.jpg",
+          "registry_id": "bullseye-0013050050f1010",
+          "formula": "001305",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 69.0364312289093,
+          "cold_L": 62.86988425507843,
+          "baseline_C": 48.04727123960151,
+          "cold_C": 82.03628265702571,
+          "paired_center_delta_e": 41.64779498515006,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001305-0050-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0002030030f1010.jpg",
+          "registry_id": "bullseye-0002030030f1010",
+          "formula": "000203",
+          "extractor_class": "opalescent",
+          "baseline_L": 34.970462805072614,
+          "cold_L": 6.048360852808461,
+          "baseline_C": 37.63863886131556,
+          "cold_C": 10.97928569854301,
+          "paired_center_delta_e": 40.29212887518794,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000203-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003320030f1010.jpg",
+          "registry_id": "bullseye-0003320030f1010",
+          "formula": "000332",
+          "extractor_class": "opalescent",
+          "baseline_L": 36.463070000084464,
+          "cold_L": 67.93729935047705,
+          "baseline_C": 41.124957346745475,
+          "cold_C": 17.929027895292478,
+          "paired_center_delta_e": 39.77997413138226,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000332-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0022500000f1010.jpg",
+          "registry_id": "bullseye-0022500000f1010",
+          "formula": "002250",
+          "extractor_class": "wispy",
+          "baseline_L": 33.182781957002874,
+          "cold_L": 68.63555567184324,
+          "baseline_C": 54.59544391965646,
+          "cold_C": 53.80838330392001,
+          "paired_center_delta_e": 38.2686627857372,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002250-0030-F_04-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012410051f1010.jpg",
+          "registry_id": "bullseye-0012410051f1010",
+          "formula": "001241",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 45.342660633123316,
+          "cold_L": 65.29692098589337,
+          "baseline_C": 39.12300154108867,
+          "cold_C": 66.6651542540515,
+          "paired_center_delta_e": 36.9817300607861,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001241-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0029710030f1010.jpg",
+          "registry_id": "bullseye-0029710030f1010",
+          "formula": "002971",
+          "extractor_class": "wispy",
+          "baseline_L": 33.457573921385034,
+          "cold_L": 25.790577461863705,
+          "baseline_C": 7.479938698721321,
+          "cold_C": 39.138879456611946,
+          "paired_center_delta_e": 36.24362539641666,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002971-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013220051f1010.jpg",
+          "registry_id": "bullseye-0013220051f1010",
+          "formula": "001322",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 40.82985532772009,
+          "cold_L": 38.04795849069853,
+          "baseline_C": 53.26752865613768,
+          "cold_C": 78.86671594876654,
+          "paired_center_delta_e": 36.06046198894132,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001322-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0011190031f1010.jpg",
+          "registry_id": "bullseye-0011190031f1010",
+          "formula": "001119",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 38.255298523699864,
+          "cold_L": 17.700392616157174,
+          "baseline_C": 30.246811325943654,
+          "cold_C": 36.556693410409665,
+          "paired_center_delta_e": 30.9158050876115,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001119-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0002250030f1010.jpg",
+          "registry_id": "bullseye-0002250030f1010",
+          "formula": "000225",
+          "extractor_class": "opalescent",
+          "baseline_L": 44.563381740949225,
+          "cold_L": 63.51640518528923,
+          "baseline_C": 87.9389916252602,
+          "cold_C": 87.65522874832158,
+          "paired_center_delta_e": 30.819575520833983,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000225-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003090030f1010.jpg",
+          "registry_id": "bullseye-0003090030f1010",
+          "formula": "000309",
+          "extractor_class": "opalescent",
+          "baseline_L": 35.337693055235036,
+          "cold_L": 14.315957655167427,
+          "baseline_C": 51.943428991966385,
+          "cold_C": 33.61824303381903,
+          "paired_center_delta_e": 30.461689772567663,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000309-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0000240030f1010.jpg",
+          "registry_id": "bullseye-0000240030f1010",
+          "formula": "000024",
+          "extractor_class": "opalescent",
+          "baseline_L": 43.09435523487784,
+          "cold_L": 55.55289228791102,
+          "baseline_C": 78.8298912867735,
+          "cold_C": 98.42435379503186,
+          "paired_center_delta_e": 29.012926474035503,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000024-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001240030f1010.jpg",
+          "registry_id": "bullseye-0001240030f1010",
+          "formula": "000124",
+          "extractor_class": "opalescent",
+          "baseline_L": 38.30944270048796,
+          "cold_L": 52.37364308210873,
+          "baseline_C": 76.0043405912863,
+          "cold_C": 98.92538210707131,
+          "paired_center_delta_e": 27.99004900727365,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000124-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0002200030f1010.jpg",
+          "registry_id": "bullseye-0002200030f1010",
+          "formula": "000220",
+          "extractor_class": "opalescent",
+          "baseline_L": 75.67924493662682,
+          "cold_L": 90.21064358994548,
+          "baseline_C": 79.59531251545003,
+          "cold_C": 88.54320083896646,
+          "paired_center_delta_e": 27.650289804935298,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000220-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0018310030f1010.jpg",
+          "registry_id": "bullseye-0018310030f1010",
+          "formula": "001831",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 81.89703334404118,
+          "cold_L": 92.46553788694668,
+          "baseline_C": 25.347943369316823,
+          "cold_C": 11.38062857545682,
+          "paired_center_delta_e": 27.532410199890137,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001831-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0000250030f1010.jpg",
+          "registry_id": "bullseye-0000250030f1010",
+          "formula": "000025",
+          "extractor_class": "opalescent",
+          "baseline_L": 63.4632038537943,
+          "cold_L": 77.00601743608104,
+          "baseline_C": 81.74726000584222,
+          "cold_C": 82.29342211692784,
+          "paired_center_delta_e": 27.075043025282387,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000025-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0002240030f1010.jpg",
+          "registry_id": "bullseye-0002240030f1010",
+          "formula": "000224",
+          "extractor_class": "opalescent",
+          "baseline_L": 31.396961912056412,
+          "cold_L": 34.70462659836291,
+          "baseline_C": 54.91740007865849,
+          "cold_C": 74.66836962982444,
+          "paired_center_delta_e": 25.926620445622998,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000224-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0022500030f1010.jpg",
+          "registry_id": "bullseye-0022500030f1010",
+          "formula": "002250",
+          "extractor_class": "wispy",
+          "baseline_L": 47.13399526334221,
+          "cold_L": 68.63555567184324,
+          "baseline_C": 32.81492354373194,
+          "cold_C": 53.80838330392001,
+          "paired_center_delta_e": 25.390747053737577,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002250-0030-F_04-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012070030f1010.jpg",
+          "registry_id": "bullseye-0012070030f1010",
+          "formula": "001207",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 69.15504016087522,
+          "cold_L": 67.57255174063461,
+          "baseline_C": 71.6719803749055,
+          "cold_C": 49.90834733550146,
+          "paired_center_delta_e": 24.671196087782146,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001207-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003200030f1010.jpg",
+          "registry_id": "bullseye-0003200030f1010",
+          "formula": "000320",
+          "extractor_class": "opalescent",
+          "baseline_L": 71.48214175432473,
+          "cold_L": 82.73192142666196,
+          "baseline_C": 80.53799743509016,
+          "cold_C": 84.19208497209934,
+          "paired_center_delta_e": 23.9464136652279,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000320-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003370030f1010.jpg",
+          "registry_id": "bullseye-0003370030f1010",
+          "formula": "000337",
+          "extractor_class": "opalescent",
+          "baseline_L": 52.22929782504889,
+          "cold_L": 37.49089908038915,
+          "baseline_C": 60.85538128021479,
+          "cold_C": 59.86401631992373,
+          "paired_center_delta_e": 23.701202539825964,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000337-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004350030f1010.jpg",
+          "registry_id": "bullseye-0004350030f1010",
+          "formula": "000435",
+          "extractor_class": "opalescent",
+          "baseline_L": 79.63734330062037,
+          "cold_L": 91.52220194596765,
+          "baseline_C": 21.667937564031927,
+          "cold_C": 3.573616848865825,
+          "paired_center_delta_e": 22.854189531339976,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000435-0030-F_03-e1766601679679-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003210030f1010.jpg",
+          "registry_id": "bullseye-0003210030f1010",
+          "formula": "000321",
+          "extractor_class": "opalescent",
+          "baseline_L": 66.11558304069915,
+          "cold_L": 76.77257691770691,
+          "baseline_C": 81.33723749213603,
+          "cold_C": 82.4552256744723,
+          "paired_center_delta_e": 21.424434744959047,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000321-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004340030f1010.jpg",
+          "registry_id": "bullseye-0004340030f1010",
+          "formula": "000434",
+          "extractor_class": "opalescent",
+          "baseline_L": 68.85834439111566,
+          "cold_L": 70.33348544277604,
+          "baseline_C": 20.364529588812232,
+          "cold_C": 37.991435540824625,
+          "paired_center_delta_e": 21.18957439546058,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000434-00300-F_03-e1766601625490-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003010030f1010.jpg",
+          "registry_id": "bullseye-0003010030f1010",
+          "formula": "000301",
+          "extractor_class": "opalescent",
+          "baseline_L": 52.943556857183026,
+          "cold_L": 72.08441783373452,
+          "baseline_C": 49.25840388939204,
+          "cold_C": 43.09394459560234,
+          "paired_center_delta_e": 20.814069420774224,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000301-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012340051f1010.jpg",
+          "registry_id": "bullseye-0012340051f1010",
+          "formula": "001234",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 54.39088138448102,
+          "cold_L": 34.72574920052615,
+          "baseline_C": 47.132186228035074,
+          "cold_C": 52.9537231886427,
+          "paired_center_delta_e": 20.704077589797084,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001234-0030-v6-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0004310030f1010.jpg",
+          "registry_id": "bullseye-0004310030f1010",
+          "formula": "000431",
+          "extractor_class": "opalescent",
+          "baseline_L": 76.205712384201,
+          "cold_L": 88.06790478284613,
+          "baseline_C": 22.488497592166276,
+          "cold_C": 9.74965673893197,
+          "paired_center_delta_e": 20.600625457273313,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000431-0030-F_03-e1766601654626-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001260030f1010.jpg",
+          "registry_id": "bullseye-0001260030f1010",
+          "formula": "000126",
+          "extractor_class": "opalescent",
+          "baseline_L": 75.9095640768439,
+          "cold_L": 80.59332804778535,
+          "baseline_C": 79.6607791872405,
+          "cold_C": 91.68317386614243,
+          "paired_center_delta_e": 16.76349601796437,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000126-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0013050030f1010.jpg",
+          "registry_id": "bullseye-0013050030f1010",
+          "formula": "001305",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 63.36364580282353,
+          "cold_L": 56.54996767256637,
+          "baseline_C": 68.25829194838786,
+          "cold_C": 80.25424930846516,
+          "paired_center_delta_e": 14.112881274252844,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001305-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001200030f1010.jpg",
+          "registry_id": "bullseye-0001200030f1010",
+          "formula": "000120",
+          "extractor_class": "opalescent",
+          "baseline_L": 88.57682595703322,
+          "cold_L": 89.17612338388794,
+          "baseline_C": 88.51440871655794,
+          "cold_C": 75.72198661954553,
+          "paired_center_delta_e": 13.570632935186687,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000120-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0021250030f1010.jpg",
+          "registry_id": "bullseye-0021250030f1010",
+          "formula": "002125",
+          "extractor_class": "wispy",
+          "baseline_L": 62.67942459965927,
+          "cold_L": 64.25570470830777,
+          "baseline_C": 76.24357017230358,
+          "cold_C": 85.76043030923744,
+          "paired_center_delta_e": 11.708074418304644,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002125-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001250030f1010.jpg",
+          "registry_id": "bullseye-0001250030f1010",
+          "formula": "000125",
+          "extractor_class": "opalescent",
+          "baseline_L": 55.51680388421761,
+          "cold_L": 63.000743356644705,
+          "baseline_C": 85.4960634265745,
+          "cold_C": 88.27685656904863,
+          "paired_center_delta_e": 11.698836739313508,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000125-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0003290030f1010.jpg",
+          "registry_id": "bullseye-0003290030f1010",
+          "formula": "000329",
+          "extractor_class": "opalescent",
+          "baseline_L": 43.8647280119077,
+          "cold_L": 40.62637974945285,
+          "baseline_C": 67.64469451312691,
+          "cold_C": 74.88026031340273,
+          "paired_center_delta_e": 10.400881234840474,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000329-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0032030030f1010.jpg",
+          "registry_id": "bullseye-0032030030f1010",
+          "formula": "003203",
+          "extractor_class": "wispy",
+          "baseline_L": 28.863622092119243,
+          "cold_L": 29.460340757180454,
+          "baseline_C": 28.591406112728848,
+          "cold_C": 36.795410600546575,
+          "paired_center_delta_e": 9.365381324997132,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/003203-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0020260030f1010.jpg",
+          "registry_id": "bullseye-0020260030f1010",
+          "formula": "002026",
+          "extractor_class": "wispy",
+          "baseline_L": 86.68702975331948,
+          "cold_L": 89.56389512749635,
+          "baseline_C": 25.59824934493496,
+          "cold_C": 19.069295892017124,
+          "paired_center_delta_e": 8.156885252190731,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002026-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0020240030f1010.jpg",
+          "registry_id": "bullseye-0020240030f1010",
+          "formula": "002024",
+          "extractor_class": "wispy",
+          "baseline_L": 49.73890906330472,
+          "cold_L": 53.69185801680243,
+          "baseline_C": 67.94770118799205,
+          "cold_C": 67.90539397252381,
+          "paired_center_delta_e": 7.897690967056349,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/002024-0030-F_cold-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0002270030f1010.jpg",
+          "registry_id": "bullseye-0002270030f1010",
+          "formula": "000227",
+          "extractor_class": "opalescent",
+          "baseline_L": 60.725177202261165,
+          "cold_L": 58.72468670090278,
+          "baseline_C": 65.03251687407506,
+          "cold_C": 64.08520281887307,
+          "paired_center_delta_e": 6.39013108235393,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000227-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0012340030f1010.jpg",
+          "registry_id": "bullseye-0012340030f1010",
+          "formula": "001234",
+          "extractor_class": "cathedral-clear",
+          "baseline_L": 37.352478694214554,
+          "cold_L": 34.72574920052615,
+          "baseline_C": 53.5215259640098,
+          "cold_C": 52.9537231886427,
+          "paired_center_delta_e": 6.278189178287532,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/001234-0030-v6-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001380030f1010.jpg",
+          "registry_id": "bullseye-0001380030f1010",
+          "formula": "000138",
+          "extractor_class": "opalescent",
+          "baseline_L": 90.87101580515093,
+          "cold_L": 95.097545537211,
+          "baseline_C": 17.48640941604533,
+          "cold_C": 14.147211020410367,
+          "paired_center_delta_e": 5.5876873234737605,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000138-0030-F_03-300x300.jpg"
+        },
+        {
+          "file": "bullseye-0001430000ffull.jpg",
+          "registry_id": "bullseye-0001430000f1010",
+          "formula": "000143",
+          "extractor_class": "opalescent",
+          "baseline_L": 94.97046372588949,
+          "cold_L": 95.02045638340037,
+          "baseline_C": 0.8799990150734122,
+          "cold_C": 2.7607584713384634,
+          "paired_center_delta_e": 0.6198597919585117,
+          "cold_url": "https://www.bullseyeglass.com/wp-content/uploads/000143-0030-F_02-300x300.jpg"
+        }
+      ]
+    }
+  },
+  "replacement_failures": []
+}
