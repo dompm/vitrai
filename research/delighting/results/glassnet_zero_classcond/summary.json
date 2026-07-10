@@ -1,0 +1,175 @@
+{
+  "args": {
+    "data": "research/delighting/synthetic_data",
+    "out": "research/delighting/results/glassnet_zero_classcond",
+    "size": 384,
+    "crop": 96,
+    "steps": 700,
+    "batch": 8,
+    "lr": 0.002,
+    "seed": 7,
+    "base": 20
+  },
+  "class_labels": [
+    "cathedral-amber",
+    "cathedral-green",
+    "dark-opaque",
+    "streaky-mix",
+    "wispy-white"
+  ],
+  "holdout_samples": [
+    "cathedral-amber__seed43__light6158",
+    "cathedral-green__seed43__light6158",
+    "dark-opaque__seed44__light8879",
+    "streaky-mix__seed45__light7995",
+    "wispy-white__seed46__light6553"
+  ],
+  "skipped": [
+    [
+      "streaky-mix__seed44__light4062",
+      "no meta"
+    ]
+  ],
+  "n_train_records": 24,
+  "n_test_records": 10,
+  "loss_tail_mean": 0.03588447576388717,
+  "per_recipe": {
+    "cathedral-amber": {
+      "n": 1,
+      "raw_mae": 44.24936550068725,
+      "classical_mae": 22.935148793430834,
+      "neural_mae": 1.5495884206112114,
+      "raw_shadow_gap": 0.9469608144974918,
+      "classical_shadow_gap": 1.3354270853486292,
+      "neural_shadow_gap": 0.006239162350450069,
+      "T_mae": 0.01165133435279131,
+      "h_mae": 0.0031997368205338717
+    },
+    "cathedral-green": {
+      "n": 1,
+      "raw_mae": 44.46557503231691,
+      "classical_mae": 27.24898208827873,
+      "neural_mae": 1.2761672250502643,
+      "raw_shadow_gap": 0.8435555668732274,
+      "classical_shadow_gap": 1.2855035812674531,
+      "neural_shadow_gap": 0.004300024433126842,
+      "T_mae": 0.009519295766949654,
+      "h_mae": 0.004996002651751041
+    },
+    "dark-opaque": {
+      "n": 1,
+      "raw_mae": 18.602416768240126,
+      "classical_mae": 42.636687053163165,
+      "neural_mae": 5.698438224967005,
+      "raw_shadow_gap": 1.3449938892308082,
+      "classical_shadow_gap": 1.0482013850071188,
+      "neural_shadow_gap": 0.022397285060987777,
+      "T_mae": 0.022809794172644615,
+      "h_mae": 0.0038326929789036512
+    },
+    "streaky-mix": {
+      "n": 1,
+      "raw_mae": 46.00914876283417,
+      "classical_mae": 18.21820873779051,
+      "neural_mae": 6.698519154470974,
+      "raw_shadow_gap": 1.541088631161797,
+      "classical_shadow_gap": 1.745735877077623,
+      "neural_shadow_gap": 0.0009687612315362084,
+      "T_mae": 0.02372743934392929,
+      "h_mae": 0.15541543066501617
+    },
+    "wispy-white": {
+      "n": 1,
+      "raw_mae": 52.82849686988524,
+      "classical_mae": 11.56122205842522,
+      "neural_mae": 3.6508441858904632,
+      "raw_shadow_gap": 0.9313915776474262,
+      "classical_shadow_gap": 1.2740746113105033,
+      "neural_shadow_gap": 0.0059859141083589635,
+      "T_mae": 0.042214538902044296,
+      "h_mae": 0.05352110043168068
+    }
+  },
+  "per_sample": [
+    {
+      "sample": "cathedral-amber__seed43__light6158",
+      "class_label": "cathedral-amber",
+      "raw_mae": 44.24936550068725,
+      "classical_mae": 22.935148793430834,
+      "neural_mae": 1.5495884206112114,
+      "raw_p95": 89.02968251626186,
+      "classical_p95": 77.60493805149258,
+      "neural_p95": 3.5230571458366127,
+      "T_mae": 0.01165133435279131,
+      "h_mae": 0.0031997368205338717,
+      "raw_shadow_gap": 0.9469608144974918,
+      "classical_shadow_gap": 1.3354270853486292,
+      "neural_shadow_gap": 0.006239162350450069,
+      "shadow_mask_iou": 0.0
+    },
+    {
+      "sample": "cathedral-green__seed43__light6158",
+      "class_label": "cathedral-green",
+      "raw_mae": 44.46557503231691,
+      "classical_mae": 27.24898208827873,
+      "neural_mae": 1.2761672250502643,
+      "raw_p95": 100.27653432338933,
+      "classical_p95": 91.45531760204878,
+      "neural_p95": 3.2176756235763353,
+      "T_mae": 0.009519295766949654,
+      "h_mae": 0.004996002651751041,
+      "raw_shadow_gap": 0.8435555668732274,
+      "classical_shadow_gap": 1.2855035812674531,
+      "neural_shadow_gap": 0.004300024433126842,
+      "shadow_mask_iou": 0.0
+    },
+    {
+      "sample": "dark-opaque__seed44__light8879",
+      "class_label": "dark-opaque",
+      "raw_mae": 18.602416768240126,
+      "classical_mae": 42.636687053163165,
+      "neural_mae": 5.698438224967005,
+      "raw_p95": 41.76488996898082,
+      "classical_p95": 55.128434397586865,
+      "neural_p95": 8.785958592497781,
+      "T_mae": 0.022809794172644615,
+      "h_mae": 0.0038326929789036512,
+      "raw_shadow_gap": 1.3449938892308082,
+      "classical_shadow_gap": 1.0482013850071188,
+      "neural_shadow_gap": 0.022397285060987777,
+      "shadow_mask_iou": 0.0
+    },
+    {
+      "sample": "streaky-mix__seed45__light7995",
+      "class_label": "streaky-mix",
+      "raw_mae": 46.00914876283417,
+      "classical_mae": 18.21820873779051,
+      "neural_mae": 6.698519154470974,
+      "raw_p95": 84.97467678256953,
+      "classical_p95": 47.49851331486476,
+      "neural_p95": 13.093771354075734,
+      "T_mae": 0.02372743934392929,
+      "h_mae": 0.15541543066501617,
+      "raw_shadow_gap": 1.541088631161797,
+      "classical_shadow_gap": 1.745735877077623,
+      "neural_shadow_gap": 0.0009687612315362084,
+      "shadow_mask_iou": 0.0
+    },
+    {
+      "sample": "wispy-white__seed46__light6553",
+      "class_label": "wispy-white",
+      "raw_mae": 52.82849686988524,
+      "classical_mae": 11.56122205842522,
+      "neural_mae": 3.6508441858904632,
+      "raw_p95": 82.25548737113341,
+      "classical_p95": 27.5317026477744,
+      "neural_p95": 8.348480646283418,
+      "T_mae": 0.042214538902044296,
+      "h_mae": 0.05352110043168068,
+      "raw_shadow_gap": 0.9313915776474262,
+      "classical_shadow_gap": 1.2740746113105033,
+      "neural_shadow_gap": 0.0059859141083589635,
+      "shadow_mask_iou": 0.0
+    }
+  ]
+}

@@ -13,6 +13,7 @@ debug_*.py
 test_save_render.py
 test*.png
 test*.exr
+*.pt
 *.tsbuildinfo
 .DS_Store
 __pycache__/

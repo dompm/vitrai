@@ -273,8 +273,8 @@ def build_flat_scene(scene, hdri_path, recipe, sample_dir, seed):
     glass.name = "GlassSheet"
     cam = add_camera(scene)
     add_dark_wall()
-    img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
-    create_glass_material(glass, img_T, img_h, img_mark, recipe, use_bump=False)
+    img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
+    create_glass_material(glass, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=False)
     return scene, glass, cam, wmap, wbg, (img_T, img_h, img_mark)
 
 
@@ -286,7 +286,7 @@ def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces):
     cam = add_camera(scene)
     add_dark_wall()
     add_lead_strips()
-    img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
+    img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
     for p in pieces:
         cx, cz = p["world_center"]
         s = p["half_size"]
@@ -295,7 +295,7 @@ def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces):
         obj.name = f"Piece_{p['name']}"
         u0, v0, u1, v1 = p["uv_rect"]
         set_uv_rect(obj, u0, v0, u1, v1, s)
-        create_glass_material(obj, img_T, img_h, img_mark, recipe, use_bump=False)
+        create_glass_material(obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=False)
     return scene, cam, wmap, wbg
 
 

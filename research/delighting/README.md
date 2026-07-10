@@ -15,7 +15,22 @@ contrast recovery, 9-sheet library batch, pair harness), `003-absolute-scale.md`
 `004-hotspot.md` (backlight-hotspot recovery; VLM class default + anchor logging),
 `007-full-recipe-eval.md` (ground-truth extractor eval across all 5 synthetic
 recipes), and `008-preview-invariance.md` (product-shaped raw-copy vs material
-relight benchmark).
+relight benchmark). `009-glassnet-zero.md` starts the high-risk neural
+inverse-rendering track. `010-material-v2-representation.md` starts a bolder
+representation reset for surface relief / normals. `011-artist-material-review-prototype.md`
+adds a standalone artist-facing comparison prototype. `012-artist-feedback-readout.md`
+turns the first artist readout into the "make it beautiful, but keep it honest"
+research rule. `014-catalog-constrained-sheet-prior.md` uses manufacturer catalog
+images to sanity-check a sheet-level prior for the right-side glass panel.
+`015-catalog-prior-gate.md` adds a first catalog-statistics gate so prior cleanup
+is provenance-aware rather than automatic. `016-learned-prior-gate-negative.md`
+records that a first synthetic-positive learned gate under-calls the real
+suncatcher failure and should not distract from inverse rendering.
+`017-catalog-leak-cleaner.md` turns the catalog into weak clean-material
+supervision for a neural leakage-field cleaner; it improves brightness
+consistency modestly but does not solve chroma/background separation.
+`018-luma-leakage-field.md` adds a safer luma-only cleanup mode that preserves
+uploaded glass hue while reducing broad brightness leakage.
 
 ## Layout
 
@@ -25,6 +40,14 @@ vlm_classify.py   Track C: glass-class prior + mark localization via `claude` CL
 contact_sheet.py  build one grid image over a batch (original|T|h|relit warm|cool)
 register_pair.py  cross-lighting validation (M3): register two photos, compare maps
 eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
+train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
+generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
+sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppressing sheet-photo contamination
+catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
+catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
+learned_prior_gate.py  negative/limited learned gate probe using catalog negatives + synthetic leaks
+train_catalog_leak_cleaner.py  weak neural cleaner trained from catalog sheets with synthetic leakage
+prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
 reports/          numbered experiment reports (honest; decision documents)
@@ -58,6 +81,32 @@ python3 register_pair.py A.jpg B.jpg --class wispy \
 
 # product preview benchmark: compare copied capture pixels to controlled T/h relight
 python3 eval_preview_invariance.py --data synthetic_data --out results/preview_invariance
+
+# high-risk neural baseline (requires torch in the ignored .venv)
+./.venv/bin/python train_glassnet_zero.py --data synthetic_data --out results/glassnet_zero_classcond
+
+# synthetic Material-v2 data (requires Blender on PATH)
+blender -b --python generate_synthetic.py -- --out synthetic_data_v2 --count 100 --light-variations 3
+
+# artist-facing Material-v2 comparison demo; open the file in a browser
+open prototypes/material-v2-artist-demo.html
+
+# catalog-constrained sheet-prior audit; registry currently lives in the main workspace
+python3 catalog_texture_audit.py \
+  --registry /Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json
+
+# first-pass gate: should the sheet-prior be offered/applied?
+python3 catalog_prior_gate.py
+
+# learned gate probe; useful negative result, not a product model
+python3 learned_prior_gate.py
+
+# weak neural leakage-field cleaner; outputs baseline and smooth-residual result folders
+./.venv/bin/python train_catalog_leak_cleaner.py --steps 900
+./.venv/bin/python train_catalog_leak_cleaner.py \
+  --out results/catalog_leak_cleaner_smooth --steps 900 --smooth-residual 33
+./.venv/bin/python train_catalog_leak_cleaner.py \
+  --out results/catalog_leak_cleaner_luma --steps 900 --smooth-residual 33 --output-mode luma
 ```
 
 manifest.json format (keys are filenames inside the folder):

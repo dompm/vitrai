@@ -1,0 +1,111 @@
+{
+  "audit": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/delight-003/research/delighting/results/catalog_texture_audit/metrics.json",
+  "n_groups": 900,
+  "n_train_groups": 720,
+  "n_test_groups": 180,
+  "train_auc": 0.8520621141975309,
+  "test_auc": 0.8441358024691358,
+  "test_accuracy_050": 0.7694444444444445,
+  "clean_false_positive_050": 0.25555555555555554,
+  "clean_false_positive_070": 0.1,
+  "leak_true_positive_050": 0.7944444444444444,
+  "leak_true_positive_070": 0.5555555555555556,
+  "coefficients": [
+    {
+      "feature": "bias",
+      "weight": 0.0073047132790565635
+    },
+    {
+      "feature": "lum_cv",
+      "weight": 0.7110320081680754
+    },
+    {
+      "feature": "lowfreq_cv",
+      "weight": 0.31632658636336064
+    },
+    {
+      "feature": "highfreq_std",
+      "weight": -0.20795022097812207
+    },
+    {
+      "feature": "highfreq_p95",
+      "weight": 0.0854893968844223
+    },
+    {
+      "feature": "chroma_mad",
+      "weight": -0.2465618409608926
+    },
+    {
+      "feature": "sat_mean",
+      "weight": -0.49827040433925307
+    },
+    {
+      "feature": "low_to_high",
+      "weight": 1.0455618912491191
+    },
+    {
+      "feature": "low_minus_chroma",
+      "weight": 0.24589078410707366
+    },
+    {
+      "feature": "z_lum",
+      "weight": -0.09258383368634433
+    },
+    {
+      "feature": "z_lowfreq",
+      "weight": -0.10795761344532502
+    },
+    {
+      "feature": "z_chroma",
+      "weight": 0.05268180814298179
+    },
+    {
+      "feature": "z_detail",
+      "weight": -0.31116211816089984
+    }
+  ],
+  "suncatcher_scores": [
+    {
+      "id": "green_raw",
+      "score": 0.5115240128280436,
+      "lowfreq_cv": 0.6106627975997836,
+      "highfreq_std": 0.5644232307451318,
+      "chroma_mad": 0.019681428767771236
+    },
+    {
+      "id": "green_relit",
+      "score": 0.3323751916033487,
+      "lowfreq_cv": 0.4773722637776583,
+      "highfreq_std": 0.5577755051973123,
+      "chroma_mad": 0.019481004120910805
+    },
+    {
+      "id": "green_prior",
+      "score": 0.0601663016974283,
+      "lowfreq_cv": 0.08714396404502753,
+      "highfreq_std": 0.34137209599628926,
+      "chroma_mad": 6.938893903907228e-18
+    },
+    {
+      "id": "orange_raw",
+      "score": 0.250613013290302,
+      "lowfreq_cv": 0.3998922529486275,
+      "highfreq_std": 0.4320897145757512,
+      "chroma_mad": 0.02631832271142115
+    },
+    {
+      "id": "orange_relit",
+      "score": 0.10192443028383115,
+      "lowfreq_cv": 0.25773022349860775,
+      "highfreq_std": 0.35258474371747583,
+      "chroma_mad": 0.08062599007175336
+    },
+    {
+      "id": "orange_prior",
+      "score": 0.03557785087095775,
+      "lowfreq_cv": 0.050393047264127966,
+      "highfreq_std": 0.2157214378337182,
+      "chroma_mad": 0.022601571560660227
+    }
+  ]
+}

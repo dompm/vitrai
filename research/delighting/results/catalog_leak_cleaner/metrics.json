@@ -1,0 +1,2461 @@
+{
+  "claim": "Catalog sheets can act as weak clean-material examples for a neural cleaner trained to remove transmitted-background leakage.",
+  "honesty": "This is not measured ground truth for a user's sheet; it is a learned plausible prior and needs confidence/provenance before product use.",
+  "config": {
+    "registry": "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json",
+    "out": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/delight-003/research/delighting/results/catalog_leak_cleaner",
+    "max_images": 420,
+    "max_dim": 420,
+    "steps": 900,
+    "bs": 8,
+    "patch": 128,
+    "base": 18,
+    "smooth_residual": 0,
+    "lr": 0.0015,
+    "eval_patches": 96,
+    "seed": 17,
+    "log_every": 300,
+    "cpu": false
+  },
+  "catalog": {
+    "categories": [
+      "Cathedral",
+      "Textured/Baroque"
+    ],
+    "n_samples": 420,
+    "n_train": 344,
+    "n_test": 76
+  },
+  "train_log": [
+    {
+      "step": 0,
+      "loss": 0.18876655399799347,
+      "rgb": 0.1014552041888237,
+      "low": 0.06676214933395386,
+      "hi": 0.06461604684591293,
+      "edit": 0.004609810188412666,
+      "elapsed_s": 0.6503090858459473
+    },
+    {
+      "step": 300,
+      "loss": 0.07003859430551529,
+      "rgb": 0.03692919388413429,
+      "low": 0.03033384494483471,
+      "hi": 0.011763853020966053,
+      "edit": 0.0016915930900722742,
+      "elapsed_s": 32.56009912490845
+    },
+    {
+      "step": 600,
+      "loss": 0.08449862152338028,
+      "rgb": 0.04452819749712944,
+      "low": 0.03789949417114258,
+      "hi": 0.012531861662864685,
+      "edit": 0.0014747318346053362,
+      "elapsed_s": 60.69329786300659
+    },
+    {
+      "step": 899,
+      "loss": 0.07933760434389114,
+      "rgb": 0.04181008040904999,
+      "low": 0.036081619560718536,
+      "hi": 0.01065776962786913,
+      "edit": 0.0013238403480499983,
+      "elapsed_s": 85.46887612342834
+    }
+  ],
+  "synthetic_rows": [
+    {
+      "mae_raw": 0.0047837658785283566,
+      "mae_neural": 0.007193092256784439,
+      "low_mae_raw": 0.0001472022704547271,
+      "low_mae_neural": 0.005058422684669495,
+      "high_mae_raw": 0.004768563900142908,
+      "high_mae_neural": 0.00499798683449626,
+      "detail_ratio_neural_to_target": 1.0311566766842566,
+      "sample_id": "bullseye-0011070050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0763918086886406,
+      "mae_neural": 0.050278425216674805,
+      "low_mae_raw": 0.07258576154708862,
+      "low_mae_neural": 0.04815446957945824,
+      "high_mae_raw": 0.00927555188536644,
+      "high_mae_neural": 0.009061098098754883,
+      "detail_ratio_neural_to_target": 1.6440390114546362,
+      "sample_id": "wissmach-wf50105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.041299398988485336,
+      "mae_neural": 0.024656860157847404,
+      "low_mae_raw": 0.03548401966691017,
+      "low_mae_neural": 0.02339562214910984,
+      "high_mae_raw": 0.009778588078916073,
+      "high_mae_neural": 0.008605810813605785,
+      "detail_ratio_neural_to_target": 1.0103098664569978,
+      "sample_id": "bullseye-0010190050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.05632198974490166,
+      "mae_neural": 0.038484398275613785,
+      "low_mae_raw": 0.05407333746552467,
+      "low_mae_neural": 0.0368274487555027,
+      "high_mae_raw": 0.005270961206406355,
+      "high_mae_neural": 0.005462392698973417,
+      "detail_ratio_neural_to_target": 0.8438926687197777,
+      "sample_id": "youghiogheny-yf606irid",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0358109176158905,
+      "mae_neural": 0.029062440618872643,
+      "low_mae_raw": 0.03265519067645073,
+      "low_mae_neural": 0.026724092662334442,
+      "high_mae_raw": 0.007645424921065569,
+      "high_mae_neural": 0.007912487722933292,
+      "detail_ratio_neural_to_target": 0.7798908808965297,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04008044674992561,
+      "mae_neural": 0.040050528943538666,
+      "low_mae_raw": 0.03449235484004021,
+      "low_mae_neural": 0.037596918642520905,
+      "high_mae_raw": 0.005758379120379686,
+      "high_mae_neural": 0.005970530677586794,
+      "detail_ratio_neural_to_target": 4.89065415386544,
+      "sample_id": "wissmach-wf62105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.044895291328430176,
+      "mae_neural": 0.04491477832198143,
+      "low_mae_raw": 0.04378914833068848,
+      "low_mae_neural": 0.04351918771862984,
+      "high_mae_raw": 0.004327239468693733,
+      "high_mae_neural": 0.005436045583337545,
+      "detail_ratio_neural_to_target": 0.6026987368425618,
+      "sample_id": "bullseye-0011220031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.030781954526901245,
+      "mae_neural": 0.027574710547924042,
+      "low_mae_raw": 0.02905978448688984,
+      "low_mae_neural": 0.024738235399127007,
+      "high_mae_raw": 0.011478750966489315,
+      "high_mae_neural": 0.012676425278186798,
+      "detail_ratio_neural_to_target": 1.1175727427033915,
+      "sample_id": "bullseye-0032030072f1010",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.048222512006759644,
+      "mae_neural": 0.036853939294815063,
+      "low_mae_raw": 0.04537864401936531,
+      "low_mae_neural": 0.03534487634897232,
+      "high_mae_raw": 0.005393716040998697,
+      "high_mae_neural": 0.005308402236551046,
+      "detail_ratio_neural_to_target": 0.7707287359601969,
+      "sample_id": "oceanside-of5432s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03180554881691933,
+      "mae_neural": 0.03152632340788841,
+      "low_mae_raw": 0.028696060180664062,
+      "low_mae_neural": 0.027227669954299927,
+      "high_mae_raw": 0.005820701364427805,
+      "high_mae_neural": 0.009025835432112217,
+      "detail_ratio_neural_to_target": 1.1714853314675664,
+      "sample_id": "youghiogheny-yf806",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.07867014408111572,
+      "mae_neural": 0.061712682247161865,
+      "low_mae_raw": 0.07542062550783157,
+      "low_mae_neural": 0.05700075626373291,
+      "high_mae_raw": 0.013280163519084454,
+      "high_mae_neural": 0.013395142741501331,
+      "detail_ratio_neural_to_target": 1.095218914181607,
+      "sample_id": "youghiogheny-yd5467x9",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.07255067676305771,
+      "mae_neural": 0.04190853610634804,
+      "low_mae_raw": 0.05507127568125725,
+      "low_mae_neural": 0.03331271559000015,
+      "high_mae_raw": 0.016433382406830788,
+      "high_mae_neural": 0.01244217436760664,
+      "detail_ratio_neural_to_target": 2.1576957523814726,
+      "sample_id": "bullseye-0041580000f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06987696141004562,
+      "mae_neural": 0.05676642432808876,
+      "low_mae_raw": 0.06663969904184341,
+      "low_mae_neural": 0.05366272106766701,
+      "high_mae_raw": 0.013454814441502094,
+      "high_mae_neural": 0.012656040489673615,
+      "detail_ratio_neural_to_target": 0.9705846443179901,
+      "sample_id": "wissmach-wf76105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.034161392599344254,
+      "mae_neural": 0.01457525696605444,
+      "low_mae_raw": 0.028711631894111633,
+      "low_mae_neural": 0.00952974334359169,
+      "high_mae_raw": 0.009377953596413136,
+      "high_mae_neural": 0.007969253696501255,
+      "detail_ratio_neural_to_target": 2.8755922778593743,
+      "sample_id": "bullseye-0011010050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004775120411068201,
+      "mae_neural": 0.024297483265399933,
+      "low_mae_raw": 0.00012329187302384526,
+      "low_mae_neural": 0.017771633341908455,
+      "high_mae_raw": 0.004758705385029316,
+      "high_mae_neural": 0.007168529089540243,
+      "detail_ratio_neural_to_target": 0.7497213756260535,
+      "sample_id": "oceanside-of83874s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0047975643537938595,
+      "mae_neural": 0.01737624779343605,
+      "low_mae_raw": 0.00015512271784245968,
+      "low_mae_neural": 0.012234390713274479,
+      "high_mae_raw": 0.004780312534421682,
+      "high_mae_neural": 0.007818383164703846,
+      "detail_ratio_neural_to_target": 0.840378805402945,
+      "sample_id": "bullseye-0011010074f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06395893543958664,
+      "mae_neural": 0.030846020206809044,
+      "low_mae_raw": 0.06133392080664635,
+      "low_mae_neural": 0.028552107512950897,
+      "high_mae_raw": 0.007618115749210119,
+      "high_mae_neural": 0.007962445728480816,
+      "detail_ratio_neural_to_target": 3.101885875177136,
+      "sample_id": "bullseye-0011140030f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.041164740920066833,
+      "mae_neural": 0.03327297046780586,
+      "low_mae_raw": 0.037296704947948456,
+      "low_mae_neural": 0.029583198949694633,
+      "high_mae_raw": 0.010047954507172108,
+      "high_mae_neural": 0.010280185379087925,
+      "detail_ratio_neural_to_target": 1.1324296630037052,
+      "sample_id": "wissmach-wf01glum",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.025790119543671608,
+      "mae_neural": 0.02727588266134262,
+      "low_mae_raw": 0.023366732522845268,
+      "low_mae_neural": 0.023275524377822876,
+      "high_mae_raw": 0.005102347116917372,
+      "high_mae_neural": 0.00629914877936244,
+      "detail_ratio_neural_to_target": 1.0171990882537747,
+      "sample_id": "bullseye-0041100000f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004771887790411711,
+      "mae_neural": 0.014008194208145142,
+      "low_mae_raw": 0.0001414147118339315,
+      "low_mae_neural": 0.012165084481239319,
+      "high_mae_raw": 0.004756439011543989,
+      "high_mae_neural": 0.00653147092089057,
+      "detail_ratio_neural_to_target": 0.9726191766833229,
+      "sample_id": "youghiogheny-yd5467x9",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.025652632117271423,
+      "mae_neural": 0.02221881039440632,
+      "low_mae_raw": 0.02429807186126709,
+      "low_mae_neural": 0.021564528346061707,
+      "high_mae_raw": 0.00611624913290143,
+      "high_mae_neural": 0.006297932472079992,
+      "detail_ratio_neural_to_target": 1.7779778850263213,
+      "sample_id": "bullseye-0011050050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.021438241004943848,
+      "mae_neural": 0.022123754024505615,
+      "low_mae_raw": 0.02075737528502941,
+      "low_mae_neural": 0.01921546272933483,
+      "high_mae_raw": 0.01005948893725872,
+      "high_mae_neural": 0.0094766179099679,
+      "detail_ratio_neural_to_target": 0.9589551155258828,
+      "sample_id": "youghiogheny-yuf5856",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.044480353593826294,
+      "mae_neural": 0.03127071633934975,
+      "low_mae_raw": 0.041506558656692505,
+      "low_mae_neural": 0.029597582295536995,
+      "high_mae_raw": 0.005350971128791571,
+      "high_mae_neural": 0.005954967346042395,
+      "detail_ratio_neural_to_target": 0.9760033415065301,
+      "sample_id": "wissmach-wi310h",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.050037965178489685,
+      "mae_neural": 0.038884520530700684,
+      "low_mae_raw": 0.049081046134233475,
+      "low_mae_neural": 0.03769497200846672,
+      "high_mae_raw": 0.009505596943199635,
+      "high_mae_neural": 0.008887294679880142,
+      "detail_ratio_neural_to_target": 1.666220802506614,
+      "sample_id": "bullseye-0014640051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03540626913309097,
+      "mae_neural": 0.053995322436094284,
+      "low_mae_raw": 0.03433854877948761,
+      "low_mae_neural": 0.05170387402176857,
+      "high_mae_raw": 0.006267240270972252,
+      "high_mae_neural": 0.006924636196345091,
+      "detail_ratio_neural_to_target": 0.42671115126782366,
+      "sample_id": "wissmach-wf62105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.057466134428977966,
+      "mae_neural": 0.04465700685977936,
+      "low_mae_raw": 0.051922861486673355,
+      "low_mae_neural": 0.04370443522930145,
+      "high_mae_raw": 0.008839672431349754,
+      "high_mae_neural": 0.007869319058954716,
+      "detail_ratio_neural_to_target": 1.3747608596452452,
+      "sample_id": "oceanside-of31702s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06851675361394882,
+      "mae_neural": 0.05312907695770264,
+      "low_mae_raw": 0.06304756551980972,
+      "low_mae_neural": 0.05300192907452583,
+      "high_mae_raw": 0.009097056463360786,
+      "high_mae_neural": 0.006809511687606573,
+      "detail_ratio_neural_to_target": 1.6991274110966512,
+      "sample_id": "bullseye-0010190031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.028222432360053062,
+      "mae_neural": 0.027366427704691887,
+      "low_mae_raw": 0.026418030261993408,
+      "low_mae_neural": 0.025863448157906532,
+      "high_mae_raw": 0.006054647732526064,
+      "high_mae_neural": 0.006572162266820669,
+      "detail_ratio_neural_to_target": 0.6769676214683416,
+      "sample_id": "bullseye-0014440051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.025657251477241516,
+      "mae_neural": 0.02715739607810974,
+      "low_mae_raw": 0.024043142795562744,
+      "low_mae_neural": 0.025072654709219933,
+      "high_mae_raw": 0.006202181335538626,
+      "high_mae_neural": 0.0065187737345695496,
+      "detail_ratio_neural_to_target": 0.947023336038961,
+      "sample_id": "youghiogheny-yd9137x9",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.028034618124365807,
+      "mae_neural": 0.0266283992677927,
+      "low_mae_raw": 0.026043057441711426,
+      "low_mae_neural": 0.025193313136696815,
+      "high_mae_raw": 0.007913242094218731,
+      "high_mae_neural": 0.008106088265776634,
+      "detail_ratio_neural_to_target": 1.7934605876768746,
+      "sample_id": "bullseye-0011080050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.041890066117048264,
+      "mae_neural": 0.041890304535627365,
+      "low_mae_raw": 0.03528479114174843,
+      "low_mae_neural": 0.03551078215241432,
+      "high_mae_raw": 0.014353476464748383,
+      "high_mae_neural": 0.014310098253190517,
+      "detail_ratio_neural_to_target": 0.874855647678414,
+      "sample_id": "youghiogheny-yd9107x9",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.08537435531616211,
+      "mae_neural": 0.07842601835727692,
+      "low_mae_raw": 0.08459138870239258,
+      "low_mae_neural": 0.07769835740327835,
+      "high_mae_raw": 0.003997195046395063,
+      "high_mae_neural": 0.00441342405974865,
+      "detail_ratio_neural_to_target": 1.0098403085023056,
+      "sample_id": "oceanside-of123s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.05907018855214119,
+      "mae_neural": 0.06317969411611557,
+      "low_mae_raw": 0.05754340812563896,
+      "low_mae_neural": 0.0620562769472599,
+      "high_mae_raw": 0.00828602910041809,
+      "high_mae_neural": 0.00946896057575941,
+      "detail_ratio_neural_to_target": 0.7938010785077838,
+      "sample_id": "youghiogheny-y1067g7x9",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.08575117588043213,
+      "mae_neural": 0.05359243229031563,
+      "low_mae_raw": 0.08202680945396423,
+      "low_mae_neural": 0.05115606263279915,
+      "high_mae_raw": 0.007883870042860508,
+      "high_mae_neural": 0.00799569208174944,
+      "detail_ratio_neural_to_target": 2.2374178700345344,
+      "sample_id": "youghiogheny-yf667",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06879308819770813,
+      "mae_neural": 0.05381229892373085,
+      "low_mae_raw": 0.062389399856328964,
+      "low_mae_neural": 0.0480504035949707,
+      "high_mae_raw": 0.008447005413472652,
+      "high_mae_neural": 0.008169732056558132,
+      "detail_ratio_neural_to_target": 0.7978451156564846,
+      "sample_id": "wissmach-wf55105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03251209855079651,
+      "mae_neural": 0.026341542601585388,
+      "low_mae_raw": 0.0312613807618618,
+      "low_mae_neural": 0.025683918967843056,
+      "high_mae_raw": 0.004043642431497574,
+      "high_mae_neural": 0.004368700087070465,
+      "detail_ratio_neural_to_target": 0.8393307103701064,
+      "sample_id": "bullseye-0014440051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04357355460524559,
+      "mae_neural": 0.03598032519221306,
+      "low_mae_raw": 0.035698506981134415,
+      "low_mae_neural": 0.030562514439225197,
+      "high_mae_raw": 0.008896901272237301,
+      "high_mae_neural": 0.00812690332531929,
+      "detail_ratio_neural_to_target": 1.0201482736059826,
+      "sample_id": "wissmach-wf29105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.025605646893382072,
+      "mae_neural": 0.01839946210384369,
+      "low_mae_raw": 0.021620430052280426,
+      "low_mae_neural": 0.016084320843219757,
+      "high_mae_raw": 0.006489146966487169,
+      "high_mae_neural": 0.0062227086164057255,
+      "detail_ratio_neural_to_target": 6.745783634639854,
+      "sample_id": "bullseye-0011280050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03502636030316353,
+      "mae_neural": 0.02071973867714405,
+      "low_mae_raw": 0.034054163843393326,
+      "low_mae_neural": 0.019070707261562347,
+      "high_mae_raw": 0.007773598190397024,
+      "high_mae_neural": 0.007863559760153294,
+      "detail_ratio_neural_to_target": 0.9873964168717974,
+      "sample_id": "bullseye-0014640051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.02290801703929901,
+      "mae_neural": 0.018928466364741325,
+      "low_mae_raw": 0.020979365333914757,
+      "low_mae_neural": 0.016008054837584496,
+      "high_mae_raw": 0.0038133447524160147,
+      "high_mae_neural": 0.004374390933662653,
+      "detail_ratio_neural_to_target": 1.0131506566226955,
+      "sample_id": "youghiogheny-y1067g7x9",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.033107876777648926,
+      "mae_neural": 0.030212068930268288,
+      "low_mae_raw": 0.029877454042434692,
+      "low_mae_neural": 0.028443699702620506,
+      "high_mae_raw": 0.008258742280304432,
+      "high_mae_neural": 0.008579365909099579,
+      "detail_ratio_neural_to_target": 0.8515136501544478,
+      "sample_id": "bullseye-0031260072f1010",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.06075754761695862,
+      "mae_neural": 0.03523974120616913,
+      "low_mae_raw": 0.059946730732917786,
+      "low_mae_neural": 0.0344340018928051,
+      "high_mae_raw": 0.0033658200409263372,
+      "high_mae_neural": 0.004032545257359743,
+      "detail_ratio_neural_to_target": 0.6813645018749241,
+      "sample_id": "oceanside-of136s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0047881160862743855,
+      "mae_neural": 0.008505352772772312,
+      "low_mae_raw": 0.00015271830488927662,
+      "low_mae_neural": 0.006651289761066437,
+      "high_mae_raw": 0.004767879843711853,
+      "high_mae_neural": 0.0050745452754199505,
+      "detail_ratio_neural_to_target": 0.7412663753829385,
+      "sample_id": "bullseye-0011010000f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.05593939125537872,
+      "mae_neural": 0.024161353707313538,
+      "low_mae_raw": 0.052164237946271896,
+      "low_mae_neural": 0.022306157276034355,
+      "high_mae_raw": 0.0050272694788873196,
+      "high_mae_neural": 0.004664460197091103,
+      "detail_ratio_neural_to_target": 1.3796570586610855,
+      "sample_id": "oceanside-of136s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04080072045326233,
+      "mae_neural": 0.03879861161112785,
+      "low_mae_raw": 0.034258779138326645,
+      "low_mae_neural": 0.03609204664826393,
+      "high_mae_raw": 0.00974277500063181,
+      "high_mae_neural": 0.008192532695829868,
+      "detail_ratio_neural_to_target": 0.8228994297392623,
+      "sample_id": "oceanside-of5282s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06239528954029083,
+      "mae_neural": 0.04728342592716217,
+      "low_mae_raw": 0.06219468638300896,
+      "low_mae_neural": 0.047213148325681686,
+      "high_mae_raw": 0.006423926446586847,
+      "high_mae_neural": 0.0068753366358578205,
+      "detail_ratio_neural_to_target": 0.887098654585989,
+      "sample_id": "youghiogheny-yf667",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.05436262488365173,
+      "mae_neural": 0.02400621771812439,
+      "low_mae_raw": 0.05289938673377037,
+      "low_mae_neural": 0.022722089663147926,
+      "high_mae_raw": 0.00498991971835494,
+      "high_mae_neural": 0.005576290190219879,
+      "detail_ratio_neural_to_target": 0.8151674834673168,
+      "sample_id": "oceanside-of136s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.1243724599480629,
+      "mae_neural": 0.10588794946670532,
+      "low_mae_raw": 0.12362160533666611,
+      "low_mae_neural": 0.10459808260202408,
+      "high_mae_raw": 0.0064674546010792255,
+      "high_mae_neural": 0.007809225935488939,
+      "detail_ratio_neural_to_target": 0.575134721805494,
+      "sample_id": "wissmach-wf76105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03323039785027504,
+      "mae_neural": 0.03286820277571678,
+      "low_mae_raw": 0.02864178456366062,
+      "low_mae_neural": 0.030910154804587364,
+      "high_mae_raw": 0.006678068544715643,
+      "high_mae_neural": 0.005596964154392481,
+      "detail_ratio_neural_to_target": 0.680770427806672,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.022558176890015602,
+      "mae_neural": 0.027659302577376366,
+      "low_mae_raw": 0.017715327441692352,
+      "low_mae_neural": 0.02343013323843479,
+      "high_mae_raw": 0.009508997201919556,
+      "high_mae_neural": 0.012558475136756897,
+      "detail_ratio_neural_to_target": 0.647032517243993,
+      "sample_id": "oceanside-of136w",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.04995359480381012,
+      "mae_neural": 0.04133899509906769,
+      "low_mae_raw": 0.04827028512954712,
+      "low_mae_neural": 0.04085661470890045,
+      "high_mae_raw": 0.005227418150752783,
+      "high_mae_neural": 0.005740506574511528,
+      "detail_ratio_neural_to_target": 0.3524523785268395,
+      "sample_id": "oceanside-of89161s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.07886695861816406,
+      "mae_neural": 0.06608667969703674,
+      "low_mae_raw": 0.07867512851953506,
+      "low_mae_neural": 0.06496673077344894,
+      "high_mae_raw": 0.005124297458678484,
+      "high_mae_neural": 0.006019018590450287,
+      "detail_ratio_neural_to_target": 0.8179657483740396,
+      "sample_id": "youghiogheny-yf606irid",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.05809183791279793,
+      "mae_neural": 0.022332223132252693,
+      "low_mae_raw": 0.05280405282974243,
+      "low_mae_neural": 0.01793883927166462,
+      "high_mae_raw": 0.006521841511130333,
+      "high_mae_neural": 0.00547866290435195,
+      "detail_ratio_neural_to_target": 1.4653027999320019,
+      "sample_id": "oceanside-of31702s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03969117999076843,
+      "mae_neural": 0.020868003368377686,
+      "low_mae_raw": 0.03476310521364212,
+      "low_mae_neural": 0.01673860102891922,
+      "high_mae_raw": 0.0072787790559232235,
+      "high_mae_neural": 0.006424995604902506,
+      "detail_ratio_neural_to_target": 2.002486499704927,
+      "sample_id": "bullseye-0014640051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.025896213948726654,
+      "mae_neural": 0.027567485347390175,
+      "low_mae_raw": 0.022718796506524086,
+      "low_mae_neural": 0.025434313341975212,
+      "high_mae_raw": 0.006284880917519331,
+      "high_mae_neural": 0.006396824959665537,
+      "detail_ratio_neural_to_target": 0.6665847567905073,
+      "sample_id": "youghiogheny-y700sp",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03253835439682007,
+      "mae_neural": 0.031010374426841736,
+      "low_mae_raw": 0.03088732250034809,
+      "low_mae_neural": 0.02806691825389862,
+      "high_mae_raw": 0.008054321631789207,
+      "high_mae_neural": 0.009519697166979313,
+      "detail_ratio_neural_to_target": 0.6278932378693425,
+      "sample_id": "bullseye-0012290031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004788260441273451,
+      "mae_neural": 0.012559741735458374,
+      "low_mae_raw": 0.00015684474783483893,
+      "low_mae_neural": 0.010227682068943977,
+      "high_mae_raw": 0.004771047737449408,
+      "high_mae_neural": 0.005708566401153803,
+      "detail_ratio_neural_to_target": 0.9287558824869965,
+      "sample_id": "wissmach-w223llg",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.1081942692399025,
+      "mae_neural": 0.06582281738519669,
+      "low_mae_raw": 0.10366540402173996,
+      "low_mae_neural": 0.06093670427799225,
+      "high_mae_raw": 0.010002627037465572,
+      "high_mae_neural": 0.010110345669090748,
+      "detail_ratio_neural_to_target": 1.0375665593717323,
+      "sample_id": "wissmach-wf76105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04648022726178169,
+      "mae_neural": 0.03995738923549652,
+      "low_mae_raw": 0.04532470181584358,
+      "low_mae_neural": 0.03716877102851868,
+      "high_mae_raw": 0.0070772417820990086,
+      "high_mae_neural": 0.008556806482374668,
+      "detail_ratio_neural_to_target": 1.170359952757082,
+      "sample_id": "oceanside-of136rr",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.045846354216337204,
+      "mae_neural": 0.03276003524661064,
+      "low_mae_raw": 0.044445279985666275,
+      "low_mae_neural": 0.03216642513871193,
+      "high_mae_raw": 0.005945760756731033,
+      "high_mae_neural": 0.006167409475892782,
+      "detail_ratio_neural_to_target": 1.1479326835131498,
+      "sample_id": "bullseye-0011380030f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0339265875518322,
+      "mae_neural": 0.023504192009568214,
+      "low_mae_raw": 0.03175097703933716,
+      "low_mae_neural": 0.021637720987200737,
+      "high_mae_raw": 0.004472881089895964,
+      "high_mae_neural": 0.004555814433842897,
+      "detail_ratio_neural_to_target": 0.7627963828483572,
+      "sample_id": "bullseye-0014440051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.055304717272520065,
+      "mae_neural": 0.024326467886567116,
+      "low_mae_raw": 0.051310013979673386,
+      "low_mae_neural": 0.021365471184253693,
+      "high_mae_raw": 0.006923888344317675,
+      "high_mae_neural": 0.006861010100692511,
+      "detail_ratio_neural_to_target": 1.2245755644713014,
+      "sample_id": "youghiogheny-y700sp",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.016989704221487045,
+      "mae_neural": 0.01835654489696026,
+      "low_mae_raw": 0.015036553144454956,
+      "low_mae_neural": 0.016460182145237923,
+      "high_mae_raw": 0.0036059822887182236,
+      "high_mae_neural": 0.004162478726357222,
+      "detail_ratio_neural_to_target": 0.8893542517632557,
+      "sample_id": "bullseye-0014120031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.027458054944872856,
+      "mae_neural": 0.030497610569000244,
+      "low_mae_raw": 0.026492146775126457,
+      "low_mae_neural": 0.028864199295639992,
+      "high_mae_raw": 0.004428861662745476,
+      "high_mae_neural": 0.005685202777385712,
+      "detail_ratio_neural_to_target": 1.1508761015403814,
+      "sample_id": "bullseye-0010190050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.014664441347122192,
+      "mae_neural": 0.015516143292188644,
+      "low_mae_raw": 0.01136021688580513,
+      "low_mae_neural": 0.013240558095276356,
+      "high_mae_raw": 0.00528199365362525,
+      "high_mae_neural": 0.00476159667596221,
+      "detail_ratio_neural_to_target": 0.7619877883339835,
+      "sample_id": "oceanside-of136s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04220687225461006,
+      "mae_neural": 0.037120718508958817,
+      "low_mae_raw": 0.03704393282532692,
+      "low_mae_neural": 0.03202730789780617,
+      "high_mae_raw": 0.006246265023946762,
+      "high_mae_neural": 0.006660573184490204,
+      "detail_ratio_neural_to_target": 1.12925732857776,
+      "sample_id": "bullseye-0010190050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004786609672009945,
+      "mae_neural": 0.010633806698024273,
+      "low_mae_raw": 0.00014646885392721742,
+      "low_mae_neural": 0.008854423649609089,
+      "high_mae_raw": 0.004770566243678331,
+      "high_mae_neural": 0.005118486937135458,
+      "detail_ratio_neural_to_target": 0.3891752923534728,
+      "sample_id": "oceanside-of5282s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.0036520538851618767,
+      "mae_neural": 0.03853261098265648,
+      "low_mae_raw": 0.0011973240179941058,
+      "low_mae_neural": 0.03517848998308182,
+      "high_mae_raw": 0.0038011849392205477,
+      "high_mae_neural": 0.005711419973522425,
+      "detail_ratio_neural_to_target": 0.5309586285202266,
+      "sample_id": "bullseye-0011010000f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.061619359999895096,
+      "mae_neural": 0.032507020980119705,
+      "low_mae_raw": 0.05115981772542,
+      "low_mae_neural": 0.024998562410473824,
+      "high_mae_raw": 0.01124624628573656,
+      "high_mae_neural": 0.01024449709802866,
+      "detail_ratio_neural_to_target": 1.7675834182072627,
+      "sample_id": "bullseye-0012290031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.037621062248945236,
+      "mae_neural": 0.022609969601035118,
+      "low_mae_raw": 0.03726234287023544,
+      "low_mae_neural": 0.021016083657741547,
+      "high_mae_raw": 0.004178271163254976,
+      "high_mae_neural": 0.005051186308264732,
+      "detail_ratio_neural_to_target": 1.2605920785462577,
+      "sample_id": "bullseye-0011220031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.03373931720852852,
+      "mae_neural": 0.026295999065041542,
+      "low_mae_raw": 0.03229150548577309,
+      "low_mae_neural": 0.0247027650475502,
+      "high_mae_raw": 0.007682681083679199,
+      "high_mae_neural": 0.00856829434633255,
+      "detail_ratio_neural_to_target": 0.7635069645195586,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04263465106487274,
+      "mae_neural": 0.029422327876091003,
+      "low_mae_raw": 0.03738778829574585,
+      "low_mae_neural": 0.026210710406303406,
+      "high_mae_raw": 0.008537002839148045,
+      "high_mae_neural": 0.008660835213959217,
+      "detail_ratio_neural_to_target": 0.9201479152692413,
+      "sample_id": "wissmach-wi1054",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.13911046087741852,
+      "mae_neural": 0.1154436394572258,
+      "low_mae_raw": 0.137246772646904,
+      "low_mae_neural": 0.11523988097906113,
+      "high_mae_raw": 0.005388460587710142,
+      "high_mae_neural": 0.00609772652387619,
+      "detail_ratio_neural_to_target": 1.4532972006454195,
+      "sample_id": "wissmach-wi341dr",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.035394489765167236,
+      "mae_neural": 0.03180166706442833,
+      "low_mae_raw": 0.034946147352457047,
+      "low_mae_neural": 0.031470611691474915,
+      "high_mae_raw": 0.0054785385727882385,
+      "high_mae_neural": 0.005517799872905016,
+      "detail_ratio_neural_to_target": 0.8863224990201357,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04282915219664574,
+      "mae_neural": 0.024375608190894127,
+      "low_mae_raw": 0.041324835270643234,
+      "low_mae_neural": 0.023336412385106087,
+      "high_mae_raw": 0.002343767089769244,
+      "high_mae_neural": 0.002847417024895549,
+      "detail_ratio_neural_to_target": 15.680141042019192,
+      "sample_id": "bullseye-0014260050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.022066472098231316,
+      "mae_neural": 0.020958418026566505,
+      "low_mae_raw": 0.019829506054520607,
+      "low_mae_neural": 0.017914675176143646,
+      "high_mae_raw": 0.008293969556689262,
+      "high_mae_neural": 0.008990117348730564,
+      "detail_ratio_neural_to_target": 1.0259564404670614,
+      "sample_id": "bullseye-0032030072f1010",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.04199962317943573,
+      "mae_neural": 0.03166625276207924,
+      "low_mae_raw": 0.03692372143268585,
+      "low_mae_neural": 0.02878825180232525,
+      "high_mae_raw": 0.005632575135678053,
+      "high_mae_neural": 0.005801121238619089,
+      "detail_ratio_neural_to_target": 0.970393306523338,
+      "sample_id": "wissmach-wwo2180irid",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.054635483771562576,
+      "mae_neural": 0.024352677166461945,
+      "low_mae_raw": 0.047964274883270264,
+      "low_mae_neural": 0.01944863609969616,
+      "high_mae_raw": 0.006777995731681585,
+      "high_mae_neural": 0.005358214024454355,
+      "detail_ratio_neural_to_target": 3.105831608814205,
+      "sample_id": "bullseye-0011160051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004768202546983957,
+      "mae_neural": 0.01365334540605545,
+      "low_mae_raw": 0.0001418726023985073,
+      "low_mae_neural": 0.009822189807891846,
+      "high_mae_raw": 0.004751926753669977,
+      "high_mae_neural": 0.006165421102195978,
+      "detail_ratio_neural_to_target": 0.5167860297679543,
+      "sample_id": "bullseye-0041580000f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.042638201266527176,
+      "mae_neural": 0.04008558765053749,
+      "low_mae_raw": 0.0419422872364521,
+      "low_mae_neural": 0.04002809897065163,
+      "high_mae_raw": 0.00562635064125061,
+      "high_mae_neural": 0.006118025165051222,
+      "detail_ratio_neural_to_target": 0.9137864024815046,
+      "sample_id": "bullseye-0014440050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04768742620944977,
+      "mae_neural": 0.03775915130972862,
+      "low_mae_raw": 0.046676427125930786,
+      "low_mae_neural": 0.036377791315317154,
+      "high_mae_raw": 0.009151631034910679,
+      "high_mae_neural": 0.00981865357607603,
+      "detail_ratio_neural_to_target": 0.8949503033975941,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04529561474919319,
+      "mae_neural": 0.03184155747294426,
+      "low_mae_raw": 0.040498632937669754,
+      "low_mae_neural": 0.027940968051552773,
+      "high_mae_raw": 0.00923688430339098,
+      "high_mae_neural": 0.008353087119758129,
+      "detail_ratio_neural_to_target": 0.8635321309397089,
+      "sample_id": "bullseye-0011450051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.038933489471673965,
+      "mae_neural": 0.02546962909400463,
+      "low_mae_raw": 0.03707325831055641,
+      "low_mae_neural": 0.023381339386105537,
+      "high_mae_raw": 0.008905346505343914,
+      "high_mae_neural": 0.009483982808887959,
+      "detail_ratio_neural_to_target": 0.85698064499846,
+      "sample_id": "bullseye-0013110051f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.039085354655981064,
+      "mae_neural": 0.03998544439673424,
+      "low_mae_raw": 0.0365542434155941,
+      "low_mae_neural": 0.03570517897605896,
+      "high_mae_raw": 0.005954875145107508,
+      "high_mae_neural": 0.007853309623897076,
+      "detail_ratio_neural_to_target": 0.6896017016635906,
+      "sample_id": "wissmach-wf55105",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06872144341468811,
+      "mae_neural": 0.047741275280714035,
+      "low_mae_raw": 0.06555938720703125,
+      "low_mae_neural": 0.043654635548591614,
+      "high_mae_raw": 0.01032713707536459,
+      "high_mae_neural": 0.010898199863731861,
+      "detail_ratio_neural_to_target": 1.2916483672923351,
+      "sample_id": "bullseye-0011260031f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.06673290580511093,
+      "mae_neural": 0.036705534905195236,
+      "low_mae_raw": 0.06017715856432915,
+      "low_mae_neural": 0.034239910542964935,
+      "high_mae_raw": 0.009028895758092403,
+      "high_mae_neural": 0.008278540335595608,
+      "detail_ratio_neural_to_target": 1.6745954959024931,
+      "sample_id": "oceanside-of89161s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.04579685255885124,
+      "mae_neural": 0.03453471139073372,
+      "low_mae_raw": 0.04101492837071419,
+      "low_mae_neural": 0.03007848560810089,
+      "high_mae_raw": 0.006146740168333054,
+      "high_mae_neural": 0.006490503903478384,
+      "detail_ratio_neural_to_target": 1.0845428092560094,
+      "sample_id": "youghiogheny-yd5037x9",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.059159647673368454,
+      "mae_neural": 0.05080223083496094,
+      "low_mae_raw": 0.056767094880342484,
+      "low_mae_neural": 0.04877616837620735,
+      "high_mae_raw": 0.0073197390884160995,
+      "high_mae_neural": 0.007464682217687368,
+      "detail_ratio_neural_to_target": 1.1497577010396374,
+      "sample_id": "oceanside-of123s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.011739362962543964,
+      "mae_neural": 0.015905028209090233,
+      "low_mae_raw": 0.009408717043697834,
+      "low_mae_neural": 0.015111054293811321,
+      "high_mae_raw": 0.0048006861470639706,
+      "high_mae_neural": 0.006181978154927492,
+      "detail_ratio_neural_to_target": 0.7995486554632195,
+      "sample_id": "wissmach-wi310h",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.03135223686695099,
+      "mae_neural": 0.015752198174595833,
+      "low_mae_raw": 0.030622994527220726,
+      "low_mae_neural": 0.013908918015658855,
+      "high_mae_raw": 0.00476308586075902,
+      "high_mae_neural": 0.0054932027123868465,
+      "detail_ratio_neural_to_target": 1.6107293089747223,
+      "sample_id": "bullseye-0011050050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004759809467941523,
+      "mae_neural": 0.010798133909702301,
+      "low_mae_raw": 0.0001458673068555072,
+      "low_mae_neural": 0.008340585045516491,
+      "high_mae_raw": 0.004741895478218794,
+      "high_mae_neural": 0.005421636626124382,
+      "detail_ratio_neural_to_target": 0.8926381738623044,
+      "sample_id": "wissmach-w223llg",
+      "category": "Textured/Baroque"
+    },
+    {
+      "mae_raw": 0.03859082609415054,
+      "mae_neural": 0.04123854264616966,
+      "low_mae_raw": 0.03849800303578377,
+      "low_mae_neural": 0.039736296981573105,
+      "high_mae_raw": 0.00573890283703804,
+      "high_mae_neural": 0.0080656623467803,
+      "detail_ratio_neural_to_target": 0.4881847749028146,
+      "sample_id": "youghiogheny-yuf8000",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.08802306652069092,
+      "mae_neural": 0.07079819589853287,
+      "low_mae_raw": 0.08680471032857895,
+      "low_mae_neural": 0.07016230374574661,
+      "high_mae_raw": 0.008382371626794338,
+      "high_mae_neural": 0.008444193750619888,
+      "detail_ratio_neural_to_target": 1.0669010083097008,
+      "sample_id": "youghiogheny-yf606irid",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.027048276737332344,
+      "mae_neural": 0.024231573566794395,
+      "low_mae_raw": 0.025299742817878723,
+      "low_mae_neural": 0.019623735919594765,
+      "high_mae_raw": 0.0048578656278550625,
+      "high_mae_neural": 0.006427004933357239,
+      "detail_ratio_neural_to_target": 0.8440320450796269,
+      "sample_id": "oceanside-of6217s",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.029777541756629944,
+      "mae_neural": 0.015526835806667805,
+      "low_mae_raw": 0.025928542017936707,
+      "low_mae_neural": 0.014218495227396488,
+      "high_mae_raw": 0.0051239547319710255,
+      "high_mae_neural": 0.00502462312579155,
+      "detail_ratio_neural_to_target": 1.80776920708909,
+      "sample_id": "bullseye-0011010050f1010",
+      "category": "Cathedral"
+    },
+    {
+      "mae_raw": 0.004767352249473333,
+      "mae_neural": 0.014391264878213406,
+      "low_mae_raw": 0.00012598790635820478,
+      "low_mae_neural": 0.012658238410949707,
+      "high_mae_raw": 0.004750702064484358,
+      "high_mae_neural": 0.0051124063320457935,
+      "detail_ratio_neural_to_target": 1.2196606104773893,
+      "sample_id": "bullseye-0014640030f1010",
+      "category": "Cathedral"
+    }
+  ],
+  "synthetic_summary": {
+    "mae_raw": {
+      "mean": 0.042546926633804105,
+      "median": 0.04044058360159397,
+      "p90": 0.07121381908655167
+    },
+    "mae_neural": {
+      "mean": 0.034077133294582986,
+      "median": 0.03092819731682539,
+      "p90": 0.05390381067991257
+    },
+    "low_mae_raw": {
+      "mean": 0.039256517278469495,
+      "median": 0.03612637519836426,
+      "p90": 0.06609954312443733
+    },
+    "low_mae_neural": {
+      "mean": 0.03152073082552912,
+      "median": 0.028003943152725697,
+      "p90": 0.0523529015481472
+    },
+    "high_mae_raw": {
+      "mean": 0.006924352215719409,
+      "median": 0.006256752647459507,
+      "p90": 0.009890607558190823
+    },
+    "high_mae_neural": {
+      "mean": 0.007255653581523802,
+      "median": 0.0066163677256554365,
+      "p90": 0.00996449962258339
+    },
+    "detail_ratio_neural_to_target": {
+      "mean": 1.3440639240164087,
+      "median": 0.9716019105006565,
+      "p90": 1.8006148973829823
+    },
+    "mae_reduction_pct": 19.9069451293616,
+    "low_mae_reduction_pct": 19.705738025780292
+  },
+  "suncatcher": {
+    "metric1_cross_piece_consistency": {
+      "green": {
+        "n_pieces": 3,
+        "raw": {
+          "mean_dE_to_centroid": 2.530200309042311,
+          "max_pairwise_dE": 5.622119493995784,
+          "lum_cv": 0.12111343103990367,
+          "hue_std_deg": 0.4917080518376888,
+          "labs": [
+            [
+              25.88235294117647,
+              -30.0,
+              24.0
+            ],
+            [
+              22.352941176470587,
+              -27.0,
+              21.0
+            ],
+            [
+              26.666666666666668,
+              -30.0,
+              23.0
+            ]
+          ]
+        },
+        "raw_neural": {
+          "mean_dE_to_centroid": 2.2680662752647245,
+          "max_pairwise_dE": 4.858829859623342,
+          "lum_cv": 0.12114784230047064,
+          "hue_std_deg": 0.24975157058259362,
+          "labs": [
+            [
+              26.274509803921568,
+              -32.0,
+              24.0
+            ],
+            [
+              23.137254901960784,
+              -29.0,
+              22.0
+            ],
+            [
+              27.45098039215686,
+              -31.0,
+              23.0
+            ]
+          ]
+        },
+        "relit": {
+          "mean_dE_to_centroid": 2.756605215861864,
+          "max_pairwise_dE": 6.8662456058404455,
+          "lum_cv": 0.11330955468684253,
+          "hue_std_deg": 0.6222570306009619,
+          "labs": [
+            [
+              41.1764705882353,
+              -41.0,
+              33.0
+            ],
+            [
+              36.470588235294116,
+              -38.0,
+              29.0
+            ],
+            [
+              40.78431372549019,
+              -40.0,
+              31.0
+            ]
+          ]
+        },
+        "relit_neural": {
+          "mean_dE_to_centroid": 2.6528998323601956,
+          "max_pairwise_dE": 5.928349578063288,
+          "lum_cv": 0.1009155758001355,
+          "hue_std_deg": 0.3924594826605992,
+          "labs": [
+            [
+              41.96078431372549,
+              -42.0,
+              31.0
+            ],
+            [
+              38.03921568627451,
+              -39.0,
+              28.0
+            ],
+            [
+              42.745098039215684,
+              -42.0,
+              30.0
+            ]
+          ]
+        },
+        "prior": {
+          "mean_dE_to_centroid": 0.17429193899782072,
+          "max_pairwise_dE": 0.39215686274509665,
+          "lum_cv": 0.006369712529866604,
+          "hue_std_deg": -0.0,
+          "labs": [
+            [
+              54.509803921568626,
+              -52.0,
+              40.0
+            ],
+            [
+              54.11764705882353,
+              -52.0,
+              40.0
+            ],
+            [
+              54.509803921568626,
+              -52.0,
+              40.0
+            ]
+          ]
+        }
+      }
+    },
+    "metric2_position_sensitivity": {
+      "GT_PIECE_1": {
+        "label": "orange-slice",
+        "sheet": "orange",
+        "n_positions": 9,
+        "raw": {
+          "mean_dE_to_centroid": 7.713327077738528,
+          "max_pairwise_dE": 25.079872407968907,
+          "lum_cv": 0.2572747814117543,
+          "hue_std_deg": 2.8122840330810326,
+          "labs": [
+            [
+              51.76470588235294,
+              32.0,
+              58.0
+            ],
+            [
+              56.07843137254902,
+              28.0,
+              60.0
+            ],
+            [
+              49.80392156862745,
+              26.0,
+              53.0
+            ],
+            [
+              40.3921568627451,
+              29.0,
+              47.0
+            ],
+            [
+              36.07843137254902,
+              30.0,
+              45.0
+            ],
+            [
+              46.666666666666664,
+              30.0,
+              52.0
+            ],
+            [
+              52.94117647058823,
+              36.0,
+              59.0
+            ],
+            [
+              51.372549019607845,
+              36.0,
+              58.0
+            ],
+            [
+              47.05882352941176,
+              35.0,
+              54.0
+            ]
+          ]
+        },
+        "raw_neural": {
+          "mean_dE_to_centroid": 6.230862752464457,
+          "max_pairwise_dE": 20.45766251070167,
+          "lum_cv": 0.21468166692156168,
+          "hue_std_deg": 2.641042555990492,
+          "labs": [
+            [
+              51.76470588235294,
+              34.0,
+              59.0
+            ],
+            [
+              54.90196078431372,
+              31.0,
+              60.0
+            ],
+            [
+              49.411764705882355,
+              30.0,
+              54.0
+            ],
+            [
+              41.1764705882353,
+              34.0,
+              50.0
+            ],
+            [
+              38.8235294117647,
+              35.0,
+              48.0
+            ],
+            [
+              46.666666666666664,
+              34.0,
+              54.0
+            ],
+            [
+              51.372549019607845,
+              38.0,
+              59.0
+            ],
+            [
+              50.588235294117645,
+              39.0,
+              58.0
+            ],
+            [
+              47.450980392156865,
+              37.0,
+              56.0
+            ]
+          ]
+        },
+        "relit": {
+          "mean_dE_to_centroid": 6.823274002158642,
+          "max_pairwise_dE": 22.33629411075338,
+          "lum_cv": 0.18304453417940872,
+          "hue_std_deg": 3.8323522461826265,
+          "labs": [
+            [
+              69.01960784313725,
+              26.0,
+              71.0
+            ],
+            [
+              70.19607843137254,
+              27.0,
+              72.0
+            ],
+            [
+              62.745098039215684,
+              31.0,
+              65.0
+            ],
+            [
+              58.431372549019606,
+              32.0,
+              62.0
+            ],
+            [
+              54.90196078431372,
+              38.0,
+              60.0
+            ],
+            [
+              63.13725490196078,
+              33.0,
+              66.0
+            ],
+            [
+              70.19607843137254,
+              27.0,
+              71.0
+            ],
+            [
+              68.62745098039215,
+              30.0,
+              71.0
+            ],
+            [
+              63.92156862745098,
+              35.0,
+              68.0
+            ]
+          ]
+        },
+        "relit_neural": {
+          "mean_dE_to_centroid": 6.570824555567333,
+          "max_pairwise_dE": 21.05487968328265,
+          "lum_cv": 0.17327983381583104,
+          "hue_std_deg": 3.848388899546266,
+          "labs": [
+            [
+              69.01960784313725,
+              29.0,
+              72.0
+            ],
+            [
+              69.80392156862744,
+              29.0,
+              72.0
+            ],
+            [
+              62.35294117647059,
+              34.0,
+              66.0
+            ],
+            [
+              58.8235294117647,
+              36.0,
+              63.0
+            ],
+            [
+              55.68627450980392,
+              41.0,
+              62.0
+            ],
+            [
+              63.13725490196078,
+              35.0,
+              66.0
+            ],
+            [
+              69.80392156862744,
+              29.0,
+              72.0
+            ],
+            [
+              68.23529411764706,
+              32.0,
+              71.0
+            ],
+            [
+              63.13725490196078,
+              37.0,
+              68.0
+            ]
+          ]
+        },
+        "prior": {
+          "mean_dE_to_centroid": 1.4963212581012018,
+          "max_pairwise_dE": 4.1042264953279455,
+          "lum_cv": 0.03396282175573666,
+          "hue_std_deg": 0.4668527115640144,
+          "labs": [
+            [
+              68.23529411764706,
+              34.0,
+              71.0
+            ],
+            [
+              68.23529411764706,
+              35.0,
+              71.0
+            ],
+            [
+              66.66666666666667,
+              33.0,
+              70.0
+            ],
+            [
+              66.27450980392157,
+              33.0,
+              69.0
+            ],
+            [
+              65.49019607843137,
+              34.0,
+              69.0
+            ],
+            [
+              67.45098039215686,
+              34.0,
+              70.0
+            ],
+            [
+              68.62745098039215,
+              35.0,
+              71.0
+            ],
+            [
+              68.23529411764706,
+              36.0,
+              71.0
+            ],
+            [
+              67.84313725490196,
+              35.0,
+              71.0
+            ]
+          ]
+        }
+      },
+      "GT_PIECE_2": {
+        "label": "leaf-R",
+        "sheet": "green",
+        "n_positions": 9,
+        "raw": {
+          "mean_dE_to_centroid": 9.680138037749943,
+          "max_pairwise_dE": 38.77866292425517,
+          "lum_cv": 0.48617715252702354,
+          "hue_std_deg": 1.1528161105742842,
+          "labs": [
+            [
+              38.431372549019606,
+              -41.0,
+              32.0
+            ],
+            [
+              54.11764705882353,
+              -48.0,
+              35.0
+            ],
+            [
+              50.588235294117645,
+              -41.0,
+              29.0
+            ],
+            [
+              28.235294117647058,
+              -32.0,
+              25.0
+            ],
+            [
+              23.137254901960784,
+              -28.0,
+              23.0
+            ],
+            [
+              34.509803921568626,
+              -36.0,
+              27.0
+            ],
+            [
+              43.13725490196078,
+              -44.0,
+              33.0
+            ],
+            [
+              40.0,
+              -42.0,
+              31.0
+            ],
+            [
+              36.07843137254902,
+              -39.0,
+              29.0
+            ]
+          ]
+        },
+        "raw_neural": {
+          "mean_dE_to_centroid": 8.471507311040728,
+          "max_pairwise_dE": 34.95077001284207,
+          "lum_cv": 0.42472013840759876,
+          "hue_std_deg": 0.9970220491072266,
+          "labs": [
+            [
+              38.431372549019606,
+              -42.0,
+              31.0
+            ],
+            [
+              51.372549019607845,
+              -48.0,
+              34.0
+            ],
+            [
+              47.450980392156865,
+              -40.0,
+              27.0
+            ],
+            [
+              28.627450980392158,
+              -33.0,
+              25.0
+            ],
+            [
+              23.92156862745098,
+              -30.0,
+              22.0
+            ],
+            [
+              34.509803921568626,
+              -38.0,
+              27.0
+            ],
+            [
+              42.745098039215684,
+              -44.0,
+              31.0
+            ],
+            [
+              40.0,
+              -43.0,
+              29.0
+            ],
+            [
+              36.86274509803921,
+              -40.0,
+              28.0
+            ]
+          ]
+        },
+        "relit": {
+          "mean_dE_to_centroid": 10.88097484628432,
+          "max_pairwise_dE": 38.73293549674888,
+          "lum_cv": 0.35010608554396067,
+          "hue_std_deg": 1.0132999992577216,
+          "labs": [
+            [
+              54.509803921568626,
+              -53.0,
+              41.0
+            ],
+            [
+              66.27450980392157,
+              -56.0,
+              41.0
+            ],
+            [
+              59.2156862745098,
+              -46.0,
+              33.0
+            ],
+            [
+              43.92156862745098,
+              -43.0,
+              34.0
+            ],
+            [
+              37.254901960784316,
+              -38.0,
+              30.0
+            ],
+            [
+              50.588235294117645,
+              -48.0,
+              35.0
+            ],
+            [
+              65.09803921568627,
+              -61.0,
+              44.0
+            ],
+            [
+              61.568627450980394,
+              -59.0,
+              43.0
+            ],
+            [
+              54.509803921568626,
+              -53.0,
+              39.0
+            ]
+          ]
+        },
+        "relit_neural": {
+          "mean_dE_to_centroid": 10.050469869234227,
+          "max_pairwise_dE": 36.32327935136598,
+          "lum_cv": 0.31227078970608524,
+          "hue_std_deg": 0.7665911545975699,
+          "labs": [
+            [
+              54.11764705882353,
+              -53.0,
+              40.0
+            ],
+            [
+              63.529411764705884,
+              -56.0,
+              40.0
+            ],
+            [
+              56.470588235294116,
+              -46.0,
+              32.0
+            ],
+            [
+              44.31372549019608,
+              -44.0,
+              33.0
+            ],
+            [
+              38.8235294117647,
+              -39.0,
+              29.0
+            ],
+            [
+              50.19607843137255,
+              -48.0,
+              35.0
+            ],
+            [
+              63.529411764705884,
+              -61.0,
+              44.0
+            ],
+            [
+              61.17647058823529,
+              -59.0,
+              42.0
+            ],
+            [
+              54.509803921568626,
+              -53.0,
+              37.0
+            ]
+          ]
+        },
+        "prior": {
+          "mean_dE_to_centroid": 1.6950371849964496,
+          "max_pairwise_dE": 5.327166272964246,
+          "lum_cv": 0.06141368320682711,
+          "hue_std_deg": 0.1752653104668045,
+          "labs": [
+            [
+              56.86274509803921,
+              -54.0,
+              41.0
+            ],
+            [
+              57.64705882352941,
+              -54.0,
+              41.0
+            ],
+            [
+              56.470588235294116,
+              -54.0,
+              41.0
+            ],
+            [
+              54.90196078431372,
+              -52.0,
+              40.0
+            ],
+            [
+              54.90196078431372,
+              -52.0,
+              40.0
+            ],
+            [
+              56.07843137254902,
+              -53.0,
+              41.0
+            ],
+            [
+              58.8235294117647,
+              -55.0,
+              42.0
+            ],
+            [
+              58.03921568627451,
+              -55.0,
+              42.0
+            ],
+            [
+              58.8235294117647,
+              -55.0,
+              42.0
+            ]
+          ]
+        }
+      },
+      "GT_PIECE_3": {
+        "label": "leaf-L",
+        "sheet": "green",
+        "n_positions": 9,
+        "raw": {
+          "mean_dE_to_centroid": 9.252268175157871,
+          "max_pairwise_dE": 35.612361508264364,
+          "lum_cv": 0.43595617657582386,
+          "hue_std_deg": 0.9903802049974192,
+          "labs": [
+            [
+              43.13725490196078,
+              -43.0,
+              34.0
+            ],
+            [
+              50.19607843137255,
+              -45.0,
+              34.0
+            ],
+            [
+              28.235294117647058,
+              -31.0,
+              24.0
+            ],
+            [
+              30.19607843137255,
+              -33.0,
+              26.0
+            ],
+            [
+              22.352941176470587,
+              -27.0,
+              21.0
+            ],
+            [
+              40.78431372549019,
+              -42.0,
+              30.0
+            ],
+            [
+              40.78431372549019,
+              -42.0,
+              31.0
+            ],
+            [
+              37.254901960784316,
+              -40.0,
+              29.0
+            ],
+            [
+              34.11764705882353,
+              -37.0,
+              29.0
+            ]
+          ]
+        },
+        "raw_neural": {
+          "mean_dE_to_centroid": 8.401145546328182,
+          "max_pairwise_dE": 31.086663102323644,
+          "lum_cv": 0.3899907824909931,
+          "hue_std_deg": 1.0314298044903325,
+          "labs": [
+            [
+              42.745098039215684,
+              -44.0,
+              33.0
+            ],
+            [
+              47.84313725490196,
+              -45.0,
+              32.0
+            ],
+            [
+              28.235294117647058,
+              -31.0,
+              23.0
+            ],
+            [
+              30.588235294117645,
+              -34.0,
+              26.0
+            ],
+            [
+              23.137254901960784,
+              -29.0,
+              22.0
+            ],
+            [
+              40.0,
+              -42.0,
+              29.0
+            ],
+            [
+              40.0,
+              -42.0,
+              30.0
+            ],
+            [
+              37.64705882352941,
+              -40.0,
+              28.0
+            ],
+            [
+              34.509803921568626,
+              -39.0,
+              27.0
+            ]
+          ]
+        },
+        "relit": {
+          "mean_dE_to_centroid": 11.097413239595804,
+          "max_pairwise_dE": 34.04967874793197,
+          "lum_cv": 0.3600995394680954,
+          "hue_std_deg": 0.8177370943821797,
+          "labs": [
+            [
+              61.17647058823529,
+              -56.0,
+              44.0
+            ],
+            [
+              63.13725490196078,
+              -54.0,
+              40.0
+            ],
+            [
+              40.0,
+              -39.0,
+              30.0
+            ],
+            [
+              46.27450980392157,
+              -45.0,
+              35.0
+            ],
+            [
+              36.470588235294116,
+              -38.0,
+              29.0
+            ],
+            [
+              58.03921568627451,
+              -53.0,
+              38.0
+            ],
+            [
+              59.2156862745098,
+              -56.0,
+              41.0
+            ],
+            [
+              58.431372549019606,
+              -56.0,
+              41.0
+            ],
+            [
+              50.588235294117645,
+              -50.0,
+              37.0
+            ]
+          ]
+        },
+        "relit_neural": {
+          "mean_dE_to_centroid": 10.138996451170344,
+          "max_pairwise_dE": 32.59257657310897,
+          "lum_cv": 0.318823887563289,
+          "hue_std_deg": 0.8083610523593129,
+          "labs": [
+            [
+              60.0,
+              -57.0,
+              44.0
+            ],
+            [
+              61.17647058823529,
+              -55.0,
+              39.0
+            ],
+            [
+              41.1764705882353,
+              -41.0,
+              29.0
+            ],
+            [
+              46.27450980392157,
+              -46.0,
+              35.0
+            ],
+            [
+              38.03921568627451,
+              -39.0,
+              28.0
+            ],
+            [
+              56.470588235294116,
+              -53.0,
+              38.0
+            ],
+            [
+              58.431372549019606,
+              -56.0,
+              41.0
+            ],
+            [
+              57.64705882352941,
+              -56.0,
+              40.0
+            ],
+            [
+              51.372549019607845,
+              -50.0,
+              36.0
+            ]
+          ]
+        },
+        "prior": {
+          "mean_dE_to_centroid": 1.9637814584148272,
+          "max_pairwise_dE": 5.928349578063288,
+          "lum_cv": 0.07028276021892385,
+          "hue_std_deg": 0.2326906635110279,
+          "labs": [
+            [
+              58.8235294117647,
+              -55.0,
+              42.0
+            ],
+            [
+              57.64705882352941,
+              -54.0,
+              41.0
+            ],
+            [
+              54.509803921568626,
+              -52.0,
+              40.0
+            ],
+            [
+              55.294117647058826,
+              -53.0,
+              40.0
+            ],
+            [
+              54.11764705882353,
+              -52.0,
+              40.0
+            ],
+            [
+              56.470588235294116,
+              -54.0,
+              41.0
+            ],
+            [
+              58.8235294117647,
+              -55.0,
+              42.0
+            ],
+            [
+              57.64705882352941,
+              -55.0,
+              42.0
+            ],
+            [
+              57.254901960784316,
+              -54.0,
+              42.0
+            ]
+          ]
+        }
+      },
+      "GT_PIECE_4": {
+        "label": "leaf-far-L",
+        "sheet": "green",
+        "n_positions": 9,
+        "raw": {
+          "mean_dE_to_centroid": 9.272636690556135,
+          "max_pairwise_dE": 37.35039361391239,
+          "lum_cv": 0.44751213882054475,
+          "hue_std_deg": 1.023601299098834,
+          "labs": [
+            [
+              42.35294117647059,
+              -43.0,
+              33.0
+            ],
+            [
+              51.372549019607845,
+              -46.0,
+              34.0
+            ],
+            [
+              32.549019607843135,
+              -33.0,
+              25.0
+            ],
+            [
+              27.45098039215686,
+              -31.0,
+              25.0
+            ],
+            [
+              21.96078431372549,
+              -27.0,
+              21.0
+            ],
+            [
+              36.470588235294116,
+              -38.0,
+              28.0
+            ],
+            [
+              42.745098039215684,
+              -44.0,
+              32.0
+            ],
+            [
+              39.6078431372549,
+              -42.0,
+              30.0
+            ],
+            [
+              34.11764705882353,
+              -37.0,
+              29.0
+            ]
+          ]
+        },
+        "raw_neural": {
+          "mean_dE_to_centroid": 8.296516635666855,
+          "max_pairwise_dE": 33.82471154512793,
+          "lum_cv": 0.40165412804441947,
+          "hue_std_deg": 0.8902384950158675,
+          "labs": [
+            [
+              41.568627450980394,
+              -43.0,
+              32.0
+            ],
+            [
+              49.01960784313725,
+              -45.0,
+              33.0
+            ],
+            [
+              32.94117647058823,
+              -35.0,
+              25.0
+            ],
+            [
+              28.235294117647058,
+              -33.0,
+              25.0
+            ],
+            [
+              22.352941176470587,
+              -28.0,
+              21.0
+            ],
+            [
+              36.470588235294116,
+              -39.0,
+              27.0
+            ],
+            [
+              42.745098039215684,
+              -44.0,
+              31.0
+            ],
+            [
+              40.0,
+              -42.0,
+              29.0
+            ],
+            [
+              34.90196078431372,
+              -38.0,
+              27.0
+            ]
+          ]
+        },
+        "relit": {
+          "mean_dE_to_centroid": 11.690434739436668,
+          "max_pairwise_dE": 37.57898256733207,
+          "lum_cv": 0.378198093335497,
+          "hue_std_deg": 1.0616986026019544,
+          "labs": [
+            [
+              59.6078431372549,
+              -55.0,
+              43.0
+            ],
+            [
+              64.70588235294117,
+              -56.0,
+              41.0
+            ],
+            [
+              44.31372549019608,
+              -41.0,
+              31.0
+            ],
+            [
+              43.13725490196078,
+              -42.0,
+              34.0
+            ],
+            [
+              35.68627450980392,
+              -37.0,
+              29.0
+            ],
+            [
+              52.94117647058823,
+              -50.0,
+              36.0
+            ],
+            [
+              62.745098039215684,
+              -59.0,
+              43.0
+            ],
+            [
+              61.568627450980394,
+              -59.0,
+              43.0
+            ],
+            [
+              51.76470588235294,
+              -51.0,
+              38.0
+            ]
+          ]
+        },
+        "relit_neural": {
+          "mean_dE_to_centroid": 10.690563196632654,
+          "max_pairwise_dE": 35.18865506946588,
+          "lum_cv": 0.33749473873850006,
+          "hue_std_deg": 0.6136843518121751,
+          "labs": [
+            [
+              58.8235294117647,
+              -56.0,
+              42.0
+            ],
+            [
+              62.35294117647059,
+              -56.0,
+              40.0
+            ],
+            [
+              44.705882352941174,
+              -43.0,
+              30.0
+            ],
+            [
+              43.529411764705884,
+              -43.0,
+              32.0
+            ],
+            [
+              37.64705882352941,
+              -38.0,
+              28.0
+            ],
+            [
+              52.94117647058823,
+              -50.0,
+              36.0
+            ],
+            [
+              61.568627450980394,
+              -59.0,
+              43.0
+            ],
+            [
+              60.78431372549019,
+              -58.0,
+              42.0
+            ],
+            [
+              52.15686274509804,
+              -51.0,
+              36.0
+            ]
+          ]
+        },
+        "prior": {
+          "mean_dE_to_centroid": 2.4351513967361376,
+          "max_pairwise_dE": 6.781593016738404,
+          "lum_cv": 0.07554566986221443,
+          "hue_std_deg": 0.22930607775917153,
+          "labs": [
+            [
+              58.431372549019606,
+              -55.0,
+              42.0
+            ],
+            [
+              57.64705882352941,
+              -55.0,
+              42.0
+            ],
+            [
+              54.90196078431372,
+              -52.0,
+              40.0
+            ],
+            [
+              54.11764705882353,
+              -52.0,
+              40.0
+            ],
+            [
+              54.11764705882353,
+              -52.0,
+              40.0
+            ],
+            [
+              55.68627450980392,
+              -53.0,
+              41.0
+            ],
+            [
+              59.2156862745098,
+              -56.0,
+              42.0
+            ],
+            [
+              58.03921568627451,
+              -55.0,
+              42.0
+            ],
+            [
+              57.64705882352941,
+              -55.0,
+              42.0
+            ]
+          ]
+        }
+      }
+    },
+    "metric2_aggregate": {
+      "raw": {
+        "mean_dE": 8.979592495300619,
+        "lum_cv": 0.4067300623337866,
+        "hue_std_deg": 1.4947704119378924
+      },
+      "raw_neural": {
+        "mean_dE": 7.850008061375055,
+        "lum_cv": 0.35776167896614325,
+        "hue_std_deg": 1.3899332261509796
+      },
+      "relit": {
+        "mean_dE": 10.123024206868859,
+        "lum_cv": 0.3178620631317404,
+        "hue_std_deg": 1.6812719856061205
+      },
+      "relit_neural": {
+        "mean_dE": 9.36271351815114,
+        "lum_cv": 0.2854673124559263,
+        "hue_std_deg": 1.5092563645788308
+      },
+      "prior": {
+        "mean_dE": 1.897572824562154,
+        "lum_cv": 0.06030123376092551,
+        "hue_std_deg": 0.2760286908252546
+      }
+    },
+    "sheet_metrics": {
+      "green": {
+        "raw": {
+          "cv": 0.9455931186676025,
+          "lowfreq_cv": 0.6213180422782898,
+          "highfreq_std": 0.5644232307451318,
+          "chroma_mad": 0.019681428767771236
+        },
+        "raw_neural": {
+          "cv": 0.8661050200462341,
+          "lowfreq_cv": 0.5362337827682495,
+          "highfreq_std": 0.5586832356011014,
+          "chroma_mad": 0.01590041299297257
+        },
+        "relit": {
+          "cv": 0.7354604601860046,
+          "lowfreq_cv": 0.44897401332855225,
+          "highfreq_std": 0.5577755051973123,
+          "chroma_mad": 0.019481004120910805
+        },
+        "relit_neural": {
+          "cv": 0.6689079403877258,
+          "lowfreq_cv": 0.38732630014419556,
+          "highfreq_std": 0.5373519577540201,
+          "chroma_mad": 0.018035459296643297
+        },
+        "prior": {
+          "cv": 0.3444291353225708,
+          "lowfreq_cv": 0.0854634940624237,
+          "highfreq_std": 0.3413720959962892,
+          "chroma_mad": 6.938893903907228e-18
+        }
+      },
+      "orange": {
+        "raw": {
+          "cv": 0.6057338118553162,
+          "lowfreq_cv": 0.3921796679496765,
+          "highfreq_std": 0.4320897145757512,
+          "chroma_mad": 0.02631832271142115
+        },
+        "raw_neural": {
+          "cv": 0.538005530834198,
+          "lowfreq_cv": 0.32548224925994873,
+          "highfreq_std": 0.40857776467598256,
+          "chroma_mad": 0.03751177281603024
+        },
+        "relit": {
+          "cv": 0.404037207365036,
+          "lowfreq_cv": 0.2386520653963089,
+          "highfreq_std": 0.35258474371747583,
+          "chroma_mad": 0.08062599007175336
+        },
+        "relit_neural": {
+          "cv": 0.38510385155677795,
+          "lowfreq_cv": 0.22659364342689514,
+          "highfreq_std": 0.3299713317929714,
+          "chroma_mad": 0.08747715242293333
+        },
+        "prior": {
+          "cv": 0.2073335349559784,
+          "lowfreq_cv": 0.045397546142339706,
+          "highfreq_std": 0.21572143783371822,
+          "chroma_mad": 0.022601571560660227
+        }
+      }
+    }
+  }
+}

@@ -60,6 +60,67 @@ def generate_scribble_mask(size, seed):
     mask = gaussian_filter(mask, sigma=1.0)
     return np.clip(mask, 0, 1)
 
+def generate_relief_height(recipe, size, seed):
+    """Ground-truth surface relief for Glass Material v2.
+
+    Earlier synthetic data used an untracked Blender Noise Texture for bump.
+    That made rendered photos look more glass-like, but the relief disappeared
+    from ground truth, so downstream models were trained to erase the very
+    "hammered/lensing" signal that makes glass feel real. This function makes
+    relief an explicit material channel.
+
+    Returns:
+      height in [0,1] (unitless texture)
+      bump_distance in meters for Blender's Bump node
+    """
+    from scipy.ndimage import gaussian_filter, zoom
+
+    fine = generate_noise(size, scale=18, seed=seed + 101)
+    mid = generate_noise(size, scale=55, seed=seed + 102)
+    broad = generate_noise(size, scale=180, seed=seed + 103)
+    hammered = 0.52 * fine + 0.34 * mid + 0.14 * broad
+
+    rng = random.Random(seed + 107)
+
+    if recipe in ("cathedral-green", "cathedral-amber"):
+        height = hammered
+        bump_distance = rng.uniform(0.0016, 0.0045)
+    elif recipe == "dark-opaque":
+        height = 0.65 * hammered + 0.35 * generate_noise(size, scale=28, seed=seed + 104)
+        bump_distance = rng.uniform(0.0010, 0.0030)
+    elif recipe == "streaky-mix":
+        # Streaky sheets are smoother, with relief that follows the pull
+        # direction instead of isotropic hammered cells.
+        low = generate_noise(size, scale=220, seed=seed + 105)
+        source_rows = max(1, size // 12)
+        stretched = zoom(low[:source_rows, :], (size / source_rows, 1), order=3)[:size, :size]
+        height = 0.70 * stretched + 0.30 * gaussian_filter(fine, sigma=5.0)
+        bump_distance = rng.uniform(0.00015, 0.0007)
+    elif recipe == "wispy-white":
+        height = 0.50 * hammered + 0.50 * generate_noise(size, scale=90, seed=seed + 106)
+        bump_distance = rng.uniform(0.0008, 0.0025)
+    else:
+        raise ValueError(f"Unknown recipe: {recipe}")
+
+    height = gaussian_filter(height, sigma=0.7)
+    height = (height - height.min()) / (height.max() - height.min() + 1e-8)
+    return height.astype(np.float32), float(bump_distance)
+
+def height_to_normal(height, strength=1.0):
+    """Convert a scalar height field to tangent-space-ish RGB normal.
+
+    This is not a Blender-rendered normal pass; it is a portable app-facing
+    normal map derived from the same relief texture. The renderer can recompute
+    normals from height, but saving this gives training/eval a stable target.
+    """
+    gy, gx = np.gradient(height.astype(np.float64))
+    nx = -gx * strength
+    ny = -gy * strength
+    nz = np.ones_like(height, dtype=np.float64)
+    n = np.stack([nx, ny, nz], axis=-1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True) + 1e-8
+    return (n * 0.5 + 0.5).astype(np.float32)
+
 def save_numpy_to_image(array, filepath, is_color=True):
     H, W = array.shape[:2]
     
@@ -145,14 +206,21 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42):
     T_path = os.path.join(out_dir, "tex_T.png")
     h_path = os.path.join(out_dir, "tex_h.png")
     mark_path = os.path.join(out_dir, "tex_mark_mask.png")
+    height_path = os.path.join(out_dir, "tex_height.png")
+    normal_path = os.path.join(out_dir, "tex_normal.png")
     
     img_T = save_numpy_to_image(T, T_path, is_color=True)
     img_h = save_numpy_to_image(h, h_path, is_color=False)
     
     mark = generate_scribble_mask(size, seed+5)
     img_mark = save_numpy_to_image(mark, mark_path, is_color=False)
+
+    height, bump_distance = generate_relief_height(recipe, size, seed)
+    img_height = save_numpy_to_image(height, height_path, is_color=False)
+    normal = height_to_normal(height, strength=18.0)
+    img_normal = save_numpy_to_image(normal, normal_path, is_color=True)
     
-    return img_T, img_h, img_mark
+    return img_T, img_h, img_mark, img_height, img_normal, bump_distance
 
 def download_polyhaven_hdri(out_dir):
     """Downloads a small outdoor HDRI from polyhaven if not present."""
@@ -368,7 +436,7 @@ def setup_scene(hdri_path, has_frame=False):
     
     return glass_obj, cam, ev, z_rot, frame_params
 
-def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe, use_bump=True):
+def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=True):
     mat = bpy.data.materials.new(name="GlassMat")
     
     # We must use nodes to set up the material
@@ -387,6 +455,9 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe, use_bump=Tr
     
     tex_mark = nodes.new('ShaderNodeTexImage')
     tex_mark.image = img_mark
+
+    tex_height = nodes.new('ShaderNodeTexImage')
+    tex_height.image = img_height
     
     # Physically-based glass using Principled BSDF
     principled = nodes.new('ShaderNodeBsdfPrincipled')
@@ -422,25 +493,16 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, recipe, use_bump=Tr
     
     links.new(mix_mark.outputs['Shader'], out_node.inputs['Surface'])
     
-    # Hammered surface bump (affects glossy and translucent). Disabled
-    # (use_bump=False) for the assembled-pair benchmark (report 014): its
-    # procedural noise is evaluated in per-object space, so the relief would NOT
-    # correspond between the flat-sheet capture and the 2x2 pieces cut from it --
-    # and relief glints are lighting-dependent (a separate realism axis, like
-    # shadows). Turning it off keeps the rendered appearance == the authored T,h
-    # by construction, which is exactly what that benchmark's purity requires.
+    # Hammered/rolled surface relief (affects glossy and transmitted lensing).
+    # Height-texture-driven (tracked material channel, UV-mapped so relief
+    # corresponds between a flat sheet capture and pieces cut from it).
+    # use_bump=False keeps rendered appearance == authored T,h exactly — used by
+    # the assembled-pair benchmark (report 014) for purity; relief/glints are a
+    # separate realism axis (Material v2).
     if use_bump:
-        noise_node = nodes.new('ShaderNodeTexNoise')
-        noise_node.inputs['Scale'].default_value = 50.0
         bump_node = nodes.new('ShaderNodeBump')
-
-        # Streaky glass is generally smoother/less bumpy
-        if recipe == 'streaky-mix':
-            bump_node.inputs['Distance'].default_value = random.uniform(0.0001, 0.0005)
-        else:
-            bump_node.inputs['Distance'].default_value = random.uniform(0.001, 0.004)
-
-        links.new(noise_node.outputs['Fac'], bump_node.inputs['Height'])
+        bump_node.inputs['Distance'].default_value = bump_distance
+        links.new(tex_height.outputs['Color'], bump_node.inputs['Height'])
         links.new(bump_node.outputs['Normal'], principled.inputs['Normal'])
     
     glass_obj.data.materials.append(mat)
@@ -528,7 +590,7 @@ def add_shadow_caster(out_dir):
     
     return caster
 
-def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
+def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal):
     scene = bpy.context.scene
     
     # Hide the world background for ground truths (make it black)
@@ -586,6 +648,18 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     scene.render.image_settings.color_mode = 'BW'
     scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.exr")
     bpy.ops.render.render(write_still=True)
+
+    # Render relief height (EXR)
+    tex_node.image = img_height
+    scene.render.image_settings.color_mode = 'BW'
+    scene.render.filepath = os.path.join(sample_dir, "gt_height.exr")
+    bpy.ops.render.render(write_still=True)
+
+    # Render derived normal map (EXR)
+    tex_node.image = img_normal
+    scene.render.image_settings.color_mode = 'RGB'
+    scene.render.filepath = os.path.join(sample_dir, "gt_normal.exr")
+    bpy.ops.render.render(write_still=True)
     
     # Render T (PNG for viz)
     scene.render.image_settings.file_format = 'PNG'
@@ -605,6 +679,18 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark):
     tex_node.image = img_mark
     scene.render.image_settings.color_mode = 'BW'
     scene.render.filepath = os.path.join(sample_dir, "gt_mark_mask.png")
+    bpy.ops.render.render(write_still=True)
+
+    # Render relief height (PNG for viz/training fallback)
+    tex_node.image = img_height
+    scene.render.image_settings.color_mode = 'BW'
+    scene.render.filepath = os.path.join(sample_dir, "gt_height.png")
+    bpy.ops.render.render(write_still=True)
+
+    # Render derived normal map (PNG for viz/training fallback)
+    tex_node.image = img_normal
+    scene.render.image_settings.color_mode = 'RGB'
+    scene.render.filepath = os.path.join(sample_dir, "gt_normal.png")
     bpy.ops.render.render(write_still=True)
     
     # Restore
@@ -696,10 +782,14 @@ def main():
                 glass_obj, cam, ev, z_rot, frame_params = setup_scene(hdri_path, has_frame=has_frame)
         
             # 2. Create textures
-            img_T, img_h, img_mark = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
+            img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(
+                recipe, sample_dir, size=1536, seed=seed
+            )
             
             # 3. Create material
-            mat = create_glass_material(glass_obj, img_T, img_h, img_mark, recipe)
+            mat = create_glass_material(
+                glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance
+            )
         
             metadata = {
                 "glass_name": f"{recipe}_{seed}",
@@ -715,7 +805,12 @@ def main():
                 },
                 "blender_version": bpy.app.version_string,
                 "seed": seed,
-                "has_shadow": has_shadow
+                "has_shadow": has_shadow,
+                "material_v2": {
+                    "channels": ["T", "h", "height", "normal", "mark_mask"],
+                    "bump_distance_m": bump_distance,
+                    "ior": 1.5
+                }
             }
         
             if has_shadow:
@@ -735,7 +830,7 @@ def main():
                 render_sample(sample_dir, "without_shadow_")
                 
             # Render aligned ground truths
-            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark)
+            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal)
                 
             with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
                 json.dump(metadata, f, indent=2)
