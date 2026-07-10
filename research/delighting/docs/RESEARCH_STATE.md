@@ -55,7 +55,10 @@ Material-v2 channels (`T,h,height`) and be evaluated on held-out material identi
 Textures-first (T,h authored as images, fed to shader → GT by construction), `Standard` view transform,
 shadow on/off pairs (for the hand-shadow problem OP-1), mullion/frame toggle, multi-lighting per seed.
 Generator: `../generate_synthetic.py` (now in-house via `bpy` in a uv env). 5 recipes: cathedral-green,
-cathedral-amber, dark-opaque, streaky-mix, wispy-white. As of report 010, the generator starts
+cathedral-amber, dark-opaque, streaky-mix, wispy-white; report 017 adds three dark-family recipes
+(dark-deep, dark-ruby, dark-slate) to widen the absolute-scale anchor's dark-end calibration. As of
+Intern-track report 010 (`010-material-v2-representation.md` — do not confuse with the same-numbered
+main-track `010-neural-shadow.md`), the generator starts
 Material-v2 by exporting authored `height` and derived `normal` maps, and using that height to drive
 Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — synthetic certifies method
 *correctness*, real photos remain the fidelity benchmark.
@@ -88,6 +91,25 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   remaining gap was traced to the same single-photo `T·B` background-separation ambiguity as OP-1/
   the north-star hard case below, not a tunable color-constancy parameter — four other candidate
   fixes were tested and rejected as one-sided trades against wispy-white (see report 009 §2.1).
+- 010 (`010-neural-shadow.md`; number collides with the Intern track's own report 010 below —
+  each track numbers its own reports independently and several numbers coincide throughout this
+  doc) neural cast-shadow removal, hybrid on top of the classical extractor: report 008's isolated
+  failure (a cast shadow darkens `I` but not `L`, so `T ≈ I/L` reads the shadow as fake dark
+  transmittance, and cathedral loses to a raw-pixel copy inside the shadow) is fixed by a small
+  U-Net (234k params) that detects the shadow and lifts `T` back toward its shadow-free value,
+  blended by the predicted mask so non-shadow pixels pass through unchanged. Held-out
+  lighting/seeds: cathedral inside-shadow preview MAE 71.9 (raw) / 56.9 (classical) -> **14.0**
+  (classical+neural); non-shadow regions unchanged (23.6->23.1). GO decision for cast-shadow
+  removal as a hybrid stage; retrained on the fixed extractor's T in report 012 below.
+- 012 (branch `research/delighting-datav2`) generator realism: full mullion grid -> partial
+  border-edge occluders (20% of samples, params in meta.json); data v2 regenerated (validation gate
+  unchanged at the report-006 floors); the report-010 shadow U-Net retrained on the FIXED
+  extractor's T. Held-out v2: inside-shadow 48.2->15.9 overall, dark-opaque 46.4->17.9 (beats the
+  v1 net run OOD on the same sample, 23.3) -- but only after a documented dark-opaque
+  train-coverage top-up: the first same-scale retrain drew zero pair-detectable dark-glass shadows
+  and silently lost the skill (46.4->46.4). Occluder over-fire largely fixed on dark glass (fire
+  ~100%->0-6%, lift 0.43->0.01); still fires on an occluder behind CLEAR glass (98%, lift 0.56) --
+  chroma-cue mask is the next step.
 - 013 (branch `research/delighting-suncatcher`) FIRST real end-to-end product test: the app's
   tutorial pair (real backlit suncatcher photo + the two hammered-cathedral sheet photos + GT
   piece polygons). `suncatcher_bench.py` reimplements ResultPanel compositing and compares
@@ -102,6 +124,23 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   (difficulty 2), now confirmed on REAL glass not just Cycles. Biggest gap = learned T·B
   separation, not solder/illuminant. Capture ask to make fidelity testable: shoot one sheet,
   cut a piece from a known region, assemble+backlight, shoot the result.
+- 014 (branch `research/delighting-assembled`) the ASSEMBLED-PAIR BENCHMARK — the
+  purest end-to-end metric, simulated entirely in Blender so the flat sheet CAPTURE
+  and a 2×2 leaded ASSEMBLED piece are the SAME authored glass (new
+  `generate_assembled.py` `--assembled` mode; pieces = UV rects of the shared sheet
+  texture, A↔C correspondence verified to MAE 1e-4). Two materials (cathedral-green
+  transmissive, wispy-white opalescent), IBL_1 capture vs IBL_2 relight truth
+  (rotated 90–135° + ±1EV). **Drag test (headline): wispy relit dispersion collapses
+  to the grain floor (Lab dE 5.30→1.01 ≈ floor 0.92; lum-CV 0.141→0.050) — dragging
+  opalescent glass becomes texture-only; cathedral relit halves lum-CV (0.292→0.140)
+  but stays 16× above the floor** (see-through `T·B` residual, the north-star hard
+  case, now visible with GT). **Honest negative: from the identity source, raw-copy
+  BEATS delight+relight on absolute composite-vs-truth fidelity** (extractor adds
+  reconstruction error, T-MAE cathedral 0.134 / wispy 0.036, while raw carries true
+  pixels) — de-lighting's win is consistency/invariance, not absolute per-piece
+  fidelity. The honest illuminant `<L_A>·2^ΔEV` (no B pixel used) leaves the
+  HDRI-rotation colour unmodeled — that global term, not the extractor, dominates the
+  absolute error (oracle-gain ceiling cuts wispy 23→4.3).
 - 015 (branch `research/delighting-corpus`) characterized the ~3,200-image catalog corpus:
   82.8% metadata-classifiable, lighting geometry NOT uniformly backlit (per-manufacturer
   triage), VLM class prior only 30.6% accurate at scale, and the extractor breadth test
@@ -121,7 +160,17 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   library false positives). Recommendation: gate everywhere; continuous anchor as default
   for VLM/metadata-classed runs, class anchor for human-verified manifests. Wrong-class
   h/assembly corruption remains open (the anchor fixes scale only); the estimator's dark
-  end is calibrated by one recipe family (more dark seeds = highest-value data add).
+  end is calibrated by one recipe family (more dark seeds = highest-value data add — see
+  report 017 below, which adds three). **Sign-off landed** (commit `896c2d7`): `--anchor`
+  now defaults to `auto` — `continuous` when the class came from the VLM/fallback path,
+  `class` when a human set it via `--class`/manifest `class_override` — implementing this
+  report's recommendation exactly; the gate stays default-on everywhere as before.
+- 017 (branch `research/delighting-017`) widened the continuous anchor's dark-end
+  calibration: added three new dark-family synthetic recipes (`dark-deep` very-dark
+  neutral, `dark-ruby` dark-tinted/strongly-colored, `dark-slate` medium-dark) spanning
+  both sides of the original single dark-opaque recipe, refit the estimator, and added
+  a first cross-lighting (capture-invariance) metric across all recipes. See report
+  017 for LORO before/after, the class-injection re-check, and the invariance table.
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -170,33 +219,6 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   RGB smooth-field cleanup (after fixed `T/h`: lum-CV 0.318 -> 0.291 instead of 0.261), but keeps hue
   stable (1.7 -> 1.7 instead of RGB smooth-field's 2.1). Product read: this is a safer default assist
   for "uneven backlight/background brightness" because it preserves uploaded glass color provenance.
-
-
-- 012 (branch `research/delighting-datav2`) generator realism: full mullion grid → partial
-  border-edge occluders (20% of samples, params in meta.json); data v2 regenerated (validation gate
-  unchanged at the report-006 floors); shadow U-Net retrained on the FIXED extractor's T. Held-out
-  v2: inside-shadow 48.2→15.9 overall, dark-opaque 46.4→17.9 (beats the v1 net run OOD on the same
-  sample, 23.3) — but only after a documented dark-opaque train-coverage top-up: the first
-  same-scale retrain drew zero pair-detectable dark-glass shadows and silently lost the skill
-  (46.4→46.4). Occluder over-fire largely fixed on dark glass (fire ~100%→0–6%, lift 0.43→0.01);
-  still fires on an occluder behind CLEAR glass (98%, lift 0.56) — chroma-cue mask is the next step.
-- 014 (branch `research/delighting-assembled`) the ASSEMBLED-PAIR BENCHMARK — the
-  purest end-to-end metric, simulated entirely in Blender so the flat sheet CAPTURE
-  and a 2×2 leaded ASSEMBLED piece are the SAME authored glass (new
-  `generate_assembled.py` `--assembled` mode; pieces = UV rects of the shared sheet
-  texture, A↔C correspondence verified to MAE 1e-4). Two materials (cathedral-green
-  transmissive, wispy-white opalescent), IBL_1 capture vs IBL_2 relight truth
-  (rotated 90–135° + ±1EV). **Drag test (headline): wispy relit dispersion collapses
-  to the grain floor (Lab dE 5.30→1.01 ≈ floor 0.92; lum-CV 0.141→0.050) — dragging
-  opalescent glass becomes texture-only; cathedral relit halves lum-CV (0.292→0.140)
-  but stays 16× above the floor** (see-through `T·B` residual, the north-star hard
-  case, now visible with GT). **Honest negative: from the identity source, raw-copy
-  BEATS delight+relight on absolute composite-vs-truth fidelity** (extractor adds
-  reconstruction error, T-MAE cathedral 0.134 / wispy 0.036, while raw carries true
-  pixels) — de-lighting's win is consistency/invariance, not absolute per-piece
-  fidelity. The honest illuminant `<L_A>·2^ΔEV` (no B pixel used) leaves the
-  HDRI-rotation colour unmodeled — that global term, not the extractor, dominates the
-  absolute error (oracle-gain ceiling cuts wispy 23→4.3).
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
