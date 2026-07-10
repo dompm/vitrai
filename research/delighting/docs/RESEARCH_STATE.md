@@ -279,6 +279,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   correlation 0.337 -> 0.033 and T-MAE 0.1158 -> 0.1018, but recovered `T` is still globally
   biased/dark. Conclusion: known motion carries real information, but material scale/color and a
   height-field prior are still needed.
+- 024 height-field displacement prior: replacing free optical-flow `D` with cold-start
+  `D = scale * grad(H)` is worse (T-MAE 0.1029 free-flow -> 0.1074 cold height; T-bg corr 0.029 ->
+  0.132), because the optimizer learns background bars as relief. But oracle-initialized height gives
+  the best material/background/displacement state (T-MAE 0.0992, B-MAE 0.1464, disp EPE 2.23,
+  height corr 0.796). Conclusion: relief is a good latent state, not a free inference solution.
 
 ## Open problems / next
 - **OP-1 hand shadow** — needs the shadow ground-truth pair; learned removal likely.
@@ -316,6 +321,9 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   height field rather than free optical flow.
 - After report 023, prioritize motion-constrained multi-frame optimization plus material scale prior
   and height-field `D`; known motion reduces leakage but does not recover absolute material color.
+- After report 024, do not swap free flow for cold-start height. Test a staged renderer:
+  free-flow warm start -> integrable height projection -> height-field refinement, then add the
+  material scale/color prior.
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.

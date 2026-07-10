@@ -1,0 +1,202 @@
+{
+  "case": "seed54",
+  "claim": "Constrain refraction displacement to a scalar height-field gradient.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_heightfield_sweep",
+    "size": 144,
+    "seed": 54,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "shift_x": 19.0,
+    "shift_y": -11.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "height_low_res": 54,
+    "steps_motion": 1200,
+    "steps_height": 1400,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "lr_h": 0.055,
+    "lr_scale": 0.02,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "height_tv": 0.01,
+    "height_lap": 0.018,
+    "height_scale_max": 18.0,
+    "height_scale_logit": 0.0,
+    "log_every": 450,
+    "sweep": true,
+    "sweep_seeds": "51,52,53,54",
+    "cpu": false,
+    "device": "mps",
+    "elapsed_s": 9.128641843795776,
+    "shifts": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        19.0,
+        -11.0
+      ]
+    ]
+  },
+  "metrics": [
+    {
+      "name": "two-frame free-flow D",
+      "renderer_recon_mae": 0.0017584217712283134,
+      "T_mae": 0.10106220096349716,
+      "T_lum_mae": 0.19553589820861816,
+      "B_mae": 0.15914417803287506,
+      "preview_lum_cv": 0.1267748970354325,
+      "T_highfreq_corr_with_bg": 0.03985814965499445,
+      "disp_epe_px": 3.123002529144287,
+      "disp_corr_x": 0.43489529499052,
+      "disp_corr_y": 0.3465947126582829,
+      "height_corr": 0.0,
+      "height_abs_corr": 0.0,
+      "height_lap_std": 0.0,
+      "height_scale": 0.0
+    },
+    {
+      "name": "two-frame height-field D",
+      "renderer_recon_mae": 0.003432363155297935,
+      "T_mae": 0.1019430086016655,
+      "T_lum_mae": 0.19649852812290192,
+      "B_mae": 0.16651733219623566,
+      "preview_lum_cv": 0.13464285698555684,
+      "T_highfreq_corr_with_bg": 0.13712876948226477,
+      "disp_epe_px": 3.8238253593444824,
+      "disp_corr_x": 0.1742119625962321,
+      "disp_corr_y": 0.1699998095918315,
+      "height_corr": 0.3024105369465651,
+      "height_abs_corr": 0.3024105369465651,
+      "height_lap_std": 0.028461681678891182,
+      "height_scale": 2.8568215370178223
+    },
+    {
+      "name": "two-frame height-field D oracle init",
+      "renderer_recon_mae": 0.002253323094919324,
+      "T_mae": 0.09693952649831772,
+      "T_lum_mae": 0.18915583193302155,
+      "B_mae": 0.14154429733753204,
+      "preview_lum_cv": 0.14109950346477335,
+      "T_highfreq_corr_with_bg": 0.025746750424960003,
+      "disp_epe_px": 2.0488061904907227,
+      "disp_corr_x": 0.7870094577973787,
+      "disp_corr_y": 0.7556398260420054,
+      "height_corr": 0.8751202019056402,
+      "height_abs_corr": 0.8751202019056402,
+      "height_lap_std": 0.012542227283120155,
+      "height_scale": 1.6761541366577148
+    }
+  ],
+  "logs": {
+    "free": [
+      {
+        "step": 0,
+        "loss": 0.022928686812520027,
+        "recon": 0.022877585142850876,
+        "disp_abs": 0.0
+      },
+      {
+        "step": 450,
+        "loss": 0.0024448451586067677,
+        "recon": 0.0018326393328607082,
+        "disp_abs": 1.5220587253570557
+      },
+      {
+        "step": 900,
+        "loss": 0.0023750243708491325,
+        "recon": 0.0017834515310823917,
+        "disp_abs": 1.4998886585235596
+      },
+      {
+        "step": 1199,
+        "loss": 0.0023537417873740196,
+        "recon": 0.0017672900576144457,
+        "disp_abs": 1.490951657295227
+      }
+    ],
+    "height": [
+      {
+        "step": 0,
+        "loss": 0.02812977135181427,
+        "recon": 0.023207657039165497,
+        "disp_abs": 6.7062764167785645,
+        "height_scale": 8.910003662109375
+      },
+      {
+        "step": 450,
+        "loss": 0.0051208967342972755,
+        "recon": 0.0036694714799523354,
+        "disp_abs": 1.8750216960906982,
+        "height_scale": 3.1685755252838135
+      },
+      {
+        "step": 900,
+        "loss": 0.004874122329056263,
+        "recon": 0.003496645949780941,
+        "disp_abs": 1.7594207525253296,
+        "height_scale": 3.010082721710205
+      },
+      {
+        "step": 1350,
+        "loss": 0.004768574610352516,
+        "recon": 0.003434430342167616,
+        "disp_abs": 1.6875708103179932,
+        "height_scale": 2.882997512817383
+      },
+      {
+        "step": 1399,
+        "loss": 0.004749306011945009,
+        "recon": 0.003428078256547451,
+        "disp_abs": 1.6722291707992554,
+        "height_scale": 2.8568215370178223
+      }
+    ],
+    "height_oracle": [
+      {
+        "step": 0,
+        "loss": 0.023938694968819618,
+        "recon": 0.022836465388536453,
+        "disp_abs": 1.9843955039978027,
+        "height_scale": 2.686978816986084
+      },
+      {
+        "step": 450,
+        "loss": 0.0031092404387891293,
+        "recon": 0.0022862334735691547,
+        "disp_abs": 1.139154076576233,
+        "height_scale": 1.703768253326416
+      },
+      {
+        "step": 900,
+        "loss": 0.0030683467630296946,
+        "recon": 0.0022746194154024124,
+        "disp_abs": 1.108715534210205,
+        "height_scale": 1.683868408203125
+      },
+      {
+        "step": 1350,
+        "loss": 0.0030253753066062927,
+        "recon": 0.0022453456185758114,
+        "disp_abs": 1.098791480064392,
+        "height_scale": 1.678853988647461
+      },
+      {
+        "step": 1399,
+        "loss": 0.0030176665168255568,
+        "recon": 0.0022392047103494406,
+        "disp_abs": 1.0964877605438232,
+        "height_scale": 1.6761541366577148
+      }
+    ]
+  }
+}

@@ -42,7 +42,10 @@ backgrounds; it helps only marginally, so extra frames need stronger B/D/T
 priors or motion constraints.
 `023-known-motion-background-constraint.md` adds a known-shift shared-background
 constraint; it reduces background leakage in `T` sharply but still needs a
-material scale/color prior.
+material scale/color prior. `024-height-field-displacement-prior.md` tests a
+height-derived displacement state: cold-start height is worse than free flow,
+but oracle-initialized height gives the best `T/B/D`, so relief is a promising
+state only if it can be initialized or inferred.
 
 ## Layout
 
@@ -63,6 +66,7 @@ luma_quotient_prior.py  deterministic quotient baseline that falsifies weak lear
 differentiable_sheet_inverse.py  tiny renderer/optimizer for T + background B + displacement D
 differentiable_sheet_twoframe.py  two-observation identifiability test for shared T,D and learned B_i
 differentiable_sheet_motion.py  known-shift shared-background inverse-rendering test
+differentiable_sheet_heightfield.py  height-field displacement prior vs free-flow D test
 prototypes/       standalone research demos for feedback sessions
 benchmark/        fixed eval inputs (easy + difficult); benchmark/library/ = 9 app swatches
 results/          committed panels, T/h maps, metrics; results/library/ = the 9-sheet batch
@@ -138,6 +142,10 @@ python3 differentiable_sheet_twoframe.py --sweep \
 # known-shift motion constraint: shared T,D,B across two shifted observations
 python3 differentiable_sheet_motion.py --sweep \
   --out results/differentiable_sheet_motion_sweep
+
+# height-field displacement prior: physical relief state vs free optical flow
+python3 differentiable_sheet_heightfield.py --sweep \
+  --out results/differentiable_sheet_heightfield_sweep
 ```
 
 manifest.json format (keys are filenames inside the folder):
