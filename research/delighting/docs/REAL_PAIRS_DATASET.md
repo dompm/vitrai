@@ -1,7 +1,10 @@
 # Real cross-capture pairs from Delphi Glass product photography — dataset spec
 
-Iteration 030. Branch `research/delighting-030`. Companion: `../reports/030-real-pairs.md`
-(the census + pair-quality results this spec is grounded in), `../realpairs/` (code).
+Iteration 030 (spec), iteration 033 (dataset BUILT — see §9, the dataset
+card; §9 supersedes §6's estimates with measured numbers). Branches:
+`research/delighting-030` (spec + census), `research/delighting-033` (full
+harvest). Companions: `../reports/030-real-pairs.md`,
+`../reports/033-pairs-harvest.md`, `../realpairs/` (code).
 
 ## 0. The discovery, restated
 
@@ -230,3 +233,84 @@ occasionally a gallery slot is a swatch-adjacent shot (a ruler, a stack of sever
 rather than the same physical piece — the capture-type classifier and the ORB registrability
 check are both about IDENTIFYING which claimed pairs are trustworthy, not asserting all of
 them are. Every number in report 030 is reported with its verification method attached.
+
+## 9. DATASET CARD — as built (iteration 033, 2026-07-11)
+
+### 9.1 Contents and location
+
+- **Manifest (committed):** `../realpairs/results/manifest_033.json` —
+  254 products (unique product_ids, variant-deduped), 1,491 images with
+  full-res capture-type labels, 4,668 pair records with ORB inlier counts,
+  registration verdicts and derivation-filter outcomes.
+- **Screens (committed):** `../realpairs/results/contamination_033.json` —
+  advisory flags per product/image/pair for six contamination modes
+  (report 033 §3); `vangogh_validation.json` — the finished-product screen's
+  measured recall (96% combined, 0 false positives on 99 hand-labeled
+  images); `aggregate_033.json` — headline stats.
+- **Raw images (NOT committed):** `../realpairs/data/images/<pid>/` —
+  368 MB of 1500×1500 JPEGs, gitignored, local-disk only, per the
+  research-use posture (§5). Refetchable idempotently by `harvest_033.py`.
+- **Evidence panels (committed, downscaled):** `../realpairs/results/panels_033/`.
+
+### 9.2 Headline counts (measured, not estimated)
+
+| | raw | after all screens |
+|---|---:|---:|
+| products | 254 | 245 usable (3 mirror, 6 pack listings excluded) |
+| images | 1,491 | 1,245 unflagged |
+| registrable cross-capture sheet pairs | 213 | **145** (64 products) |
+| statistics-only same-product pair candidates | — | ~1,850 (213 products; 805 clean×wild) |
+| same-photo derivation pairs (dedup metadata) | 45 + 16 suspect | — |
+
+Capture-type mix (full-res classifier): window 42.9%, closeup 36.8%,
+shop 18.2%, **lightbox 1.8%**, other 0.2%. 76% of products have ≥1 clean
+(lightbox/closeup) and ≥1 wild (window/shop) image.
+
+### 9.3 How to consume pairs (the load-bearing predicate)
+
+A pair from `manifest_033.json` is a trustworthy registrable sheet pair iff:
+`kind == "cross_capture"` AND `finished_product_flag == false` AND neither
+image key appears in `contamination_033.json` products[pid].images AND the
+product has neither `non_transmissive_mirror` nor `multi_sheet_listing` in
+products[pid].flags AND NOT (`residual_mad < 15 AND inliers >= 200`)
+(the clear-glass same-photo leak, report 033 §3 mode 5). Products with
+`opal_streaky_caution` (31.5%) additionally carry unverified sheet identity
+across captures (030 §2.3): usable for texture-statistics work, "sheet-
+identity-unverified" for registered-consistency positives per
+`EVAL_PROTOCOL.md` §3c.
+
+### 9.4 Known biases (measure before believing a benchmark number)
+
+- **Wild-wild rich, clean-reference poor:** 27 lightbox images TOTAL (1.8%).
+  There is effectively no per-product studio reference; sim-to-real
+  (wild, clean) evaluation gets only a handful of products.
+- **Brand skew in registrable pairs:** uro (65) + tiffany-today (40) +
+  clear-textured (29) = 92% of surviving pairs; van-gogh has 29 products but
+  contributes 1 pair (stock-photo-dominated galleries); kokomo/armstrong/
+  wissmach/specialty contribute 10 combined; delphi-superior none.
+- **Texture skew:** ripples/mottles/textured clears register best, smooth
+  cathedrals worst — 32 of the 64 pair-bearing products carry the
+  opal/streaky caution.
+- **Window-shot house style:** most wild captures share Delphi's storefront
+  composition (sheet on windowsill, trees/sky above) — illumination variety
+  within `window` is real but scene variety is limited.
+- **Label noise:** capture labels are heuristic (87% clean/wild binary at
+  full res; window/shop confusion is the dominant error — 5/8 shop-rack
+  shots in the Van Gogh eyeball set were labeled window).
+- **Holdout (frozen, EVAL_PROTOCOL.md §3c v1.0):** reserve iff
+  `int(sha1(product_id_string).hexdigest(),16) % 5 == 0` → 55/254 products
+  (21.7%), 13 of the 64 pair-bearing products. Per-brand reserved counts:
+  armstrong 5/13, clear-textured 19/88, delphi-superior 0/2, kokomo 2/17,
+  specialty-finish 0/7, tiffany-today 10/42, uro 7/30, van-gogh 8/29,
+  wissmach 4/26. Brands below 15% reserved (kokomo 12%, the two zero-count
+  micro-brands) are iter-034's topping-up call (protocol v1.1).
+
+### 9.5 Provenance & usage posture
+
+Pages: Wayback Machine only (zero live page loads). Images: Delphi's
+unprotected image hosts, 1,485 GETs at 0.42 req/s measured, normal UA,
+2026-07-10/11. Internal research evaluation only; raw photography
+gitignored and never redistributed; committed panels are small downscales
+captioned as Delphi's photography (report 030 §5 posture, maintainer-
+approved for research use). The live catalog (2-5× this slice) remains
+inaccessible without Delphi's permission.
