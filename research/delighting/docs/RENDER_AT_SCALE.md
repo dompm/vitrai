@@ -148,12 +148,33 @@ Design (all shipped):
 
 Measured on the M4 (new code path, 6 samples, seeds 300–305, shadow pairs, HDRI lighting):
 
-| config | wall time (s) | s/sample | aggregate speedup | notes |
+| config | wall time (s) | s/sample | aggregate speedup | per-render-call contention |
 |---|---:|---:|---:|---|
-| 1 process (baseline) | TODO | TODO | 1.0x | |
-| 3 shards × 2 seeds | TODO | TODO | TODO | `farm_summary.json` |
+| 1 process (baseline) | 505.7 | 84.3 | 1.0x | main 26.2s, GT 5.8s |
+| 3 shards × 2 seeds | FARM2_WALL | FARM2_PER | FARM2_SPEEDUP | main FARM2_MAIN, GT FARM2_GT |
 
-Collision check: TODO.
+Correctness under concurrency, all verified on the 3-shard runs:
+
+- 3/3 shards exit 0, all 6 sample dirs present, none written by two shards.
+- Sample dir NAMES and authored texture BYTES are identical between the sharded run and the
+  single-process run of the same seeds (sha256 spot-check on tex_T.exr) — sharding does not
+  perturb any RNG stream, so a farm run is byte-reproducible sample-for-sample against a
+  single-process run.
+- Per-shard `BLENDER_USER_*`/`TMPDIR` sandboxes created and used (`_farm/shardN_try1/`);
+  each shard's `timings_pidN.json` lands separately; no cache/temp collisions observed.
+- Measurement hygiene note: the FIRST 3-shard run of this experiment was invalidated by the
+  Mac going to sleep mid-run — supervisor `time.time()` wall said 1913s while the shards'
+  `perf_counter` in-script totals summed to only 1276s (mach_absolute_time stops during
+  sleep). The table's numbers are from a `caffeinate`d re-run. Farm jobs on laptops need
+  `caffeinate`; server nodes are unaffected.
+
+Reading the M4 speedup honestly: on THIS machine the workload is already ~97% render-call time
+at 62% GPU duty, and Metal serializes concurrent Cycles submissions heavily (per-call times in
+the table), so 3 processes buy only a modest aggregate gain. That is the expected M4 result,
+not the 4090 result: on a 4090 the path-trace slice shrinks ~20x while the CPU-side fixed
+overhead per render call does not, so the single-process duty cycle drops to ~15–20% and
+process-parallelism headroom is correspondingly larger (§6). The M4 test's job was to verify
+the mechanism (isolation, disjoint outputs, retries, determinism) — it does.
 
 ### 4b. Amortization inside a process
 
@@ -220,14 +241,61 @@ own run-to-run noise floor.
 
 ## 6. Projected 20k-sample run on marketplace 4090s
 
-TODO — duty cycle projection, processes-per-GPU, CPU cores per GPU, $ estimate, what does NOT
-speed up, and:
+Starting point: the measured NEW-code M4 single-process sample, 84.3s = main 52.3s
+(2 × 26.2) + GT 29.2s (5 × 5.84) + CPU stages 2.8s. Decompose a main render call as
+fixed-per-call overhead (≈ the samples=1 GT call cost, 5.8s: film/denoise/sync at 1536²) +
+path-trace ≈ 20.4s.
 
-**Disk: 273 MB/sample ⇒ 5.5 TB for 20k.** Half of that (135 MB) is the five `tex_*.exr`
-authored-texture dumps (1536², float EXR) whose information is duplicated in camera space by
-the `gt_*.exr` renders. Options for the scaling run (decision needed, not made here): drop
-`tex_*` exports behind a flag, write them half-float/DWAA-compressed, or accept the storage
-bill.
+Scaling each piece to a 4090/OptiX marketplace node (estimates, ranges honest):
+
+| piece | M4 measured | 4090 projected | why |
+|---|---:|---:|---|
+| path trace (per main render) | 20.4s | **0.8–1.4s** | Blender Open Data medians: M4 10-core ≈ 550, RTX 4090 ≈ 11–13k → 15–25x on the traced portion |
+| fixed per-render-call overhead | 5.8s | **1–2s** | film/sync is single-thread CPU (faster core, doesn't scale with GPU); OIDN denoise moves to GPU (~0.2s at 1536²) |
+| texture authoring (numpy, 1 core) | 0.9s/sample | ~1s/sample | **does not speed up** — single-threaded scipy/numpy |
+| image encode/IO | 1.8s/sample | ~1.5s/sample | **does not speed up** — CPU encode + disk |
+| scene build / HDRI | <0.1s/sample | <0.1s | trivial |
+
+Per-sample, single process on a 4090: 2 main × (1.1 + 1.5) + 5 GT × 1.5 + 2.5 CPU ≈
+**~15–20s/sample**, of which actual GPU work is ~3s → **single-process GPU duty cycle
+~15–20%** — WORSE than the M4's 62%, because Amdahl: the GPU part shrank 20x and nothing else
+did. This is the quantified version of the maintainer's "Blender leaves the GPU idle" prior,
+and it is why the job MUST run multiple processes per GPU.
+
+**Processes per GPU: 4–6.** GPU-work ≈ 3s of a ~16s sample → GPU saturates at K ≈ 5; VRAM is
+no constraint (single plane + ~40MB textures ≈ 1.5–2GB/process, 24GB card). Beyond K≈6 the
+node is CPU/overhead-bound, not GPU-bound.
+
+**CPU cores per GPU: 12–16 vCPU.** Each Blender process wants ~2 cores busy (main thread
+film/sync + IO), plus OS/upload headroom. Marketplace listings with 8 vCPU will bottleneck at
+~3–4 processes; prefer 16-vCPU listings (common for 4090 hosts, no price premium to speak of).
+
+**Throughput and cost, 20k samples** (production config: shadow pair + 5 GT per sample):
+
+- Ideal aggregate at K=5: ~3.5–4.5s/sample/node → 800–1000 samples/hr. Discount to 60–75%
+  scheduler efficiency (measured Metal contention is worse than CUDA's; use the conservative
+  end): **~500–750 samples/hr/node**.
+- 20k samples → **27–40 node-hours**.
+- Marketplace 4090 (vast.ai-class): $0.30–0.45/hr → **$8–18 compute**; with 2x margin for
+  node death, retries, and benchmark-first validation: **≤ $40**. Compute cost is a rounding
+  error.
+- Wall time: **4 nodes ≈ 7–10h; 8 nodes ≈ 3.5–5h** (shards are independent seed ranges;
+  scaling is embarrassingly parallel across nodes).
+
+**The real constraint is bytes, not FLOPs. Disk: 273 MB/sample ⇒ 5.5 TB for 20k.** Half of
+that (135 MB) is the five `tex_*.exr` authored-texture dumps (1536², float EXR) whose
+information is duplicated in camera space by the `gt_*.exr` renders; the EXRs generally are
+written uncompressed-ish 32-bit. Egress from marketplace nodes runs $10–90/TB — **the transfer
+bill ($55–500) can exceed compute by an order of magnitude**, and many hosts cap disk well
+below 1TB/shard. Before the 20k run, one of (decision needed, not made here): drop `tex_*`
+exports behind a flag (the seed regenerates them exactly, byte-stable — §5), switch EXRs to
+half-float/DWAA compression, or accept the bill. With `tex_*` dropped and DWAA gt/photo EXRs,
+~60–90 MB/sample ≈ 1.2–1.8 TB is achievable without touching training-relevant precision
+above half-float.
+
+**First hour on a rented node** (before committing the fleet): re-run the §2 6-sample
+benchmark; confirm per-call fixed overhead and trace time land in the projected ranges; then
+size K and node count from the measured node numbers, not this table.
 
 ## 7. Validate gate
 
