@@ -11,7 +11,8 @@ import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../u
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -1596,7 +1597,14 @@ export function ResultPanel({
             </span>
           </button>
           
-          {!isSolderPopoverOpen && <span className="tooltip-tip">{t('solderThicknessTooltip')}</span>}
+          {!isSolderPopoverOpen && (
+            <ToolTooltip
+              name={t('tooltipSolderName')}
+              shortcut=""
+              description={t('solderThicknessTooltip')}
+              animation={<SolderAnimation />}
+            />
+          )}
           
           {isSolderPopoverOpen && (
             <div className="solder-popover">
@@ -1655,15 +1663,17 @@ export function ResultPanel({
                 aria-label={t('lampSymmetryTooltip')}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="9" strokeDasharray="2 2" />
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M12 3v6" />
-                  <path d="M12 15v6" />
-                  <path d="M3 12h6" />
-                  <path d="M15 12h6" />
+                  <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="3 2" />
+                  <path d="M 5,7 L 10,12 L 5,17 Z" />
+                  <path d="M 19,7 L 14,12 L 19,17 Z" />
                 </svg>
               </button>
-              <span className="tooltip-tip">{t('lampSymmetryTooltip')}</span>
+              <ToolTooltip
+                name={t('tooltipSymmetryName')}
+                shortcut=""
+                description={t('lampSymmetryTooltip')}
+                animation={<SymmetryAnimation />}
+              />
             </div>
           </>
         )}
@@ -1683,7 +1693,12 @@ export function ResultPanel({
                   <ellipse cx="12" cy="19" rx="8" ry="2.5" />
                 </svg>
               </button>
-              <span className="tooltip-tip">{t('lampProfileButtonTooltip')}</span>
+              <ToolTooltip
+                name={t('tooltipProfileName')}
+                shortcut=""
+                description={t('lampProfileButtonTooltip')}
+                animation={<ProfileAnimation />}
+              />
             </div>
           </>
         )}

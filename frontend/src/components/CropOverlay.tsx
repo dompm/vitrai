@@ -11,7 +11,7 @@ interface Props {
 }
 
 const DIM = 'rgba(0,0,0,0.42)';
-const STROKE = '#2563eb';
+const STROKE = '#c08a1f';
 const EDGE_HIT = 28;   // edge hit zone in display px
 const ARM = 22;        // corner L-handle arm length in display px
 const ARM_W = 4;       // corner arm thickness in display px
