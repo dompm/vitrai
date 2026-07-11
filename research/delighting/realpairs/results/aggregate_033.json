@@ -1,0 +1,38 @@
+{
+ "n_products_done": 254,
+ "n_images": 1491,
+ "images_per_product_mean": 5.8700787401574805,
+ "products_per_brand": {
+  "clear-textured-glass": 88,
+  "wissmach-glass": 26,
+  "van-gogh-glass": 29,
+  "kokomo-glass": 17,
+  "armstrong-glass": 13,
+  "specialty-finish-glass": 7,
+  "uro-glass": 30,
+  "tiffany-today-glass": 42,
+  "delphi-superior-glass": 2
+ },
+ "capture_type_dist": {
+  "closeup": 549,
+  "window": 640,
+  "shop": 272,
+  "lightbox": 27,
+  "other": 3
+ },
+ "products_multi_capture": 197,
+ "products_clean_and_wild": 193,
+ "n_pairs_total": 4668,
+ "pair_kind_counts": {
+  "none": 4410,
+  "cross_capture": 213,
+  "same_photo": 45
+ },
+ "n_cross_capture": 213,
+ "n_cross_capture_clean": 168,
+ "products_with_cross_capture": 98,
+ "products_with_cross_capture_clean": 79,
+ "products_with_statistics_only": 223,
+ "products_opal_streaky_caution": 80,
+ "n_same_photo": 45
+}

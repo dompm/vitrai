@@ -148,14 +148,57 @@ study.
 - **Re-run the synthetic/assembled/cross-lighting rows against the frozen extractor** once Blender
   data is regenerated, to replace the read-from-record rows with a same-session re-run (harness
   changes are already in place).
-- **Harvest-033 manifest finalization** — pin per-brand reserved counts and top up any brand
-  landing <15% (a v1.1 bump) when the harvest completes; harvest-033 will ping on completion.
+- ~~**Harvest-033 manifest finalization** — pin per-brand reserved counts and top up any brand
+  landing <15% (a v1.1 bump) when the harvest completes.~~ DONE, §7 below (v1.1, 2026-07-11).
 
 ## 6. Files
 
-- `docs/EVAL_PROTOCOL.md` — the frozen protocol (v1.0).
-- `docs/OUTPUT_CONTRACT.md` — the material/nuisance state contract (v1.0).
+- `docs/EVAL_PROTOCOL.md` — the frozen protocol (v1.0 = `7f6f1ee`; v1.1 after §7).
+- `docs/OUTPUT_CONTRACT.md` — the material/nuisance state contract (v1.0, unchanged by v1.1).
 - `eval_texture_preservation.py` — MGP + FCS; `--library` frozen-baseline run + `evaluate()` import.
 - `assembled_bench.py` — `flatten_flag` on the drag test.
 - `register_pair.py` — `registered_t_agreement` / `t_agreement_from_registered_photos` callables.
 - `results/texture_preservation/texture_preservation_{classical,quotient}.json` — the fresh row.
+
+## 7. v1.1 — the real holdout pinned (2026-07-11, harvest-033 complete)
+
+The pre-declared bump (§5's last item; v1.0 §3c/§6.2), executed on harvest-033's completion ping
+and BEFORE any method was scored against the real set. Final manifest
+(`realpairs/results/manifest_033.json` on `research/delighting-033`, `REAL_PAIRS_DATASET.md`
+§9.3/§9.4, commit `c36f307`): 254 unique products, 1,491 images, 213 raw cross-capture pairs →
+145 surviving all screens (64 products).
+
+**Pinned reservation (independently recomputed from the manifest; matches harvest-033's numbers
+exactly).** The frozen hash rule reserves 55/254 = 21.7%: armstrong 5/13 · clear-textured 19/88 ·
+delphi-superior 0/2 · kokomo 2/17 · specialty-finish 0/7 · tiffany-today 10/42 · uro 7/30 ·
+van-gogh 8/29 · wissmach 4/26. Reserved-set capture mix: window 142 / closeup 114 / shop 55 /
+lightbox 6 / other 1; 13 of the 64 pair-bearing products land in the base holdout.
+
+**Top-up refinement + list.** One refinement over v1.0's sketch, with justification: the <15%
+floor is computed over eval-ELIGIBLE products (no `non_transmissive_mirror` /
+`multi_sheet_listing` product flag) and topped up with eligible products only — v1.0's literal
+"next-lowest-hash" would have reserved mirror product 220088, which the §9.3 consumption
+predicate excludes from every sheet metric: dead weight that buys no eval coverage. Frozen
+top-up (next-lowest-hash unreserved eligible, until ≥15% of eligible): **239270**
+(delphi-superior), **203533** (kokomo), **220043** (specialty-finish). All three are free of
+product-level EXCLUSION flags (the eligibility criterion). Cross-audit nuances from
+harvest-033, recorded for honest reading of what they contribute: 239270 carries
+`opal_streaky_caution` (scores sheet-identity-unverified under §3c; its 2 raw cross-capture
+pairs are the report-030 "bell pepper" same-photo crops — identity coverage only);
+203533/220043 each carry 2-3 image-level flags (line_stock_photo/lineup gallery slots) and have
+no surviving registrable pairs — statistics-only contributors.
+**Final frozen holdout: 58/254 = 22.8%.** No v1.0-reserved product was removed. harvest-033
+cross-verified the list and synced the dataset card to this freeze point
+(`REAL_PAIRS_DATASET.md` §9.4 @ `6d6d7f5` on `research/delighting-033`, referencing `94f2d01`).
+
+**Schema additions wired into §3c use-gating:** per-image contamination flags are LISTS;
+`variant_duplicate_listing` duplicates are one identity (count once; reserve ALL if the hash
+ever disagrees across duplicates — 175010/234263 both land train-side, no action);
+`suspect_same_photo` (residual_mad<15 AND inliers≥200, 16 pairs — the clear-glass
+crop-derivation leak) excluded as registered pairs; finished-product screen validated at 96%
+recall / 0 FP on Van Gogh.
+
+**Honest bias note carried into the protocol:** surviving pairs are heavily brand-skewed
+(uro+tiffany-today+clear-textured = 92%); the three top-up products come from brands with few or
+no surviving registrable pairs, so they buy identity coverage for texture/statistics work, not
+pair volume; lightbox references remain near-absent (1.8%).
