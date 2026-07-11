@@ -1,12 +1,12 @@
 # 032 — Generator v3: pre-scaling texture-authoring overhaul
 
-Date: 2026-07-10. Branch `research/delighting-032` (off `research/delighting`).
+Date: 2026-07-10/11. Branch `research/delighting-032` (off `research/delighting`).
 Consolidates the evidence from reports 029 (VLM realism critique), 031 (variety
 coverage), and `docs/RENDER_AT_SCALE.md` into generator changes, ahead of the
 20k-sample production run. Code touched: `generate_synthetic.py` (WP-A authoring
-+ helpers), `corpus/appearance_stats.py` (single-source refactor),
-`docs/GT_SPEC.md` (WP-C spec + size budget). Offline evidence + reproduction
-scripts under `results/032/`. No PR — reports are the deliverable.
++ helpers, WP-B `--specular`), `corpus/appearance_stats.py` (single-source
+refactor), `docs/GT_SPEC.md` (WP-C spec + size budget). Evidence, harnesses,
+and review materials under `results/032/`. No PR — reports are the deliverable.
 
 ## 0. TL;DR
 
@@ -35,17 +35,18 @@ scripts under `results/032/`. No PR — reports are the deliverable.
   (5.5 TB → 1.2–1.8 TB), which RENDER_AT_SCALE named as the true scaling
   constraint (egress can cost 10x compute). `gt_B` + 4 free multilayer AOVs
   specified with wiring notes.
-- **WP-B (scene realism) and the render-gated WP-D items (specular-on extractor
-  impact, gallery rebuild) — NOT landed this iteration.** Honest scoping call:
-  WP-A is the highest-leverage, offline-verifiable, evidence-backed core (029
-  gaps #1/#3 + 031's documented legibility failures), and I prioritized landing
-  it clean and gated over half-finishing the scene/GT render plumbing. §6 states
-  exactly what remains and why each needs a render/VLM budget I flag rather than
-  fake.
+- **VLM legibility: 3/3 streaky recipes now classify as T12-streaky** (§3) —
+  after four retune→re-render→re-classify rounds; the decisive addition was a
+  thin smoke-filament veil layer (`filament_layer()`), the cue the real
+  exemplars show. Instrument calibrated on two committed REAL exemplars (both
+  pass), so the letter grade is meaningful.
+- **WP-B: `--specular` flag landed** (glass Specular IOR Level 0.5–1.0 + a
+  dim-interior wall, dedicated RNG so OFF/ON scenes are otherwise identical);
+  specular-ON extractor impact measured in §7. Textured window frames, wider
+  camera jitter, and the opal-scatter ceiling are NOT landed (§6).
 - **`--validate` gate: 13/13 pass** — unchanged-family recipes reproduce report
   022's committed MAE to the 3rd–4th decimal; the reworked streaky recipes stay
   inside the 022 band (§5).
-- **VLM legibility verdict:** see §3.
 
 ## 1. WP-A: texture-authoring overhaul
 
@@ -135,15 +136,67 @@ Removed the ~130-line duplicated `generate_noise` + `recipe_T` copy; it now stub
 shim T == generator T, byte-identical). This turns the "keep both files in sync"
 footgun — which every WP-A change would have tripped — into a real single source
 of truth, at zero risk to the render path (no importer of appearance_stats
-elsewhere; the generator is untouched by the shim). Recipe color stats
-re-derived post-change still hit the 021/022 targets (§0).
+elsewhere; the generator is untouched by the shim).
 
-## 3. VLM legibility verdict (WP-A acceptance)
+**Full grounding re-run** over the real corpus (n=692 backlit-verified images;
+`results/032/appearance_grounding_032.txt`, refreshed
+`results/corpus/appearance_stats.json`): all 13 post-032 recipes sit inside
+their class's real L/C/hue ranges — streaky-fine-texture lands the 021 target
+exactly (L54.4/C40.0/hue30°); wispy-white moved from L=90.7 (ABOVE the real
+wispy p95 of 88.9 — the pre-032 recipe was too white to be real) to L=76,
+between the class median and p95. Two honest flags: (1) the previously
+committed `appearance_stats.json` was **stale — pre-022, 8 recipes only** — so
+old-vs-new hf comparisons from that file are meaningless; the valid hf
+preservation evidence is the OLD-code-vs-NEW-code harness in
+`results/032/wpa_evidence.py`. (2) By the 512px radial-FFT hf-fraction
+instrument, the two-color streak recipes (streaky-mix 0.0011, wispy-white
+0.0013) sit below the real wispy p5 (0.0035) — the legible macro-streak
+contrast inflates the DENOMINATOR (total variance), not because fine detail
+fell (the stale pre-022 baseline scored the same 0.0016 with far less macro
+structure). hf-fraction and streak legibility trade off directly through that
+ratio; flagged for a follow-up calibration of the instrument, deliberately not
+"fixed" by killing the streak contrast the VLM gate demanded.
 
-[PENDING — HDRI-lit renders of the three streaky recipes + a per-recipe `claude`
-CLI taxon classification (streaky T12 vs ring-mottle T7 vs smooth-opal T14 vs
-cathedral). Acceptance: streaky recipes classify as streaky. Filled after the
-`--validate` gate frees the GPU.]
+## 3. VLM legibility verdict (WP-A acceptance): **3/3 PASS, instrument-calibrated**
+
+Harness: `results/032/vlm_legibility_032.py` — one blind `claude -p` (haiku)
+taxon call per rendered photo (T12-streaky vs T7-ring-mottle vs T14-smooth-opal
+vs T2-cathedral-textured), the `vlm_classify.py` subprocess pattern. Inputs are
+the uniform-backlight `--validate` renders (the HARDEST case for pattern
+legibility — no directional lighting to help). Downscaled copies committed at
+`results/032/legibility_inputs/`.
+
+**Instrument calibration first**: both committed REAL wispy/streaky exemplars
+(`reports/assets_029/corpus_bullseye-0021000000f1010.jpg` black 2-color mix,
+`corpus_bullseye-0023050030f1010.jpg` salmon 2-color mix) classify as
+T12-streaky — the letter grade is achievable, so a synthetic miss is a real
+authoring gap, not prompt noise.
+
+It took four rounds (each: retune → re-render → re-classify → verify by eye —
+every round re-passed the `--validate` gate):
+
+| round | change | streaky-mix | streaky-fine | wispy-white |
+|---|---|---|---|---|
+| 1 | flow-advected streaks (§1a) | **T12 PASS** | T2 (fine detail swamped the soft streak in the RENDER) | T14 (wisps washed to near-white) |
+| 2 | streak amp ↑, detail ↓, wisp threshold/color deepened | — | T14 | T14 |
+| 3 | **filament layer** (`filament_layer()`: thin smoke-like curved veils — sparse thresholded source + long high-curl LIC at 768 working res; the cue the real exemplars scream) | — | **T12 PASS** | T14 |
+| 4 | wispy contrast deepened (wisp_color 0.42→0.30, fil 0.5→0.72; grounded headroom — pre-032 wispy L=90.7 was ABOVE the real wispy p95 88.9, final L=76 sits between the class median 56.8 and p95; gate MAE improved 0.0397→0.0264) | — | — | **T12 PASS** |
+
+The round-1..2 lesson is worth keeping: **authored-array anisotropy is not
+render legibility.** Round 1's authored T had the anisotropy lift (§1a table),
+but the render diluted it (fine-detail mottle + relief shading). The filament
+layer — thin, sharp, curved veils folding through broad soft marbling — is what
+flipped the VLM, and it is exactly what the real corpus exemplars show.
+
+Own-eyes verdict (mine, final renders next to the real exemplars): streaky-mix
+has legible directional two-color streaks with sharp lamination lines;
+streaky-fine reads as marbled salmon with thin darker threads — a convincing
+sibling of the real salmon 2-color mix; wispy-white now carries smoke-like
+folding veils with thin filaments, a strong family resemblance to the real
+black-smoke exemplar (in white). None of the three would fool 029's full
+realism critique (that instrument reads camera optics and lighting too — out of
+WP-A's scope), but the *pattern taxon* is now right, which is what 031 flagged
+and this gate accepts.
 
 ## 4. WP-C: GT export v3 + size budget
 
@@ -182,34 +235,44 @@ uniform backlight, i.e. the authored→shader→render→GT pipeline is intact.
 | dark-opaque | 0.0045 | 0.0045 | | cathedral-green | 0.0232 | 0.0230 |
 | streaky-fine-texture | 0.0083 | 0.0084 | | cathedral-amber | 0.0258 | 0.0256 |
 | dark-slate | 0.0095 | 0.0095 | | streaky-mix | 0.0426 | 0.0375 |
-| | | | | wispy-white | 0.0341 | 0.0397 |
+| | | | | wispy-white | 0.0264 | 0.0397 |
 
-Reading: the dark family reproduces 022 exactly (the coupling swing is smallest
-there and MAE is texture-mean-dominated); cathedral/opalescent recipes land
-within +0.0002 of 022 (micro-events + coupling are mean-preserving by
+(Table shows the FINAL post-§3-tuning values; the intermediate rounds also all
+passed — streaky-fine 0.0083/0.0084/0.0084, wispy 0.0341/0.0318/0.0264 across
+rounds.) Reading: the dark family reproduces 022 exactly (the coupling swing is
+smallest there and MAE is texture-mean-dominated); cathedral/opalescent recipes
+land within +0.0002 of 022 (micro-events + coupling are mean-preserving by
 construction); the two rewritten streak recipes move MAE *within* the 022 band
-in both directions (streaky-mix 0.0375→0.0426, wispy-white 0.0397→0.0341 —
+in both directions (streaky-mix 0.0375→0.0426, wispy-white 0.0397→0.0264 —
 022's own gate ceiling was 0.0397; streaky-mix's small rise tracks its sharper
 lamination lines, far below any failure threshold).
 
 ## 6. What is NOT done, and why (honest scope)
 
-Render/VLM/extractor-budget-gated items I deliberately did not fake:
+Landed beyond WP-A: the `--specular` flag + dim-interior wall (§0, §7), the
+VLM legibility loop (§3), the grounding re-run (§2), extractor OFF/ON A/B and
+review contact sheet (§7). Deliberately NOT landed:
 
-1. **WP-B scene realism** (front-surface specular veil, textured window frames,
-   wider camera jitter, opal-scatter ceiling). Specular-on **degrades the
-   veil-less extractor** by construction (029/MMv3 G2) — the point is to MEASURE
-   that honestly, which needs an extractor smoke-run over a new render batch
-   (specular OFF vs ON). Not startable without those renders; flagged as the
-   next package.
+1. **WP-B remainder**: textured window frames (the RGB-0.01 void bars are
+   unchanged), wider camera jitter ranges, per-render HDRI-pack sampling as the
+   *default* (the pack + `--hdri-dir` are consumed by the §7 batches, but the
+   no-flag default still downloads the single sunflowers HDRI — unchanged for
+   byte-compat), and the opal-scatter stopgap (second rough-transmission lobe).
+   Each is a scene change that must ride its own validate+extractor pass; the
+   real fix for the scatter is MMv3-G1's PSF and remains so.
 2. **Mark overhaul + new taxa recipes** (§1e).
-3. **WP-C code** (flags/AOVs/gt_B) — spec'd (§4), not landed.
-4. **Gallery rebuild + extractor smoke-run + determinism spot-check** (WP-D
-   render deliverables).
+3. **WP-C code** (`--no-tex-dump`, `--exr-codec`, gt_B, AOVs) — spec'd (§4)
+   with wiring notes, not landed.
+4. **Determinism spot-check old-vs-new**: not run as a render-level check this
+   iteration — by design the reworked recipes regenerate (that's the point),
+   and unchanged-recipe determinism is already covered by RENDER_AT_SCALE §5
+   plus the gate's 4th-decimal MAE reproduction (§5). Authoring-level
+   determinism (same seed → identical arrays) is verified in
+   `results/032/wpa_evidence.py`'s harness.
 
-The through-line: WP-A is the evidence-backed core that is fully verifiable
-offline and gate-checkable, so it shipped clean; the scene/GT/render items each
-need a render or VLM budget whose result I would rather measure than assert.
+The through-line: everything that could be verified offline or with the render
+budget available this session shipped and is gated; the remaining scene/GT
+items each need their own validate+extractor pass and are cleanly separable.
 
 ## Reproduction
 
