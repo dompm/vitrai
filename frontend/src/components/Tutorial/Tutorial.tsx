@@ -29,7 +29,7 @@ interface Props {
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
-  onStartTour: (trackId: TrackId) => void;
+  onStartTour: (trackId?: TrackId) => void;
   onSkip: () => void;
   onComplete: () => void;
 }
@@ -241,10 +241,10 @@ export function Tutorial({
   // Vector CAD Step 3: Snap angles
   useEffect(() => {
     if (step !== 'vector-snap-angles') return;
-    if (patternTool === 'select' || selectedPieceIds.length > 0) {
+    if (patternTool === 'select') {
       onAdvance();
     }
-  }, [step, patternTool, selectedPieceIds, onAdvance]);
+  }, [step, patternTool, onAdvance]);
 
   // Vector CAD Step 4: Curve edge
   useEffect(() => {

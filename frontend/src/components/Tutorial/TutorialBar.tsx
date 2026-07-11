@@ -5,7 +5,7 @@ import { IconSpark, IconSquare, IconLamp, IconRuler } from '../icons';
 
 interface TutorialBarProps {
   step: StepId;
-  onStart: (trackId: TrackId) => void;
+  onStart: (trackId?: TrackId) => void;
   onSkip: () => void;
   onComplete: () => void;
   customTitle?: string;
@@ -84,8 +84,11 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
           <div className="tutorial-modal-eyebrow">{t('tutorialEyebrow')}</div>
           <h2 className="tutorial-modal-title">{t('tutorialDoneTitle')}</h2>
           <p className="tutorial-modal-body">{t('tutorialDoneBody')}</p>
-          <div className="tutorial-modal-actions">
-            <button className="btn-primary" onClick={onComplete}>
+          <div className="tutorial-modal-actions" style={{ gap: '12px' }}>
+            <button className="btn-primary" onClick={() => onStart()}>
+              {t('tutorialChooseAnotherTrackButton')}
+            </button>
+            <button className="btn-ghost" onClick={onComplete}>
               {t('tutorialFinishButton')}
             </button>
           </div>

@@ -144,7 +144,6 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   },
   'vector-draw-shape': {
     id: 'vector-draw-shape',
-    spotlightTarget: '.canvas-well',
     panel: 'pattern',
   },
   'vector-snap-angles': {
@@ -154,7 +153,6 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   },
   'vector-curve-edge': {
     id: 'vector-curve-edge',
-    spotlightTarget: '.canvas-well',
     panel: 'pattern',
   },
   'vector-assign-glass': {
