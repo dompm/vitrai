@@ -131,8 +131,18 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
         if (!res.ok) throw new Error('Failed to load swatch library JSON');
         return res.json();
       })
-      .then(data => {
-        setLibrary(data);
+      .then((data: SwatchItem[]) => {
+        const cdnUrl = (import.meta.env.VITE_SWATCH_CDN_URL || '').replace(/\/$/, '');
+        const processed = cdnUrl
+          ? data.map(item => {
+              const imgPath = item.local_image.startsWith('/') ? item.local_image : `/${item.local_image}`;
+              return {
+                ...item,
+                local_image: `${cdnUrl}${imgPath}`
+              };
+            })
+          : data;
+        setLibrary(processed);
         setLoading(false);
       })
       .catch(err => {
