@@ -274,6 +274,51 @@ The through-line: everything that could be verified offline or with the render
 budget available this session shipped and is gated; the remaining scene/GT
 items each need their own validate+extractor pass and are cleanly separable.
 
+## 7. Extractor impact: specular OFF vs ON, and the review contact sheet
+
+Batch: 13 recipes × 1 HDRI-pack lighting (`--hdri-dir`, 23 CC0 HDRIs,
+seed-keyed) × production config (shadow pairs), seeds 500–512, rendered TWICE
+with identical seeds — specular OFF vs `--specular` ON (Specular IOR Level
+0.5–1.0 + dim-interior wall 0.02–0.08; scenes otherwise identical by the
+dedicated-RNG construction). Extractor = `eval_synthetic.py`'s oracle-class
+harness over `extract.py`. Full tables: `results/032/extractor_{off,on}_table.md`,
+per-recipe delta: `results/032/extractor_delta_off_on.txt`.
+
+**Measured impact: near-zero on T, small and dark-family-concentrated on h.**
+Mean ΔT_mae = +0.0000 (max |Δ| 0.005, cathedral-blue); mean Δh_mae = +0.0024,
+dominated by ONE recipe — dark-deep h_mae 0.115→0.155 (+0.040): against a
+near-black transmission even a dim-interior veil is proportionally the largest
+signal, and the veil-less extractor books it as haze.
+
+The honest reading (do NOT over-celebrate): this is **not** evidence the
+extractor tolerates reflection veils — it is evidence the *dim-interior* veil
+this flag produces is small by construction (a 0.02–0.08 gray wall). It is the
+right first step for capture realism (a real workshop interior IS dim next to a
+backlit sheet — and 9/16 of 029's diagnostics cited the total *absence* of any
+glint), but MMv3-G2's real front IBL (a bright environment reflected in the
+front face) will hit the extractor's no-veil assumption much harder. That
+measurement belongs to the iteration that adds the front IBL; this one
+establishes the mechanism, the meta.json audit trail (the `specular` block),
+and the baseline numbers.
+
+Also visible in the OFF/ON photos (own eyes): cathedral-green/red pick up a
+believable relief-tracking sheen with `--specular` ON; the effect is subtle at
+review-sheet scale for the dark family. Micro-event seeds read as small bright
+dots on the dark recipes — 029's donut cue, now present.
+
+**Review contact sheet** (WP-D): `results/032/contact_sheet_032.jpg` —
+13 recipes × [photo OFF | photo ON | gt_T | gt_height], downscaled and
+committed; built by `results/032/contact_sheet_032.py` from the gitignored
+batch dirs, so the lead can rebuild the review page. The HDRI-pack lighting
+variety is evident across rows (window-lit interiors, outdoor sun, dim rooms —
+vs the historical single sunflowers env), and the frame-occluder trap and
+shadow-pair machinery ran unchanged (dark-deep drew edge bars; streaky-mix drew
+a window-backlit interior).
+
+**Production per-sample footprint, measured on this batch: 275 MB** (21 files,
+shadow pair + 5 GT channels) — confirms `docs/GT_SPEC.md`'s 273 MB planning
+number and its ≤100 MB `--no-tex-dump --exr-codec DWAA` decision.
+
 ## Reproduction
 
 ```
@@ -283,4 +328,13 @@ python3 results/032/wpa_evidence.py          # OLD-vs-NEW offline evidence table
 for r in <13 recipes>; do BLENDER -b -P generate_synthetic.py -- \
    --out OUT --seed 42 --count 1 --light-variations 1 --validate --recipe $r; done
 python3 check_validation.py OUT
+# VLM legibility (needs `claude` CLI):
+python3 results/032/vlm_legibility_032.py OUT/<streaky-sample>/without_shadow_photo.png
+# specular A/B batch + extractor + contact sheet (needs Blender + HDRI pack):
+python3 fetch_hdri_pack.py --out HDRI_DIR --res 1k
+#   render 13 recipes seeds 500-512 twice (results/032/batch_specular_ab_032.sh; ON adds --specular)
+python3 eval_synthetic.py --data OFF_DIR --out EVAL_OFF   # and ON_DIR
+python3 results/032/contact_sheet_032.py OFF_DIR ON_DIR results/032/contact_sheet_032.jpg
+# appearance grounding (needs the catalog_images symlink, report-015 convention):
+python3 corpus/appearance_stats.py
 ```
