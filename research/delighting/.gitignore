@@ -30,8 +30,10 @@ __pycache__/
 dark_calibration_data/
 realpairs/crawl_log.txt
 realpairs/results/census_images/
+realpairs/data/
 results/variety_031/images/
 results/variety_031/recipes/*.png
 results/vlm_realism_029/raw_wild/
 results/vlm_realism_029/ours/
 results/vlm_realism_029/downscaled/
+results/corpus/swatch_picker_cache/

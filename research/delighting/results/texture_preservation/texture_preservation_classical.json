@@ -1,0 +1,711 @@
+{
+  "illum": "classical",
+  "size": 700,
+  "n_images": 11,
+  "mode": "photo (T vs input photo high-frequency)",
+  "aggregate_T": {
+    "fine_grad_corr": 0.6089798546534408,
+    "fine_retained_energy": 1.2669728279892756,
+    "fcs_survival": 0.5089023724543356
+  },
+  "aggregate_flatten_control": {
+    "fine_grad_corr": 0.44258664566299827,
+    "fine_retained_energy": 0.02659470962297017,
+    "fcs_survival": 0.0
+  },
+  "per_image": [
+    {
+      "image": "amber.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.7158863457711679,
+              "retained_energy": 0.8237315913989663
+            },
+            "sigma2": {
+              "grad_corr": 0.8127920156382814,
+              "retained_energy": 0.8467857041598432
+            },
+            "sigma4": {
+              "grad_corr": 0.8619900370956034,
+              "retained_energy": 0.8447206937806648
+            },
+            "sigma8": {
+              "grad_corr": 0.8486300731707459,
+              "retained_energy": 0.8450944641006526
+            }
+          },
+          "fine_grad_corr": 0.7643391807047246,
+          "fine_retained_energy": 0.8352586477794048
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.586
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.2796121965954072,
+              "retained_energy": 0.011838014698453837
+            },
+            "sigma2": {
+              "grad_corr": 0.3251067062346172,
+              "retained_energy": 0.041476044099310466
+            },
+            "sigma4": {
+              "grad_corr": 0.5314405025321647,
+              "retained_energy": 0.13658136265184356
+            },
+            "sigma8": {
+              "grad_corr": 0.8322199596597423,
+              "retained_energy": 0.39116212269151907
+            }
+          },
+          "fine_grad_corr": 0.3023594514150122,
+          "fine_retained_energy": 0.026657029398882152
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "orange.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.2554642926681933,
+              "retained_energy": 0.6459892451457522
+            },
+            "sigma2": {
+              "grad_corr": 0.3108412499829922,
+              "retained_energy": 0.6152541485892561
+            },
+            "sigma4": {
+              "grad_corr": 0.3986759622008145,
+              "retained_energy": 0.5868020295920189
+            },
+            "sigma8": {
+              "grad_corr": 0.37398150841614064,
+              "retained_energy": 0.6169330629828343
+            }
+          },
+          "fine_grad_corr": 0.28315277132559274,
+          "fine_retained_energy": 0.6306216968675041
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.196
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.392768761534353,
+              "retained_energy": 0.012997752384727805
+            },
+            "sigma2": {
+              "grad_corr": 0.46061443235180255,
+              "retained_energy": 0.045887897621619184
+            },
+            "sigma4": {
+              "grad_corr": 0.6481600382188057,
+              "retained_energy": 0.14601016735666325
+            },
+            "sigma8": {
+              "grad_corr": 0.8684366987539246,
+              "retained_energy": 0.3906835650435584
+            }
+          },
+          "fine_grad_corr": 0.4266915969430778,
+          "fine_retained_energy": 0.029442825003173495
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "pink.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.49883863491417,
+              "retained_energy": 1.0943867001587528
+            },
+            "sigma2": {
+              "grad_corr": 0.5670140591303464,
+              "retained_energy": 1.2026087690508396
+            },
+            "sigma4": {
+              "grad_corr": 0.6465147678685643,
+              "retained_energy": 1.2160553014925344
+            },
+            "sigma8": {
+              "grad_corr": 0.6382320898013186,
+              "retained_energy": 1.2118662996086715
+            }
+          },
+          "fine_grad_corr": 0.5329263470222583,
+          "fine_retained_energy": 1.1484977346047962
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.412
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.4749283759463927,
+              "retained_energy": 0.010580178804297152
+            },
+            "sigma2": {
+              "grad_corr": 0.5353358569457,
+              "retained_energy": 0.040485537027567284
+            },
+            "sigma4": {
+              "grad_corr": 0.6856744625429282,
+              "retained_energy": 0.13886707838248374
+            },
+            "sigma8": {
+              "grad_corr": 0.8900828397054095,
+              "retained_energy": 0.40173200651638363
+            }
+          },
+          "fine_grad_corr": 0.5051321164460463,
+          "fine_retained_energy": 0.025532857915932218
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "red.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": -0.03837323680563182,
+              "retained_energy": 0.88162979158186
+            },
+            "sigma2": {
+              "grad_corr": -0.053582528475267226,
+              "retained_energy": 1.0180325745787562
+            },
+            "sigma4": {
+              "grad_corr": -0.05405617394891371,
+              "retained_energy": 1.0247172837215366
+            },
+            "sigma8": {
+              "grad_corr": -0.08097080304289282,
+              "retained_energy": 1.0872002025154714
+            }
+          },
+          "fine_grad_corr": -0.045977882640449524,
+          "fine_retained_energy": 0.9498311830803081
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.042
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.5221985800667238,
+              "retained_energy": 0.00992887671966976
+            },
+            "sigma2": {
+              "grad_corr": 0.5915734786622868,
+              "retained_energy": 0.03912619820693407
+            },
+            "sigma4": {
+              "grad_corr": 0.7400488359224454,
+              "retained_energy": 0.13940486881471287
+            },
+            "sigma8": {
+              "grad_corr": 0.911537894242506,
+              "retained_energy": 0.3953029284202316
+            }
+          },
+          "fine_grad_corr": 0.5568860293645053,
+          "fine_retained_energy": 0.024527537463301913
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "green.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.6818803476105886,
+              "retained_energy": 1.7320515083398815
+            },
+            "sigma2": {
+              "grad_corr": 0.7252359669541579,
+              "retained_energy": 1.8756291857985197
+            },
+            "sigma4": {
+              "grad_corr": 0.7480248536559002,
+              "retained_energy": 1.8656471669117134
+            },
+            "sigma8": {
+              "grad_corr": 0.735085473086595,
+              "retained_energy": 1.879574641337437
+            }
+          },
+          "fine_grad_corr": 0.7035581572823733,
+          "fine_retained_energy": 1.8038403470692006
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.62
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.5169683613619674,
+              "retained_energy": 0.013175205471617572
+            },
+            "sigma2": {
+              "grad_corr": 0.5813348910916801,
+              "retained_energy": 0.047672232360676824
+            },
+            "sigma4": {
+              "grad_corr": 0.7385660333640406,
+              "retained_energy": 0.14674097575772266
+            },
+            "sigma8": {
+              "grad_corr": 0.8967032779616531,
+              "retained_energy": 0.38761485132266926
+            }
+          },
+          "fine_grad_corr": 0.5491516262268238,
+          "fine_retained_energy": 0.0304237189161472
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "blue.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.6114594074881174,
+              "retained_energy": 1.2781506850822766
+            },
+            "sigma2": {
+              "grad_corr": 0.5797690820713223,
+              "retained_energy": 1.4245813786645005
+            },
+            "sigma4": {
+              "grad_corr": 0.6206109584902973,
+              "retained_energy": 1.4165949144812502
+            },
+            "sigma8": {
+              "grad_corr": 0.6024820588455763,
+              "retained_energy": 1.4086897857998046
+            }
+          },
+          "fine_grad_corr": 0.5956142447797199,
+          "fine_retained_energy": 1.3513660318733884
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.672
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.5404203164421487,
+              "retained_energy": 0.009206438523371888
+            },
+            "sigma2": {
+              "grad_corr": 0.6098381714168104,
+              "retained_energy": 0.03866321028237581
+            },
+            "sigma4": {
+              "grad_corr": 0.7493471128683726,
+              "retained_energy": 0.13838101810730755
+            },
+            "sigma8": {
+              "grad_corr": 0.9181836634555632,
+              "retained_energy": 0.3908598485579752
+            }
+          },
+          "fine_grad_corr": 0.5751292439294795,
+          "fine_retained_energy": 0.023934824402873846
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "turquoise.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.8343355366459706,
+              "retained_energy": 1.5642527370014292
+            },
+            "sigma2": {
+              "grad_corr": 0.850975301170573,
+              "retained_energy": 1.6811794813235776
+            },
+            "sigma4": {
+              "grad_corr": 0.8481941171971434,
+              "retained_energy": 1.7104488073848223
+            },
+            "sigma8": {
+              "grad_corr": 0.8140718773699421,
+              "retained_energy": 1.7514608914129794
+            }
+          },
+          "fine_grad_corr": 0.8426554189082718,
+          "fine_retained_energy": 1.6227161091625035
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.796
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.43771047103267774,
+              "retained_energy": 0.009956400254749634
+            },
+            "sigma2": {
+              "grad_corr": 0.4908804934733352,
+              "retained_energy": 0.03966856908041498
+            },
+            "sigma4": {
+              "grad_corr": 0.6599754522432598,
+              "retained_energy": 0.1356946892081494
+            },
+            "sigma8": {
+              "grad_corr": 0.8794659111451124,
+              "retained_energy": 0.3892359042173871
+            }
+          },
+          "fine_grad_corr": 0.46429548225300643,
+          "fine_retained_energy": 0.024812484667582308
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "white.jpg",
+      "class": "opalescent",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.9246113417237369,
+              "retained_energy": 0.972331519938713
+            },
+            "sigma2": {
+              "grad_corr": 0.9515355499698932,
+              "retained_energy": 1.006691219908739
+            },
+            "sigma4": {
+              "grad_corr": 0.9572466892461293,
+              "retained_energy": 1.0414811567073474
+            },
+            "sigma8": {
+              "grad_corr": 0.9457568329651135,
+              "retained_energy": 1.0586477548193907
+            }
+          },
+          "fine_grad_corr": 0.9380734458468151,
+          "fine_retained_energy": 0.989511369923726
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.786
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.24507779908002994,
+              "retained_energy": 0.011433995349061508
+            },
+            "sigma2": {
+              "grad_corr": 0.2802169374572649,
+              "retained_energy": 0.04024798354860523
+            },
+            "sigma4": {
+              "grad_corr": 0.49086075877554886,
+              "retained_energy": 0.13459156744512815
+            },
+            "sigma8": {
+              "grad_corr": 0.810558459650905,
+              "retained_energy": 0.39392527262913934
+            }
+          },
+          "fine_grad_corr": 0.26264736826864743,
+          "fine_retained_energy": 0.025840989448833368
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "black.jpg",
+      "class": "dark-opaque",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.838340459119789,
+              "retained_energy": 2.782929465270733
+            },
+            "sigma2": {
+              "grad_corr": 0.8494321340926185,
+              "retained_energy": 2.912161468704521
+            },
+            "sigma4": {
+              "grad_corr": 0.8550919942618282,
+              "retained_energy": 2.9271017086414868
+            },
+            "sigma8": {
+              "grad_corr": 0.8407526116846165,
+              "retained_energy": 2.9122718937344754
+            }
+          },
+          "fine_grad_corr": 0.8438862966062037,
+          "fine_retained_energy": 2.847545466987627
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.782
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.49132329596440627,
+              "retained_energy": 0.00897764346776601
+            },
+            "sigma2": {
+              "grad_corr": 0.5694054679409952,
+              "retained_energy": 0.038892960021876255
+            },
+            "sigma4": {
+              "grad_corr": 0.7218758405200401,
+              "retained_energy": 0.13844574348844615
+            },
+            "sigma8": {
+              "grad_corr": 0.9056788732473942,
+              "retained_energy": 0.40377377085386923
+            }
+          },
+          "fine_grad_corr": 0.5303643819527007,
+          "fine_retained_energy": 0.023935301744821134
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "easy_amber.jpg",
+      "class": "cathedral-clear",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.7038379166563494,
+              "retained_energy": 0.8310451798864202
+            },
+            "sigma2": {
+              "grad_corr": 0.807198544937194,
+              "retained_energy": 0.8515544954664358
+            },
+            "sigma4": {
+              "grad_corr": 0.859474620995101,
+              "retained_energy": 0.8475234824063134
+            },
+            "sigma8": {
+              "grad_corr": 0.8468208684967108,
+              "retained_energy": 0.8483055852587695
+            }
+          },
+          "fine_grad_corr": 0.7555182307967717,
+          "fine_retained_energy": 0.841299837676428
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 500,
+          "survival": 0.602
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.2789353763565092,
+              "retained_energy": 0.011973788886568415
+            },
+            "sigma2": {
+              "grad_corr": 0.32538951994094445,
+              "retained_energy": 0.04166431223711244
+            },
+            "sigma4": {
+              "grad_corr": 0.5317571305953102,
+              "retained_energy": 0.13677786198608335
+            },
+            "sigma8": {
+              "grad_corr": 0.8322497889172791,
+              "retained_energy": 0.39125415017299625
+            }
+          },
+          "fine_grad_corr": 0.30216244814872684,
+          "fine_retained_energy": 0.02681905056184043
+        },
+        "fcs": {
+          "n_ref_kp": 500,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    },
+    {
+      "image": "difficult_wispy.jpg",
+      "class": "wispy",
+      "illum": "classical",
+      "T_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.4570764783399938,
+              "retained_energy": 0.8871256992898704
+            },
+            "sigma2": {
+              "grad_corr": 0.5129879027711409,
+              "retained_energy": 0.9452996664244188
+            },
+            "sigma4": {
+              "grad_corr": 0.564843097830521,
+              "retained_energy": 0.9943124185383059
+            },
+            "sigma8": {
+              "grad_corr": 0.6052980982579843,
+              "retained_energy": 1.0484735962112837
+            }
+          },
+          "fine_grad_corr": 0.48503219055556734,
+          "fine_retained_energy": 0.9162126828571446
+        },
+        "fcs": {
+          "n_ref_kp": 433,
+          "n_test_kp": 206,
+          "survival": 0.10392609699769054
+        }
+      },
+      "flatten_control_vs_photo": {
+        "mgp": {
+          "per_scale": {
+            "sigma1": {
+              "grad_corr": 0.3283852673547757,
+              "retained_energy": 0.01118875608249048
+            },
+            "sigma2": {
+              "grad_corr": 0.4588814473351335,
+              "retained_energy": 0.050041616576077114
+            },
+            "sigma4": {
+              "grad_corr": 0.6285272987692058,
+              "retained_energy": 0.20928071111141205
+            },
+            "sigma8": {
+              "grad_corr": 0.8856571815433957,
+              "retained_energy": 0.5592833605527432
+            }
+          },
+          "fine_grad_corr": 0.3936333573449546,
+          "fine_retained_energy": 0.030615186329283797
+        },
+        "fcs": {
+          "n_ref_kp": 433,
+          "n_test_kp": 0,
+          "survival": 0.0
+        }
+      }
+    }
+  ]
+}

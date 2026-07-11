@@ -1,0 +1,467 @@
+{
+  "recovered": [
+    {
+      "id": "bullseye-0000090030f1010",
+      "name": "Reactive Cloud Opalescent, Double-rolled, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0000090030f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0000090030f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.1911,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.3473
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.522,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.5063
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0000090050f1010",
+      "name": "Reactive Cloud Opalescent, Thin-rolled, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0000090050f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0000090050f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.3871,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.3347
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.5199,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.4997
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010090050f1010",
+      "name": "Reactive Ice Transparent, Thin-rolled, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010090050f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010090050f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.3842,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.32550999999999997
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.736,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.55
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150031f1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150031f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150031f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.4636,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.7756274224042559,
+            "coverage": 0.33898
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.6101,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.350385
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150051f1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150051f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150051f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.4636,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.7756274224042559,
+            "coverage": 0.33898
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.6306,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.41447
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160031f1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160031f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160031f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.1928,
+          "components": {
+            "audit": 0.0,
+            "hand": 0.43900000000000006,
+            "seam": 0.0,
+            "coverage": 0.3282
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.61,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.349875
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160051f1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160051f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160051f1010-v2.jpg"
+      ],
+      "pick": 1,
+      "correct": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.1928,
+          "components": {
+            "audit": 0.0,
+            "hand": 0.43900000000000006,
+            "seam": 0.0,
+            "coverage": 0.3282
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.6425,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.4517
+          }
+        }
+      ]
+    }
+  ],
+  "unrecoverable": [
+    {
+      "id": "bullseye-0010090030f1010",
+      "name": "Reactive Ice Transparent, Double-rolled, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010090030f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/d5733901b17c3289.jpg"
+      ],
+      "pick": null,
+      "max_score": 0.3842,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.3842,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.32550999999999997
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1014,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.06701499999999999
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150030f1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150030f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/0531698ae1a87d61.jpg"
+      ],
+      "pick": null,
+      "max_score": 0.4216,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.4216,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.442385
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1003,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.06354
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010150050f1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010150050f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/f403a80a98bf2bd4.jpg"
+      ],
+      "pick": null,
+      "max_score": 0.4216,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.4216,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.442385
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1004,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.063645
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160030f1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160030f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/318b480d72a656f9.jpg"
+      ],
+      "pick": 0,
+      "max_score": 0.5376,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.5376,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.49883500000000003
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1034,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.073125
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010160050f1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010160050f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/c05db1351907d88b.jpg"
+      ],
+      "pick": 0,
+      "max_score": 0.5376,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.5376,
+          "components": {
+            "audit": 0.35,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.49883500000000003
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1033,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.07296
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010190030f1010",
+      "name": "Red Reactive Clear Transparent, Double-rolled, 3 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010190030f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/c5a7f69a12c10d7e.jpg"
+      ],
+      "pick": null,
+      "max_score": 0.3819,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.3819,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.31840499999999994
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1012,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.066325
+          }
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0010190050f1010",
+      "name": "Red Reactive Clear Transparent, Thin-rolled, 2 mm, Fusible",
+      "candidates": [
+        "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/catalog_images/bullseye-0010190050f1010.jpg",
+        "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a87bf7224e2b3000c/research/delighting/corpus/../results/corpus/swatch_picker_cache/9f581d5d4d9ea44b.jpg"
+      ],
+      "pick": null,
+      "max_score": 0.3819,
+      "acceptable": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.3819,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.31840499999999994
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.1012,
+          "components": {
+            "audit": 0.0,
+            "hand": 1.0,
+            "seam": 0.0,
+            "coverage": 0.066325
+          }
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "n_recovered": 7,
+    "n_recovered_correct": 7,
+    "n_unrecoverable": 7,
+    "n_unrecoverable_none_or_low": 7
+  }
+}

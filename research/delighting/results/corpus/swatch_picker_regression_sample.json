@@ -1,0 +1,457 @@
+{
+  "n_sample": 20,
+  "seed": 42,
+  "n_fetched_ok": 20,
+  "n_agree_with_position1": 15,
+  "agreement_rate": 0.75,
+  "results": [
+    {
+      "id": "youghiogheny-yuf707312",
+      "manufacturer": "Youghiogheny",
+      "name": "96 COE Lime Fibroid",
+      "product_url": "https://www.stainedglassexpress.com/products/96-lime-fibroid",
+      "n_images": 4,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.9858
+        },
+        {
+          "position": 3,
+          "final_score": 0.9958
+        },
+        {
+          "position": 4,
+          "final_score": 0.9971
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0011200051f1010",
+      "manufacturer": "Bullseye",
+      "name": "Yellow Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/yellow-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
+      "n_images": 3,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9731
+        },
+        {
+          "position": 2,
+          "final_score": 0.682
+        },
+        {
+          "position": 3,
+          "final_score": 0.6718
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0001240030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Red Opalescent, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/red-opalescent-double-rolled-3-mm-fusible",
+      "n_images": 3,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7205
+        },
+        {
+          "position": 3,
+          "final_score": 0.9135
+        }
+      ]
+    },
+    {
+      "id": "oceanside-of100hs",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Clear Small Hammered",
+      "product_url": "https://www.stainedglassexpress.com/products/oceanside-clear-small-hammered-fusible",
+      "n_images": 8,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9974
+        },
+        {
+          "position": 2,
+          "final_score": 0.9886
+        },
+        {
+          "position": 3,
+          "final_score": 0.9553
+        },
+        {
+          "position": 4,
+          "final_score": 0.9045
+        },
+        {
+          "position": 5,
+          "final_score": 0.9972
+        },
+        {
+          "position": 6,
+          "final_score": 0.9446
+        },
+        {
+          "position": 7,
+          "final_score": 0.9775
+        },
+        {
+          "position": 8,
+          "final_score": 0.8308
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0023020000f1010",
+      "manufacturer": "Bullseye",
+      "name": "White, Pink Opal 2-Color Mix, Single-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/white-pink-opal-2-color-mix-single-rolled-3-mm-fusible",
+      "n_images": 3,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.8228
+        },
+        {
+          "position": 2,
+          "final_score": 0.6434
+        },
+        {
+          "position": 3,
+          "final_score": 0.6434
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0020200030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Clear, Sunflower Yellow Opal 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/clear-sunflower-yellow-opal-2-color-mix-double-rolled-3-mm-fusible",
+      "n_images": 3,
+      "picked_position": 2,
+      "agree_with_position1": false,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.6436
+        },
+        {
+          "position": 2,
+          "final_score": 0.7142
+        },
+        {
+          "position": 3,
+          "final_score": 0.644
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0012070050f1010",
+      "manufacturer": "Bullseye",
+      "name": "Fern Green Transparent, Thin-rolled, 2 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/fern-green-transparent-thin-rolled-2-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9726
+        },
+        {
+          "position": 2,
+          "final_score": 0.7185
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0011140030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Deep Royal Blue Transparent, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/deep-royal-blue-transparent-double-rolled-3-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7186
+        }
+      ]
+    },
+    {
+      "id": "youghiogheny-y5002spirid",
+      "manufacturer": "Youghiogheny",
+      "name": "Beige Ice Stipple Iridescent",
+      "product_url": "https://www.stainedglassexpress.com/products/youghiogheny-beige-iridized-stipple-glass",
+      "n_images": 2,
+      "picked_position": 2,
+      "agree_with_position1": false,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9957
+        },
+        {
+          "position": 2,
+          "final_score": 1.4999
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0011010054f1010",
+      "manufacturer": "Bullseye",
+      "name": "Clear Transparent, Thin, Reeded Texture, Iridescent, rainbow, 2 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/clear-transparent-thin-reeded-texture-iridescent-rainbow-2-mm-fusible",
+      "n_images": 2,
+      "picked_position": 2,
+      "agree_with_position1": false,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.8494
+        },
+        {
+          "position": 2,
+          "final_score": 0.8579
+        }
+      ]
+    },
+    {
+      "id": "youghiogheny-yf520",
+      "manufacturer": "Youghiogheny",
+      "name": "96 COE Honey",
+      "product_url": "https://www.stainedglassexpress.com/products/yf520",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.9934
+        }
+      ]
+    },
+    {
+      "id": "wissmach-w18h",
+      "manufacturer": "Wissmach",
+      "name": "Scarlet Hammered",
+      "product_url": "https://www.stainedglassexpress.com/products/wissmach-red-hammered-cathedral-glass",
+      "n_images": 4,
+      "picked_position": 2,
+      "agree_with_position1": false,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9779
+        },
+        {
+          "position": 2,
+          "final_score": 0.9991
+        },
+        {
+          "position": 3,
+          "final_score": 0.9507
+        },
+        {
+          "position": 4,
+          "final_score": 0.8718
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0001380030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Marzipan Striker Opalescent, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/marzipan-striker-opalescent-double-rolled-3-mm-fusible",
+      "n_images": 3,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7118
+        },
+        {
+          "position": 3,
+          "final_score": 0.5028
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0001360030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Deco Gray Opalescent, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/deco-gray-opalescent-double-rolled-3-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7186
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0011050050f1010",
+      "manufacturer": "Bullseye",
+      "name": "Deep Plum Transparent, Thin-rolled, 2 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/deep-plum-transparent-thin-rolled-2-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7105
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0018590030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Rhubarb Shift Tint, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/rhubarb-shift-tint-double-rolled-3-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9997
+        },
+        {
+          "position": 2,
+          "final_score": 0.7118
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0021220030fhalf",
+      "manufacturer": "Bullseye",
+      "name": "Yellow Opal, Deep Green 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/yellow-opal-deep-green-2-color-mix-double-rolled-3-mm-fusible",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.7631
+        },
+        {
+          "position": 2,
+          "final_score": 0.6293
+        }
+      ]
+    },
+    {
+      "id": "wissmach-wiwo85",
+      "manufacturer": "Wissmach",
+      "name": "Sky Blue with Purple and White Wispy",
+      "product_url": "https://www.stainedglassexpress.com/products/wissmach-sky-blue-with-purple-and-white-wispy-opal-glass",
+      "n_images": 2,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9194
+        },
+        {
+          "position": 2,
+          "final_score": 0.8425
+        }
+      ]
+    },
+    {
+      "id": "youghiogheny-yf7173",
+      "manufacturer": "Youghiogheny",
+      "name": "96 COE Elephant Opal with Jet",
+      "product_url": "https://www.stainedglassexpress.com/products/96-elephant-w-jet-f",
+      "n_images": 3,
+      "picked_position": 2,
+      "agree_with_position1": false,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.8425
+        },
+        {
+          "position": 2,
+          "final_score": 0.9922
+        },
+        {
+          "position": 3,
+          "final_score": 0.914
+        }
+      ]
+    },
+    {
+      "id": "bullseye-0001250050f1010",
+      "manufacturer": "Bullseye",
+      "name": "Orange Opalescent, Thin-rolled, 2 mm, Fusible",
+      "product_url": "https://shop.bullseyeglass.com/products/orange-opalescent-thin-rolled-2-mm-fusible",
+      "n_images": 3,
+      "picked_position": 1,
+      "agree_with_position1": true,
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.9999
+        },
+        {
+          "position": 2,
+          "final_score": 0.7184
+        },
+        {
+          "position": 3,
+          "final_score": 0.9303
+        }
+      ]
+    }
+  ]
+}

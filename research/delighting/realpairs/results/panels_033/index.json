@@ -1,0 +1,254 @@
+{
+ "best": [
+  {
+   "panel": "results/panels_033/best_01_203548.jpg",
+   "product_id": "203548",
+   "brand": "clear-textured-glass",
+   "title": "Kokomo Clear Wavolite Stained Glass Sheets | Textured",
+   "pair": [
+    "gallery_2",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 400,
+   "residual_mad": 19.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_02_234259.jpg",
+   "product_id": "234259",
+   "brand": "clear-textured-glass",
+   "title": "Oceanside Clear Iridized Hammered Stained Glass Sheets | Textured",
+   "pair": [
+    "gallery_2",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "closeup"
+   ],
+   "inliers": 400,
+   "residual_mad": 15.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_03_230189.jpg",
+   "product_id": "230189",
+   "brand": "clear-textured-glass",
+   "title": "Oceanside Clear Corteza Stained Glass Sheets | Textured",
+   "pair": [
+    "gallery_3",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 399,
+   "residual_mad": 26.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_04_239940.jpg",
+   "product_id": "239940",
+   "brand": "uro-glass",
+   "title": "Uro Cobalt, Violet, White, Sky Blue And Deep Purple Herringbone Ripple | Glass",
+   "pair": [
+    "gallery_1",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 397,
+   "residual_mad": 17.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_05_190203.jpg",
+   "product_id": "190203",
+   "brand": "clear-textured-glass",
+   "title": "Clear Everglade Stained Glass Sheets | Textured Delphi",
+   "pair": [
+    "gallery_2",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "closeup"
+   ],
+   "inliers": 393,
+   "residual_mad": 18.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_06_230233.jpg",
+   "product_id": "230233",
+   "brand": "van-gogh-glass",
+   "title": "Van Gogh Green Sparkle Shift Stained Glass Sheets | Delphi Glass",
+   "pair": [
+    "gallery_3",
+    "gallery_5"
+   ],
+   "capture_types": [
+    "window",
+    "closeup"
+   ],
+   "inliers": 369,
+   "residual_mad": 28.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_07_230307.jpg",
+   "product_id": "230307",
+   "brand": "clear-textured-glass",
+   "title": "Oceanside Clear Hammered - 96 COE Stained Glass Sheets | Textured",
+   "pair": [
+    "gallery_3",
+    "gallery_4"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 310,
+   "residual_mad": 30.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_08_191942.jpg",
+   "product_id": "191942",
+   "brand": "clear-textured-glass",
+   "title": "Clear Bamboo Stained Glass Sheets | Textured Delphi",
+   "pair": [
+    "gallery_1",
+    "gallery_2"
+   ],
+   "capture_types": [
+    "closeup",
+    "closeup"
+   ],
+   "inliers": 298,
+   "residual_mad": 36.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_09_175899.jpg",
+   "product_id": "175899",
+   "brand": "clear-textured-glass",
+   "title": "Clear Sparkle Stained Glass Sheets | Textured Delphi",
+   "pair": [
+    "gallery_2",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 295,
+   "residual_mad": 22.0,
+   "flags": []
+  },
+  {
+   "panel": "results/panels_033/best_10_235106.jpg",
+   "product_id": "235106",
+   "brand": "clear-textured-glass",
+   "title": "Wissmach Clear Transparent Flemish Stained Glass Sheets | Textured",
+   "pair": [
+    "gallery_2",
+    "hero"
+   ],
+   "capture_types": [
+    "window",
+    "closeup"
+   ],
+   "inliers": 249,
+   "residual_mad": 71.0,
+   "flags": []
+  }
+ ],
+ "worst": [
+  {
+   "panel": "results/panels_033/worst_01_191915.jpg",
+   "product_id": "191915",
+   "brand": "clear-textured-glass",
+   "title": "Clear Digital Stained Glass Sheets | Textured Delphi",
+   "pair": [
+    "gallery_1",
+    "gallery_6"
+   ],
+   "capture_types": [
+    "closeup",
+    "closeup"
+   ],
+   "inliers": 21,
+   "residual_mad": 46.0,
+   "flags": [
+    "finished_product_flag",
+    "low_inliers=21"
+   ]
+  },
+  {
+   "panel": "results/panels_033/worst_02_191915.jpg",
+   "product_id": "191915",
+   "brand": "clear-textured-glass",
+   "title": "Clear Digital Stained Glass Sheets | Textured Delphi",
+   "pair": [
+    "gallery_3",
+    "gallery_4"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 21,
+   "residual_mad": 66.0,
+   "flags": [
+    "low_inliers=21"
+   ]
+  },
+  {
+   "panel": "results/panels_033/worst_03_238699.jpg",
+   "product_id": "238699",
+   "brand": "tiffany-today-glass",
+   "title": "Rainbow Eucalyptus Opal Mottle Stained Glass Sheets | Tiffany Today",
+   "pair": [
+    "gallery_3",
+    "hero"
+   ],
+   "capture_types": [
+    "shop",
+    "closeup"
+   ],
+   "inliers": 21,
+   "residual_mad": 9.0,
+   "flags": [
+    "opal_streaky_caution",
+    "low_inliers=21"
+   ]
+  },
+  {
+   "panel": "results/panels_033/worst_04_238536.jpg",
+   "product_id": "238536",
+   "brand": "uro-glass",
+   "title": "Uro Gold Pink And White Herringbone Ripple Stained Glass Sheets",
+   "pair": [
+    "gallery_1",
+    "gallery_2"
+   ],
+   "capture_types": [
+    "window",
+    "window"
+   ],
+   "inliers": 21,
+   "residual_mad": 31.0,
+   "flags": [
+    "low_inliers=21"
+   ]
+  }
+ ]
+}

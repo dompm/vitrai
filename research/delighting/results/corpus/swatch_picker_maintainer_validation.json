@@ -1,0 +1,108 @@
+{
+  "cases": [
+    {
+      "name": "uro-by-yough-clear-granite-ripple",
+      "product_url": "https://www.stainedglassexpress.com/products/uro-by-yough-clear-granite-ripple-fusible-glass-96-coe",
+      "correct_position": 4,
+      "picked_position": 4,
+      "correct": true,
+      "margin": 0.9423,
+      "override": false,
+      "text_notes": [
+        "position 1: customer photo (\"1st photo taken by a customer.\")",
+        "position 2: comparison mentioned (\"Second and third show Granite Ripple (right) next to Oceanside Granite (left).\")",
+        "position 3: comparison mentioned (\"Second and third show Granite Ripple (right) next to Oceanside Granite (left).\")"
+      ],
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 0.0,
+          "components": {
+            "audit": 1.0,
+            "hand": 0.31800000000000006,
+            "seam": 1.0,
+            "coverage": 0.7615582735711874
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.0576,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 0.7072937197814408,
+            "coverage": 0.7378994110140871
+          }
+        },
+        {
+          "position": 3,
+          "final_score": 0.0,
+          "components": {
+            "audit": 1.0,
+            "hand": 0.32400000000000007,
+            "seam": 0.8583638933551317,
+            "coverage": 0.7368989541994054
+          }
+        },
+        {
+          "position": 4,
+          "final_score": 0.9999,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.9998
+          }
+        }
+      ],
+      "panel": "swatch_picker_maintainer_1.jpg"
+    },
+    {
+      "name": "yough-steel-grey-opal",
+      "product_url": "https://www.stainedglassexpress.com/en-ca/products/yough-steel-grey-opal",
+      "correct_position": 3,
+      "picked_position": 3,
+      "correct": true,
+      "margin": 0.24859999999999993,
+      "override": false,
+      "text_notes": [
+        "position 1: backlit (\"First and third photos are backlit.\")",
+        "position 3: backlit (\"First and third photos are backlit.\")"
+      ],
+      "scores": [
+        {
+          "position": 1,
+          "final_score": 1.228,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.14997
+          }
+        },
+        {
+          "position": 2,
+          "final_score": 0.9894,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.9669371204768914
+          }
+        },
+        {
+          "position": 3,
+          "final_score": 1.4766,
+          "components": {
+            "audit": 1.0,
+            "hand": 1.0,
+            "seam": 1.0,
+            "coverage": 0.9269350000000001
+          }
+        }
+      ],
+      "panel": "swatch_picker_maintainer_2.jpg"
+    }
+  ],
+  "all_pass": true
+}
