@@ -1,0 +1,41 @@
+backlit-verified subset for appearance stats: 1145 / 1281 clean images (excludes low-confidence Textured/Baroque tier + Youghiogheny dark-opaque)
+  class=opalescent       n= 250
+  class=wispy            n= 158
+  class=dark-opaque      n=  34
+  class=cathedral-clear  n= 250
+
+=== REAL per-class appearance summary ===
+  opalescent       n= 250 L=62.3 [32.3-92.0] C=31.8 [1.6-83.7] hue~85deg [29-313] hf=0.0207 [0.0050-0.2591]
+  wispy            n= 158 L=56.8 [23.1-88.9] C=28.5 [4.6-71.0] hue~64deg [20-332] hf=0.0166 [0.0035-0.0734]
+  dark-opaque      n=  34 L=9.6 [1.3-53.7] C=4.0 [0.4-33.9] hue~281deg [36-322] hf=0.1100 [0.0058-0.3703]
+  cathedral-clear  n= 250 L=61.6 [24.6-95.3] C=31.0 [1.0-81.7] hue~43deg [20-343] hf=0.0353 [0.0057-0.3665]
+
+=== SYNTHETIC recipe appearance ===
+[TIMING] texture_authoring: 0.4752s
+  cathedral-green  class~cathedral-clear  L=72.0 C=28.3 hue=146deg hf=0.0070
+[TIMING] texture_authoring: 0.3143s
+  cathedral-amber  class~cathedral-clear  L=75.1 C=28.3 hue=84deg hf=0.0081
+[TIMING] texture_authoring: 0.2818s
+  dark-opaque      class~dark-opaque      L=21.7 C=3.4 hue=144deg hf=0.0315
+[TIMING] texture_authoring: 0.3018s
+  dark-deep        class~dark-opaque      L=3.7 C=0.3 hue=290deg hf=0.0347
+[TIMING] texture_authoring: 0.2910s
+  dark-ruby        class~dark-opaque      L=4.6 C=11.2 hue=17deg hf=0.0405
+[TIMING] texture_authoring: 0.2863s
+  dark-slate       class~dark-opaque      L=31.0 C=2.9 hue=257deg hf=0.0178
+[TIMING] texture_authoring: 1.0711s
+  streaky-mix      class~wispy            L=87.1 C=12.5 hue=268deg hf=0.0011
+[TIMING] texture_authoring: 4.9604s
+  wispy-white      class~wispy            L=83.8 C=3.1 hue=281deg hf=0.0013
+[TIMING] texture_authoring: 0.2420s
+  cathedral-blue   class~cathedral-clear  L=46.6 C=40.7 hue=264deg hf=0.0069
+[TIMING] texture_authoring: 0.2343s
+  cathedral-red    class~cathedral-clear  L=45.0 C=54.4 hue=10deg hf=0.0208
+[TIMING] texture_authoring: 0.3099s
+  saturated-opalescent class~opalescent       L=59.4 C=45.2 hue=340deg hf=0.0043
+[TIMING] texture_authoring: 5.3644s
+  streaky-fine-texture class~wispy            L=54.4 C=40.0 hue=30deg hf=0.0063
+[TIMING] texture_authoring: 0.2814s
+  dark-textured    class~dark-opaque      L=15.4 C=5.1 hue=198deg hf=0.0392
+
+wrote /Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a90728859ff9fb3d5/research/delighting/corpus/../results/corpus/appearance_stats.json

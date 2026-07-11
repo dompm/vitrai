@@ -197,6 +197,27 @@ def streak_selector(size, seed, angle, ws=320, curl=0.14, contrast=1.7, lam=0.18
     return zoom(sel, size / ws, order=1)[:size, :size]
 
 
+def filament_layer(size, seed, angle, fil_ws=768, curl=0.45, length=90,
+                   thresh=0.90, gain=4.0):
+    """Thin smoke-like filament veils (report 032, 2nd legibility round): the
+    real wispy/streaky corpus exemplars (e.g. Bullseye 2-Color Mix,
+    reports/assets_029/corpus_bullseye-0021000000f1010.jpg) carry razor-thin
+    curved filaments folding through the broad veils -- the single strongest
+    'streaky' cue, which broad-field LIC alone cannot produce. Mechanism:
+    advect a SPARSE thresholded source (small blobs) along a high-curl flow;
+    long advection stretches each blob into a thin feathered trail that curves
+    with the local eddies. Authored at `fil_ws` (thin structure needs higher
+    working res than the broad selector's 320). Returns [0,1] opacity."""
+    from scipy.ndimage import zoom
+    np.random.seed(seed + 7)
+    fx, fy = flow_field(fil_ws, seed + 7, angle, curl=curl, curl_scale=3.0)
+    src = (generate_noise(fil_ws, fil_ws / 22.0, seed + 3,
+                          octaves=2, persistence=0.5, lacunarity=5.0) > thresh).astype(np.float64)
+    fil = advect_streaks(src, fx, fy, length=length, step=1.2)
+    fil = np.clip(fil * gain, 0, 1)
+    return zoom(fil, size / fil_ws, order=1)[:size, :size]
+
+
 def micro_events(size, seed, density, r_range=(3.0, 8.0)):
     """Discrete refractive seed/bubble events (report 029 gap G-1: bubble/seed
     optics -- bright-core/dark-rim donuts -- were the VLM's single favorite
@@ -552,14 +573,29 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         wisp0 = generate_noise(ws, ws / 5.5, seed + 1, octaves=3, persistence=0.5, lacunarity=5.0)
         wisp = advect_streaks(wisp0, fx, fy, length=44)
         wisp = (wisp - wisp.min()) / (wisp.max() - wisp.min() + 1e-8)
-        wisp = np.clip((wisp - 0.45) * 2.0, 0, 1)
+        # First VLM legibility round (results/032): (w-0.45)*2.0 + wisp_color
+        # 0.55 rendered near-featureless white -- advection pulls the field
+        # toward its mean, so after normalization few pixels cleared the
+        # threshold strongly. Lower threshold + steeper ramp + deeper wisp
+        # color = legible wisps in the render, not just in the authored array.
+        wisp = np.clip((wisp - 0.38) * 2.4, 0, 1)
         wisp = _zoom(wisp, size / ws, order=1)[:size, :size]
 
         base_color = np.array([0.85, 0.87, 0.92])
-        wisp_color = np.array([0.55, 0.55, 0.55])
+        # 4th legibility round: wisp/filament contrast deepened -- the render
+        # washed the veils toward white and still read smooth-opal. Grounded
+        # headroom: pre-032 wispy-white sat at L=90.7, ABOVE the real wispy
+        # p95 (88.9); at these depths L~76, BETWEEN the class median (56.8)
+        # and p95 -- more real, not less.
+        wisp_color = np.array([0.30, 0.30, 0.34])
 
         T = base_color * (1 - wisp[..., None]) + wisp_color * wisp[..., None]
-        h = (0.5 + 0.45 * wisp).astype(np.float32)
+        # Thin smoke filaments folding through the broad veils -- the
+        # strongest 'streaky/wispy' cue in the real exemplars (see
+        # filament_layer docstring).
+        fil = filament_layer(size, seed, angle)
+        T = np.clip(T * (1.0 - 0.72 * fil[..., None]), 0, 1)
+        h = np.clip(0.5 + 0.45 * wisp + 0.25 * fil, 0, 0.97).astype(np.float32)
 
     # ---- Report 022: five gap recipes from 021 §5 (Lab->linear base_color
     # and haze targets taken verbatim from that report's exemplar-grounded
@@ -619,13 +655,21 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         # streak (1.59 offline) while keeping the single-base "marbled" look.
         base_color = np.array([0.549, 0.145, 0.125])
         angle = np.random.uniform(-18, 18)
-        sel = streak_selector(size, seed, angle, curl=0.14, contrast=1.5, lam=0.12)
-        streak_mod = (sel - 0.5) * 0.55
+        # Second legibility round: modulation 0.55 + detail 0.18 rendered as
+        # isotropic pebble (VLM: "cathedral-textured") -- the fine detail
+        # swamped the soft streak in the RENDER even though the authored
+        # anisotropy was up. Streak amplitude up, fine detail down.
+        sel = streak_selector(size, seed, angle, curl=0.14, contrast=1.7, lam=0.12)
+        streak_mod = (sel - 0.5) * 0.85
         T = np.clip(base_color * (1 + streak_mod[..., None]), 0, 1)
         detail = generate_noise(size, scale=20, seed=seed + 902,
                                 octaves=3, persistence=0.55, lacunarity=6.0)
-        detail_scaled = (detail * 0.18) - 0.09
+        detail_scaled = (detail * 0.11) - 0.055
         T = np.clip(T + detail_scaled[..., None], 0, 1)
+        # 3rd legibility round: thin curved filament threads over the soft
+        # marbling (matches the salmon 2-color-mix exemplar family).
+        fil = filament_layer(size, seed, angle, gain=4.5)
+        T = np.clip(T * (1.0 - 0.55 * fil[..., None]), 0, 1)
         # 021 §5: flat haze 0.25-0.35 (real wispy avg 0.215); mid of range.
         h = np.full((size, size), 0.30, dtype=np.float32)
 
@@ -852,7 +896,7 @@ def add_frame_occluders(cam):
     return params
 
 
-def setup_scene(hdri_path, has_frame=False):
+def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     _t0_scene = time.perf_counter()
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
@@ -962,13 +1006,17 @@ def setup_scene(hdri_path, has_frame=False):
         frame_params = add_frame_occluders(cam)
 
     # Dark wall behind camera to block HDRI reflections on the front face (simulates dim interior)
+    # Report 032 WP-B: `wall_gray` > 0 turns the pure-black wall into a DIM
+    # INTERIOR so the front face has something plausible to reflect when the
+    # glass specular lobe is enabled (--specular). Default 0.0 = byte-compat
+    # with every existing dataset.
     bpy.ops.mesh.primitive_plane_add(size=5.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
     wall = bpy.context.active_object
     wall.name = "DarkWall"
     mat_wall = bpy.data.materials.new(name="WallMat")
     mat_wall.use_nodes = True
     bsdf = mat_wall.node_tree.nodes["Principled BSDF"]
-    bsdf.inputs["Base Color"].default_value = (0.00, 0.00, 0.00, 1)
+    bsdf.inputs["Base Color"].default_value = (wall_gray, wall_gray, wall_gray, 1)
     if "Specular IOR Level" in bsdf.inputs:
         bsdf.inputs["Specular IOR Level"].default_value = 0.0
     elif "Specular" in bsdf.inputs:
@@ -978,7 +1026,8 @@ def setup_scene(hdri_path, has_frame=False):
     _record('scene_build', time.perf_counter() - _t0_scene)
     return glass_obj, cam, ev, z_rot, frame_params
 
-def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=True):
+def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=True,
+                          specular_ior_level=None):
     mat = bpy.data.materials.new(name="GlassMat")
     
     # We must use nodes to set up the material
@@ -1004,6 +1053,20 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe,
     # Physically-based glass using Principled BSDF
     principled = nodes.new('ShaderNodeBsdfPrincipled')
     principled.inputs['IOR'].default_value = 1.5
+
+    # Report 032 WP-B (MMv3 G2, 029 gap G-4): front-surface specular lobe.
+    # None (default) leaves the node's stock value -- byte-compatible with
+    # every existing dataset (the pure-black DarkWall made the front lobe
+    # invisible regardless). --specular passes an explicit 0.5-1.0 level and
+    # pairs it with a dim-interior wall (setup_scene wall_gray) so the front
+    # face carries a real reflected-environment veil. The extractor has no
+    # veil term (that is MMv3's motivation) -- the point of the flag is to
+    # MEASURE that degradation honestly, not to hide it.
+    if specular_ior_level is not None:
+        if 'Specular IOR Level' in principled.inputs:
+            principled.inputs['Specular IOR Level'].default_value = specular_ior_level
+        elif 'Specular' in principled.inputs:
+            principled.inputs['Specular'].default_value = specular_ior_level
     
     if 'Transmission Weight' in principled.inputs:
         principled.inputs['Transmission Weight'].default_value = 1.0
@@ -1279,6 +1342,12 @@ def parse_args():
                         help="Directory of pre-fetched .hdr/.exr files; one is picked "
                              "deterministically per seed (no network call). Falls back to "
                              "the single-file polyhaven download into --out if omitted.")
+    parser.add_argument('--specular', action='store_true',
+                        help="Report 032 WP-B: enable the glass front-surface specular lobe "
+                             "(Specular IOR Level drawn 0.5-1.0 per sample from a dedicated "
+                             "RNG) and lift the DarkWall to a dim-interior gray so the front "
+                             "face has something plausible to reflect. Default OFF = "
+                             "byte-compatible with all existing datasets.")
     return parser.parse_args(argv)
 
 def main():
@@ -1341,23 +1410,36 @@ def main():
 
             print(f"Generating {sample_dir}...")
 
+            # Report 032 WP-B: front-surface specular params from a DEDICATED
+            # RNG stream (keyed on seed+variation) so enabling --specular does
+            # not perturb the global `random` stream -- an OFF and an ON run of
+            # the same seed produce IDENTICAL scenes except the specular lobe
+            # and wall gray (required for the extractor A/B in report 032).
+            spec_level, wall_gray = None, 0.0
+            if args.specular:
+                _spec_rng = random.Random(seed * 7919 + v * 13 + 5)
+                spec_level = _spec_rng.uniform(0.5, 1.0)
+                wall_gray = _spec_rng.uniform(0.02, 0.08)
+
             # 1. Setup scene FIRST (clears factory settings)
             if args.validate:
                 glass_obj, cam, ev, z_rot, frame_params = setup_scene(None, has_frame=has_frame)
             else:
-                glass_obj, cam, ev, z_rot, frame_params = setup_scene(hdri_path, has_frame=has_frame)
-        
+                glass_obj, cam, ev, z_rot, frame_params = setup_scene(
+                    hdri_path, has_frame=has_frame, wall_gray=wall_gray)
+
             # 2. Create textures (numpy compute cached across this glass
             # piece's light variations; bpy encode always redone -- see
             # create_glass_textures/_texture_cache comments above)
             img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(
                 recipe, sample_dir, size=1536, seed=seed, cache=_texture_cache
             )
-            
+
             # 3. Create material
             with stage('scene_build'):
                 mat = create_glass_material(
-                    glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance
+                    glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance,
+                    specular_ior_level=spec_level
                 )
         
             metadata = {
@@ -1375,6 +1457,11 @@ def main():
                 "blender_version": bpy.app.version_string,
                 "seed": seed,
                 "has_shadow": has_shadow,
+                "specular": {
+                    "enabled": bool(args.specular),
+                    "ior_level": spec_level,
+                    "wall_gray": wall_gray,
+                },
                 "material_v2": {
                     "channels": ["T", "h", "height", "normal", "mark_mask"],
                     "bump_distance_m": bump_distance,
