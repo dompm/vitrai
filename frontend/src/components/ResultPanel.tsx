@@ -2436,7 +2436,7 @@ export function ResultPanel({
                   {tutorialStep === 'vector-curve-edge' && (
                     <>
                       <Line
-                        points={[300, 300, 500, 200, 700, 300]}
+                        points={[300, 300, 300, 500, 500, 700]}
                         stroke="#fbbf24"
                         strokeWidth={2 / es}
                         dash={[6 / es, 4 / es]}
@@ -2444,7 +2444,7 @@ export function ResultPanel({
                         listening={false}
                       />
                       <Arrow
-                        points={[500, 300, 500, 220]}
+                        points={[400, 500, 320, 500]}
                         stroke="#10b981"
                         strokeWidth={3 / es}
                         fill="#10b981"
