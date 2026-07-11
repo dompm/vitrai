@@ -1,0 +1,184 @@
+{
+ "note": "Van Gogh line finished-product screen validation; ground truth = 033 agent multimodal eyeball of vangogh_validation panels",
+ "n_products": 27,
+ "n_images_labeled": 99,
+ "n_non_sheet_images": 67,
+ "n_sheet_images": 32,
+ "recall_tail_slot": 0.34328358208955223,
+ "recall_line_stock": 0.9104477611940298,
+ "recall_lineup_on_white": 0.16417910447761194,
+ "recall_combined": 0.9552238805970149,
+ "false_positives_on_sheet_images": {
+  "any": 0,
+  "cases": []
+ },
+ "combined_misses": [
+  [
+   "186636",
+   "gallery_2"
+  ],
+  [
+   "193881",
+   "gallery_1"
+  ],
+  [
+   "193881",
+   "gallery_2"
+  ]
+ ],
+ "ground_truth": {
+  "186190": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished",
+   "gallery_8": "collage"
+  },
+  "186196": {
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished",
+   "gallery_8": "collage"
+  },
+  "186199": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished"
+  },
+  "186203": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished"
+  },
+  "186204": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "collage",
+   "gallery_8": "finished"
+  },
+  "186205": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished"
+  },
+  "186636": {
+   "hero": "sheet",
+   "gallery_1": "finished",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "collage"
+  },
+  "186638": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished"
+  },
+  "186641": {
+   "hero": "sheet",
+   "gallery_1": "sheet",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "finished",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished",
+   "gallery_8": "collage"
+  },
+  "186643": {
+   "hero": "collage"
+  },
+  "193881": {
+   "hero": "collage",
+   "gallery_1": "collage",
+   "gallery_2": "finished",
+   "gallery_3": "finished",
+   "gallery_4": "collage",
+   "gallery_5": "finished",
+   "gallery_6": "finished",
+   "gallery_7": "finished"
+  },
+  "186191": {
+   "hero": "sheet"
+  },
+  "186192": {
+   "hero": "sheet"
+  },
+  "186193": {
+   "hero": "sheet"
+  },
+  "186194": {
+   "hero": "sheet"
+  },
+  "186195": {
+   "hero": "sheet"
+  },
+  "186197": {
+   "hero": "sheet"
+  },
+  "186198": {
+   "hero": "sheet"
+  },
+  "186200": {
+   "hero": "sheet"
+  },
+  "186201": {
+   "hero": "sheet"
+  },
+  "186202": {
+   "hero": "sheet"
+  },
+  "186206": {
+   "hero": "sheet"
+  },
+  "186631": {
+   "hero": "sheet"
+  },
+  "186634": {
+   "hero": "sheet"
+  },
+  "186635": {
+   "hero": "sheet"
+  },
+  "186639": {
+   "hero": "sheet"
+  },
+  "186642": {
+   "hero": "sheet"
+  }
+ }
+}

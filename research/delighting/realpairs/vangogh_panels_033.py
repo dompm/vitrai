@@ -65,7 +65,10 @@ def main():
                 flags = []
                 if im.get("gallery_index") is not None and im["gallery_index"] >= 6:
                     flags.append("TAIL")
-                if key in contam.get(pid, {}).get("images", {}):
+                reasons = contam.get(pid, {}).get("images", {}).get(key, [])
+                if "line_stock_photo" in reasons:
+                    flags.append("STOCK")
+                if any(r in ("test_fire_tiles", "product_on_white") for r in reasons):
                     flags.append("LINEUP")
                 cap = f"{key} {im['capture_type']}" + (f" [{','.join(flags)}]" if flags else "")
                 d.text((x0 + 2, y0 + 16), cap[:34], fill=(180, 255, 180) if not flags else (255, 140, 140))

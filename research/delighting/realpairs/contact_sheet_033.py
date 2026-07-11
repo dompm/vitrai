@@ -83,6 +83,10 @@ def main():
     args = ap.parse_args()
 
     products = {p["product_id"]: p for p in json.load(open(args.manifest))}
+    contam_path = os.path.join(os.path.dirname(args.manifest), "contamination_033.json")
+    contam = {}
+    if os.path.exists(contam_path):
+        contam = json.load(open(contam_path)).get("products", {})
     candidates = []
     for pid, p in products.items():
         for pr in p.get("pairs", []):
@@ -93,9 +97,30 @@ def main():
 
     print(f"{len(candidates)} registrable cross_capture pairs across {len(products)} products")
 
-    clean = [c for c in candidates if not c["finished_product_flag"] and not c["opal_streaky_caution"]]
+    def suspect_same_photo(c):
+        # crop-derivation leak on low-gradient glass (contamination_033 mode 5)
+        return c["residual_mad"] is not None and c["residual_mad"] < 15 and c["inliers"] >= 200
+
+    def image_flagged(c):
+        rec = contam.get(c["product_id"], {})
+        imgs = rec.get("images", {})
+        return (c["a"] in imgs or c["b"] in imgs
+                or "non_transmissive_mirror" in rec.get("flags", [])
+                or "multi_sheet_listing" in rec.get("flags", []))
+
+    clean = [c for c in candidates if not c["finished_product_flag"]
+             and not c["opal_streaky_caution"] and not suspect_same_photo(c)
+             and not image_flagged(c)]
     clean.sort(key=lambda c: -c["inliers"])
-    best = clean[:args.n_best]
+    # at most 2 best-pairs per product, for product variety on the sheet
+    best, per_pid = [], {}
+    for c in clean:
+        if per_pid.get(c["product_id"], 0) >= 2:
+            continue
+        best.append(c)
+        per_pid[c["product_id"]] = per_pid.get(c["product_id"], 0) + 1
+        if len(best) >= args.n_best:
+            break
 
     borderline = [c for c in candidates
                   if (c["finished_product_flag"] or c["opal_streaky_caution"] or c["inliers"] < 40)]
