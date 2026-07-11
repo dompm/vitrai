@@ -1,0 +1,302 @@
+[
+ {
+  "product_id": "230189",
+  "brand": "clear-textured-glass",
+  "title": "Oceanside Clear Corteza Stained Glass Sheets | Textured",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-corteza",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "gallery_4",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "hero",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 8,
+  "orb_inliers_b_from_a": 4,
+  "best_inliers": 8,
+  "registrable": false,
+  "panel": "results/panels/230189.jpg"
+ },
+ {
+  "product_id": "238631",
+  "brand": "tiffany-today-glass",
+  "title": "Peacock Blue Transparent Stained Glass Sheets | Tiffany Today",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-peacock-blue-transparent",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 7,
+  "orb_inliers_b_from_a": 7,
+  "best_inliers": 7,
+  "registrable": false,
+  "panel": "results/panels/238631.jpg"
+ },
+ {
+  "product_id": "238541",
+  "brand": "uro-glass",
+  "title": "Uro Emerald, Spring And Light Green Herringbone Ripple Stained Glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-emerald-spring-and-light-green-herringbone-ripple",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 262,
+  "orb_inliers_b_from_a": 275,
+  "best_inliers": 275,
+  "registrable": true,
+  "panel": "results/panels/238541.jpg"
+ },
+ {
+  "product_id": "173810",
+  "brand": "wissmach-glass",
+  "title": "English Muffle Coronation Gold Stained Glass Sheets | Wissmach",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-coronation-gold",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 8,
+  "orb_inliers_b_from_a": 7,
+  "best_inliers": 8,
+  "registrable": false,
+  "panel": "results/panels/173810.jpg"
+ },
+ {
+  "product_id": "186204",
+  "brand": "van-gogh-glass",
+  "title": "Van Gogh Violet / Bluegreen Copper Stained Glass Sheets | Delphi Glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-violet-bluegreen-copper",
+  "n_images_downloaded": 9,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 7,
+  "orb_inliers_b_from_a": 6,
+  "best_inliers": 7,
+  "registrable": false,
+  "panel": "results/panels/186204.jpg"
+ },
+ {
+  "product_id": "218088",
+  "brand": "kokomo-glass",
+  "title": "Kokomo Clear Flemish Stained Glass Sheets",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-clear-flemish",
+  "n_images_downloaded": 9,
+  "pair_a": {
+   "key": "gallery_8",
+   "label": "lightbox"
+  },
+  "pair_b": {
+   "key": "gallery_2",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 4,
+  "orb_inliers_b_from_a": 8,
+  "best_inliers": 8,
+  "registrable": false,
+  "panel": "results/panels/218088.jpg"
+ },
+ {
+  "product_id": "239285",
+  "brand": "delphi-superior-glass",
+  "title": "Delphi Superior Blue Corn Transparent - 90 COE Stained Glass Sheets",
+  "url": "https://www.delphiglass.com/stained-glass/delphi-superior-glass/delphi-superior-blue-corn-transparent-90-coe",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 400,
+  "orb_inliers_b_from_a": 400,
+  "best_inliers": 400,
+  "registrable": true,
+  "panel": "results/panels/239285.jpg"
+ },
+ {
+  "product_id": "220063",
+  "brand": "specialty-finish-glass",
+  "title": "MLW Vivid Amethyst Mirror Stained Glass Sheets | Specialty Finish",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-vivid-amethyst-mirror",
+  "n_images_downloaded": 6,
+  "pair_a": {
+   "key": "gallery_1",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_4",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 2,
+  "orb_inliers_b_from_a": 8,
+  "best_inliers": 8,
+  "registrable": false,
+  "panel": "results/panels/220063.jpg"
+ },
+ {
+  "product_id": "230207",
+  "brand": "clear-textured-glass",
+  "title": "Oceanside Clear Vecchio Stained Glass Sheets | Textured",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-vecchio",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "gallery_3",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "hero",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 6,
+  "orb_inliers_b_from_a": 6,
+  "best_inliers": 6,
+  "registrable": false,
+  "panel": "results/panels/230207.jpg"
+ },
+ {
+  "product_id": "238607",
+  "brand": "tiffany-today-glass",
+  "title": "Mermaid Dreams Iridized Opal Streaky Stained Glass | Tiffany Today",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-mermaid-dreams-iridized-opal-streaky",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 9,
+  "orb_inliers_b_from_a": 6,
+  "best_inliers": 9,
+  "registrable": false,
+  "panel": "results/panels/238607.jpg"
+ },
+ {
+  "product_id": "238531",
+  "brand": "uro-glass",
+  "title": "Uro Emerald, Chartruese And Turquoise Herringbone Ripple Stained Glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-emerald-chartruese-and-turquoise-herringbone-ripple",
+  "n_images_downloaded": 9,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 65,
+  "orb_inliers_b_from_a": 75,
+  "best_inliers": 75,
+  "registrable": true,
+  "panel": "results/panels/238531.jpg"
+ },
+ {
+  "product_id": "173747",
+  "brand": "wissmach-glass",
+  "title": "English Muffle Windsor Blue Stained Glass Sheets | Wissmach",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-windsor-blue",
+  "n_images_downloaded": 10,
+  "pair_a": {
+   "key": "gallery_6",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "hero",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 8,
+  "orb_inliers_b_from_a": 5,
+  "best_inliers": 8,
+  "registrable": false,
+  "panel": "results/panels/173747.jpg"
+ },
+ {
+  "product_id": "186196",
+  "brand": "van-gogh-glass",
+  "title": "Van Gogh Silver Stained Glass Sheets | Delphi Glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-silver",
+  "n_images_downloaded": 8,
+  "pair_a": {
+   "key": "gallery_3",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_2",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 6,
+  "orb_inliers_b_from_a": 7,
+  "best_inliers": 7,
+  "registrable": false,
+  "panel": "results/panels/186196.jpg"
+ },
+ {
+  "product_id": "203547",
+  "brand": "kokomo-glass",
+  "title": "Kokomo Clear Light Seedy Stained Glass Sheets",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-clear-light-seedy",
+  "n_images_downloaded": 7,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 7,
+  "orb_inliers_b_from_a": 7,
+  "best_inliers": 7,
+  "registrable": false,
+  "panel": "results/panels/203547.jpg"
+ },
+ {
+  "product_id": "239270",
+  "brand": "delphi-superior-glass",
+  "title": "Delphi Superior Bell Pepper Opal - 90 COE Stained Glass Sheets",
+  "url": "https://www.delphiglass.com/stained-glass/delphi-superior-glass/delphi-superior-bell-pepper-opal-90-coe",
+  "n_images_downloaded": 9,
+  "pair_a": {
+   "key": "hero",
+   "label": "closeup"
+  },
+  "pair_b": {
+   "key": "gallery_1",
+   "label": "window"
+  },
+  "orb_inliers_a_from_b": 27,
+  "orb_inliers_b_from_a": 42,
+  "best_inliers": 42,
+  "registrable": true,
+  "panel": "results/panels/239270.jpg"
+ }
+]

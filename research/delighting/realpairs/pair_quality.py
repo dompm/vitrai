@@ -81,20 +81,23 @@ def download_full_set(entry, img_root, sleep_s=1.0):
     return out
 
 
-PRIORITY = ["lightbox", "window", "shop_held", "standing", "closeup", "other"]
+PRIORITY = ["lightbox", "closeup", "window", "shop", "other"]
 
 
 def pick_pair(labeled):
-    """labeled: list of (key, path, label). Prefer lightbox vs the most
-    'different' other label; else any two distinct labels; else first two."""
+    """labeled: list of (key, path, label). Prefer a CLEAN reference
+    (lightbox, else closeup) against the most different WILD capture
+    (window, else shop); else any two distinct labels; else first two."""
     by_label = {}
     for k, p, l in labeled:
         by_label.setdefault(l, []).append((k, p))
-    if "lightbox" in by_label:
-        a = by_label["lightbox"][0]
-        for pref in ["window", "shop_held", "standing", "closeup", "other"]:
+    for clean in ["lightbox", "closeup"]:
+        if clean not in by_label:
+            continue
+        a = by_label[clean][0]
+        for pref in ["window", "shop", "other"]:
             if pref in by_label:
-                return ("lightbox", a[0], a[1]), (pref, by_label[pref][0][0], by_label[pref][0][1])
+                return (clean, a[0], a[1]), (pref, by_label[pref][0][0], by_label[pref][0][1])
     labels_present = list(by_label.keys())
     if len(labels_present) >= 2:
         la, lb = labels_present[0], labels_present[1]

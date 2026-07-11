@@ -104,8 +104,18 @@ pairs (derived, per product, generated not stored redundantly):
        method: "orb_homography" | "corners" | "none",
        inliers: int,               -- ORB path
        registrable: bool,           -- inliers >= threshold (20, calibrated in report 030)
-       homography: 3x3 (if registrable)
+       homography: 3x3 (if registrable),
+       residual_mad: float,         -- post-registration central-region median |diff|
+       grad_corr: float             -- gradient correlation of the aligned regions
     },
+    kind: "same_photo" | "cross_capture" | "statistics_only" | "unusable",
+       -- same_photo: crop/rescale derivation (registrable AND residual_mad < 10/255
+       --   with high grad_corr) -- Delphi's hero is routinely a crop of gallery_1;
+       --   dedup metadata, NOT a pair (report 030 SS2.1);
+       -- cross_capture: registrable with substantial residual = same sheet region,
+       --   different capture (the prize);
+       -- statistics_only: not registrable but same-sheet by eyeball/texture agreement;
+       -- unusable: finished-product shot, collage, or different physical sheet.
     same_sheet_confidence: float,  -- eyeballed / heuristic-color-and-texture-agreement
                                        score when NOT registrable (statistics-only case)
   }
@@ -119,10 +129,10 @@ dedup-by-id before counting "how many physical sheets" a crawl actually captured
 
 **Politeness mechanics (the easy part):** page discovery/parsing never touches the live
 storefront (Wayback only); image downloads are throttled ~1 req/s with a normal UA, well
-under the load of a single browsing session. A full crawl at the yield estimated in §6
-(≈2,500–4,000 products × ~5 images ≈ 12,500–20,000 image GETs) at 1 req/s is 3.5–5.5 hours
-of trivial, sequential, single-connection load spread over however many days the crawl is
-paced across — this is not a load concern for Delphi's infrastructure.
+under the load of a single browsing session. A Wayback-only full crawl (§6: ~350 products
+× ~5.5 images ≈ 1,900 image GETs) at 1 req/s is ~35 minutes of trivial, sequential,
+single-connection load; even a permission-unlocked live-catalog crawl (2-5× that) stays
+a few hours of trickle — not a load concern for Delphi's infrastructure.
 
 **The honest ToS flag (the part that needs a human call before a full crawl):** Delphi's
 Terms of Use (archived snapshot, `page/main_terms`, checked 2026-07-10) contains two
@@ -155,24 +165,31 @@ redistributed or published beyond this repo's internal reports.
 
 ## 6. Estimated yield of a full crawl
 
-From the report-030 census (`../reports/030-real-pairs.md` §1): sampled products average
-**N_bar images/product** (see report for the measured number) across the ~10 genuine
-single-sheet brand/category directories under `/stained-glass/`; **X%** of products expose
-≥2 distinct capture types. The CDX discovery pass alone found **~394** distinct product
-URLs with at least one Wayback snapshot in those directories (report 030 §1 candidate
-count) — this is a **lower bound**, not the true catalog size, because: (a) Wayback's
-coverage of any given product page is opportunistic (only pages some crawler visited get
-archived), (b) several brand directories (german-new-antique and others, see report 030
-§1's coverage caveat) have only pre-2015 snapshots whose page template this parser does not
-handle, undercounting live catalog size, and (c) Delphi's live catalog almost certainly
-has more current SKUs than Wayback has ever captured. A conservative estimate: the true
-`/stained-glass/` sheet catalog is on the order of **2,500–4,000 products** (extrapolating
-from the ~394-with-any-snapshot floor and typical Wayback coverage rates of 10-20% for a
-mid-size e-commerce catalog's long tail); at report 030's measured ≥2-capture-type rate,
-that implies roughly **X% × catalog size** products yielding at least one real
-cross-capture pair, and (from the 15 hand-picked pair-quality checks) a
-**registrable-vs-statistics-only split** given in report 030 §2 that determines what
-fraction of those pairs support pixel-aligned vs. distribution-only supervision.
+Measured (report 030): mean **5.5 images/product**; **73%** of census products have both
+a clean (lightbox/closeup) and a wild (window/shop) image (calibration-corrected band
+60-80%); **60%** of deep-checked products yield ≥1 pixel-registrable same-region
+cross-capture sheet pair (~1.9 pairs each) and **73%** at least a statistics-only
+same-sheet pair. The CDX discovery pass found **394** distinct product URLs with a
+Wayback snapshot in the sheet-brand directories — a **lower bound** on catalog size:
+(a) Wayback coverage is opportunistic, (b) 40 of the 220 sampled had only pre-2015
+snapshots this parser doesn't handle (a legacy-template parser recovers most), and
+(c) the live catalog (marketing: "1,000+ glass varieties") is likely 2-5× the Wayback
+slice but inaccessible without permission or the WAF lifting.
+
+**Wayback-only yield (no new access needed):** ~330-350 parseable products ≈ 1,900
+images ≈ **~200 products / ~380 registrable cross-capture pairs / ~700-1,000
+statistics-only pairs** before attrition; a conservative planning number after
+finished-product and sheet-identity attrition is **~150 products / ~300 registrable /
+~600 statistics-only** — versus the project's current real-pair inventory of one
+suncatcher pair (report 013). Live-catalog access multiplies this 2-5×.
+
+**Two mandatory filters, measured in report 030 §2:** (i) same-photo derivation
+detection — Delphi's hero image is routinely a CROP of gallery_1 (4/15 products), so
+registration alone over-counts pairs; keep a pair only if the post-registration
+central-region residual is substantial (median |diff| ≥ 10/255 or low gradient
+correlation). (ii) finished-product screening — gallery tail slots (6-9) often show
+suncatchers/mosaics MADE from the glass (5/22 registrable pairs in the probe);
+these register but are not sheet data.
 
 ## 7. How the pairs feed the research
 
