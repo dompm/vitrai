@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import useImage from 'use-image';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
@@ -64,6 +65,7 @@ export function Tutorial({
   const initialSolderWidthRef = useRef<number | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
+  const [, patternImgStatus] = useImage(project.patternImageUrl || '');
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
   const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
 
@@ -395,6 +397,7 @@ export function Tutorial({
 
   // Show loading dialog if they are asked to cut the first piece but the model is still loading
   const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
+  const isPatternLoading = !!step && !!project.patternImageUrl && patternImgStatus === 'loading';
 
   const percent = downloadProgress != null ? Math.round(downloadProgress * 100) : null;
   const etaText = etaSeconds != null ? (etaSeconds > 60 ? `~${Math.ceil(etaSeconds/60)}m` : `${etaSeconds}s`) : '...';
@@ -435,6 +438,19 @@ export function Tutorial({
                 {t('tutorialModelLoadingOk', 'Got it')}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {isPatternLoading && (
+        <div className="move-confirm-backdrop" style={{ zIndex: 3000 }}>
+          <div className="move-confirm-dialog" style={{ textAlign: 'center', padding: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="spinner-tiny" style={{ width: 32, height: 32, marginBottom: 16 }} />
+            <p className="move-confirm-title" style={{ marginBottom: 8 }}>
+              {t('loadingImageTitle')}
+            </p>
+            <p className="move-confirm-body" style={{ margin: 0 }}>
+              {t('loadingImageBody')}
+            </p>
           </div>
         </div>
       )}

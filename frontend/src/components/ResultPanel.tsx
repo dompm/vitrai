@@ -1323,7 +1323,7 @@ export function ResultPanel({
     return () => cancelAnimationFrame(animId);
   }, [tutorialStep, project.pieces.length]);
   
-  const [patternImg] = useImage(project.patternImageUrl);
+  const [patternImg, patternImgStatus] = useImage(project.patternImageUrl);
   const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
   const measure = useMeasure();
 
@@ -1990,6 +1990,12 @@ export function ResultPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
+        {project.patternImageUrl && patternImgStatus === 'loading' && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(20, 18, 14, 0.45)', zIndex: 10, gap: '12px' }}>
+            <div className="spinner-tiny" style={{ width: 32, height: 32 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-bright)' }}>{t('loadingImage')}</span>
+          </div>
+        )}
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div style={{ maxWidth: 800 }}>
