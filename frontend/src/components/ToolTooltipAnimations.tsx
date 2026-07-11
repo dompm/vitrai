@@ -109,7 +109,6 @@ export function BoxAnimation() {
   // Top petal (0°): ellipse at (110,37), rx=7, ry=15 → extents x:103-117, y:22-52
   // Detection box with padding
   const bx = 98, by = 15, bw = 24, bh = 42;
-  const perim = (bw + bh) * 2; // 132
 
   // 5 keyTimes → 4 splines for petal highlight
   const KT_P = '0; 0.42; 0.50; 0.80; 1';
