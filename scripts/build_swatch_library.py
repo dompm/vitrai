@@ -282,6 +282,7 @@ def main():
                             "resolved_name": title,
                             "category": category,
                             "image_url": img_url,
+                            "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
                             "local_image": calib['asset_url'],
                             "cropped": calib['cropped'],
                             "crop_box": calib['crop_box'],
@@ -324,6 +325,7 @@ def main():
                             "resolved_name": title,
                             "category": category,
                             "image_url": img_url,
+                            "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
                             "local_image": calib['asset_url'],
                             "cropped": calib['cropped'],
                             "crop_box": calib['crop_box'],
@@ -368,6 +370,7 @@ def main():
                             "resolved_name": title,
                             "category": category,
                             "image_url": img_url,
+                            "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
                             "local_image": calib['asset_url'],
                             "cropped": calib['cropped'],
                             "crop_box": calib['crop_box'],
@@ -415,6 +418,7 @@ def main():
                             "resolved_name": title,
                             "category": category,
                             "image_url": img_url,
+                            "product_url": f"https://shop.bullseyeglass.com/products/{p.get('handle')}",
                             "local_image": calib['asset_url'],
                             "cropped": calib['cropped'],
                             "crop_box": calib['crop_box'],
@@ -522,13 +526,40 @@ def main():
         # Fallback to visual color analysis
         return get_hsv_class(image_path, category)
 
+    # Load swatch quarantine list if present (Finding 1)
+    quarantine_set = set()
+    quarantine_path = 'research/delighting/results/corpus/swatch_quarantine.json'
+    if os.path.exists(quarantine_path):
+        try:
+            with open(quarantine_path, 'r') as f:
+                q_data = json.load(f)
+                # Keep high-confidence bad reasons (test_fire_tiles, reaction_demo_line, composite_streamer_line)
+                bad_reasons = {'test_fire_tiles', 'reaction_demo_line', 'composite_streamer_line'}
+                for q_item in q_data.get('items', []):
+                    item_id = q_item.get('id')
+                    if item_id:
+                        reasons = set(q_item.get('reason', []))
+                        if reasons.intersection(bad_reasons):
+                            quarantine_set.add(item_id.lower())
+            print(f"Loaded {len(quarantine_set)} quarantined item IDs from {quarantine_path}")
+        except Exception as e:
+            print(f"Error loading quarantine JSON: {e}")
+
     # Sort so that preferred items come first
     registry_sorted = sorted(registry, key=get_preference_score)
     
+    seen_image_urls = set()
     for item in registry_sorted:
         mfg = item['manufacturer']
         base_sku = item['base_sku']
         
+        # Check image URL duplicate prevention (Finding 3)
+        image_url = item.get('image_url')
+        if image_url:
+            if image_url in seen_image_urls:
+                continue
+            seen_image_urls.add(image_url)
+            
         # Normalize formula ID
         formula_id = base_sku.split('-')[0]
         if mfg == 'Bullseye':
@@ -538,21 +569,41 @@ def main():
                 
         formula_key = (mfg, formula_id)
         if formula_key not in seen_formulas:
-            seen_formulas.add(formula_key)
-            
-            # Prefer recovered -v2 image version from delighting-024 if present
+            # Check quarantine status (Finding 1)
+            item_id = item['id'].lower()
             local_img_filename = os.path.basename(item['local_image'])
             base_name, ext = os.path.splitext(local_img_filename)
             v2_filename = f"{base_name}-v2{ext}"
             v2_path = os.path.join(IMAGE_DIR, v2_filename)
             
-            if os.path.exists(v2_path):
+            # Explicitly exclude Reactive Cloud (000009) since its -v2 is still bad
+            is_reactive_cloud = '000009' in base_sku
+            
+            if item_id in quarantine_set:
+                # If we have a valid -v2 image on disk (and it's not Reactive Cloud), promote it!
+                if os.path.exists(v2_path) and not is_reactive_cloud:
+                    item['local_image'] = f"/assets/catalog_images/{v2_filename}"
+                    local_img_filename = v2_filename
+                else:
+                    # No valid recovery, skip this quarantined SKU entirely to keep the catalog clean!
+                    print(f"  Quarantined: skipping {item['id']} ({item['name']}) due to test-fire/reaction photo")
+                    continue
+            
+            # Check if there is a recovered -v2 image even for non-quarantined/marginal items
+            elif os.path.exists(v2_path) and not is_reactive_cloud:
                 item['local_image'] = f"/assets/catalog_images/{v2_filename}"
                 local_img_filename = v2_filename
-                
+
+            seen_formulas.add(formula_key)
+            
             # Compute precalculated color family key using local cropped image path
             local_img_path = os.path.join(IMAGE_DIR, local_img_filename)
             item['color_family'] = get_color_family_hybrid(item['name'], item['base_sku'], item['category'], local_img_path)
+            
+            # Tag front-lit images (Finding 4)
+            is_irid = 'irid' in base_sku.lower() or 'iridescent' in item['name'].lower()
+            is_opaque_dark = (mfg == 'Youghiogheny' and any(k in item['name'].lower() for k in ['opaque', 'stipple', 'black']))
+            item['front_lit'] = bool(is_irid or is_opaque_dark)
             
             deduped.append(item)
             

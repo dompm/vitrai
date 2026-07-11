@@ -16,47 +16,6 @@ const COLOR_FAMILIES = [
   { id: 'Other', label: 'Multi/Other', colorStyle: 'linear-gradient(45deg, #f72585, #7209b7, #3f37c9, #4cc9f0)' }
 ];
 
-const getColorFamily = (name: string, sku: string): string => {
-  const s = sku.toUpperCase();
-  
-  const match = (words: string[]) => {
-    return words.some(w => new RegExp(`\\b${w}\\b`, 'i').test(name));
-  };
-  
-  if (match(['clear', 'crystal', 'ice']) || s.includes('ICE') || s.startsWith('W800') || s.startsWith('Y800') || s.startsWith('OF100ICE')) {
-    return 'Clear';
-  }
-  if (match(['white', 'black', 'gray', 'grey', 'charcoal', 'pearl', 'silver', 'opal white', 'reactive cloud', 'platinum', 'opaline', 'pewter', 'ivory', 'bone', 'alabaster', 'slate', 'smoke', 'coal', 'ebony', 'milk', 'snow', 'steel'])) {
-    return 'Monochrome';
-  }
-  if (match(['red', 'cherry', 'ruby', 'daredevil', 'grenadine', 'crimson', 'cinnabar', 'tomato', 'scarlet', 'rhubarb', 'carnelian', 'flame', 'tulip', 'wine', 'brick', 'garnet', 'cardinal', 'maroon', 'burgundy', 'begonia'])) {
-    return 'Red';
-  }
-  if (match(['orange', 'tangerine', 'persimmon', 'coral', 'peach', 'pumpkin', 'apricot'])) {
-    return 'Orange';
-  }
-  if (match(['yellow', 'canary', 'lemon', 'marigold', 'marzipan', 'almond', 'citronelle', 'butterscotch', 'custard', 'dandelion', 'flaxen', 'noble brass', 'mustard', 'banana', 'straw', 'butter', 'sunflower', 'ocher', 'ochre'])) {
-    return 'Yellow';
-  }
-  if (match(['green', 'lime', 'moss', 'sage', 'emerald', 'caribbean', 'aventurine', 'pine', 'artichoke', 'celadon', 'pea pod', 'jade', 'olive', 'fern', 'mint', 'chartreuse', 'olivine', 'asparagus', 'clover', 'meadow', 'grass', 'foliage', 'avocado', 'lichen', 'basil', 'kiwi', 'seaweed', 'forest', 'viridian'])) {
-    return 'Green';
-  }
-  if (match(['blue', 'cobalt', 'sky', 'turquoise', 'indigo', 'teal', 'ocean', 'aqua', 'cyan', 'periwinkle', 'sapphire', 'navy', 'chambray', 'lagoon', 'sea', 'pacific', 'denim', 'edgewater'])) {
-    return 'Blue';
-  }
-  if (match(['purple', 'violet', 'plum', 'heather', 'amethyst', 'grape', 'lavender', 'lilac', 'eggplant', 'mauve', 'wisteria', 'orchid', 'mulberry', 'boysenberry'])) {
-    return 'Purple';
-  }
-  if (match(['pink', 'rose', 'fuchsia', 'cranberry', 'gold pink', 'magenta'])) {
-    return 'Pink';
-  }
-  if (match(['brown', 'amber', 'bronze', 'chestnut', 'chocolate', 'wood', 'gold', 'cognac', 'caramel', 'tan', 'honey', 'umber', 'mink', 'khaki', 'coffee', 'champagne', 'sienna', 'copper', 'terra cotta', 'terracotta', 'mahogany', 'sand', 'tiger eye', 'russet', 'rust'])) {
-    return 'Brown';
-  }
-  
-  return 'Other';
-};
-
 interface SwatchItem {
   id: string;
   manufacturer: string;
@@ -69,6 +28,8 @@ interface SwatchItem {
   original_width_px: number;
   original_height_px: number;
   color_family?: string;
+  product_url?: string;
+  front_lit?: boolean;
 }
 
 interface Props {
@@ -198,7 +159,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
 
     // Color filter
     if (colorFilter !== 'All') {
-      result = result.filter(item => (item.color_family ?? getColorFamily(item.name, item.base_sku)) === colorFilter);
+      result = result.filter(item => item.color_family === colorFilter);
     }
 
     return result;
@@ -445,9 +406,28 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                       <span className={`glass-library-badge badge-${item.manufacturer.toLowerCase()}`}>
                         {item.manufacturer}
                       </span>
+                      {item.front_lit && (
+                        <span className="glass-library-front-lit-badge" title="Front-lit surface photo. May not match transmissive backlight color.">
+                          ⚠️ Front-Lit
+                        </span>
+                      )}
                     </div>
                     <div className="glass-library-card-details">
-                      <div className="glass-library-card-sku">{item.base_sku}</div>
+                      <div className="glass-library-card-sku">
+                        <span>{item.base_sku}</span>
+                        {item.product_url && (
+                          <a
+                            href={item.product_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="glass-library-product-link"
+                            onClick={(e) => e.stopPropagation()}
+                            title="View product details on manufacturer site"
+                          >
+                            🔗
+                          </a>
+                        )}
+                      </div>
                       <div className="glass-library-card-name" title={item.name}>
                         {item.name}
                       </div>

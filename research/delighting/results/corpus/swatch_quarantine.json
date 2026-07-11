@@ -1,0 +1,3161 @@
+{
+  "flagger": "audit_flagger.py",
+  "note": "ADVISORY quarantine list -- nothing deleted. See report 019. test_fire_tiles = high-confidence reaction/test-fire tile-on-white (the smoking gun). reaction_demo_line/composite_streamer_line = name-based, Bullseye product lines whose catalog photo is not a uniform sheet. product_on_white = weak/advisory: front-lit single-sheet-on-white OR non-glass junk (mostly SGE) -- review before use.",
+  "reason_codes": [
+    "test_fire_tiles",
+    "reaction_demo_line",
+    "composite_streamer_line",
+    "product_on_white",
+    "unreadable"
+  ],
+  "n_flagged": 168,
+  "items": [
+    {
+      "id": "bullseye-0000090030f1010",
+      "file": "bullseye-0000090030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Cloud Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.6509,
+        "border_white": 0.5814,
+        "fg_frac": 0.3473,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3473,
+        "mean_blob_solidity": 0.9262,
+        "fg_sat": 0.2143
+      }
+    },
+    {
+      "id": "bullseye-0000090050f1010",
+      "file": "bullseye-0000090050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Cloud Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.6602,
+        "border_white": 0.5808,
+        "fg_frac": 0.3347,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3347,
+        "mean_blob_solidity": 0.9738,
+        "fg_sat": 0.2212
+      }
+    },
+    {
+      "id": "bullseye-0000130030f1010",
+      "file": "bullseye-0000130030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Opaque White Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7508,
+        "border_white": 0.6365,
+        "fg_frac": 0.2406,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2403,
+        "mean_blob_solidity": 0.6409,
+        "fg_sat": 0.0382
+      }
+    },
+    {
+      "id": "bullseye-0000130050f1010",
+      "file": "bullseye-0000130050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Opaque White Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7004,
+        "border_white": 0.5957,
+        "fg_frac": 0.2932,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2932,
+        "mean_blob_solidity": 0.7737,
+        "fg_sat": 0.0365
+      }
+    },
+    {
+      "id": "bullseye-0001130030f1010",
+      "file": "bullseye-0001130030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6788,
+        "border_white": 0.5865,
+        "fg_frac": 0.3151,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3151,
+        "mean_blob_solidity": 0.9271,
+        "fg_sat": 0.0744
+      }
+    },
+    {
+      "id": "bullseye-0001130050f1010",
+      "file": "bullseye-0001130050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6674,
+        "border_white": 0.5821,
+        "fg_frac": 0.327,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.327,
+        "mean_blob_solidity": 0.9623,
+        "fg_sat": 0.1099
+      }
+    },
+    {
+      "id": "bullseye-0001430000f1010",
+      "file": "bullseye-0001430000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Lacy White Opalescent, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.8316,
+        "border_white": 0.7559,
+        "fg_frac": 0.1603,
+        "n_blobs": 6,
+        "biggest_blob_frac": 0.0928,
+        "mean_blob_solidity": 0.4329,
+        "fg_sat": 0.0976
+      }
+    },
+    {
+      "id": "bullseye-0001430030f1010",
+      "file": "bullseye-0001430030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Lacy White Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6708,
+        "border_white": 0.5802,
+        "fg_frac": 0.3224,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.9486,
+        "fg_sat": 0.0937
+      }
+    },
+    {
+      "id": "bullseye-0001430050f1010",
+      "file": "bullseye-0001430050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Lacy White Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6741,
+        "border_white": 0.5826,
+        "fg_frac": 0.3194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3194,
+        "mean_blob_solidity": 0.9507,
+        "fg_sat": 0.0945
+      }
+    },
+    {
+      "id": "bullseye-0002430030f1010",
+      "file": "bullseye-0002430030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Translucent White Translucent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6728,
+        "border_white": 0.5935,
+        "fg_frac": 0.3266,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3266,
+        "mean_blob_solidity": 0.9609,
+        "fg_sat": 0.0674
+      }
+    },
+    {
+      "id": "bullseye-0002430050f1010",
+      "file": "bullseye-0002430050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Translucent White Translucent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6729,
+        "border_white": 0.5849,
+        "fg_frac": 0.322,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.322,
+        "mean_blob_solidity": 0.9474,
+        "fg_sat": 0.0764
+      }
+    },
+    {
+      "id": "bullseye-0004030030f1010",
+      "file": "bullseye-0004030030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Opaline Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.66,
+        "border_white": 0.581,
+        "fg_frac": 0.3348,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3348,
+        "mean_blob_solidity": 0.9851,
+        "fg_sat": 0.3263
+      }
+    },
+    {
+      "id": "bullseye-0004030050f1010",
+      "file": "bullseye-0004030050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Opaline Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6597,
+        "border_white": 0.5813,
+        "fg_frac": 0.3352,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3352,
+        "mean_blob_solidity": 0.9977,
+        "fg_sat": 0.4772
+      }
+    },
+    {
+      "id": "bullseye-0009200030f1010",
+      "file": "bullseye-0009200030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Warm White Opalescent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.675,
+        "border_white": 0.5919,
+        "fg_frac": 0.324,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.324,
+        "mean_blob_solidity": 0.8918,
+        "fg_sat": 0.0313
+      }
+    },
+    {
+      "id": "bullseye-0009200050f1010",
+      "file": "bullseye-0009200050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Warm White Opalescent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6783,
+        "border_white": 0.5946,
+        "fg_frac": 0.321,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.321,
+        "mean_blob_solidity": 0.9132,
+        "fg_sat": 0.0308
+      }
+    },
+    {
+      "id": "bullseye-0010090030f1010",
+      "file": "bullseye-0010090030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Ice Transparent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5205,
+        "border_white": 0.6306,
+        "fg_frac": 0.4728,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2462,
+        "mean_blob_solidity": 0.9686,
+        "fg_sat": 0.5548
+      }
+    },
+    {
+      "id": "bullseye-0010090050f1010",
+      "file": "bullseye-0010090050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Reactive Ice Transparent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5205,
+        "border_white": 0.6306,
+        "fg_frac": 0.4728,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2462,
+        "mean_blob_solidity": 0.9686,
+        "fg_sat": 0.5548
+      }
+    },
+    {
+      "id": "bullseye-0010150030f1010",
+      "file": "bullseye-0010150030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5462,
+        "border_white": 0.8197,
+        "fg_frac": 0.4431,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.442,
+        "mean_blob_solidity": 0.9203,
+        "fg_sat": 0.3262
+      }
+    },
+    {
+      "id": "bullseye-0010150031f1010",
+      "file": "bullseye-0010150031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6403,
+        "border_white": 0.6586,
+        "fg_frac": 0.3408,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.338,
+        "mean_blob_solidity": 0.8874,
+        "fg_sat": 0.2682
+      }
+    },
+    {
+      "id": "bullseye-0010150050f1010",
+      "file": "bullseye-0010150050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5462,
+        "border_white": 0.8197,
+        "fg_frac": 0.4431,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.442,
+        "mean_blob_solidity": 0.9203,
+        "fg_sat": 0.3262
+      }
+    },
+    {
+      "id": "bullseye-0010150051f1010",
+      "file": "bullseye-0010150051f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6403,
+        "border_white": 0.6586,
+        "fg_frac": 0.3408,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.338,
+        "mean_blob_solidity": 0.8874,
+        "fg_sat": 0.2682
+      }
+    },
+    {
+      "id": "bullseye-0010160030f1010",
+      "file": "bullseye-0010160030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.4689,
+        "border_white": 0.7431,
+        "fg_frac": 0.5041,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.496,
+        "mean_blob_solidity": 0.8976,
+        "fg_sat": 0.5265
+      }
+    },
+    {
+      "id": "bullseye-0010160031f1010",
+      "file": "bullseye-0010160031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6684,
+        "border_white": 0.7039,
+        "fg_frac": 0.3282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3282,
+        "mean_blob_solidity": 0.9754,
+        "fg_sat": 0.8802
+      }
+    },
+    {
+      "id": "bullseye-0010160050f1010",
+      "file": "bullseye-0010160050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.4689,
+        "border_white": 0.7431,
+        "fg_frac": 0.5041,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.496,
+        "mean_blob_solidity": 0.8976,
+        "fg_sat": 0.5265
+      }
+    },
+    {
+      "id": "bullseye-0010160051f1010",
+      "file": "bullseye-0010160051f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6684,
+        "border_white": 0.7039,
+        "fg_frac": 0.3282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3282,
+        "mean_blob_solidity": 0.9754,
+        "fg_sat": 0.8802
+      }
+    },
+    {
+      "id": "bullseye-0010190030f1010",
+      "file": "bullseye-0010190030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Red Reactive Clear Transparent, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5252,
+        "border_white": 0.6677,
+        "fg_frac": 0.4707,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2364,
+        "mean_blob_solidity": 0.9577,
+        "fg_sat": 0.6234
+      }
+    },
+    {
+      "id": "bullseye-0010190031f1010",
+      "file": "bullseye-0010190031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Red Reactive Clear Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6543,
+        "border_white": 0.5956,
+        "fg_frac": 0.3231,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.7573,
+        "fg_sat": 0.0565
+      }
+    },
+    {
+      "id": "bullseye-0010190050f1010",
+      "file": "bullseye-0010190050f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Red Reactive Clear Transparent, Thin-rolled, 2 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "reaction_demo_line"
+      ],
+      "signals": {
+        "white_frac": 0.5252,
+        "border_white": 0.6677,
+        "fg_frac": 0.4707,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2364,
+        "mean_blob_solidity": 0.9577,
+        "fg_sat": 0.6234
+      }
+    },
+    {
+      "id": "bullseye-0018770030f1010",
+      "file": "bullseye-0018770030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Olivine Tint, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7136,
+        "border_white": 0.6079,
+        "fg_frac": 0.2282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2247,
+        "mean_blob_solidity": 0.7014,
+        "fg_sat": 0.0808
+      }
+    },
+    {
+      "id": "bullseye-002249ca37f1010",
+      "file": "bullseye-002249ca37f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White, Light Silver Gray 2-Color Mix, Cascade, Iridescent, silver, 3 mm, Fusible",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6093,
+        "border_white": 0.7551,
+        "fg_frac": 0.3713,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3578,
+        "mean_blob_solidity": 0.7153,
+        "fg_sat": 0.035
+      }
+    },
+    {
+      "id": "bullseye-002964ca30f1010",
+      "file": "bullseye-002964ca30f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Warm White, True Blue 2-Color Mix, Cascade, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5906,
+        "border_white": 0.7593,
+        "fg_frac": 0.405,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3877,
+        "mean_blob_solidity": 0.7507,
+        "fg_sat": 0.6248
+      }
+    },
+    {
+      "id": "bullseye-0040100000f1010",
+      "file": "bullseye-0040100000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "SPRING: Blue, Green, Aqua and Pink on White Lacy White Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.1643,
+        "border_white": 0.063,
+        "fg_frac": 0.829,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.829,
+        "mean_blob_solidity": 0.829,
+        "fg_sat": 0.2512
+      }
+    },
+    {
+      "id": "bullseye-0040110000f1010",
+      "file": "bullseye-0040110000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "AUTUMN: Orange, Yellow and Red on White Lacy White Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.4841,
+        "border_white": 0.5634,
+        "fg_frac": 0.5089,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.504,
+        "mean_blob_solidity": 0.6017,
+        "fg_sat": 0.4732
+      }
+    },
+    {
+      "id": "bullseye-0040140000f1010",
+      "file": "bullseye-0040140000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Spring Green and Deep Pink on White Lacy White Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "test_fire_tiles",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.5689,
+        "border_white": 0.5485,
+        "fg_frac": 0.4273,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3619,
+        "mean_blob_solidity": 0.5816,
+        "fg_sat": 0.2136
+      }
+    },
+    {
+      "id": "bullseye-0041000000f1010",
+      "file": "bullseye-0041000000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Black Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.9056,
+        "border_white": 0.9307,
+        "fg_frac": 0.0839,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.06,
+        "mean_blob_solidity": 0.1297,
+        "fg_sat": 0.1167
+      }
+    },
+    {
+      "id": "bullseye-0041020031f1010",
+      "file": "bullseye-0041020031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Clear with Clear Fractures Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.2238,
+        "border_white": 0.2244,
+        "fg_frac": 0.7053,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.6731,
+        "mean_blob_solidity": 0.4993,
+        "fg_sat": 0.1561
+      }
+    },
+    {
+      "id": "bullseye-0041100000f1010",
+      "file": "bullseye-0041100000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "SPRING: Blue, Green, Aqua, and Pink on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.4393,
+        "border_white": 0.4687,
+        "fg_frac": 0.5273,
+        "n_blobs": 4,
+        "biggest_blob_frac": 0.4699,
+        "mean_blob_solidity": 0.6675,
+        "fg_sat": 0.2419
+      }
+    },
+    {
+      "id": "bullseye-0041110000f1010",
+      "file": "bullseye-0041110000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "AUTUMN: Orange, Yellow, and Red on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6301,
+        "border_white": 0.5629,
+        "fg_frac": 0.3465,
+        "n_blobs": 4,
+        "biggest_blob_frac": 0.1952,
+        "mean_blob_solidity": 0.5452,
+        "fg_sat": 0.6579
+      }
+    },
+    {
+      "id": "bullseye-0041120000f1010",
+      "file": "bullseye-0041120000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "SUMMER: Green and Yellow on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6901,
+        "border_white": 0.652,
+        "fg_frac": 0.2744,
+        "n_blobs": 10,
+        "biggest_blob_frac": 0.0815,
+        "mean_blob_solidity": 0.5797,
+        "fg_sat": 0.4072
+      }
+    },
+    {
+      "id": "bullseye-0041130000f1010",
+      "file": "bullseye-0041130000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "WINTER: White (with Clear Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.8263,
+        "border_white": 0.7567,
+        "fg_frac": 0.1252,
+        "n_blobs": 8,
+        "biggest_blob_frac": 0.0363,
+        "mean_blob_solidity": 0.474,
+        "fg_sat": 0.0127
+      }
+    },
+    {
+      "id": "bullseye-0041140000f1010",
+      "file": "bullseye-0041140000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Spring Green and Deep Pink on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.5405,
+        "border_white": 0.6834,
+        "fg_frac": 0.4447,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.4191,
+        "mean_blob_solidity": 0.5095,
+        "fg_sat": 0.3604
+      }
+    },
+    {
+      "id": "bullseye-0041160000f1010",
+      "file": "bullseye-0041160000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Light Pink, Green, and White on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.2956,
+        "border_white": 0.2823,
+        "fg_frac": 0.6642,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6576,
+        "mean_blob_solidity": 0.6576,
+        "fg_sat": 0.1696
+      }
+    },
+    {
+      "id": "bullseye-0041170000f1010",
+      "file": "bullseye-0041170000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Green and White on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.5802,
+        "border_white": 0.6916,
+        "fg_frac": 0.3769,
+        "n_blobs": 8,
+        "biggest_blob_frac": 0.2299,
+        "mean_blob_solidity": 0.5687,
+        "fg_sat": 0.0729
+      }
+    },
+    {
+      "id": "bullseye-0041180000f1010",
+      "file": "bullseye-0041180000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White (with Black Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.4998,
+        "border_white": 0.4806,
+        "fg_frac": 0.4613,
+        "n_blobs": 5,
+        "biggest_blob_frac": 0.2073,
+        "mean_blob_solidity": 0.5545,
+        "fg_sat": 0.0554
+      }
+    },
+    {
+      "id": "bullseye-0041190000f1010",
+      "file": "bullseye-0041190000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Blue and White on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.5938,
+        "border_white": 0.6729,
+        "fg_frac": 0.3767,
+        "n_blobs": 8,
+        "biggest_blob_frac": 0.2492,
+        "mean_blob_solidity": 0.536,
+        "fg_sat": 0.2682
+      }
+    },
+    {
+      "id": "bullseye-0041210000f1010",
+      "file": "bullseye-0041210000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Light Pink and White on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.4945,
+        "border_white": 0.6718,
+        "fg_frac": 0.4928,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3742,
+        "mean_blob_solidity": 0.4034,
+        "fg_sat": 0.1546
+      }
+    },
+    {
+      "id": "bullseye-0041280000f1010",
+      "file": "bullseye-0041280000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Deep Pink, Plum, Spring Green, Aqua (with Pink Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.3999,
+        "border_white": 0.3213,
+        "fg_frac": 0.5592,
+        "n_blobs": 5,
+        "biggest_blob_frac": 0.3346,
+        "mean_blob_solidity": 0.5147,
+        "fg_sat": 0.2156
+      }
+    },
+    {
+      "id": "bullseye-0041360000f1010",
+      "file": "bullseye-0041360000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Black with Black Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6395,
+        "border_white": 0.6335,
+        "fg_frac": 0.3392,
+        "n_blobs": 6,
+        "biggest_blob_frac": 0.1424,
+        "mean_blob_solidity": 0.4522,
+        "fg_sat": 0.1339
+      }
+    },
+    {
+      "id": "bullseye-0041510000f1010",
+      "file": "bullseye-0041510000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Royal Blue Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.9229,
+        "border_white": 0.9113,
+        "fg_frac": 0.0689,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.0294,
+        "mean_blob_solidity": 0.2453,
+        "fg_sat": 0.5397
+      }
+    },
+    {
+      "id": "bullseye-0041520000f1010",
+      "file": "bullseye-0041520000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Aventurine Green Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.8923,
+        "border_white": 0.8512,
+        "fg_frac": 0.0892,
+        "n_blobs": 6,
+        "biggest_blob_frac": 0.0271,
+        "mean_blob_solidity": 0.2811,
+        "fg_sat": 0.6569
+      }
+    },
+    {
+      "id": "bullseye-0041580000f1010",
+      "file": "bullseye-0041580000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.9233,
+        "border_white": 0.9292,
+        "fg_frac": 0.0714,
+        "n_blobs": 5,
+        "biggest_blob_frac": 0.0233,
+        "mean_blob_solidity": 0.2497,
+        "fg_sat": 0.0112
+      }
+    },
+    {
+      "id": "bullseye-0041710000f1010",
+      "file": "bullseye-0041710000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Black and White Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.8909,
+        "border_white": 0.8812,
+        "fg_frac": 0.0255,
+        "n_blobs": 0,
+        "biggest_blob_frac": 0.0,
+        "mean_blob_solidity": 0.0,
+        "fg_sat": 0.1303
+      }
+    },
+    {
+      "id": "bullseye-0043020031f1010",
+      "file": "bullseye-0043020031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Clear with Clear Streamers Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.3045,
+        "border_white": 0.309,
+        "fg_frac": 0.6407,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.5058,
+        "mean_blob_solidity": 0.5459,
+        "fg_sat": 0.1807
+      }
+    },
+    {
+      "id": "bullseye-0043250000f1010",
+      "file": "bullseye-0043250000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Green Fracture w/Line Cast Green Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.0439,
+        "border_white": 0.0477,
+        "fg_frac": 0.9168,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.9097,
+        "mean_blob_solidity": 0.9097,
+        "fg_sat": 0.3118
+      }
+    },
+    {
+      "id": "bullseye-0043290000f1010",
+      "file": "bullseye-0043290000f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Green & Pink Fracture w/Line Cast Green Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.2438,
+        "border_white": 0.3013,
+        "fg_frac": 0.6739,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.5999,
+        "mean_blob_solidity": 0.4997,
+        "fg_sat": 0.3504
+      }
+    },
+    {
+      "id": "bullseye-0044000030f1010",
+      "file": "bullseye-0044000030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Black Chopstix Clear Base Collage, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.7775,
+        "border_white": 0.7048,
+        "fg_frac": 0.2194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2194,
+        "mean_blob_solidity": 0.2194,
+        "fg_sat": 0.182
+      }
+    },
+    {
+      "id": "bullseye-0044000031f1010",
+      "file": "bullseye-0044000031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Black Chopstix Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.2791,
+        "border_white": 0.3028,
+        "fg_frac": 0.676,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6718,
+        "mean_blob_solidity": 0.6718,
+        "fg_sat": 0.2049
+      }
+    },
+    {
+      "id": "bullseye-0044020031f1010",
+      "file": "bullseye-0044020031f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Clear Chopstix Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.4729,
+        "border_white": 0.4301,
+        "fg_frac": 0.4354,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.2959,
+        "mean_blob_solidity": 0.336,
+        "fg_sat": 0.1601
+      }
+    },
+    {
+      "id": "bullseye-0044140030f1010",
+      "file": "bullseye-0044140030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Blue Chopstix Clear Base Collage, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.6851,
+        "border_white": 0.6758,
+        "fg_frac": 0.3103,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3103,
+        "mean_blob_solidity": 0.3103,
+        "fg_sat": 0.3973
+      }
+    },
+    {
+      "id": "bullseye-0044240030f1010",
+      "file": "bullseye-0044240030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "Red Chopstix Clear Base Collage, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "product_on_white",
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.7644,
+        "border_white": 0.7674,
+        "fg_frac": 0.2328,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2328,
+        "mean_blob_solidity": 0.2328,
+        "fg_sat": 0.7145
+      }
+    },
+    {
+      "id": "bullseye-0044370030f1010",
+      "file": "bullseye-0044370030f1010.jpg",
+      "manufacturer": "Bullseye",
+      "name": "White Chopstix Clear Base Collage, Double-rolled, 3 mm, Fusible",
+      "reason": [
+        "composite_streamer_line"
+      ],
+      "signals": {
+        "white_frac": 0.9435,
+        "border_white": 0.9266,
+        "fg_frac": 0.0442,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.0086,
+        "mean_blob_solidity": 0.3325,
+        "fg_sat": 0.013
+      }
+    },
+    {
+      "id": "oceanside-of100ice",
+      "file": "oceanside-of100ice.jpg",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Clear Ice",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7051,
+        "border_white": 0.5659,
+        "fg_frac": 0.2789,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.225,
+        "mean_blob_solidity": 0.569,
+        "fg_sat": 0.0744
+      }
+    },
+    {
+      "id": "oceanside-of209s",
+      "file": "oceanside-of209s.jpg",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Crystal Opal",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7283,
+        "border_white": 0.6571,
+        "fg_frac": 0.2404,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.229,
+        "mean_blob_solidity": 0.5459,
+        "fg_sat": 0.0604
+      }
+    },
+    {
+      "id": "oceanside-of89161s",
+      "file": "oceanside-of89161s.jpg",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Pink Champagne, White",
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.563,
+        "border_white": 0.5848,
+        "fg_frac": 0.4159,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3392,
+        "mean_blob_solidity": 0.533,
+        "fg_sat": 0.0353
+      }
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000090030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6509,
+        "border_white": 0.5814,
+        "fg_frac": 0.3473,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3473,
+        "mean_blob_solidity": 0.9262,
+        "fg_sat": 0.2143
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000090030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6509,
+        "border_white": 0.5814,
+        "fg_frac": 0.3473,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3473,
+        "mean_blob_solidity": 0.9262,
+        "fg_sat": 0.2143
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000090050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6602,
+        "border_white": 0.5808,
+        "fg_frac": 0.3347,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3347,
+        "mean_blob_solidity": 0.9738,
+        "fg_sat": 0.2212
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000130030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7508,
+        "border_white": 0.6365,
+        "fg_frac": 0.2406,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2403,
+        "mean_blob_solidity": 0.6409,
+        "fg_sat": 0.0382
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000130030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7508,
+        "border_white": 0.6365,
+        "fg_frac": 0.2406,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2403,
+        "mean_blob_solidity": 0.6409,
+        "fg_sat": 0.0382
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0000130050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7004,
+        "border_white": 0.5957,
+        "fg_frac": 0.2932,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2932,
+        "mean_blob_solidity": 0.7737,
+        "fg_sat": 0.0365
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001130030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6788,
+        "border_white": 0.5865,
+        "fg_frac": 0.3151,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3151,
+        "mean_blob_solidity": 0.9271,
+        "fg_sat": 0.0744
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001130030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6788,
+        "border_white": 0.5865,
+        "fg_frac": 0.3151,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3151,
+        "mean_blob_solidity": 0.9271,
+        "fg_sat": 0.0744
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001130050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6674,
+        "border_white": 0.5821,
+        "fg_frac": 0.327,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.327,
+        "mean_blob_solidity": 0.9623,
+        "fg_sat": 0.1099
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001430030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6708,
+        "border_white": 0.5802,
+        "fg_frac": 0.3224,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.9486,
+        "fg_sat": 0.0937
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001430030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6708,
+        "border_white": 0.5802,
+        "fg_frac": 0.3224,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.9486,
+        "fg_sat": 0.0937
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0001430050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6741,
+        "border_white": 0.5826,
+        "fg_frac": 0.3194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3194,
+        "mean_blob_solidity": 0.9507,
+        "fg_sat": 0.0945
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0002430030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6728,
+        "border_white": 0.5935,
+        "fg_frac": 0.3266,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3266,
+        "mean_blob_solidity": 0.9609,
+        "fg_sat": 0.0674
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0002430030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6728,
+        "border_white": 0.5935,
+        "fg_frac": 0.3266,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3266,
+        "mean_blob_solidity": 0.9609,
+        "fg_sat": 0.0674
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0002430050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6729,
+        "border_white": 0.5849,
+        "fg_frac": 0.322,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.322,
+        "mean_blob_solidity": 0.9474,
+        "fg_sat": 0.0764
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0004030030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.66,
+        "border_white": 0.581,
+        "fg_frac": 0.3348,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3348,
+        "mean_blob_solidity": 0.9851,
+        "fg_sat": 0.3263
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0004030030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.66,
+        "border_white": 0.581,
+        "fg_frac": 0.3348,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3348,
+        "mean_blob_solidity": 0.9851,
+        "fg_sat": 0.3263
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0004030050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6597,
+        "border_white": 0.5813,
+        "fg_frac": 0.3352,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3352,
+        "mean_blob_solidity": 0.9977,
+        "fg_sat": 0.4772
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0009200030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.675,
+        "border_white": 0.5919,
+        "fg_frac": 0.324,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.324,
+        "mean_blob_solidity": 0.8918,
+        "fg_sat": 0.0313
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0009200030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.675,
+        "border_white": 0.5919,
+        "fg_frac": 0.324,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.324,
+        "mean_blob_solidity": 0.8918,
+        "fg_sat": 0.0313
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0009200050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6783,
+        "border_white": 0.5946,
+        "fg_frac": 0.321,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.321,
+        "mean_blob_solidity": 0.9132,
+        "fg_sat": 0.0308
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010090030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5205,
+        "border_white": 0.6306,
+        "fg_frac": 0.4728,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2462,
+        "mean_blob_solidity": 0.9686,
+        "fg_sat": 0.5548
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010090030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5205,
+        "border_white": 0.6306,
+        "fg_frac": 0.4728,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2462,
+        "mean_blob_solidity": 0.9686,
+        "fg_sat": 0.5548
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010090050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5205,
+        "border_white": 0.6306,
+        "fg_frac": 0.4728,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2462,
+        "mean_blob_solidity": 0.9686,
+        "fg_sat": 0.5548
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5462,
+        "border_white": 0.8197,
+        "fg_frac": 0.4431,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.442,
+        "mean_blob_solidity": 0.9203,
+        "fg_sat": 0.3262
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5462,
+        "border_white": 0.8197,
+        "fg_frac": 0.4431,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.442,
+        "mean_blob_solidity": 0.9203,
+        "fg_sat": 0.3262
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150031ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6403,
+        "border_white": 0.6586,
+        "fg_frac": 0.3408,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.338,
+        "mean_blob_solidity": 0.8874,
+        "fg_sat": 0.2682
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150031fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6403,
+        "border_white": 0.6586,
+        "fg_frac": 0.3408,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.338,
+        "mean_blob_solidity": 0.8874,
+        "fg_sat": 0.2682
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5462,
+        "border_white": 0.8197,
+        "fg_frac": 0.4431,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.442,
+        "mean_blob_solidity": 0.9203,
+        "fg_sat": 0.3262
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010150051fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6403,
+        "border_white": 0.6586,
+        "fg_frac": 0.3408,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.338,
+        "mean_blob_solidity": 0.8874,
+        "fg_sat": 0.2682
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4689,
+        "border_white": 0.7431,
+        "fg_frac": 0.5041,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.496,
+        "mean_blob_solidity": 0.8976,
+        "fg_sat": 0.5265
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4689,
+        "border_white": 0.7431,
+        "fg_frac": 0.5041,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.496,
+        "mean_blob_solidity": 0.8976,
+        "fg_sat": 0.5265
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160031ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6684,
+        "border_white": 0.7039,
+        "fg_frac": 0.3282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3282,
+        "mean_blob_solidity": 0.9754,
+        "fg_sat": 0.8802
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160031fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6684,
+        "border_white": 0.7039,
+        "fg_frac": 0.3282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3282,
+        "mean_blob_solidity": 0.9754,
+        "fg_sat": 0.8802
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4689,
+        "border_white": 0.7431,
+        "fg_frac": 0.5041,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.496,
+        "mean_blob_solidity": 0.8976,
+        "fg_sat": 0.5265
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010160051fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6684,
+        "border_white": 0.7039,
+        "fg_frac": 0.3282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3282,
+        "mean_blob_solidity": 0.9754,
+        "fg_sat": 0.8802
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010190030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5252,
+        "border_white": 0.6677,
+        "fg_frac": 0.4707,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2364,
+        "mean_blob_solidity": 0.9577,
+        "fg_sat": 0.6234
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010190030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5252,
+        "border_white": 0.6677,
+        "fg_frac": 0.4707,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2364,
+        "mean_blob_solidity": 0.9577,
+        "fg_sat": 0.6234
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010190031ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6543,
+        "border_white": 0.5956,
+        "fg_frac": 0.3231,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.7573,
+        "fg_sat": 0.0565
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010190031fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6543,
+        "border_white": 0.5956,
+        "fg_frac": 0.3231,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3224,
+        "mean_blob_solidity": 0.7573,
+        "fg_sat": 0.0565
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0010190050fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5252,
+        "border_white": 0.6677,
+        "fg_frac": 0.4707,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2364,
+        "mean_blob_solidity": 0.9577,
+        "fg_sat": 0.6234
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0018770030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7136,
+        "border_white": 0.6079,
+        "fg_frac": 0.2282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2247,
+        "mean_blob_solidity": 0.7014,
+        "fg_sat": 0.0808
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0018770030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7136,
+        "border_white": 0.6079,
+        "fg_frac": 0.2282,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2247,
+        "mean_blob_solidity": 0.7014,
+        "fg_sat": 0.0808
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-002249ca37ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6093,
+        "border_white": 0.7551,
+        "fg_frac": 0.3713,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3578,
+        "mean_blob_solidity": 0.7153,
+        "fg_sat": 0.035
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-002249ca37fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6093,
+        "border_white": 0.7551,
+        "fg_frac": 0.3713,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3578,
+        "mean_blob_solidity": 0.7153,
+        "fg_sat": 0.035
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-002964ca30ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5906,
+        "border_white": 0.7593,
+        "fg_frac": 0.405,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3877,
+        "mean_blob_solidity": 0.7507,
+        "fg_sat": 0.6248
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-002964ca30fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5906,
+        "border_white": 0.7593,
+        "fg_frac": 0.405,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3877,
+        "mean_blob_solidity": 0.7507,
+        "fg_sat": 0.6248
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0040110000fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4841,
+        "border_white": 0.5634,
+        "fg_frac": 0.5089,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.504,
+        "mean_blob_solidity": 0.6017,
+        "fg_sat": 0.4732
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0040140000ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5689,
+        "border_white": 0.5485,
+        "fg_frac": 0.4273,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3619,
+        "mean_blob_solidity": 0.5816,
+        "fg_sat": 0.2136
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0040140000fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5689,
+        "border_white": 0.5485,
+        "fg_frac": 0.4273,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3619,
+        "mean_blob_solidity": 0.5816,
+        "fg_sat": 0.2136
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0041140000ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5405,
+        "border_white": 0.6834,
+        "fg_frac": 0.4447,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.4191,
+        "mean_blob_solidity": 0.5095,
+        "fg_sat": 0.3604
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0041140000fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5405,
+        "border_white": 0.6834,
+        "fg_frac": 0.4447,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.4191,
+        "mean_blob_solidity": 0.5095,
+        "fg_sat": 0.3604
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0041210000fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4945,
+        "border_white": 0.6718,
+        "fg_frac": 0.4928,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3742,
+        "mean_blob_solidity": 0.4034,
+        "fg_sat": 0.1546
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0044000030ffull.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7775,
+        "border_white": 0.7048,
+        "fg_frac": 0.2194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2194,
+        "mean_blob_solidity": 0.2194,
+        "fg_sat": 0.182
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0044000030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7775,
+        "border_white": 0.7048,
+        "fg_frac": 0.2194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2194,
+        "mean_blob_solidity": 0.2194,
+        "fg_sat": 0.182
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0044140030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6851,
+        "border_white": 0.6758,
+        "fg_frac": 0.3103,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3103,
+        "mean_blob_solidity": 0.3103,
+        "fg_sat": 0.3973
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-0044240030fhalf.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7644,
+        "border_white": 0.7674,
+        "fg_frac": 0.2328,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2328,
+        "mean_blob_solidity": 0.2328,
+        "fg_sat": 0.7145
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-51110A-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5087,
+        "border_white": 0.8122,
+        "fg_frac": 0.489,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.489,
+        "mean_blob_solidity": 0.9603,
+        "fg_sat": 0.6944
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-51124A-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5115,
+        "border_white": 0.8003,
+        "fg_frac": 0.4838,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4836,
+        "mean_blob_solidity": 0.9731,
+        "fg_sat": 0.7264
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-51209A-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5128,
+        "border_white": 0.8106,
+        "fg_frac": 0.4848,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4848,
+        "mean_blob_solidity": 0.9699,
+        "fg_sat": 0.9202
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-51217B-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5093,
+        "border_white": 0.8049,
+        "fg_frac": 0.4886,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4886,
+        "mean_blob_solidity": 0.9691,
+        "fg_sat": 0.3809
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-60105B-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5365,
+        "border_white": 0.8194,
+        "fg_frac": 0.4574,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4572,
+        "mean_blob_solidity": 0.9386,
+        "fg_sat": 0.1648
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "bullseye-60112B-0030-F-1010.jpg",
+      "manufacturer": "bullseye",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4974,
+        "border_white": 0.7954,
+        "fg_frac": 0.4998,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4998,
+        "mean_blob_solidity": 0.9774,
+        "fg_sat": 0.3366
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "oceanside-100s.jpg",
+      "manufacturer": "oceanside",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7051,
+        "border_white": 0.5659,
+        "fg_frac": 0.2789,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.225,
+        "mean_blob_solidity": 0.569,
+        "fg_sat": 0.0744
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "oceanside-of100ice6x12.jpg",
+      "manufacturer": "oceanside",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7051,
+        "border_white": 0.5659,
+        "fg_frac": 0.2789,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.225,
+        "mean_blob_solidity": 0.569,
+        "fg_sat": 0.0744
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "oceanside-of209s6x12.jpg",
+      "manufacturer": "oceanside",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7283,
+        "border_white": 0.6571,
+        "fg_frac": 0.2404,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.229,
+        "mean_blob_solidity": 0.5459,
+        "fg_sat": 0.0604
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "oceanside-of89161s6x12.jpg",
+      "manufacturer": "oceanside",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.563,
+        "border_white": 0.5848,
+        "fg_frac": 0.4159,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.3392,
+        "mean_blob_solidity": 0.533,
+        "fg_sat": 0.0353
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-12015SF-6x8.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.6905,
+        "border_white": 0.8793,
+        "fg_frac": 0.2784,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2784,
+        "mean_blob_solidity": 0.6231,
+        "fg_sat": 0.275
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-15308.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.417,
+        "border_white": 0.6872,
+        "fg_frac": 0.5806,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.5806,
+        "mean_blob_solidity": 0.9528,
+        "fg_sat": 0.0866
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-325034.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.312,
+        "border_white": 0.6091,
+        "fg_frac": 0.6872,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6872,
+        "mean_blob_solidity": 0.9989,
+        "fg_sat": 0.2093
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-412912EA.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4387,
+        "border_white": 0.7002,
+        "fg_frac": 0.5245,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.4659,
+        "mean_blob_solidity": 0.6022,
+        "fg_sat": 0.4885
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-50421.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.8206,
+        "border_white": 0.9976,
+        "fg_frac": 0.1765,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.1762,
+        "mean_blob_solidity": 0.592,
+        "fg_sat": 0.3036
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-62666.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5326,
+        "border_white": 0.9962,
+        "fg_frac": 0.4673,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4673,
+        "mean_blob_solidity": 0.7894,
+        "fg_sat": 0.8742
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BB051.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.6386,
+        "border_white": 0.985,
+        "fg_frac": 0.3612,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.3612,
+        "mean_blob_solidity": 0.5376,
+        "fg_sat": 0.6353
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE0114.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.4606,
+        "border_white": 0.8669,
+        "fg_frac": 0.5382,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2724,
+        "mean_blob_solidity": 0.9931,
+        "fg_sat": 0.4757
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE011450F.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3163,
+        "border_white": 0.6695,
+        "fg_frac": 0.683,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3416,
+        "mean_blob_solidity": 0.9881,
+        "fg_sat": 0.4769
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE014450-5x8-1-2.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3091,
+        "border_white": 0.6505,
+        "fg_frac": 0.6886,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6872,
+        "mean_blob_solidity": 0.9751,
+        "fg_sat": 0.9656
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE0146.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.5072,
+        "border_white": 0.9287,
+        "fg_frac": 0.4924,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.2483,
+        "mean_blob_solidity": 0.9935,
+        "fg_sat": 0.7379
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE016450-5x8-1-2.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3146,
+        "border_white": 0.6633,
+        "fg_frac": 0.6745,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6732,
+        "mean_blob_solidity": 0.9513,
+        "fg_sat": 0.7244
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE042130F.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3032,
+        "border_white": 0.6397,
+        "fg_frac": 0.6898,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.3565,
+        "mean_blob_solidity": 0.9687,
+        "fg_sat": 0.2004
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE110551-5x8-1-2.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3,
+        "border_white": 0.7163,
+        "fg_frac": 0.6947,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6947,
+        "mean_blob_solidity": 0.9341,
+        "fg_sat": 0.2599
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE1112.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3194,
+        "border_white": 0.6651,
+        "fg_frac": 0.6665,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.6663,
+        "mean_blob_solidity": 0.9517,
+        "fg_sat": 0.6138
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE111251-5x8.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4398,
+        "border_white": 0.8303,
+        "fg_frac": 0.5578,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.5578,
+        "mean_blob_solidity": 0.9657,
+        "fg_sat": 0.4469
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE111930.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3049,
+        "border_white": 0.6336,
+        "fg_frac": 0.6858,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.6719,
+        "mean_blob_solidity": 0.862,
+        "fg_sat": 0.5333
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE112030.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.2966,
+        "border_white": 0.6257,
+        "fg_frac": 0.7023,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.6918,
+        "mean_blob_solidity": 0.8696,
+        "fg_sat": 0.9665
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE185930inv.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.3313,
+        "border_white": 0.678,
+        "fg_frac": 0.6589,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.6497,
+        "mean_blob_solidity": 0.5617,
+        "fg_sat": 0.1231
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE2129F.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.315,
+        "border_white": 0.6603,
+        "fg_frac": 0.685,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.685,
+        "mean_blob_solidity": 0.9824,
+        "fg_sat": 0.1006
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-BE60112B30F_10X17.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4977,
+        "border_white": 0.7958,
+        "fg_frac": 0.4996,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4996,
+        "mean_blob_solidity": 0.977,
+        "fg_sat": 0.3377
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-CG231.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7144,
+        "border_white": 0.9305,
+        "fg_frac": 0.2821,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2821,
+        "mean_blob_solidity": 0.6423,
+        "fg_sat": 0.0506
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-CIM921.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4479,
+        "border_white": 0.6917,
+        "fg_frac": 0.5351,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.5175,
+        "mean_blob_solidity": 0.5349,
+        "fg_sat": 0.129
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-DAIA169.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4543,
+        "border_white": 0.921,
+        "fg_frac": 0.5438,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.5436,
+        "mean_blob_solidity": 0.7966,
+        "fg_sat": 0.482
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-DC2552B.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5279,
+        "border_white": 0.9798,
+        "fg_frac": 0.472,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.472,
+        "mean_blob_solidity": 0.7742,
+        "fg_sat": 0.7519
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-DG1039.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.2442,
+        "border_white": 0.5712,
+        "fg_frac": 0.7554,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.7554,
+        "mean_blob_solidity": 0.9968,
+        "fg_sat": 0.2688
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-E6006.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.4698,
+        "border_white": 0.6369,
+        "fg_frac": 0.4641,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4465,
+        "mean_blob_solidity": 0.9612,
+        "fg_sat": 0.1793
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-FW733.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7189,
+        "border_white": 0.9621,
+        "fg_frac": 0.2807,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2807,
+        "mean_blob_solidity": 0.5088,
+        "fg_sat": 0.7201
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-GE524.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.8004,
+        "border_white": 0.9252,
+        "fg_frac": 0.1847,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.1746,
+        "mean_blob_solidity": 0.5502,
+        "fg_sat": 0.207
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-GE525.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.8176,
+        "border_white": 0.9433,
+        "fg_frac": 0.1711,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.1693,
+        "mean_blob_solidity": 0.5576,
+        "fg_sat": 0.3021
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-MES16.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.778,
+        "border_white": 0.9538,
+        "fg_frac": 0.2194,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2188,
+        "mean_blob_solidity": 0.9008,
+        "fg_sat": 0.0803
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-NS037.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.8061,
+        "border_white": 0.9013,
+        "fg_frac": 0.1881,
+        "n_blobs": 3,
+        "biggest_blob_frac": 0.1159,
+        "mean_blob_solidity": 0.8535,
+        "fg_sat": 0.6363
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-PT1C.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.5342,
+        "border_white": 0.8707,
+        "fg_frac": 0.4653,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.4653,
+        "mean_blob_solidity": 0.5415,
+        "fg_sat": 0.1559
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-SGEEC150.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.7824,
+        "border_white": 0.9537,
+        "fg_frac": 0.216,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2158,
+        "mean_blob_solidity": 0.3382,
+        "fg_sat": 0.1032
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-XM071.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "product_on_white"
+      ],
+      "signals": {
+        "white_frac": 0.785,
+        "border_white": 0.8702,
+        "fg_frac": 0.2117,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.2117,
+        "mean_blob_solidity": 0.4411,
+        "fg_sat": 0.3509
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-XM626.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.8404,
+        "border_white": 0.912,
+        "fg_frac": 0.1502,
+        "n_blobs": 2,
+        "biggest_blob_frac": 0.143,
+        "mean_blob_solidity": 0.5523,
+        "fg_sat": 0.3271
+      },
+      "unregistered": true
+    },
+    {
+      "id": null,
+      "file": "sge-XM943.jpg",
+      "manufacturer": "sge",
+      "name": null,
+      "reason": [
+        "test_fire_tiles"
+      ],
+      "signals": {
+        "white_frac": 0.7989,
+        "border_white": 0.9333,
+        "fg_frac": 0.1909,
+        "n_blobs": 1,
+        "biggest_blob_frac": 0.1905,
+        "mean_blob_solidity": 0.5603,
+        "fg_sat": 0.4526
+      },
+      "unregistered": true
+    }
+  ]
+}
