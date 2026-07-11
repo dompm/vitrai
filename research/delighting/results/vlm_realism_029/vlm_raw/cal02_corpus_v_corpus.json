@@ -1,0 +1,13 @@
+{
+  "call_id": "cal02_corpus_v_corpus",
+  "truth_label": "real_vs_real",
+  "images": [
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/corpus/bullseye-0021000000f1010.jpg",
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/corpus/bullseye-0023050030f1010.jpg"
+  ],
+  "model": "sonnet",
+  "elapsed_s": 29.2,
+  "returncode": 0,
+  "stdout": "OBSERVATIONS:\n- Image 1, category 2 (texture): the vertical striations vary irregularly in spacing, curvature, and darkness (e.g., the two dark near-parallel bands left-of-center diverge and thin unevenly toward the top) \u2014 consistent with real rolled-glass waviness rather than a repeating procedural pattern.\n- Image 1, category 6 (noise): the near-black region (upper left) shows fine irregular luminance grain rather than a flat black \u2014 consistent with real camera sensor noise at low signal level.\n- Image 1, category 3 (translucency): at least two small circular \"o\"-shaped marks (~x610,y345 and x860,y400) show a dark ring with a lighter core, i.e., a seed bubble refracting/redirecting light differently from the surrounding glass \u2014 a local optical event, not a painted-on dot.\n- Image 2, category 2 (texture): the central vertical mark has fine parallel ridulations resembling a reamy fold/pull line from hand-working the glass, with the color banding bending to follow the ridge rather than sitting on top of it \u2014 a sign the pigment gradient and physical relief are coupled, as in real glass.\n- Image 2, category 3 (color depth): the coral mottling has soft, cloud-like diffusion with variable edge sharpness (crisp near the vertical ream, blurred in open field) \u2014 consistent with real streaky/opalescent glass where pigment concentration tracks physical mixing depth, not a uniform tint plus haze layer.\n- Image 2, category 6 (noise): fine grain is visible in the light pink flat zones (lower right), and a tiny bright speck (~x718,y548) shows a small directional glint rather than a uniform dot, suggesting a physical surface imperfection catching light.\n- Neither image shows a hard/synthetic edge fringe, unnaturally uniform gradient, or texture that repeats/tiles.\n\nVERDICT: Both appear real -- each shows local optical irregularities (bubble refraction, coupled ream/color banding, irregular sensor grain) that are difficult to fake and don't read as procedural or uniform.",
+  "stderr": ""
+}

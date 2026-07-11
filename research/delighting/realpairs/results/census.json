@@ -1,0 +1,7419 @@
+[
+ {
+  "product_id": "175884",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-checker-board",
+  "title": "Clear Checker Board Stained Glass Sheets | Textured Delphi",
+  "n_images": 4,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.655,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.835,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.427,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234958",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-sky-blue-sea-green-with-white-gold-pink-streaky-granite",
+  "title": "Uro Sky Blue, Sea Green With White, Gold Pink Streaky Granite Glass",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.465,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.439,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.628,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.87,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.688,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234482",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-textures-sampler-glass-pack",
+  "title": "Van Gogh Textures Sampler Glass Pack Stained Sheets",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.384,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.855,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "224295",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-light-amber-transparent-flemish",
+  "title": "Kokomo Light Amber Transparent Flemish Stained Glass Sheets",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "shop"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "186639",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-violet-red",
+  "title": "Van Gogh Violet / Red - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238683",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-red-velvet-cake-opal-streaky",
+  "title": "Red Velvet Cake Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.973,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.405,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.528,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.516,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.586,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218136",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-opal-yellow",
+  "title": "Armstrong Clear Opal Yellow - Armstrong Glass - Armstrong Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "186204",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-violet-bluegreen-copper",
+  "title": "Van Gogh Violet / Bluegreen Copper Stained Glass Sheets | Delphi Glass",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.78,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.966,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.475,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.721,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "230663",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-granite",
+  "title": "Oceanside Clear Granite Stained Glass Sheets | Textured",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.881,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.678,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.906,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.943,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.753,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.992,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "208641",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-medium-amber-and-clear-cathedral-old-mississippi",
+  "title": "Kokomo Medium Amber And Clear Cathedral Old Mississippi Stained Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "230189",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-corteza",
+  "title": "Oceanside Clear Corteza Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.815,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.818,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.447,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.527,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.98,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238667",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-four-leaf-clover-transparent",
+  "title": "Four Leaf Clover Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.973,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.464,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.53,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "230207",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-vecchio",
+  "title": "Oceanside Clear Vecchio Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.948,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.806,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.763,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.977,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "lightbox",
+    "confidence": 0.814,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.863,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234943",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-gold-purple-and-white-granite",
+  "title": "Uro Gold Purple And White Granite Stained Glass Sheets",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 4,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.761,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.642,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.886,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.464,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.481,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238531",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-emerald-chartruese-and-turquoise-herringbone-ripple",
+  "title": "Uro Emerald, Chartruese And Turquoise Herringbone Ripple Stained Glass",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.541,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.651,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.615,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.454,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.564,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218132",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-light-blue-yellow-purple-opal-streaky",
+  "title": "Armstrong Clear Light Blue Yellow Purple Opal Streaky",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173813",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-antique-veil",
+  "title": "English Muffle Antique Veil Stained Glass Sheets | Wissmach",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.996,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.834,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186200",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-blue-purple",
+  "title": "Van Gogh Blue / Purple - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "234933",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-aqua-sea-green-and-white-granite",
+  "title": "Uro Aqua, Sea Green And White Granite Stained Glass Sheets",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.538,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.616,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.509,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.925,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.573,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.713,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "212196",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-onami-glue-chip",
+  "title": "Clear Onami Glue Chip Stained Glass Sheets | Textured Delphi",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.71,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.526,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.588,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218128",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-flesh-opalascent",
+  "title": "Armstrong Flesh Opalascent - Armstrong Glass - Armstrong Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238655",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-bluff-opal-streaky",
+  "title": "Bluff Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.437,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.501,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.436,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.488,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238587",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-lagoon-opal-streaky",
+  "title": "Lagoon Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.996,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.555,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.491,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.614,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.493,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "231040",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-true-blue-transparent-vertigo",
+  "title": "Kokomo True Blue Transparent Vertigo Stained Glass Sheets",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.994,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.963,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "221957",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-aqua-blue-purple-pink-opal-streaky",
+  "title": "Armstrong Aqua Blue Purple Pink Opal Streaky Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.66,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.446,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.79,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.553,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234908",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-brown-coffee-butterscotch-granite-ripple",
+  "title": "Uro Brown, Coffee, Butterscotch Granite Ripple Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "shop",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.633,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.45,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.763,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.683,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.979,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.762,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.478,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186196",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-silver",
+  "title": "Van Gogh Silver Stained Glass Sheets | Delphi Glass",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.496,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.722,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.473,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "174122",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/spectrum-clear-granite",
+  "title": "Spectrum Clear Granite - Clear Textured Glass - Spectrum Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "lightbox"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.664,
+    "reason": "uniform near-white border distinct from interior"
+   }
+  ]
+ },
+ {
+  "product_id": "230364",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-small-hammered-96-coe",
+  "title": "Oceanside Clear Small Hammered - 96 COE Stained Glass Sheets | Textured",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.994,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.783,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.72,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.692,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186191",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-purple",
+  "title": "Van Gogh Purple - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238679",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-bonfire-opal-streaky",
+  "title": "Bonfire Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.956,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.445,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.63,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.432,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.543,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "230195",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-artique-96-coe",
+  "title": "Oceanside Clear Artique - 96 COE Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.955,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.86,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.773,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.426,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.644,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.968,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238659",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-chartreuse-transparent",
+  "title": "Chartreuse Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.997,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.441,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.459,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.447,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234424",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-amber-and-lemon-yellow-on-white-mottle",
+  "title": "Uro Amber And Lemon Yellow On White Mottle Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.992,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.432,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.9,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.952,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.759,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.478,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239906",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-pink-and-yellow-opal-streaky",
+  "title": "Pink And Yellow Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.444,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.486,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.449,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238715",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-orange-soda-transparent",
+  "title": "Orange Soda Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.923,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.434,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.62,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186193",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-cranberry-red",
+  "title": "Van Gogh Cranberry Red - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238691",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-creamsicle-opal-streaky",
+  "title": "Creamsicle Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.41,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.445,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.425,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "214795",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-nouveau-reamy",
+  "title": "Clear Nouveau Reamy Stained Glass Sheets | Textured Delphi",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.9,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173798",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-selenium-red",
+  "title": "English Muffle Selenium Red Stained Glass Sheets | Wissmach",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "224662",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-raindown",
+  "title": "Clear Raindown Stained Glass Sheets | Textured Delphi",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173810",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-coronation-gold",
+  "title": "English Muffle Coronation Gold Stained Glass Sheets | Wissmach",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.42,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.654,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.655,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234903",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-celery-green-and-deep-forest-green-mottle",
+  "title": "Uro Celery Green And Deep Forest Mottle Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.443,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.851,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.889,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.884,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.374,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.401,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.735,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "220063",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-vivid-amethyst-mirror",
+  "title": "MLW Vivid Amethyst Mirror Stained Glass Sheets | Specialty Finish",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.492,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238731",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-cherry-on-top-opal-streaky",
+  "title": "Cherry On Top Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.993,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.422,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.631,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.443,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.541,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.507,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239384",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/wissmach-clear-transparent-cube",
+  "title": "Wissmach Clear Transparent Cube Stained Glass Sheets | Textured",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.912,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.44,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.635,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "229548",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/kokomo-clear-transparent-mississippi",
+  "title": "Kokomo Clear Transparent Mississippi Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.429,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.966,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.942,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.839,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.422,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.414,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238695",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-bubblegum-opal-streaky",
+  "title": "Bubblegum Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 4,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.807,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.67,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.414,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_5",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "239388",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/wissmach-clear-transparent-aerolite",
+  "title": "Wissmach Clear Transparent Aerolite Stained Glass Sheets | Textured",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.821,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.897,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.423,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.84,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "229896",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-medium-copper-blue",
+  "title": "English Muffle Medium Copper Blue Stained Glass Sheets | Wissmach",
+  "n_images": 4,
+  "distinct_capture_types": [
+   "shop",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.517,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.399,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "174934",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-reamy",
+  "title": "Clear Reamy Stained Glass Sheets | Textured Delphi",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.959,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.501,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.611,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.408,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.991,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "220058",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-naples-hand-stained-glass",
+  "title": "MLW Naples Hand Stained Glass Sheets | Specialty Finish Delphi",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238647",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-tequila-sunrise-opal-streaky",
+  "title": "Tequila Sunrise Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.764,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.445,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.409,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.541,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.616,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238541",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-emerald-spring-and-light-green-herringbone-ripple",
+  "title": "Uro Emerald, Spring And Light Green Herringbone Ripple Stained Glass",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.549,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.618,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.59,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.535,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.559,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.478,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "193881",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-sample-set",
+  "title": "Van Gogh Sample Set Stained Glass Sheets | Delphi Glass",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.582,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.723,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.721,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "240276",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-bora-bora-streaky",
+  "title": "Bora Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.541,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.998,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.495,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.428,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.516,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "174970",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/spectrum-clear-corteza-iridized",
+  "title": "Spectrum Clear Corteza Iridized - Clear Textured Glass - Spectrum Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "224993",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/kokomo-clear-transparent-rolled-granite",
+  "title": "Kokomo Clear Transparent Rolled Granite Stained Glass Sheets | Textured",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.671,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.897,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239153",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-peaches-and-cream-opal-streaky",
+  "title": "Peaches And Cream Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.876,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.983,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.429,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.442,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "217585",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/bubbles-clear-texture",
+  "title": "Bubbles Clear Texture - Clear Textured Glass - Delphi Glass",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.411,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.754,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "192278",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-cobalt-blue-and-clear-transparent-streaky",
+  "title": "Kokomo Cobalt Blue And Clear Transparent Streaky Stained Glass Sheets",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "186206",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-blue-violet",
+  "title": "Van Gogh Blue / Violet - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "203547",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-clear-light-seedy",
+  "title": "Kokomo Clear Light Seedy Stained Glass Sheets",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.955,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.688,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.416,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.508,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "174130",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-hammered",
+  "title": "Clear Hammered Stained Glass Sheets | Textured Delphi",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.85,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.977,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.96,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.533,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.583,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.994,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "209907",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-water",
+  "title": "Clear Water Stained Glass Sheets | Textured Delphi",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.498,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238723",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-black-cherry-transparent",
+  "title": "Black Cherry Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.984,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.458,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.474,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.709,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239285",
+  "brand": "delphi-superior-glass",
+  "url": "https://www.delphiglass.com/stained-glass/delphi-superior-glass/delphi-superior-blue-corn-transparent-90-coe",
+  "title": "Delphi Superior Blue Corn Transparent - 90 COE Stained Glass Sheets",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.95,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.961,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.981,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.821,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.927,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.989,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "209065",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-diamond-texture",
+  "title": "Clear Diamond Texture Stained Glass Sheets | Textured Delphi",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173820",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-textured-glacier",
+  "title": "Clear Textured Glacier Stained Glass Sheets | Delphi Glass",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.978,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.687,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "220043",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-indian-hand-stained-glass",
+  "title": "MLW Indian Hand-Stained Glass Stained Sheets | Specialty Finish",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "186205",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-bronze",
+  "title": "Van Gogh Bronze Stained Glass Sheets | Delphi Glass",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.722,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238711",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-poppy-opal-streaky",
+  "title": "Poppy Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.441,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.489,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.543,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238521",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-white-opal-herringbone-ripple",
+  "title": "Uro White Opal Herringbone Ripple Stained Glass Sheets",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.423,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "230310",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-satin-seedy",
+  "title": "Oceanside Clear Satin Seedy Stained Glass Sheets | Textured",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.729,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.875,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.473,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.745,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.98,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173750",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-scottish-heather",
+  "title": "English Muffle Scottish Heather Stained Glass Sheets | Wissmach",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.983,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.792,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.404,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.45,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.765,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "lightbox",
+    "confidence": 0.754,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.952,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "212188",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-ocean-glue-chip",
+  "title": "Clear Ocean Glue Chip Stained Glass Sheets | Textured Delphi",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.79,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.74,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.483,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186643",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-glass-pack-big-mix",
+  "title": "Van Gogh Glass Pack - Big Mix - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218088",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-clear-flemish",
+  "title": "Kokomo Clear Flemish Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.779,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.985,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "lightbox",
+    "confidence": 0.8,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.618,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.476,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "lightbox",
+    "confidence": 0.86,
+    "reason": "uniform near-white border distinct from interior"
+   }
+  ]
+ },
+ {
+  "product_id": "175270",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/uroboros-clear-herringbone-ripple-90-coe",
+  "title": "Uroboros Clear Herringbone Ripple - 90 COE Stained Glass Sheets | Textured",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.989,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218144",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-orange-black-opal-streaky",
+  "title": "Armstrong Orange Black Opal Streaky Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.449,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.461,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186201",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-purple-bluegreen",
+  "title": "Van Gogh Purple / Bluegreen - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "174093",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-autumn",
+  "title": "Clear Autumn Stained Glass Sheets | Textured Delphi",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.499,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.894,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.514,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.538,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.482,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.914,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "230364",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-small-hammered",
+  "title": "Oceanside Clear Small Hammered Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.994,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.783,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.72,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.692,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.566,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.982,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.952,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173747",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-windsor-blue",
+  "title": "English Muffle Windsor Blue Stained Glass Sheets | Wissmach",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.997,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.992,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.814,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.592,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.579,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.536,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.996,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218124",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-opal-light-blue",
+  "title": "Armstrong Clear Opal Light Blue",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "230165",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-rough-rolled",
+  "title": "Oceanside Clear Rough Rolled Stained Glass Sheets | Textured",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.893,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.902,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.709,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.963,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173783",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-regency-gold",
+  "title": "English Muffle Regency Gold Stained Glass Sheets | Wissmach",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.997,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.723,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.601,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.949,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.669,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.423,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.585,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239157",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-yellow-transparent",
+  "title": "Yellow Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.674,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.774,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.537,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.42,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238631",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-peacock-blue-transparent",
+  "title": "Peacock Blue Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.941,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.503,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.534,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.752,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.915,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.876,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.474,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.909,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "191915",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-digital",
+  "title": "Clear Digital Stained Glass Sheets | Textured Delphi",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.45,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.433,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.714,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.778,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.823,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "224633",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/kokomo-clear-ripple-iridized",
+  "title": "Kokomo Clear Ripple Iridized Stained Glass Sheets | Textured",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "183587",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/delta-clear-etched",
+  "title": "Delta Clear Etched Stained Glass Sheets | Textured Delphi",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 4,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.984,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.428,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.405,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.997,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   }
+  ]
+ },
+ {
+  "product_id": "186198",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-green-copper-gold",
+  "title": "Van Gogh Green / Copper/ Gold - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "215284",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-texture-architectural-glass-pack",
+  "title": "Clear Texture / Architectural Glass Pack - Clear Textured Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "175899",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-sparkle",
+  "title": "Clear Sparkle Stained Glass Sheets | Textured Delphi",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.486,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.414,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.995,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218140",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-rust-cathedral",
+  "title": "Armstrong Rust Cathedral - Armstrong Glass - Armstrong Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173744",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-cornwall-green",
+  "title": "English Muffle Cornwall Green Stained Glass Sheets | Wissmach",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238607",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-mermaid-dreams-iridized-opal-streaky",
+  "title": "Mermaid Dreams Iridized Opal Streaky Stained Glass | Tiffany Today",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.908,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.577,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.749,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.445,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.441,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.752,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.915,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.876,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239173",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-chantilly",
+  "title": "Clear Chantilly Stained Glass Sheets | Textured Delphi",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.453,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.712,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "lightbox",
+    "confidence": 0.868,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.687,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "239935",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-cobalt-mottled-plum-emerald-deep-purple-sky-blue-and-midnight-mottle",
+  "title": "Uro Cobalt, Mottled Plum, Emerald, Deep Purple, Sky Blue And Midnight Mottle | Glass",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.987,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.693,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.622,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.774,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.692,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "174096",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-sycamore",
+  "title": "Clear Sycamore Stained Glass Sheets | Textured Delphi",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.971,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234226",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-blue-green-forest-green-and-midnight-green-mottle",
+  "title": "Uro Blue-Green, Forest Green And Midnight Mottle Stained Glass",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.953,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.55,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.748,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.528,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.965,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.746,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "221937",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-amber-cobalt-blue-opal-streaky",
+  "title": "Armstrong Amber Cobalt Blue Opal Streaky Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.747,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.89,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173795",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-midnight-blue",
+  "title": "English Muffle Midnight Blue Stained Glass Sheets | Wissmach",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.99,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.983,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.404,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.782,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "175890",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-textured-petals",
+  "title": "Clear Textured Petals Stained Glass Sheets | Delphi Glass",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238719",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-cardinal-transparent",
+  "title": "Cardinal Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.979,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.456,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.443,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.611,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218128",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-flesh-opalescent",
+  "title": "Armstrong Flesh Opalescent Stained Glass Sheets",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "190275",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-cord-96-coe",
+  "title": "Oceanside Clear Cord - 96 COE Stained Glass Sheets | Textured",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "lightbox"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.802,
+    "reason": "uniform near-white border distinct from interior"
+   }
+  ]
+ },
+ {
+  "product_id": "214791",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-velvet-antique",
+  "title": "Clear Velvet Antique Stained Glass Sheets | Textured Delphi",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "187939",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/double-strength-clear-glass",
+  "title": "Double Strength Clear Glass Stained Sheets | Textured Delphi",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "235522",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-cloud-hand-rolled-opal-96-coe",
+  "title": "Uro Cloud Hand-Rolled Opal - 96 COE Stained Glass Sheets",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.909,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.96,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186203",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-violet-and-bluegreen",
+  "title": "Van Gogh Violet And Bluegreen Stained Glass Sheets | Delphi Glass",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.682,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.722,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.473,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "218124",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-and-light-blue-opal-streaky",
+  "title": "Armstrong Clear And Light Blue Opal Streaky Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.446,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.82,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238635",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-ocean-spray-opal-mottle",
+  "title": "Ocean Spray Opal Mottle Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.88,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.609,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.574,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.441,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.503,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238627",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-island-vibes-opal-streaky",
+  "title": "Island Vibes Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.724,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.481,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.717,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.436,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.554,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234778",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-spearmint-transparent-96-coe",
+  "title": "Uro Spearmint Transparent - 96 COE Stained Glass Sheets",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.609,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "147228",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/glue-chip-glass-pack",
+  "title": "Glue Chip Glass Pack Stained Sheets | Clear Textured",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_6",
+    "label": "lightbox",
+    "confidence": 0.913,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.478,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.584,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "239145",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-turquoise-transparent",
+  "title": "Turquoise Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.904,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.665,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "175649",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/uroboros-clear-granite-iridized-90-coe",
+  "title": "Uroboros Clear Granite Iridized - 90 COE Stained Glass Sheets",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173756",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-sage-green",
+  "title": "English Muffle Sage Green Stained Glass Sheets | Wissmach",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.54,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.611,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.73,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.593,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.976,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "174075",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-double-glue-chip",
+  "title": "Clear Double Glue Chip Stained Glass Sheets | Textured Delphi",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.761,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.686,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.502,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.902,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.72,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.641,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.405,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "149338",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/bullseye-clear-transparent-double-thick-90-coe",
+  "title": "Bullseye Clear Transparent Double Thick - 90 COE Stained Glass Sheets | Textured",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "239270",
+  "brand": "delphi-superior-glass",
+  "url": "https://www.delphiglass.com/stained-glass/delphi-superior-glass/delphi-superior-bell-pepper-opal-90-coe",
+  "title": "Delphi Superior Bell Pepper Opal - 90 COE Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.855,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.999,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.488,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_7",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_8",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173804",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-emerald-isle",
+  "title": "English Muffle Emerald Isle Stained Glass Sheets | Wissmach",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.573,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.586,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.61,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.589,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.634,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.992,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.621,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238675",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-atlantis-iridized-opal-streaky",
+  "title": "Atlantis Iridized Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.986,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.421,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.443,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.915,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.876,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.474,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "221953",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-yellow-cobalt-blue-opal-streaky",
+  "title": "Armstrong Clear Yellow Cobalt Blue Opal Streaky Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.927,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.917,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.858,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.6,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238595",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-cobalt-blue-transparent",
+  "title": "Cobalt Blue Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.734,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.925,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.803,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.558,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234255",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-iridized-granite-96-coe",
+  "title": "Oceanside Clear Iridized Granite - 96 COE Stained Glass Sheets | Textured",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.684,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.93,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.554,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.818,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.66,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.794,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.959,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "220048",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-arctic-hand-stained-glass",
+  "title": "MLW Arctic Hand Stained Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "221945",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-light-blue-pink-yellow-opal-streaky",
+  "title": "Armstrong Clear Light Blue Pink Yellow Opal Streaky Stained Glass",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.408,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.488,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.408,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.48,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234953",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-blue-and-green-with-white-pink-and-violet-granite",
+  "title": "Uro Blue And Green With White, Pink Violet Granite Stained Glass",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.904,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.536,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.891,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.597,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.939,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.648,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.474,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "218136",
+  "brand": "armstrong-glass",
+  "url": "https://www.delphiglass.com/stained-glass/armstrong-glass/armstrong-clear-and-yellow-opal",
+  "title": "Armstrong Clear And Yellow Opal Stained Glass Sheets",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "175010",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-iridized-waterglass",
+  "title": "Oceanside Clear Iridized Waterglass Stained Glass Sheets | Textured",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.966,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.893,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.585,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.625,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.581,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234318",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-light-brown-dark-brown-and-emerald-green-granite",
+  "title": "Uro Light Brown, Dark Brown And Emerald Green Granite Stained Glass",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "shop",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.644,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.409,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.833,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.935,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.934,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "220088",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-vivid-silver-mirror",
+  "title": "MLW Vivid Silver Mirror Stained Glass Sheets | Specialty Finish",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 4,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "lightbox",
+    "confidence": 0.679,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.403,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "lightbox",
+    "confidence": 0.675,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_4",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "173807",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-majesty-blue",
+  "title": "English Muffle Majesty Blue Stained Glass Sheets | Wissmach",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.995,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.436,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.965,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.757,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.585,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "186641",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-champagne-and-silver",
+  "title": "Van Gogh Champagne And Silver Stained Glass Sheets | Delphi Glass",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.409,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.838,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.722,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.413,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.473,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.845,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "215286",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/icy-cool-winter-glass-pack",
+  "title": "Icy Cool Winter Glass Pack - Clear Textured Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "190275",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-cord",
+  "title": "Oceanside Clear Cord Stained Glass Sheets | Textured",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.802,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.758,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.863,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.507,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.632,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "234853",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-ruby-golden-yellow-and-red-on-white-mottle",
+  "title": "Uro Ruby, Golden Yellow And Red On White Mottle Stained Glass Sheets",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.863,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.412,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.785,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.876,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.727,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.42,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.735,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   }
+  ]
+ },
+ {
+  "product_id": "230138",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/oceanside-clear-crystal-ice-96-coe",
+  "title": "Oceanside Clear Crystal Ice - 96 COE Stained Glass Sheets | Textured",
+  "n_images": 4,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 0.885,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.834,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "lightbox",
+    "confidence": 0.877,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173738",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-clear",
+  "title": "English Muffle Clear Stained Glass Sheets | Wissmach",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.902,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.588,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.629,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.441,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.425,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.919,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.585,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "238611",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-purple-haze-opal-streaky",
+  "title": "Purple Haze Opal Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 10,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.63,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.63,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.439,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.514,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.61,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.66,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.91,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.649,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 0.437,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "173753",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-flaxen-tint",
+  "title": "English Muffle Flaxen Tint Stained Glass Sheets | Wissmach",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.971,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.818,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "191919",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-mayflower",
+  "title": "Clear Mayflower Stained Glass Sheets | Textured Delphi",
+  "n_images": 8,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 4,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "lightbox",
+    "confidence": 0.757,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_4",
+    "label": "lightbox",
+    "confidence": 0.761,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.55,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.562,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "192250",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/kokomo-clear-vertigo",
+  "title": "Kokomo Clear Vertigo Stained Glass Sheets | Textured",
+  "n_images": 9,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.415,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.953,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.958,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "window",
+    "confidence": 0.934,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_7",
+    "label": "window",
+    "confidence": 0.549,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_8",
+    "label": "window",
+    "confidence": 0.451,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_9",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "229880",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-lavender",
+  "title": "English Muffle Lavender Stained Glass Sheets | Wissmach",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 1.0,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.386,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "220053",
+  "brand": "specialty-finish-glass",
+  "url": "https://www.delphiglass.com/stained-glass/specialty-finish-glass/mlw-atlantic-hand-stained-glass",
+  "title": "MLW Atlantic Hand Stained Glass Sheets | Specialty Finish",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.757,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_5",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "239169",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-florielle",
+  "title": "Clear Florielle Stained Glass Sheets | Textured Delphi",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.426,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.646,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.946,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "lightbox",
+    "confidence": 0.933,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "173765",
+  "brand": "wissmach-glass",
+  "url": "https://www.delphiglass.com/stained-glass/wissmach-glass/english-muffle-apricot-beige",
+  "title": "English Muffle Apricot Beige Stained Glass Sheets | Wissmach",
+  "n_images": 3,
+  "distinct_capture_types": [
+   "window"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "window",
+    "confidence": 0.977,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.987,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.905,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "224096",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-medium-amber-transparent-light-seedy",
+  "title": "Kokomo Medium Amber Transparent Light Seedy Stained Glass Sheets",
+  "n_images": 5,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.834,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.992,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "240281",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-lava-reef-streaky",
+  "title": "Lava Reef Streaky Stained Glass Sheets | Tiffany Today",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "238619",
+  "brand": "tiffany-today-glass",
+  "url": "https://www.delphiglass.com/stained-glass/tiffany-today-glass/tiffany-today-eggplant-transparent",
+  "title": "Eggplant Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 6,
+  "distinct_capture_types": [
+   "closeup",
+   "shop",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.825,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "shop",
+    "confidence": 0.6,
+    "reason": "background visible; indoor (no sky/foliage cue)"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.436,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.598,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.733,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "194323",
+  "brand": "clear-textured-glass",
+  "url": "https://www.delphiglass.com/stained-glass/clear-textured-glass/clear-santa-fe",
+  "title": "Clear Santa Fe - Clear Textured Glass - Delphi Glass",
+  "n_images": 4,
+  "distinct_capture_types": [
+   "closeup",
+   "lightbox",
+   "window"
+  ],
+  "n_distinct": 3,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "lightbox",
+    "confidence": 1.0,
+    "reason": "uniform near-white border distinct from interior"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_2",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.797,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   }
+  ]
+ },
+ {
+  "product_id": "224997",
+  "brand": "kokomo-glass",
+  "url": "https://www.delphiglass.com/stained-glass/kokomo-glass/kokomo-clear-ripple",
+  "title": "Kokomo Clear Ripple Stained Glass Sheets",
+  "n_images": 2,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "186634",
+  "brand": "van-gogh-glass",
+  "url": "https://www.delphiglass.com/stained-glass/van-gogh-glass/van-gogh-spring-green",
+  "title": "Van Gogh Spring Green - Van Gogh Glass - Delphi Glass",
+  "n_images": 1,
+  "distinct_capture_types": [
+   "closeup"
+  ],
+  "n_distinct": 1,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ },
+ {
+  "product_id": "234231",
+  "brand": "uro-glass",
+  "url": "https://www.delphiglass.com/stained-glass/uro-glass/uro-steel-blue-and-sky-blue-on-white-mottle",
+  "title": "Uro Steel Blue And Sky On White Mottle Stained Glass Sheets",
+  "n_images": 7,
+  "distinct_capture_types": [
+   "closeup",
+   "window"
+  ],
+  "n_distinct": 2,
+  "classifications": [
+   {
+    "key": "hero",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   },
+   {
+    "key": "gallery_1",
+    "label": "window",
+    "confidence": 0.686,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_2",
+    "label": "window",
+    "confidence": 0.773,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_3",
+    "label": "window",
+    "confidence": 0.92,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_4",
+    "label": "window",
+    "confidence": 0.826,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_5",
+    "label": "window",
+    "confidence": 0.666,
+    "reason": "background visible; sky/foliage above or through the sheet"
+   },
+   {
+    "key": "gallery_6",
+    "label": "closeup",
+    "confidence": 1.0,
+    "reason": "full-bleed texture, no distinct background band"
+   }
+  ]
+ }
+]

@@ -1,0 +1,5847 @@
+[
+ {
+  "product_id": "230189",
+  "brand": "clear-textured-glass",
+  "title": "Oceanside Clear Corteza Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 1,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 399,
+    "mad": 26.0,
+    "grad_corr": 0.4757649600505829,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "238631",
+  "brand": "tiffany-today-glass",
+  "title": "Peacock Blue Transparent Stained Glass Sheets | Tiffany Today",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 3,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 114,
+    "mad": 42.0,
+    "grad_corr": 0.5288907289505005,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 114,
+    "mad": 23.0,
+    "grad_corr": 0.5228477120399475,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 28,
+    "mad": 65.0,
+    "grad_corr": 0.22688548266887665,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "238541",
+  "brand": "uro-glass",
+  "title": "Uro Emerald, Spring And Light Green Herringbone Ripple Stained Glass",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 3,
+  "n_same_photo": 2,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 41,
+    "mad": 27.0,
+    "grad_corr": 0.011396014131605625,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 293,
+    "mad": 7.0,
+    "grad_corr": 0.6428649425506592,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 400,
+    "mad": 4.0,
+    "grad_corr": 0.8446092009544373,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 118,
+    "mad": 23.0,
+    "grad_corr": 0.08847726136445999,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 375,
+    "mad": 16.0,
+    "grad_corr": 0.03521290794014931,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "173810",
+  "brand": "wissmach-glass",
+  "title": "English Muffle Coronation Gold Stained Glass Sheets | Wissmach",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 0,
+  "n_same_photo": 1,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "shop",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 400,
+    "mad": 1.0,
+    "grad_corr": 0.9974165558815002,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "shop",
+    "label_b": "window",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "186204",
+  "brand": "van-gogh-glass",
+  "title": "Van Gogh Violet / Bluegreen Copper Stained Glass Sheets | Delphi Glass",
+  "n_images": 9,
+  "n_pairs": 36,
+  "n_cross_capture": 0,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "218088",
+  "brand": "kokomo-glass",
+  "title": "Kokomo Clear Flemish Stained Glass Sheets",
+  "n_images": 9,
+  "n_pairs": 36,
+  "n_cross_capture": 1,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "lightbox",
+    "label_b": "lightbox",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "lightbox",
+    "label_b": "closeup",
+    "inliers": 1,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "lightbox",
+    "label_b": "lightbox",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "lightbox",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 16,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "lightbox",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "lightbox",
+    "label_b": "lightbox",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "lightbox",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 14,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 14,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "lightbox",
+    "inliers": 128,
+    "mad": 29.0,
+    "grad_corr": 0.7596405744552612,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "lightbox",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "239285",
+  "brand": "delphi-superior-glass",
+  "title": "Delphi Superior Blue Corn Transparent - 90 COE Stained Glass Sheets",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 1,
+  "n_same_photo": 3,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 399,
+    "mad": 2.0,
+    "grad_corr": 0.9218886494636536,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 400,
+    "mad": 2.0,
+    "grad_corr": 0.925609827041626,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 400,
+    "mad": 1.0,
+    "grad_corr": 0.9264293909072876,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 32,
+    "mad": 25.0,
+    "grad_corr": -0.014038549736142159,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "220063",
+  "brand": "specialty-finish-glass",
+  "title": "MLW Vivid Amethyst Mirror Stained Glass Sheets | Specialty Finish",
+  "n_images": 6,
+  "n_pairs": 15,
+  "n_cross_capture": 0,
+  "n_same_photo": 1,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "shop",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "shop",
+    "label_b": "shop",
+    "inliers": 400,
+    "mad": 1.0,
+    "grad_corr": 0.9808789491653442,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "shop",
+    "label_b": "shop",
+    "inliers": 0,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "shop",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "shop",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "230207",
+  "brand": "clear-textured-glass",
+  "title": "Oceanside Clear Vecchio Stained Glass Sheets | Textured",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 2,
+  "n_same_photo": 1,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 395,
+    "mad": 24.0,
+    "grad_corr": 0.51878422498703,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 400,
+    "mad": 0.0,
+    "grad_corr": 0.999980628490448,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 394,
+    "mad": 23.0,
+    "grad_corr": 0.6229345798492432,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "lightbox",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "lightbox",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "238607",
+  "brand": "tiffany-today-glass",
+  "title": "Mermaid Dreams Iridized Opal Streaky Stained Glass | Tiffany Today",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 4,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 43,
+    "mad": 10.0,
+    "grad_corr": 0.4136265516281128,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 99,
+    "mad": 26.0,
+    "grad_corr": 0.08617857098579407,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 44,
+    "mad": 7.0,
+    "grad_corr": 0.08283688127994537,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 41,
+    "mad": 26.0,
+    "grad_corr": 0.7160623073577881,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "238531",
+  "brand": "uro-glass",
+  "title": "Uro Emerald, Chartruese And Turquoise Herringbone Ripple Stained Glass",
+  "n_images": 9,
+  "n_pairs": 36,
+  "n_cross_capture": 2,
+  "n_same_photo": 1,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 76,
+    "mad": 37.0,
+    "grad_corr": 0.162666916847229,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 400,
+    "mad": 6.0,
+    "grad_corr": 0.6835967302322388,
+    "kind": "same_photo"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 3,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 200,
+    "mad": 11.0,
+    "grad_corr": 0.3821829855442047,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "173747",
+  "brand": "wissmach-glass",
+  "title": "English Muffle Windsor Blue Stained Glass Sheets | Wissmach",
+  "n_images": 10,
+  "n_pairs": 45,
+  "n_cross_capture": 1,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 73,
+    "mad": 24.0,
+    "grad_corr": 0.01171827595680952,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 5,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_9",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "gallery_9",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_9",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "186196",
+  "brand": "van-gogh-glass",
+  "title": "Van Gogh Silver Stained Glass Sheets | Delphi Glass",
+  "n_images": 8,
+  "n_pairs": 28,
+  "n_cross_capture": 1,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 4,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 6,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 41,
+    "mad": 101.0,
+    "grad_corr": -0.004419333301484585,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "203547",
+  "brand": "kokomo-glass",
+  "title": "Kokomo Clear Light Seedy Stained Glass Sheets",
+  "n_images": 7,
+  "n_pairs": 21,
+  "n_cross_capture": 1,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 23,
+    "mad": 51.0,
+    "grad_corr": 0.005575313698500395,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ },
+ {
+  "product_id": "239270",
+  "brand": "delphi-superior-glass",
+  "title": "Delphi Superior Bell Pepper Opal - 90 COE Stained Glass Sheets",
+  "n_images": 9,
+  "n_pairs": 36,
+  "n_cross_capture": 2,
+  "n_same_photo": 0,
+  "pairs": [
+   {
+    "a": "gallery_1",
+    "b": "gallery_2",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 47,
+    "mad": 42.0,
+    "grad_corr": -0.004617814440280199,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_1",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 22,
+    "mad": 204.0,
+    "grad_corr": 0.017120562493801117,
+    "kind": "cross_capture"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_3",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 14,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_2",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 7,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_4",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_3",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_5",
+    "label_a": "window",
+    "label_b": "window",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 15,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_4",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_6",
+    "label_a": "window",
+    "label_b": "shop",
+    "inliers": 8,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_7",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "gallery_8",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 11,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_5",
+    "b": "hero",
+    "label_a": "window",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_7",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "gallery_8",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_6",
+    "b": "hero",
+    "label_a": "shop",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "gallery_8",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 12,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_7",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 10,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   },
+   {
+    "a": "gallery_8",
+    "b": "hero",
+    "label_a": "closeup",
+    "label_b": "closeup",
+    "inliers": 9,
+    "mad": null,
+    "grad_corr": null,
+    "kind": "none"
+   }
+  ]
+ }
+]

@@ -285,6 +285,54 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
   not one replacing the other; the specific envelope-swap hybrid is not the right integration
   depth for a unified default. No PR, not shipped; `--illum quotient` stays research-only pending
   a dedicated haze/anchor retune for that convention (flagged, not attempted).
+- 029 (branch `research/delighting-029`, `029-vlm-realism-critique.md`) VLM realism critique
+  of render_022 vs the clean catalog corpus vs 12 in-the-wild photos (23 blind pairwise/
+  triplet `claude`-CLI calls; the SAME instrument runs the diagnostics and the real-vs-real
+  calibration controls). Ranked gap list, known vs NEW: (1) texture SPATIAL statistics read
+  procedural — 15/16 diagnostic calls — periodicity/isotropy/no roll-direction anisotropy/no
+  seed-bubble event layer (a NEW dimension beyond 022's hf-ENERGY fix); (2) camera-optics
+  layer absent or wrong (no shot grain/CA/DoF; where noise exists it is signal-INdependent
+  Cycles residual — NEW, but discounted vs catalog targets: it fired in all 3 calibration
+  false-positives); (3) layer DECOUPLING — color gradients/vignette/hotspot ride on top of
+  the relief instead of being modulated by it (10/16, NEW, most actionable: couple T to
+  height via Beer-Lambert at texture-authoring time); (4) zero front-surface specularity
+  (9/16, KNOWN = MMv3 G2, now with frequency evidence); (5) lighting monotony (KNOWN) plus a
+  NEW bug-level artifact: the saturated-opalescent render carries a razor-sharp HDRI-horizon
+  seam THROUGH supposedly milky opal glass — eye-verified, direct visual evidence of MMv3
+  G1's roughness-only-haze insufficiency. Calibration: 3/7 real-vs-real controls
+  false-positived (43%), always calling the cleaner CATALOG-style image synthetic; no wild
+  photo was ever called synthetic — the catalog corpus itself is "synthetic-adjacent" in
+  capture statistics (matters for what the learned track can learn from it). Honest caveat:
+  file paths leaked set identity to the critic (one verdict echoed a recipe name), so the
+  16/16 detection stat is soft; the observation inventory is the deliverable and its
+  strongest items were verified by eye. Maintainer add-on folded in: real sheet marks can be
+  WHITE paint-pen on dark glass — the generator draws dark-only strokes and composites them
+  aliased (7/16 calls caught the mark inconsistency); queued as a generator+detector fix.
+  Pre-scaling to-do in report §5: front veil (G2), T-height Beer-Lambert coupling, seed/
+  bubble event layer + roll anisotropy, opal scatter (G1), camera post (photo-only), marks.
+- 031 (branch `research/delighting-031`, `031-variety-coverage.md`) VLM glass-VARIETY coverage
+  scan — complements 021 §5's continuous Lab/hf gap analysis with a categorical/structural read
+  a color histogram can't see. 9 `claude` CLI calls (8 taxonomy-pass grids over 72 stratified
+  clean-corpus tiles + 1 recipe-mapping call) built a 14-taxon bottom-up taxonomy. **9 of 14
+  taxa have ZERO representation across our 13 recipes**: iridized/dichroic surface sheen (19.4%
+  sample / 15.5% keyword prevalence — the single biggest miss), seedy bubbles (12.5%/rarely
+  named), baroque/rolling-wave relief (11%/10.8% category), fracture/thread-crack streamer
+  network (9.7%/1.8%), confetti shard collage, reactive color-cell mottle, crackle/faceted
+  relief, dew-droplet relief, drapery fold. Key cross-cutting finding: for texture/streak
+  variety the manufacturer doesn't bother naming (fine surface relief, coarse baroque waves,
+  fracture lines, color streaks), the VLM's pixel-sample rate runs 3-6x the registry-keyword
+  rate — these patterns are pervasive across nominally-plain product photos, not confined to
+  the manufacturer's own branded texture line; catalog naming systematically undercounts real
+  structural prevalence. Cost split for the top-5 misses: 4 of 5 are cheap (existing
+  Material-v2 height/relief channel, or new Voronoi-cell texture masks feeding the existing T
+  pipeline) — only iridescence (T13, also the most prevalent miss) needs genuinely new
+  material-model physics (thin-film interference, angle/wavelength-dependent). Also found by
+  the recipe-mapping call: `streaky-fine-texture` and `wispy-white` (both authored as
+  streaky-family recipes, 022) get independently VLM-classified as ring-mottle and
+  opalescent-smooth respectively — their streak signal doesn't read as streaky to a fresh
+  judge, a legibility gap 022's own hf-energy statistics didn't catch (flagged as a follow-up,
+  not fixed here).
+
 
 ### Intern track (Mira/Codex — high-risk neural; numbering overlaps main-track reports, kept as-is)
 - 009 high-risk neural track begins (`train_glassnet_zero.py` + persona doc): a tiny class-conditioned
@@ -404,3 +452,11 @@ Blender bump. **Caveat:** Cycles glass is cleaner than real rolled glass — syn
 - **Real photos still un-shot:** cross-lighting pairs + a shadow/no-shadow pair (the final benchmark).
 - Relight side (2D compositor + 3D lamp PBR) — spiked earlier, shelved; returns once extraction is
   good enough.
+- NEW (report 031): 9 of 14 real-corpus glass VARIETIES have zero synthetic-recipe coverage —
+  highest-prevalence miss is iridized/dichroic surface sheen (needs new thin-film-interference
+  material physics, not just texture/relief authoring); the next 4 by prevalence (baroque/
+  rolling-wave relief, fracture/thread-crack streamer network, confetti shard collage, seedy
+  bubbles) are cheap — extensions of the existing Material-v2 height/relief channel or new
+  Voronoi-cell texture masks feeding the existing T-authoring pipeline. Also flagged there:
+  `streaky-fine-texture`/`wispy-white` (022) don't read as their intended streaky family to a
+  fresh VLM judge — a legibility check worth adding alongside hf-energy statistics.

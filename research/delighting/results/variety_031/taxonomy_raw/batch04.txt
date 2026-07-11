@@ -1,0 +1,19 @@
+VARIETY: smooth cathedral
+STRUCTURE: Flat, uniform transmissive color in the body with no discernible surface relief or internal structure (aside from incidental dust specks); light passes evenly through.
+TILES: #036
+
+VARIETY: cloud/gradient blend
+STRUCTURE: Body-level smooth diffuse transition between two colors (here orange fading into white/cream) with a soft, cloud-like irregular boundary rather than a hard edge or discrete streaks.
+TILES: #037
+
+VARIETY: granite/ripple relief
+STRUCTURE: Fine, all-over irregular pebbled surface relief covering the whole tile, water-like and small in scale, sitting on top of a uniform transmissive or translucent body color.
+TILES: #038, #040, #041, #042, #043
+
+VARIETY: baroque wave overlay
+STRUCTURE: Larger-scale rolling, elongated horizontal wave bands in the surface relief, layered over the finer granite texture, giving a hand-rolled/reamy look concentrated in bands rather than uniform all-over.
+TILES: #039, #042
+
+VARIETY: opalescent smooth
+STRUCTURE: Dense, uniform matte body color with little to no light transmission and no visible surface or body texture, characteristic of opalescent (rather than clear cathedral) glass.
+TILES: #044

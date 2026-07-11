@@ -1,0 +1,23 @@
+VARIETY: ring/oval mottle
+STRUCTURE: Dense overlapping oval and round opaque color blobs suspended within the glass body, arranged in loose vertical streaks; a body-level pattern, not a surface texture.
+TILES: #018
+
+VARIETY: confetti shard collage
+STRUCTURE: Flat, angular, non-overlapping pieces of colored glass (taupe/grey shards, or plum/teal/pink shapes) embedded in a clear/white body, resembling scattered broken confetti; a body pattern.
+TILES: #020, #021
+
+VARIETY: thread/crack streamer lines
+STRUCTURE: Thin, dark or colored thread-like lines that meander or run roughly vertically through a clear/white body, resembling fine cracks or trailed threads of glass; a body pattern layered over the base.
+TILES: #020, #021, #022, #023
+
+VARIETY: seedy bubbles
+STRUCTURE: Small round bubbles suspended within the glass body, visible as scattered light or dark dots; a body pattern.
+TILES: #020, #021, #022
+
+VARIETY: iridized/dichroic surface sheen
+STRUCTURE: A thin rainbow/metallic sheen sitting on top of the glass body, visually distinct from and independent of the underlying color/streaks; a surface effect.
+TILES: #023, #025
+
+VARIETY: fine granite/pebbled surface relief
+STRUCTURE: All-over fine, irregular pebbled surface texture giving a rippled, water-like relief across the whole tile, distinct from any body color pattern; a surface effect.
+TILES: #019, #024, #025, #026

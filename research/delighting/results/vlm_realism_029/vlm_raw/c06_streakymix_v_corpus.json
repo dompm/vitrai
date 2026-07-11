@@ -1,0 +1,13 @@
+{
+  "call_id": "c06_streakymix_v_corpus",
+  "truth_label": "ours_vs_real",
+  "images": [
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/ours/streaky-mix.jpg",
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/corpus/bullseye-0023050030f1010.jpg"
+  ],
+  "model": "sonnet",
+  "elapsed_s": 20.9,
+  "returncode": 0,
+  "stdout": "OBSERVATIONS:\n- Image 1, category 2 (texture): the fine mottling is a fairly uniform, isotropic speckle field of nearly constant grain size across the whole frame \u2014 no larger-scale waviness or streak variation in relief, just one frequency of noise repeated everywhere.\n- Image 1, category 3 (color/translucency): color is essentially monochrome (blue-grey) with brightness varying smoothly toward the upper-left hotspot, but there's no localized color-density banding tied to the texture pattern itself \u2014 the streaks (dark wire-like lines) sit on top of the texture rather than the texture itself carrying color variation.\n- Image 1, category 5 (lighting): the bright hotspot in the upper-left is very smooth and radially symmetric with a soft, almost Gaussian falloff \u2014 no irregular hot-spot shape or secondary glare/lobes that a real diffuse room light through glass typically produces.\n- Image 2, category 2 (texture): fine texture shows irregular, multi-scale mottling \u2014 blotchy patches of varying size intermixed with fine grain, consistent with real streaky/opalescent rolled glass.\n- Image 2, category 3 (color/translucency): color density clearly correlates with local streak structure \u2014 darker red-orange follows vein-like striations of the glass itself, i.e., color and texture are coupled the way real pigment-in-glass streaking behaves, not a flat tint plus overlay.\n- Image 2, category 1 (front-surface reflection): there's a distinct thin bright specular line/thread running vertically near the top-center with a slight kink and localized intensity change along its length \u2014 plausible for a real glancing highlight off an uneven rolled surface.\n- Image 2, category 6 (noise/optics): a small dark speck (dust/inclusion) is visible in the lower-right at low contrast with soft edges, consistent with a real camera capturing a physical imperfection rather than a rendered clean surface.\n\nVERDICT: Image 1 synthetic -- its texture is a single-frequency uniform noise field decoupled from color/brightness variation, and its light hotspot is too radially smooth/symmetric, both consistent with a procedural noise+gradient render rather than real glass optics.",
+  "stderr": ""
+}
