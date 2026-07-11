@@ -1,0 +1,13 @@
+{
+  "call_id": "x01_corpus_v_wild",
+  "truth_label": "real_vs_real",
+  "images": [
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/downscaled/corpus/bullseye-0014260030f1010.jpg",
+    "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a24f6e2161fb6f08a/research/delighting/results/vlm_realism_029/raw_wild/sheets_waterglass_pair.jpg"
+  ],
+  "model": "sonnet",
+  "elapsed_s": 46.1,
+  "returncode": 0,
+  "stdout": "OBSERVATIONS:\n- Image 1 (texture/color depth): the lime-green body color is essentially flat across the whole frame \u2014 no visible striation bands or brightness gradient tied to the rolling texture. Real hand-rolled sheet glass backlit like this typically shows streaky light/dark banding from thickness variation; here only the bubbles break up an otherwise uniform field.\n- Image 1 (noise/optics): the bubble edges are high-contrast dark rings on a saturated bright field, a classic spot for chromatic aberration in real macro photography, but every bubble edge is clean neutral-gray/black with no purple/green fringing.\n- Image 1 (lighting): illumination is perfectly even edge-to-edge with no falloff or hot spot, consistent with either a very well-diffused light table or a synthetic uniform environment \u2014 no distinguishing gradient either way.\n- Image 2 (front-surface reflection/texture): the blue sheet carries a clear reflected/refracted image of the house that is visibly warped into wavy bands (window frames bend and repeat), which is the signature optical fingerprint of real rolled/rippled glass distorting a reflection.\n- Image 2 (color depth/lighting): the red sheet has a bright diffuse highlight streak near the top-left that fades unevenly downward, with local darkening mottling tied to the visible surface waviness \u2014 brightness is coupled to texture rather than flat.\n- Image 2 (edge effect): the top physical edge of both sheets shows an irregular, slightly darker rim following the uneven hand-cut boundary, plausible for real glass.\n- Image 2 (optics): the reflected house detail is slightly softer/lower-contrast than the glass sheet's own surface plane, consistent with a real secondary focal/reflection plane rather than a single flat render pass.\n\nVERDICT: Image 1 synthetic -- its color/brightness stays flat and texture-decoupled with no chromatic aberration on hard bubble edges, unlike Image 2 which shows texture-coupled luminance, wavy reflection distortion, and edge/optics behavior typical of real glass.",
+  "stderr": ""
+}

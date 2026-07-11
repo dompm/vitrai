@@ -1,0 +1,27 @@
+VARIETY: angular crackle/faceted relief
+STRUCTURE: Surface relief made of large sharp-edged irregular facets like shattered/broken ice, clear body, strong light/shadow contrast between facets.
+TILES: #027
+
+VARIETY: baroque wave relief with streaky mottle
+STRUCTURE: Rolling undulating surface waves (glossy specular highlights) combined with body-level streaky lighter/darker green mottling blended into the base color.
+TILES: #028
+
+VARIETY: coarse hammered texture with streaky banding
+STRUCTURE: Fine all-over pebbled/hammered surface relief overlaid with distinct horizontal dark and pale streak bands running through the body.
+TILES: #029
+
+VARIETY: fine granite/pebble relief
+STRUCTURE: Surface-level fine, all-over irregular bumpy relief (water-like ripple), sitting over an otherwise uniform body color.
+TILES: #030, #031, #032
+
+VARIETY: iridized surface sheen
+STRUCTURE: A thin rainbow/metallic sheen sitting on top of the glass surface, visually distinct from the pale coral body color beneath it.
+TILES: #032
+
+VARIETY: reactive cloud color-cell mottle
+STRUCTURE: Body-level blotchy structure of distinct teal/turquoise square cells against a smooth white opalescent base, formed by a reactive strike pattern rather than fine mottling.
+TILES: #033, #035
+
+VARIETY: smooth transparent with seedy specks
+STRUCTURE: Mostly flat, uniform coral transparent body with sparse tiny dark seed-like specks suspended in it; negligible surface relief.
+TILES: #034

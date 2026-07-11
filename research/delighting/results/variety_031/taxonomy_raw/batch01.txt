@@ -1,0 +1,24 @@
+VARIETY: dew droplet relief
+STRUCTURE: Surface relief of distinct raindrop-shaped bumps scattered over a hazy, semi-cloudy translucent body; each droplet catches light as a small bright lens against darker fogged patches.
+TILES: #009, #011
+
+VARIETY: fine seed/pebble texture
+STRUCTURE: Dense field of very small round dots (finer and more uniform than the dew droplets above), either fine all-over surface pebbling or embedded bubble seeds, giving a grainy sparkle across the body.
+TILES: #010, #012
+
+VARIETY: iridized surface sheen
+STRUCTURE: A thin rainbow/metallic film sitting on top of the glass body, visually distinct from and layered over the underlying pebble texture; colors shift blue-purple-gold across the surface independent of any body color.
+TILES: #010
+
+VARIETY: crisp ring mottle
+STRUCTURE: Body pattern of dense, overlapping circular/oval opaque or translucent blobs with fairly distinct thin-outlined ring edges, creating a bubbly, cell-like mottle.
+TILES: #013, #016
+
+VARIETY: streaky marbled mottle
+STRUCTURE: Body pattern of larger, more organic and elongated blob shapes than the crisp ring mottle, with streaky/blended edges rather than clean circular outlines, giving a marbled or amoeba-like look.
+TILES: #014, #017
+
+VARIETY: streaky swirl ribbon
+STRUCTURE: Elongated color streaks in the body that blend smoothly into each other in a flowing, wave-like swirl, producing ribbon-like bands of color rather than discrete blobs.
+TILES: #015
+---

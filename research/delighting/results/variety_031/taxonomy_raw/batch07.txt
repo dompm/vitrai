@@ -1,0 +1,23 @@
+VARIETY: iridized fine-texture surface sheen
+STRUCTURE: SURFACE pattern — a thin metallic rainbow (pink/gold/purple) sheen sits on top of a finely pebbled, all-over granite-like relief; the body color underneath is a flat pale or deep tone.
+TILES: #063, #064
+
+VARIETY: marbled swirl streaky
+STRUCTURE: BODY pattern — dark brown vein-like streaks swirl and flow through an amber/orange translucent base, forming a marbled, current-like network rather than discrete straight streaks.
+TILES: #065
+
+VARIETY: wispy/streaky color mix
+STRUCTURE: BODY pattern — elongated, softly blended color streaks (white-on-aqua waves, red/orange/cream flame-like columns, or two-tone blue vertical striations) within a semi-translucent base.
+TILES: #066, #067, #070
+
+VARIETY: smooth cathedral
+STRUCTURE: BODY — flat, uniform transmissive color with no visible surface relief or internal structure.
+TILES: #068
+
+VARIETY: opalescent smooth
+STRUCTURE: BODY — uniform milky opacity with no discernible streaks, dots, or relief.
+TILES: #069
+
+VARIETY: clear subtle ripple surface
+STRUCTURE: SURFACE pattern — a near-clear sheet with very faint diagonal striations/ripple relief, barely perturbing transparency.
+TILES: #071

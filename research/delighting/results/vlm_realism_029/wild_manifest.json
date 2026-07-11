@@ -1,0 +1,19 @@
+{
+  "note": "In-the-wild comparison set for report 029. Fetched 2026-07-10 from public blog/listing pages (everythingstainedglass.com -- community-submitted photos of stained glass and sheet glass under real capture conditions). Full-size originals in results/vlm_realism_029/raw_wild/ (gitignored); only downscaled cited copies are committed under reports/assets_029/.",
+  "user_agent": "normal desktop Safari UA, 1.5s delay between fetches, 12 images total",
+  "images": {
+    "sheets_shelf": "https://everythingstainedglass.com/wp-content/uploads/stained-glass-sheets04.jpg",
+    "sheets_handblown": "https://everythingstainedglass.com/wp-content/uploads/2016/08/xstained-glass-sheets01.jpg.pagespeed.ic_.YjwUzN2yud.jpg",
+    "sheets_waterglass_pair": "https://everythingstainedglass.com/wp-content/uploads/stained-glass-sheets03-1.jpg",
+    "sheets_fusible_beforeafter": "https://everythingstainedglass.com/wp-content/uploads/stained-glass-sheets05.jpg",
+    "panel_dragonfly_whitebg": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Erica-Straus01.jpeg",
+    "panel_window_cloudysky": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Linda-Sheldon-1.3.jpeg",
+    "panel_directsun": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Manda-Steinhagen01.jpeg",
+    "panel_tungsten_backlit": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Judy-Bludworth01.jpeg",
+    "panel_reflected_vs_transmitted": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Helen-Sexton01.jpeg",
+    "panel_green_bg_distortion": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Ashley-Culpepper01a.jpeg",
+    "panel_lightbox": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Gail-Kirkwood02-.jpeg",
+    "panel_wall_reflected": "https://everythingstainedglass.com/wp-content/uploads/2022/01/Kristina-Gintautiene04-.jpeg"
+  },
+  "scrape_notes": "Etsy and Delphi listing pages return 403 to non-browser fetchers; the wild set therefore comes from a stained-glass community blog whose photos are exactly the target capture regime (phone photos, room reflections, mixed lighting, sheets against windows). Delphi/Etsy product-page scraping was NOT retried aggressively (politeness)."
+}

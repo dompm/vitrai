@@ -1,0 +1,23 @@
+VARIETY: smooth cathedral transparent
+STRUCTURE: Body shows flat, uniform transmissive color with no visible mottling or streaking — light passes through evenly.
+TILES: #045, #047
+
+VARIETY: seedy inclusions
+STRUCTURE: Small dark round dots (bubbles/seeds) suspended and scattered irregularly through an otherwise uniform transparent body.
+TILES: #045, #047
+
+VARIETY: wispy/streaky marbled swirl
+STRUCTURE: Body pattern of elongated, interwoven color streaks with sharp-edged swirling boundaries between two or more colors (not fully blended), creating a marbled/flame-like look.
+TILES: #048, #051
+
+VARIETY: iridized surface sheen
+STRUCTURE: A thin rainbow/metallic sheen sits on top of the glass surface, visually distinct from the body color beneath, shifting color across the tile with a soft diagonal gradient.
+TILES: #046, #049, #050, #052, #053
+
+VARIETY: granite/pebbled surface relief
+STRUCTURE: Fine, all-over irregular pebbled surface texture that breaks up reflected/transmitted light into small mottled patches, giving a water- or frost-like relief.
+TILES: #046, #049, #050, #053
+
+VARIETY: milky/frosted diffusion
+STRUCTURE: Body appears hazy and whitish rather than clearly transparent, with light diffusely scattered so the glass reads as translucent-milky rather than see-through.
+TILES: #050, #052, #053

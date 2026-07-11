@@ -1,0 +1,722 @@
+[
+ {
+  "idx": 0,
+  "sample_file": "000_Wissmach_flemish_wissmach-wi18flem.jpg",
+  "orig_file": "wissmach-wi18flem.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Cathedral",
+  "name": "Red Flemish",
+  "tag": "flemish",
+  "registry_id": "wissmach-wi18flem"
+ },
+ {
+  "idx": 1,
+  "sample_file": "001_Wissmach_flemish_wissmach-w338f.jpg",
+  "orig_file": "wissmach-w338f.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Cathedral",
+  "name": "Denim Flemish",
+  "tag": "flemish",
+  "registry_id": "wissmach-w338f"
+ },
+ {
+  "idx": 2,
+  "sample_file": "002_Wissmach_flemish_wissmach-w51llflem.jpg",
+  "orig_file": "wissmach-w51llflem.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Cathedral",
+  "name": "Translucent White Flemish",
+  "tag": "flemish",
+  "registry_id": "wissmach-w51llflem"
+ },
+ {
+  "idx": 3,
+  "sample_file": "003_Wissmach_flemish_wissmach-wi48flem.jpg",
+  "orig_file": "wissmach-wi48flem.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Cathedral",
+  "name": "Medium Amber Flemish",
+  "tag": "flemish",
+  "registry_id": "wissmach-wi48flem"
+ },
+ {
+  "idx": 4,
+  "sample_file": "004_Wissmach_flemish_wissmach-w01f.jpg",
+  "orig_file": "wissmach-w01f.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Cathedral",
+  "name": "Clear Flemish",
+  "tag": "flemish",
+  "registry_id": "wissmach-w01f"
+ },
+ {
+  "idx": 5,
+  "sample_file": "005_Bullseye_fracture_streamer_bullseye-0043290000ffull.jpg",
+  "orig_file": "bullseye-0043290000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Green & Pink Fracture w/Line Cast Green Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "fracture_streamer",
+  "registry_id": "bullseye-0043290000f1010"
+ },
+ {
+  "idx": 6,
+  "sample_file": "006_Bullseye_fracture_streamer_bullseye-0041020031ffull.jpg",
+  "orig_file": "bullseye-0041020031ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Clear with Clear Fractures Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "fracture_streamer",
+  "registry_id": "bullseye-0041020031f1010"
+ },
+ {
+  "idx": 7,
+  "sample_file": "007_Bullseye_fracture_streamer_bullseye-0043250000ffull.jpg",
+  "orig_file": "bullseye-0043250000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Green Fracture w/Line Cast Green Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "fracture_streamer",
+  "registry_id": "bullseye-0043250000f1010"
+ },
+ {
+  "idx": 8,
+  "sample_file": "008_Oceanside_fracture_streamer_oceanside-of100crackle.jpg",
+  "orig_file": "oceanside-of100crackle.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Cathedral",
+  "name": "96 COE Clear Crackle",
+  "tag": "fracture_streamer",
+  "registry_id": "oceanside-of100crackle"
+ },
+ {
+  "idx": 9,
+  "sample_file": "009_Oceanside_dew_rainwater_oceanside-of100rw.jpg",
+  "orig_file": "oceanside-of100rw.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Rainwater",
+  "tag": "dew_rainwater",
+  "registry_id": "oceanside-of100rw"
+ },
+ {
+  "idx": 10,
+  "sample_file": "010_Wissmach_dew_rainwater_wissmach-wf01dlum105.jpg",
+  "orig_file": "wissmach-wf01dlum105.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Dew Drop Luminescent",
+  "tag": "dew_rainwater",
+  "registry_id": "wissmach-wf01dlum105"
+ },
+ {
+  "idx": 11,
+  "sample_file": "011_Oceanside_seedy_oceanside-of100seedy.jpg",
+  "orig_file": "oceanside-of100seedy.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Seedy",
+  "tag": "seedy",
+  "registry_id": "oceanside-of100seedy"
+ },
+ {
+  "idx": 12,
+  "sample_file": "012_Wissmach_seedy_wissmach-wi01seedy.jpg",
+  "orig_file": "wissmach-wi01seedy.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Textured/Baroque",
+  "name": "Clear Heavy Seedy",
+  "tag": "seedy",
+  "registry_id": "wissmach-wi01seedy"
+ },
+ {
+  "idx": 13,
+  "sample_file": "013_Youghiogheny_ring_mottle_youghiogheny-yu0040.jpg",
+  "orig_file": "youghiogheny-yu0040.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Steel Blue, Sky Blue Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu0040"
+ },
+ {
+  "idx": 14,
+  "sample_file": "014_Youghiogheny_ring_mottle_youghiogheny-yu00361.jpg",
+  "orig_file": "youghiogheny-yu00361.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Amber, Yellow, White Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu00361"
+ },
+ {
+  "idx": 15,
+  "sample_file": "015_Youghiogheny_ring_mottle_youghiogheny-yu0074.jpg",
+  "orig_file": "youghiogheny-yu0074.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Emerald, Spring, Light Green Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu0074"
+ },
+ {
+  "idx": 16,
+  "sample_file": "016_Youghiogheny_ring_mottle_youghiogheny-yu0036.jpg",
+  "orig_file": "youghiogheny-yu0036.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Light Yellow, Bright Yellow, White Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu0036"
+ },
+ {
+  "idx": 17,
+  "sample_file": "017_Youghiogheny_ring_mottle_youghiogheny-yu00756.jpg",
+  "orig_file": "youghiogheny-yu00756.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Blue-Green, Forest, Dark Green Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu00756"
+ },
+ {
+  "idx": 18,
+  "sample_file": "018_Youghiogheny_ring_mottle_youghiogheny-yu0079.jpg",
+  "orig_file": "youghiogheny-yu0079.jpg",
+  "manufacturer": "Youghiogheny",
+  "category": "Ring Mottle",
+  "name": "Celery, Forest Green Mottle",
+  "tag": "ring_mottle",
+  "registry_id": "youghiogheny-yu0079"
+ },
+ {
+  "idx": 19,
+  "sample_file": "019_Bullseye_streamer_bullseye-0041130000ffull.jpg",
+  "orig_file": "bullseye-0041130000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "WINTER: White (with Clear Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "streamer",
+  "registry_id": "bullseye-0041130000f1010"
+ },
+ {
+  "idx": 20,
+  "sample_file": "020_Bullseye_streamer_bullseye-0041360000ffull.jpg",
+  "orig_file": "bullseye-0041360000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Black with Black Streamers on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "streamer",
+  "registry_id": "bullseye-0041360000f1010"
+ },
+ {
+  "idx": 21,
+  "sample_file": "021_Bullseye_streamer_bullseye-0041280000ffull.jpg",
+  "orig_file": "bullseye-0041280000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Deep Pink, Plum, Spring Green, Aqua (with Pink Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "streamer",
+  "registry_id": "bullseye-0041280000f1010"
+ },
+ {
+  "idx": 22,
+  "sample_file": "022_Bullseye_streamer_bullseye-0041180000ffull.jpg",
+  "orig_file": "bullseye-0041180000ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "White (with Black Streamers) on Clear Clear Base Collage, Single-rolled, 3 mm, Fusible",
+  "tag": "streamer",
+  "registry_id": "bullseye-0041180000f1010"
+ },
+ {
+  "idx": 23,
+  "sample_file": "023_Bullseye_streamer_bullseye-0043020031ffull.jpg",
+  "orig_file": "bullseye-0043020031ffull.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Clear with Clear Streamers Clear Base Collage, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "streamer",
+  "registry_id": "bullseye-0043020031f1010"
+ },
+ {
+  "idx": 24,
+  "sample_file": "024_Oceanside_baroque_hammered_oceanside-of134h.jpg",
+  "orig_file": "oceanside-of134h.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Medium Blue Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of134h"
+ },
+ {
+  "idx": 25,
+  "sample_file": "025_Oceanside_baroque_hammered_oceanside-of100hirid.jpg",
+  "orig_file": "oceanside-of100hirid.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Hammered Iridescent",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of100hirid"
+ },
+ {
+  "idx": 26,
+  "sample_file": "026_Oceanside_baroque_hammered_oceanside-of100h.jpg",
+  "orig_file": "oceanside-of100h.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of100h"
+ },
+ {
+  "idx": 27,
+  "sample_file": "027_Oceanside_baroque_hammered_oceanside-of100a.jpg",
+  "orig_file": "oceanside-of100a.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Artique",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of100a"
+ },
+ {
+  "idx": 28,
+  "sample_file": "028_Oceanside_baroque_hammered_oceanside-of123h.jpg",
+  "orig_file": "oceanside-of123h.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Medium Green Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of123h"
+ },
+ {
+  "idx": 29,
+  "sample_file": "029_Oceanside_baroque_hammered_oceanside-of100hs.jpg",
+  "orig_file": "oceanside-of100hs.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Textured/Baroque",
+  "name": "96 COE Clear Small Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "oceanside-of100hs"
+ },
+ {
+  "idx": 30,
+  "sample_file": "030_Wissmach_baroque_hammered_wissmach-wi310h.jpg",
+  "orig_file": "wissmach-wi310h.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Textured/Baroque",
+  "name": "Amber Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "wissmach-wi310h"
+ },
+ {
+  "idx": 31,
+  "sample_file": "031_Wissmach_baroque_hammered_wissmach-wi341h.jpg",
+  "orig_file": "wissmach-wi341h.jpg",
+  "manufacturer": "Wissmach",
+  "category": "Textured/Baroque",
+  "name": "Medium Blue Hammered",
+  "tag": "baroque_hammered",
+  "registry_id": "wissmach-wi341h"
+ },
+ {
+  "idx": 32,
+  "sample_file": "032_Bullseye_cloud_sunset_bullseye-0013050051f1010.jpg",
+  "orig_file": "bullseye-0013050051f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Sunset Coral Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0013050051f1010"
+ },
+ {
+  "idx": 33,
+  "sample_file": "033_Bullseye_cloud_sunset_bullseye-0000090050f1010-v2.jpg",
+  "orig_file": "bullseye-0000090050f1010-v2.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Opalescent",
+  "name": "Reactive Cloud Opalescent, Thin-rolled, 2 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0000090050f1010"
+ },
+ {
+  "idx": 34,
+  "sample_file": "034_Bullseye_cloud_sunset_bullseye-0013050050f1010.jpg",
+  "orig_file": "bullseye-0013050050f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Sunset Coral Transparent, Thin-rolled, 2 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0013050050f1010"
+ },
+ {
+  "idx": 35,
+  "sample_file": "035_Bullseye_cloud_sunset_bullseye-0000090030f1010-v2.jpg",
+  "orig_file": "bullseye-0000090030f1010-v2.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Opalescent",
+  "name": "Reactive Cloud Opalescent, Double-rolled, 3 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0000090030f1010"
+ },
+ {
+  "idx": 36,
+  "sample_file": "036_Bullseye_cloud_sunset_bullseye-0013050030f1010.jpg",
+  "orig_file": "bullseye-0013050030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Sunset Coral Transparent, Double-rolled, 3 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0013050030f1010"
+ },
+ {
+  "idx": 37,
+  "sample_file": "037_Bullseye_cloud_sunset_bullseye-0013050031f1010.jpg",
+  "orig_file": "bullseye-0013050031f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Sunset Coral Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "cloud_sunset",
+  "registry_id": "bullseye-0013050031f1010"
+ },
+ {
+  "idx": 38,
+  "sample_file": "038_Wissmach_muffle_wissmach-em4925.jpg",
+  "orig_file": "wissmach-em4925.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Irish Green English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4925"
+ },
+ {
+  "idx": 39,
+  "sample_file": "039_Wissmach_muffle_wissmach-em4916.jpg",
+  "orig_file": "wissmach-em4916.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Noble Brass English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4916"
+ },
+ {
+  "idx": 40,
+  "sample_file": "040_Wissmach_muffle_wissmach-em4903.jpg",
+  "orig_file": "wissmach-em4903.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Green Tea English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4903"
+ },
+ {
+  "idx": 41,
+  "sample_file": "041_Wissmach_muffle_wissmach-em4906.jpg",
+  "orig_file": "wissmach-em4906.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Flaxen Tint English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4906"
+ },
+ {
+  "idx": 42,
+  "sample_file": "042_Wissmach_muffle_wissmach-em4901.jpg",
+  "orig_file": "wissmach-em4901.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Clear English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4901"
+ },
+ {
+  "idx": 43,
+  "sample_file": "043_Wissmach_muffle_wissmach-em4924.jpg",
+  "orig_file": "wissmach-em4924.jpg",
+  "manufacturer": "Wissmach",
+  "category": "English Muffle",
+  "name": "Wine English Muffle",
+  "tag": "muffle",
+  "registry_id": "wissmach-em4924"
+ },
+ {
+  "idx": 44,
+  "sample_file": "044_Bullseye_marine_moss_bullseye-0002410030f1010.jpg",
+  "orig_file": "bullseye-0002410030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Opalescent",
+  "name": "Moss Green Opalescent, Double-rolled, 3 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-0002410030f1010"
+ },
+ {
+  "idx": 45,
+  "sample_file": "045_Bullseye_marine_moss_bullseye-0014080030f1010.jpg",
+  "orig_file": "bullseye-0014080030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Light Aquamarine Blue Transparent, Double-rolled, 3 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-0014080030f1010"
+ },
+ {
+  "idx": 46,
+  "sample_file": "046_Bullseye_marine_moss_bullseye-0014080051f1010.jpg",
+  "orig_file": "bullseye-0014080051f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Light Aquamarine Blue Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-0014080051f1010"
+ },
+ {
+  "idx": 47,
+  "sample_file": "047_Bullseye_marine_moss_bullseye-0014080050f1010.jpg",
+  "orig_file": "bullseye-0014080050f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Light Aquamarine Blue Transparent, Thin-rolled, 2 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-0014080050f1010"
+ },
+ {
+  "idx": 48,
+  "sample_file": "048_Bullseye_marine_moss_bullseye-51209a0030f1010.jpg",
+  "orig_file": "bullseye-51209a0030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Wispy/Streaky",
+  "name": "Peacock Blue Transparent, White Opalescent, Aquamarine Blue Transparent, 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-51209a0030f1010"
+ },
+ {
+  "idx": 49,
+  "sample_file": "049_Bullseye_marine_moss_bullseye-0014080031f1010.jpg",
+  "orig_file": "bullseye-0014080031f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Light Aquamarine Blue Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "marine_moss",
+  "registry_id": "bullseye-0014080031f1010"
+ },
+ {
+  "idx": 50,
+  "sample_file": "050_Bullseye_reactive_fusion_bullseye-0010090031f1010.jpg",
+  "orig_file": "bullseye-0010090031f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Reactive Ice Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-0010090031f1010"
+ },
+ {
+  "idx": 51,
+  "sample_file": "051_Bullseye_reactive_fusion_bullseye-51201a0030fhalf.jpg",
+  "orig_file": "bullseye-51201a0030fhalf.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Wispy/Streaky",
+  "name": "Pumpkin Orange Opalescent with Pea Pod Green Opalescent Infusion, 2-Color Mix, Double-rolled, 3 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-51201a0030fhalf"
+ },
+ {
+  "idx": 52,
+  "sample_file": "052_Bullseye_reactive_fusion_bullseye-0010190051f1010.jpg",
+  "orig_file": "bullseye-0010190051f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Red Reactive Clear Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-0010190051f1010"
+ },
+ {
+  "idx": 53,
+  "sample_file": "053_Bullseye_reactive_fusion_bullseye-0010090051f1010.jpg",
+  "orig_file": "bullseye-0010090051f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Reactive Ice Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-0010090051f1010"
+ },
+ {
+  "idx": 54,
+  "sample_file": "054_Bullseye_reactive_fusion_bullseye-0010090050f1010-v2.jpg",
+  "orig_file": "bullseye-0010090050f1010-v2.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Reactive Ice Transparent, Thin-rolled, 2 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-0010090050f1010"
+ },
+ {
+  "idx": 55,
+  "sample_file": "055_Bullseye_reactive_fusion_bullseye-002537in30f1010.jpg",
+  "orig_file": "bullseye-002537in30f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Wispy/Streaky",
+  "name": "French Vanilla with Lt Turquoise Blue 2-Color Mix, Infusion, 3 mm, Fusible",
+  "tag": "reactive_fusion",
+  "registry_id": "bullseye-002537in30f1010"
+ },
+ {
+  "idx": 56,
+  "sample_file": "056_Bullseye_granite_ripple_bullseye-0001000073f1010.jpg",
+  "orig_file": "bullseye-0001000073f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Black Opalescent, Ripple, Rainbow Iridescent, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0001000073f1010"
+ },
+ {
+  "idx": 57,
+  "sample_file": "057_Bullseye_granite_ripple_bullseye-0033450072f1010.jpg",
+  "orig_file": "bullseye-0033450072f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Cranberry Pink, Emerald Green, White 3+ Color Mix, Ripple, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0033450072f1010"
+ },
+ {
+  "idx": 58,
+  "sample_file": "058_Bullseye_granite_ripple_bullseye-0011010071f1010.jpg",
+  "orig_file": "bullseye-0011010071f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Clear Transparent, Granite Texture, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0011010071f1010"
+ },
+ {
+  "idx": 59,
+  "sample_file": "059_Bullseye_granite_ripple_bullseye-0001000072f1010.jpg",
+  "orig_file": "bullseye-0001000072f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Black Opalescent, Ripple, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0001000072f1010"
+ },
+ {
+  "idx": 60,
+  "sample_file": "060_Bullseye_granite_ripple_bullseye-0030450072f1010.jpg",
+  "orig_file": "bullseye-0030450072f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Azure Blue Opal, Jade Green Opal, Neo-Lavender 3+ Color Mix, Ripple, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0030450072f1010"
+ },
+ {
+  "idx": 61,
+  "sample_file": "061_Bullseye_granite_ripple_bullseye-0033340072f1010.jpg",
+  "orig_file": "bullseye-0033340072f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Textured/Baroque",
+  "name": "Cranberry Pink, Gold Purple, White 3+ Color Mix, Ripple, 3 mm, Fusible",
+  "tag": "granite_ripple",
+  "registry_id": "bullseye-0033340072f1010"
+ },
+ {
+  "idx": 62,
+  "sample_file": "062_Bullseye_iridescent_dichroic_lumin_bullseye-0013340051f1010.jpg",
+  "orig_file": "bullseye-0013340051f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Gold Purple Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+  "tag": "iridescent_dichroic_lumin",
+  "registry_id": "bullseye-0013340051f1010"
+ },
+ {
+  "idx": 63,
+  "sample_file": "063_Bullseye_iridescent_dichroic_lumin_bullseye-0014490031f1010.jpg",
+  "orig_file": "bullseye-0014490031f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Oregon Gray Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "iridescent_dichroic_lumin",
+  "registry_id": "bullseye-0014490031f1010"
+ },
+ {
+  "idx": 64,
+  "sample_file": "064_Bullseye_iridescent_dichroic_lumin_bullseye-0011180031f1010.jpg",
+  "orig_file": "bullseye-0011180031f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Midnight Blue Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+  "tag": "iridescent_dichroic_lumin",
+  "registry_id": "bullseye-0011180031f1010"
+ },
+ {
+  "idx": 65,
+  "sample_file": "065_Oceanside_wispy_streaky_oceanside-of41115s.jpg",
+  "orig_file": "oceanside-of41115s.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Wispy/Streaky",
+  "name": "96 COE Brown on Gold Streaky",
+  "tag": "wispy_streaky",
+  "registry_id": "oceanside-of41115s"
+ },
+ {
+  "idx": 66,
+  "sample_file": "066_Oceanside_wispy_streaky_oceanside-of83393s.jpg",
+  "orig_file": "oceanside-of83393s.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Wispy/Streaky",
+  "name": "96 COE Deep Aqua with White Wispy",
+  "tag": "wispy_streaky",
+  "registry_id": "oceanside-of83393s"
+ },
+ {
+  "idx": 67,
+  "sample_file": "067_Bullseye_opal_bullseye-0022500030f1010.jpg",
+  "orig_file": "bullseye-0022500030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Wispy/Streaky",
+  "name": "Soft Yellow Opal, Deep Red 2-Color Mix, Double-rolled, 3 mm, Fusible",
+  "tag": "opal",
+  "registry_id": "bullseye-0022500030f1010"
+ },
+ {
+  "idx": 68,
+  "sample_file": "068_Bullseye_opal_bullseye-0001450030f1010.jpg",
+  "orig_file": "bullseye-0001450030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Opalescent",
+  "name": "Jade Green Opalescent, Double-rolled, 3 mm, Fusible",
+  "tag": "opal",
+  "registry_id": "bullseye-0001450030f1010"
+ },
+ {
+  "idx": 69,
+  "sample_file": "069_Bullseye_plain_bullseye-0019340030f1010.jpg",
+  "orig_file": "bullseye-0019340030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Cathedral",
+  "name": "Copper Tint, Double-rolled, 3 mm, Fusible",
+  "tag": "plain",
+  "registry_id": "bullseye-0019340030f1010"
+ },
+ {
+  "idx": 70,
+  "sample_file": "070_Bullseye_plain_bullseye-0021160030f1010.jpg",
+  "orig_file": "bullseye-0021160030f1010.jpg",
+  "manufacturer": "Bullseye",
+  "category": "Wispy/Streaky",
+  "name": "Turquoise Blue, Deep Royal Blue 2-Color Mix, Double-rolled, 3 mm, Fusible",
+  "tag": "plain",
+  "registry_id": "bullseye-0021160030f1010"
+ },
+ {
+  "idx": 71,
+  "sample_file": "071_Oceanside_plain_oceanside-of100sice5mm.jpg",
+  "orig_file": "oceanside-of100sice5mm.jpg",
+  "manufacturer": "Oceanside",
+  "category": "Cathedral",
+  "name": "96 COE 5mm Clear Ice",
+  "tag": "plain",
+  "registry_id": "oceanside-of100sice5mm"
+ }
+]
