@@ -41,20 +41,40 @@ def classify_glass(title, sku, manufacturer):
     if 'mottle' in title_lower or 'mottled' in title_lower:
         return "Ring Mottle"
         
-    # 3. Baroque / Ripple / Artique / Ripple
+    # 3. Baroque / Ripple / Artique / Textured
     if any(term in title_lower for term in ['baroque', 'artique', 'waterglass', 'ripple', 'granite', 'seedy', 'hammered', 'dew drop', 'rainwater', 'glue chip', 'rough rolled']):
         return "Textured/Baroque"
         
-    # 4. Wispy / Streaky
-    if any(term in title_lower for term in ['wispy', 'streaky', 'mix', 'blend', 'opal-art', 'fusers reserve', 'mottle']):
+    # 4. Wispy / Streaky / Blends
+    if any(term in title_lower for term in ['wispy', 'streaky', 'mix', 'blend', 'opal-art', 'fusers reserve', 'cascade', 'spirit']):
+        return "Wispy/Streaky"
+    if manufacturer == 'Bullseye' and any(sku_upper.startswith(prefix) for prefix in ['002', '003', '51', '52']):
         return "Wispy/Streaky"
         
-    # 5. Opalescent
-    if 'opal' in title_lower:
+    # 5. Clear Glass (not Cathedral!)
+    if any(term in title_lower for term in ['clear', 'crystal', 'ice']):
+        # Except if it's a colored clear like 'clear green'
+        if not any(color in title_lower for color in ['red', 'blue', 'green', 'yellow', 'orange', 'pink', 'purple', 'amber', 'brown']):
+            return "Clear"
+            
+    # 6. Opalescent (Opaque / Solid)
+    if 'opal' in title_lower or any(term in title_lower for term in ['opaque', 'solid', 'dense', 'alabaster']):
+        return "Opalescent"
+    if manufacturer == 'Bullseye' and sku_upper.startswith('000'):
         return "Opalescent"
         
-    # 6. Cathedral
+    # 7. Cathedral (Transparent colored)
+    if 'cathedral' in title_lower or any(term in title_lower for term in ['transparent', 'translucent', 'tint']):
+        return "Cathedral"
+    if manufacturer == 'Bullseye' and sku_upper.startswith('001'):
+        return "Cathedral"
+        
+    # Default fallbacks based on visual cues
+    if any(term in title_lower for term in ['white', 'black', 'grey', 'gray', 'ivory', 'bone']):
+        return "Opalescent"
+        
     return "Cathedral"
+
 
 def clean_sku(s):
     return re.sub(r'[^a-zA-Z0-9]', '', s).lower()
