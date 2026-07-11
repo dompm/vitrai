@@ -1,6 +1,19 @@
-# Glass de-lighting — FROZEN evaluation protocol (v1.0)
+# Glass de-lighting — FROZEN evaluation protocol (v1.1)
 
-Iteration 034. Branch `research/delighting-034`. Status: **FROZEN**. This document is the
+Iteration 034. Branch `research/delighting-034`. Status: **FROZEN**.
+
+> **v1.1 (2026-07-11)** — the pre-declared bump on harvest-033 completion (v1.0 §3c/§6.2;
+> executed BEFORE any method was scored against the real set). All changes are in §3c: per-brand
+> reserved counts pinned against the final `manifest_033.json` (254 products; the base hash rule
+> reserves 55 = 21.7%); the <15% floor is computed over **eval-ELIGIBLE** products (those without
+> a product-level exclusion flag — reserving a product the consumption predicate excludes anyway
+> adds zero eval coverage) and topped up with eligible products only; the frozen top-up list is
+> **3 product ids** (final holdout 58/254 = 22.8%); the harvest's final contamination schema is
+> wired in (per-image flag LISTS, `variant_duplicate_listing`, the sixth `suspect_same_photo`
+> pair screen, and the `REAL_PAIRS_DATASET.md` §9.3 consumption predicate by reference). No
+> product reserved by v1.0's hash rule was removed. v1.0 is commit `7f6f1ee` for comparison.
+
+This document is the
 evaluation contract that must exist BEFORE any foundation-model training begins (the academic
 consultant's weeks-1–2 deliverable, adopted by the lead with the amendments recorded inline).
 Companion: `OUTPUT_CONTRACT.md` (the prediction targets), `MATERIAL_MODEL_V3.md` (the forward
@@ -174,21 +187,50 @@ Three sources, reserved BEFORE first results:
 
    > **reserve product P as TEST iff `int(sha1(str(product_id)).hexdigest(), 16) % 5 == 0`.**
 
-   Stratification/reporting: partition results by `brand` (the 10 sheet-category slugs) ×
+   Stratification/reporting: partition results by `brand` (the sheet-category slugs) ×
    capture-type (`{lightbox, window, shop, closeup}`, the report-030 merged taxonomy) so the
-   ~20% reservation is read per stratum, not just in aggregate. The hash rule already
-   approximates a stratified draw because `product_id` is independent of brand; report per-brand
-   reserved counts when the manifest finalizes and top up any brand that lands <15% by reserving
-   its next-lowest-hash products (a v1.1 bump, recorded).
-   Two harvest-033 record flags gate USE of a reserved product (they do not change WHO is
-   reserved, only how it is scored): `finished_product_flag` (per-pair, gallery-tail
-   suncatcher/mosaic) → **excluded** from all sheet metrics; `opal_streaky_caution` (product-
-   level) → kept but scored as **sheet-identity-unverified** (report 030 §2.3: opal/streaky
-   same-product pairs can be different physical sheets), reported in a separate column, never
-   used as a registered-consistency positive.
-   The manifest is `realpairs/results/manifest_033.json` on `research/delighting-033`; the RULE
-   is frozen now and does not require the file to exist. If harvest-033 later ships an explicit
-   reserved-id list preferred over the hash, adopting it is a versioned bump.
+   ~20% reservation is read per stratum, not just in aggregate.
+
+   **v1.1 — PINNED against the final `manifest_033.json`** (254 unique products, 1,491 images,
+   213 raw cross-capture pairs → 145 surviving all contamination screens, across 64 products;
+   `research/delighting-033`, `REAL_PAIRS_DATASET.md` §9). The base hash rule reserves
+   **55/254 = 21.7%**; per brand (reserved/total): armstrong 5/13 · clear-textured 19/88 ·
+   delphi-superior 0/2 · kokomo 2/17 · specialty-finish 0/7 · tiffany-today 10/42 · uro 7/30 ·
+   van-gogh 8/29 · wissmach 4/26. Reserved-set capture mix: window 142, closeup 114, shop 55,
+   lightbox 6, other 1; 13 of the 64 pair-bearing products land in the base holdout.
+
+   **v1.1 top-up (the <15% floor).** The floor is computed over **eval-ELIGIBLE** products —
+   those without a product-level exclusion flag (`non_transmissive_mirror`,
+   `multi_sheet_listing`), since an excluded product can never appear in the eval and reserving
+   it adds no coverage. Brands under the eligible floor: delphi-superior 0/2, kokomo 2/17,
+   specialty-finish 0/4-eligible. Frozen top-up = the next-lowest-hash unreserved ELIGIBLE
+   products until ≥15%:
+
+   > **`239270`** (delphi-superior, Bell Pepper Opal) · **`203533`** (kokomo, Dark Purple
+   > Light Seedy) · **`220043`** (specialty-finish, MLW Indian Hand-Stained).
+
+   **Final frozen holdout: the 55 hash-rule products + these 3 = 58/254 = 22.8%.**
+
+   Use-gating of reserved products (affects HOW they are scored, not WHO is reserved), per the
+   harvest-033 final schema — the full load-bearing predicate is `REAL_PAIRS_DATASET.md` §9.3:
+   - `finished_product_flag` pairs (gallery-tail suncatcher/mosaic) → **excluded** from all
+     sheet metrics (Van Gogh screen validated: 96% recall, 0 FP);
+   - per-image contamination flags are LISTS (e.g. `["line_stock_photo","product_on_white"]`,
+     `contamination_033.json` products[pid].images) — any flagged image is excluded;
+   - `suspect_same_photo` (`residual_mad < 15 AND inliers >= 200` on a cross_capture pair; the
+     clear-glass crop-derivation leak, 16 pairs) → excluded as a registered pair;
+   - `variant_duplicate_listing` (e.g. 175010/234263, one product listed twice) → the duplicates
+     are ONE identity: count once, and if the hash rule ever disagrees across duplicates,
+     reserve ALL of them (conservative; for 175010/234263 both land train-side, no action);
+   - `opal_streaky_caution` (product-level, 31.5%) → kept but scored **sheet-identity-
+     unverified** (report 030 §2.3), reported in a separate column, never used as a
+     registered-consistency positive.
+
+   Known reserved-set biases to weigh when reading results (`REAL_PAIRS_DATASET.md` §9.4):
+   surviving pairs are brand-skewed (uro + tiffany-today + clear-textured = 92%), lightbox
+   references are near-absent (1.8% of images), and the three top-up products come from brands
+   that contribute few or no surviving registrable pairs — they buy identity coverage for
+   texture/statistics work, not pair volume.
 
 2. **Tutorial suncatcher assets** — the real backlit suncatcher photo + the two
    hammered-cathedral sheet photos + GT piece polygons (`suncatcher_bench.py`, report 013).
@@ -306,10 +348,12 @@ lower better; oracle-input = extraction-only floor):
 1. The **real test set (§3c) may not be modified after the first results are seen on it.** No
    adding/removing products, re-drawing the hash split, or re-labelling reserved captures once a
    method has been scored against them.
-2. Any protocol change is a **versioned bump** (this is v1.0): new version header, a
-   `reports/NNN` entry stating what changed and why, and the old version kept for comparison.
-   Retuning a metric, adding a class family, adopting harvest-033's explicit reserved-id list,
-   or topping up an under-reserved brand stratum all require a bump.
+2. Any protocol change is a **versioned bump** (this is v1.1; v1.0 = commit `7f6f1ee`): new
+   version header + change log, a `reports/NNN` entry stating what changed and why, and the old
+   version kept in git history for comparison. Retuning a metric, adding a class family, or any
+   change to the reserved set requires a bump. (The brand-stratum top-up pre-declared in v1.0
+   was executed as v1.1 on harvest-033 completion, before any method was scored on the real set —
+   the holdout is now fully pinned; further changes to it need first-results-grade justification.)
 3. The **frozen classical extractor** (`59813c272de6…`) is the immovable reference row; if the
    trunk extractor advances, the frozen commit stays pinned here as the comparison anchor and the
    new extractor is reported as a candidate against it, not silently swapped in.
