@@ -439,11 +439,11 @@ export function App() {
           },
           {
             id: 'default-sheet-2',
-            label: 'Amber Glass',
-            imageUrl: '/assets/glass/amber.jpg',
+            label: 'Cobalt Blue',
+            imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: null,
-            swatch: '#ffb74d'
+            swatch: '#1e88e5'
           }
         ]
       });
