@@ -297,13 +297,18 @@ identity-unverified" for registered-consistency positives per
 - **Label noise:** capture labels are heuristic (87% clean/wild binary at
   full res; window/shop confusion is the dominant error — 5/8 shop-rack
   shots in the Van Gogh eyeball set were labeled window).
-- **Holdout (frozen, EVAL_PROTOCOL.md §3c v1.0):** reserve iff
-  `int(sha1(product_id_string).hexdigest(),16) % 5 == 0` → 55/254 products
-  (21.7%), 13 of the 64 pair-bearing products. Per-brand reserved counts:
-  armstrong 5/13, clear-textured 19/88, delphi-superior 0/2, kokomo 2/17,
-  specialty-finish 0/7, tiffany-today 10/42, uro 7/30, van-gogh 8/29,
-  wissmach 4/26. Brands below 15% reserved (kokomo 12%, the two zero-count
-  micro-brands) are iter-034's topping-up call (protocol v1.1).
+- **Holdout (frozen, EVAL_PROTOCOL.md §3c — v1.1 final):** base rule
+  reserve iff `int(sha1(product_id_string).hexdigest(),16) % 5 == 0` →
+  55/254 products (21.7%; per-brand: armstrong 5/13, clear-textured 19/88,
+  delphi-superior 0/2, kokomo 2/17, specialty-finish 0/7, tiffany-today
+  10/42, uro 7/30, van-gogh 8/29, wissmach 4/26), plus the v1.1 top-up of
+  three eval-eligible products for brands under the 15% floor: 239270
+  (delphi-superior; opal-caution, scores identity-unverified), 203533
+  (kokomo), 220043 (specialty-finish) → **final holdout 58/254 = 22.8%**,
+  13 of the 64 pair-bearing products (the top-ups add identity coverage,
+  not pair volume). Frozen in research/delighting-034 commit 94f2d01; any
+  further change needs first-results-grade justification per that
+  protocol's §6.
 
 ### 9.5 Provenance & usage posture
 
