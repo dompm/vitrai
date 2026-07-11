@@ -30,6 +30,17 @@ def main(census_path, manifest_path):
     print(f"products with >=2 DISTINCT capture types (heuristic labels): "
           f"{len(multi)}/{len(with_images)} = {100*len(multi)/len(with_images):.1f}%")
 
+    # clean-vs-wild pairing: the number the research actually needs -- a product
+    # with at least one clean reference (lightbox/closeup) AND one wild capture
+    # (window/shop) is a usable cross-capture pair candidate.
+    CLEAN = {"lightbox", "closeup"}
+    WILD = {"window", "shop"}
+    paired = [c for c in with_images
+              if any(l in CLEAN for l in c["distinct_capture_types"])
+              and any(l in WILD for l in c["distinct_capture_types"])]
+    print(f"products with >=1 CLEAN (lightbox/closeup) AND >=1 WILD (window/shop) image: "
+          f"{len(paired)}/{len(with_images)} = {100*len(paired)/len(with_images):.1f}%")
+
     label_counts = Counter()
     for c in with_images:
         for cl in c["classifications"]:

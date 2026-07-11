@@ -1,0 +1,8 @@
+{
+"0": ["closeup"], "1": ["closeup"], "2": ["window","closeup"], "3": ["shop_held"], "4": ["window"],
+"5": ["standing","window"], "6": ["shop_held","standing"], "7": ["closeup"], "8": ["standing","window"], "9": ["window"],
+"10": ["other"], "11": ["window","standing"], "12": ["closeup"], "13": ["standing","other"], "14": ["window"],
+"15": ["closeup"], "16": ["closeup"], "17": ["window"], "18": ["other"], "19": ["window"],
+"20": ["closeup"], "21": ["closeup"], "22": ["lightbox","closeup"], "23": ["window","standing"], "24": ["standing","other"],
+"25": ["window","standing"], "26": ["closeup"], "27": ["closeup"], "28": ["window"], "29": ["closeup"]
+}
