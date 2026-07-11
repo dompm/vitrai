@@ -21,20 +21,33 @@ render farm?"
 - **GPU duty cycle (main_render / total): 47.3%** on the old code — a naive one-process job on
   a GPU node leaves the GPU idle or near-idle more than half the time. Counting the GT passes
   as (mostly wasted) GPU-touching time, render calls cover 98.6% of wall time, which is why
-  CPU-side amortization (texture cache) buys little and killing redundant render calls +
-  process-level parallelism buys a lot.
+  CPU-side amortization (texture cache) buys little and killing redundant render calls buys a
+  lot — and why what multi-process buys depends entirely on how low the duty cycle is (see the
+  M4-vs-4090 split below).
 - **Shipped, measurements-justified:** (1) GT channels now render ONCE and save EXR+PNG from the
   same render result (10 → 5 render calls/sample) — validate-mode sample: 71.2s → 46.3s
-  (**1.54x**); production sample: 138.9s → ~104s (**~1.33x**). (2) Texture-authoring split +
-  per-(recipe,seed) cache across light variations (small win, ~0.5s per extra variation — done
-  because it is nearly free, see §4b). (3) `render_farm.py` seed-sharding launcher with
-  per-shard `BLENDER_USER_*`/`TMPDIR` sandboxes and retries. (4) `--hdri-dir` + a 23-HDRI CC0
+  (**1.54x**); production sample: 138.9s → 84.3s measured (**1.65x**), lifting single-process
+  GPU duty to **62%** on the M4. (2) Texture-authoring split + per-(recipe,seed) cache across
+  light variations (small win, ~0.5s per extra variation — done because it is nearly free,
+  §4b). (3) `render_farm.py` seed-sharding launcher with per-shard
+  `BLENDER_USER_*`/`TMPDIR` sandboxes and retries. (4) `--hdri-dir` + a 23-HDRI CC0
   pre-fetched pack (no render-time network).
-- **Multi-process on the M4: §4a** — measured aggregate speedup from `farm_summary.json`.
-- **Determinism: §5** — same seed produces the same sample under the new path (hash table).
-- **20k projection: §6** — the render compute is cheap (tens of dollars on marketplace 4090s);
-  the real scaling constraints are the **~273 MB/sample disk footprint (5.5 TB for 20k)** and
-  per-render-call CPU overhead, both quantified below.
+- **Multi-process on the M4: measured 0.81x — SLOWER than one process** (§4a). Metal degrades
+  per-render-call time super-linearly under 3-way overlap (3.2–4.6x), and after the GT dedup
+  this machine is already 62%-duty GPU-bound, so there is no idle window to fill.
+  Mechanism fully verified though: no cache/temp collisions, disjoint outputs, and the sharded
+  run reproduces the single-process run byte-for-byte per sample. Multi-process is the right
+  design for the LOW-duty 4090 regime (~15–20% single-process duty, §6), not for the M4;
+  processes-per-GPU must be re-measured in the first hour on a rented node.
+- **Determinism: §5** — same seed reproduces the sample: authored textures byte-identical,
+  all GT maps pixel-identical (EXR byte diffs are Blender's embedded Date/RenderTime headers),
+  photos within the engine's own run-to-run noise floor (control-verified).
+- **Validate gate: 13/13 pass**, every recipe reproducing report 022's committed MAE to the
+  fourth decimal (§7).
+- **20k projection: §6** — ~27–40 node-hours, ≤ $40 compute on marketplace 4090s (4–6
+  processes/GPU, 12–16 vCPU/node); the real scaling constraints are the **~273 MB/sample disk
+  footprint (5.5 TB for 20k, egress bill can exceed compute 10x)** and per-render-call CPU
+  overhead, both quantified below.
 
 ## 1. Method
 
@@ -97,8 +110,9 @@ camera + wall + node graphs; texture authoring is ~0.5s/sample of fBm noise at 1
 Two corollaries:
 
 1. Per-sample cost scales with **render calls**, not with samples-per-render at this scene
-   complexity. The efficient shape is: fewer render calls per sample, then more samples per
-   node via process parallelism.
+   complexity. The efficient shape is: fewer render calls per sample first; process
+   parallelism second, and only where the duty cycle is low (it pays on 4090s, §6 — it
+   measurably does NOT pay on the M4, §4a).
 2. On a much faster GPU (4090/OptiX), main_render's path-trace portion shrinks toward the
    fixed overhead floor and the whole profile becomes overhead-dominated → the duty cycle of a
    single process gets WORSE on better hardware (Amdahl), which is exactly the maintainer's
@@ -112,9 +126,12 @@ the correct pattern: render once, `save_render()` twice. The GT path now does th
 the 5 channels (T, h, mark_mask, height, normal) renders once and the same Render Result is
 saved to EXR (32-bit, view transform 'Raw' — unchanged) and PNG (16-bit — unchanged).
 
-- Validate-mode sample (what the gate runs): 71.2s → 46.3s (**1.54x**).
-- Production sample: 138.9s → ~104s (gt_render 71.3s → ~35.6s), **~1.33x** (§4a's new-code
-  baseline confirms).
+- Validate-mode sample (what the gate runs, same recipe+seed both sides): 71.2s → 46.3s
+  (**1.54x**).
+- Production batch: 138.9 s/sample (seeds 100–105, old) → 84.3 s/sample (seeds 300–305, new;
+  §4a baseline) — **1.65x end-to-end**, though the two batches drew different recipe mixes, so
+  the apples-to-apples number is the per-call one: gt_render calls halved (10 → 5/sample) at
+  an unchanged ~5.8–7s/call, i.e. ~35s/sample removed.
 - Pixel-identical by construction (Cycles is deterministic for a fixed scene/seed; the old
   PNG was literally a second identical render) — verified by the §5 hash table and the
   `--validate` gate (§7).
@@ -151,7 +168,11 @@ Measured on the M4 (new code path, 6 samples, seeds 300–305, shadow pairs, HDR
 | config | wall time (s) | s/sample | aggregate speedup | per-render-call contention |
 |---|---:|---:|---:|---|
 | 1 process (baseline) | 505.7 | 84.3 | 1.0x | main 26.2s, GT 5.8s |
-| 3 shards × 2 seeds | FARM2_WALL | FARM2_PER | FARM2_SPEEDUP | main FARM2_MAIN, GT FARM2_GT |
+| 3 shards × 2 seeds | 627.0 | 104.5 | **0.81x — slower** | main 84.1s (3.2x), GT 26.8s (4.6x) |
+
+(A 2-shard point was not separately timed — session constraints; with 3-way contention already
+degrading per-render-call time 3.2–4.6x, super-linearly worse than a perfectly-shared GPU's
+3.0x, the direction of the M4 curve is unambiguous without it.)
 
 Correctness under concurrency, all verified on the 3-shard runs:
 
@@ -168,13 +189,22 @@ Correctness under concurrency, all verified on the 3-shard runs:
   sleep). The table's numbers are from a `caffeinate`d re-run. Farm jobs on laptops need
   `caffeinate`; server nodes are unaffected.
 
-Reading the M4 speedup honestly: on THIS machine the workload is already ~97% render-call time
-at 62% GPU duty, and Metal serializes concurrent Cycles submissions heavily (per-call times in
-the table), so 3 processes buy only a modest aggregate gain. That is the expected M4 result,
-not the 4090 result: on a 4090 the path-trace slice shrinks ~20x while the CPU-side fixed
-overhead per render call does not, so the single-process duty cycle drops to ~15–20% and
-process-parallelism headroom is correspondingly larger (§6). The M4 test's job was to verify
-the mechanism (isolation, disjoint outputs, retries, determinism) — it does.
+**Reading the M4 numbers honestly: on THIS machine, multi-process LOSES.** Three concurrent
+Cycles/Metal processes degrade per-render-call time super-linearly (3.2–4.6x on 3-way overlap
+— worse than the 3x a perfectly-shared GPU would cost), so aggregate throughput lands ~19%
+BELOW one process. That is the coherent consequence of §2: after the GT dedup this workload
+is ~97% render-call time at 62% GPU duty on the M4's small unified-memory GPU — there is
+almost no idle-GPU window for a second process to fill, and Metal's scheduling + unified-
+memory pressure add real overhead on top. Recommendation for M4-class machines: 1 process.
+
+The 4090 story is the opposite by arithmetic, not by hope: the path-trace slice shrinks
+~20x while the CPU-side fixed overhead per render call does not, so single-process duty falls
+to ~15–20% and 4–6 processes have real idle GPU to fill (§6) — the regime the maintainer's
+industry experience comes from, and the regime this M4 cannot reproduce. The M4 test's job
+was to verify the MECHANISM (isolation, disjoint outputs, retries, cross-mode determinism):
+it does, cleanly. The processes-per-GPU number must be re-derived in the first hour on a
+rented 4090 (§6, "first hour") — this report deliberately does not extrapolate a Metal
+contention curve onto CUDA.
 
 ### 4b. Amortization inside a process
 
@@ -188,10 +218,11 @@ upload+save, must rerun after every factory reset), with a per-(recipe,seed) dic
 
 Honestly sized: this saves ~0.5s per extra light variation (texture_authoring is 0.7% of
 wall) — implemented because it is a 20-line, risk-free refactor, NOT because measurements
-demanded it. The measurements say the wins live in render-call count (§3) and process
-parallelism (§4a), not here. A persistent-scene/swap-textures rebuild was likewise NOT
-implemented: scene_build is 0.04% of wall time — rebuilding from factory settings every sample
-is effectively free and keeps the isolation guarantees the reports history relies on.
+demanded it. The measurements say the wins live in render-call count (§3, on every machine)
+and in process parallelism only where duty is low (§4a/§6 — 4090 yes, M4 no), not here. A
+persistent-scene/swap-textures rebuild was likewise NOT implemented: scene_build is 0.04% of
+wall time — rebuilding from factory settings every sample is effectively free and keeps the
+isolation guarantees the reports history relies on.
 
 ## 5. Determinism
 
@@ -299,7 +330,23 @@ size K and node count from the measured node numbers, not this table.
 
 ## 7. Validate gate
 
-TODO — 13/13 recipe MAEs on the new code path.
+Full 13-recipe uniform-backlight gate on the new code path (seed 42, `check_validation.py`,
+same protocol as report 022 §3; the 13 renders were themselves produced by 3 concurrent
+env-isolated Blender processes — the farm pattern — with zero collisions):
+
+| recipe | MAE | 022 MAE | | recipe | MAE | 022 MAE |
+|---|---|---|---|---|---|---|
+| dark-deep | 0.0013 | 0.0013 | | saturated-opalescent | 0.0130 | 0.0130 |
+| dark-ruby | 0.0016 | 0.0016 | | cathedral-blue | 0.0146 | 0.0146 |
+| dark-textured | 0.0035 | 0.0035 | | cathedral-red | 0.0162 | 0.0162 |
+| dark-opaque | 0.0045 | 0.0045 | | cathedral-green | 0.0230 | 0.0230 |
+| streaky-fine-texture | 0.0084 | 0.0084 | | cathedral-amber | 0.0256 | 0.0256 |
+| dark-slate | 0.0095 | 0.0095 | | streaky-mix | 0.0375 | 0.0375 |
+| | | | | wispy-white | 0.0397 | 0.0397 |
+
+**13/13 pass, and every MAE reproduces report 022's committed gate value to the fourth
+decimal** — the strongest possible confirmation that the GT dedup + texture-cache +
+instrumentation changes did not perturb the authored→shader→render→GT pipeline.
 
 ## 8. HDRI strategy at scale
 
