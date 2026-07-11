@@ -15,7 +15,7 @@ interface TutorialBarProps {
 
 export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, customBody, activeTrackId }: TutorialBarProps) {
   const { t } = useTranslation();
-  const [selectedTrack, setSelectedTrack] = useState<TrackId>('ai-tracing');
+  const [selectedTrack, setSelectedTrack] = useState<TrackId>('vector-drawing');
 
   if (step === 'welcome') {
     return (
@@ -28,21 +28,21 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
           <div className="tutorial-track-grid">
             <button
               type="button"
-              className={`tutorial-track-card ${selectedTrack === 'ai-tracing' ? 'active' : ''}`}
-              onClick={() => setSelectedTrack('ai-tracing')}
-            >
-              <div className="tutorial-track-icon"><IconSpark size={24} /></div>
-              <h3 className="tutorial-track-card-title">{t('tutorialTrackAiTracingTitle')}</h3>
-              <p className="tutorial-track-card-desc">{t('tutorialTrackAiTracingDesc')}</p>
-            </button>
-            <button
-              type="button"
               className={`tutorial-track-card ${selectedTrack === 'vector-drawing' ? 'active' : ''}`}
               onClick={() => setSelectedTrack('vector-drawing')}
             >
               <div className="tutorial-track-icon"><IconSquare size={24} /></div>
               <h3 className="tutorial-track-card-title">{t('tutorialTrackVectorDrawingTitle')}</h3>
               <p className="tutorial-track-card-desc">{t('tutorialTrackVectorDrawingDesc')}</p>
+            </button>
+            <button
+              type="button"
+              className={`tutorial-track-card ${selectedTrack === 'ai-tracing' ? 'active' : ''}`}
+              onClick={() => setSelectedTrack('ai-tracing')}
+            >
+              <div className="tutorial-track-icon"><IconSpark size={24} /></div>
+              <h3 className="tutorial-track-card-title">{t('tutorialTrackAiTracingTitle')}</h3>
+              <p className="tutorial-track-card-desc">{t('tutorialTrackAiTracingDesc')}</p>
             </button>
             <button
               type="button"
