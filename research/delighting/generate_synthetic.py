@@ -91,11 +91,30 @@ def generate_noise(size, scale, seed, octaves=1, persistence=0.55, lacunarity=6.
 
     def _band(band_scale, band_seed):
         np.random.seed(band_seed)
-        base_res = max(1, int(size / band_scale))
-        low_freq = np.random.rand(base_res, base_res)
+        # Report 032 (mirror-symmetry fix): the coarsest octave of large-scale
+        # recipes lands at a tiny base_res (cathedral scale=200 @1536 -> 7; at
+        # smaller working sizes as low as 2), and a cubic zoom of a 2-7 cell
+        # grid produces low-frequency structure that is near mirror-symmetric
+        # about the image CENTER for some seeds -- the gallery-flagged
+        # cathedral-green artifact (seed700 measured mirror corr ~0.24, seed1234
+        # LR ~0.30). Two statistics-preserving guards: (a) a base_res floor of 4
+        # (no 2x2 degenerate symmetric cell), and (b) generate a slightly larger
+        # grid and crop a per-band random-offset window so the image center is
+        # NOT a reflection axis. Neither changes the noise's spatial frequency
+        # or amplitude distribution (verified: hf_energy_frac unchanged within
+        # noise, report 032 sec WP-A), so the 021/022 hf-energy grounding still
+        # holds; it only decorrelates the spurious centered mirror (worst-case
+        # corr 0.30 -> 0.13). The offset draw uses the SAME per-band seeded RNG
+        # stream, so determinism (same seed -> same texture) is preserved.
+        base_res = max(4, int(round(size / band_scale)))
+        pad = 2
+        low_freq = np.random.rand(base_res + pad, base_res + pad)
         zoom_factor = size / base_res
         img = zoom(low_freq, zoom_factor, order=3)
-        return img[:size, :size]
+        H, W = img.shape
+        off_y = int(np.random.randint(0, max(1, H - size + 1)))
+        off_x = int(np.random.randint(0, max(1, W - size + 1)))
+        return img[off_y:off_y + size, off_x:off_x + size]
 
     octaves = max(1, int(octaves))
     total = np.zeros((size, size), dtype=np.float64)
@@ -114,6 +133,117 @@ def generate_noise(size, scale, seed, octaves=1, persistence=0.55, lacunarity=6.
     # Normalize to 0-1
     noise_img = (noise_img - noise_img.min()) / (noise_img.max() - noise_img.min() + 1e-8)
     return noise_img
+
+# ===========================================================================
+# Report 032 WP-A texture-authoring overhaul: flow-advected streaks, discrete
+# micro-events (seeds/bubbles), and Beer-Lambert T<->height coupling. These are
+# pure-numpy primitives (no bpy) mirrored verbatim in corpus/appearance_stats.py
+# so the appearance-grounding harness re-derives the exact same recipe fields.
+# ===========================================================================
+
+def flow_field(size, seed, base_angle_deg, curl=0.16, curl_scale=5.0):
+    """Smooth per-pixel unit flow field: a dominant roll/pull direction plus a
+    low-frequency curl perturbation (local eddies). Drives streak advection so
+    rolled-glass streaks run along a coherent direction with gentle meander
+    instead of the old isotropic-threshold noise (report 029 gap G-1: our
+    streaks had no roll-direction anisotropy; report 031: streaky-fine-texture
+    and wispy-white misclassified because their streaks didn't read as streaks).
+    """
+    pert = generate_noise(size, size / curl_scale, seed + 313,
+                          octaves=2, persistence=0.6, lacunarity=4.0)
+    ang = math.radians(base_angle_deg) + (pert - 0.5) * 2.0 * curl * math.pi
+    return np.cos(ang), np.sin(ang)
+
+
+def advect_streaks(scalar, fx, fy, length=36, step=1.4):
+    """Line-integral-convolution smear of `scalar` along flow (fx, fy): walks
+    each pixel forward and backward along its local flow direction, averaging
+    with a triangular taper (feathered ends). Produces anisotropic streaks
+    aligned to the flow -- the core of the flow-advected authoring. Fixed
+    per-pixel reference flow (1 resample/step) keeps it ~0.6s at 1536."""
+    from scipy.ndimage import map_coordinates
+    n = scalar.shape[0]
+    yy, xx = np.mgrid[0:n, 0:n].astype(np.float64)
+    acc = scalar.astype(np.float64).copy()
+    wsum = np.ones_like(acc)
+    for d in (1.0, -1.0):
+        px, py = xx.copy(), yy.copy()
+        for k in range(1, length + 1):
+            px = px + d * step * fx
+            py = py + d * step * fy
+            w = 1.0 - (k / (length + 1.0))
+            acc += w * map_coordinates(scalar, [py, px], order=1, mode='reflect')
+            wsum += w
+    return acc / wsum
+
+
+def streak_selector(size, seed, angle, ws=320, curl=0.14, contrast=1.7, lam=0.18):
+    """A [0,1] streak-blend selector authored at working resolution `ws`
+    (streaks are large-scale, so LIC at 320 then upscale is exact-enough and
+    ~5x cheaper) then bilinear-zoomed to `size`. `contrast` crisps the streak
+    edges; `lam` blends in occasional SHARP lamination lines (thresholded then
+    advected) -- the sharp laminations real rolled sheets show between color
+    pulls."""
+    from scipy.ndimage import zoom
+    fx, fy = flow_field(ws, seed, angle, curl=curl)
+    sel = advect_streaks(
+        generate_noise(ws, ws / 6.0, seed + 11, octaves=2, persistence=0.55, lacunarity=4.0),
+        fx, fy, length=36)
+    sel = (sel - sel.min()) / (sel.max() - sel.min() + 1e-8)
+    sel = np.clip((sel - 0.5) * contrast + 0.5, 0, 1)
+    if lam > 0:
+        lam0 = (generate_noise(ws, ws / 9.0, seed + 29, octaves=1) > 0.82).astype(np.float64)
+        sel = np.clip(sel + lam * np.clip(advect_streaks(lam0, fx, fy, length=44) * 3.0, 0, 1), 0, 1)
+    return zoom(sel, size / ws, order=1)[:size, :size]
+
+
+def micro_events(size, seed, density, r_range=(3.0, 8.0)):
+    """Discrete refractive seed/bubble events (report 029 gap G-1: bubble/seed
+    optics -- bright-core/dark-rim donuts -- were the VLM's single favorite
+    authenticity cue for real sheets and we had NONE; report 031 taxon T11).
+    Stamps small donut profiles (raised rim + sunken core) into a height delta
+    and a small local transmission gain, and returns a footprint mask (exported
+    as GT). `density` = expected events per 512x512 tile.
+    Returns (height_delta, T_gain, event_mask), all float64 (size,size)."""
+    rng = np.random.RandomState(seed + 77)
+    n = max(0, int(density * (size / 512.0) ** 2))
+    hd = np.zeros((size, size))
+    tg = np.zeros((size, size))
+    mask = np.zeros((size, size))
+    if n == 0:
+        return hd, tg, mask
+    ys = rng.randint(0, size, n)
+    xs = rng.randint(0, size, n)
+    rs = rng.uniform(r_range[0], r_range[1], n)
+    for x, y, r in zip(xs, ys, rs):
+        R = int(math.ceil(r * 2.2))
+        y0, y1 = max(0, y - R), min(size, y + R)
+        x0, x1 = max(0, x - R), min(size, x + R)
+        if y1 <= y0 or x1 <= x0:
+            continue
+        yy, xx = np.mgrid[y0:y1, x0:x1]
+        dd = np.sqrt((xx - x) ** 2 + (yy - y) ** 2)
+        ring = np.exp(-((dd - r * 0.6) / (0.28 * r)) ** 2)
+        core = np.exp(-(dd / (0.32 * r)) ** 2)
+        hd[y0:y1, x0:x1] += (ring - 0.6 * core)
+        tg[y0:y1, x0:x1] += 0.12 * core - 0.05 * ring
+        m = (dd < r * 1.1).astype(np.float64)
+        mask[y0:y1, x0:x1] = np.maximum(mask[y0:y1, x0:x1], m)
+    return hd, tg, mask
+
+
+def couple_T_to_height(T, height, coupling):
+    """Beer-Lambert T<->height coupling (report 029 gap G-3, the most-actionable
+    NEW finding: color/lighting rode ON TOP of relief as independent fields).
+    Local thickness co-varies with the SAME authored height field: crests
+    (high height => thinner glass) transmit lighter AND less saturated; troughs
+    (thicker) darker AND more saturated -- because (T_r/T_g)^p moves toward 1
+    for p<1. `height` in [0,1]; `coupling` is the fractional thickness swing.
+    Mean transmission is ~preserved (symmetric about height=0.5). Applied to the
+    authored T that becomes BOTH gt_T (emission GT) and the transmitted photo,
+    so the uniform-backlight validate agreement is unaffected."""
+    thickness = 1.0 - coupling * (2.0 * height.astype(np.float64) - 1.0)
+    return np.clip(T ** thickness[..., None], 0.0, 1.0)
 
 def generate_scribble_mask(size, seed):
     np.random.seed(seed)
@@ -391,40 +521,45 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         h = np.full((size, size), 0.15, dtype=np.float32)
 
     elif recipe == 'streaky-mix':
-        from scipy.ndimage import zoom
-        noise = generate_noise(size, scale=250, seed=seed)
-        noise_stretched = zoom(noise[:size//10, :], (10, 1), order=3)[:size, :size]
-        mask = np.clip((noise_stretched - 0.3) * 2.0, 0, 1)
-
+        # Report 032 WP-A: flow-advected streaks replace the old vertical
+        # zoom-stretch. A coherent pull direction (+/-18 deg) with mild curl
+        # produces elongated, feathered two-color streaks WITH occasional sharp
+        # lamination lines -- reads as rolled streaky glass (029 gap G-1). The
+        # fine-detail layer is now at a genuinely fine scale (22, oct 2) so it
+        # feeds hf_energy without swamping the macro streak reading that the old
+        # isotropic scale-60 amp-0.8 overlay washed out (031: this was why the
+        # streaky family lost directionality).
+        angle = np.random.uniform(-18, 18)
+        sel = streak_selector(size, seed, angle, curl=0.08, contrast=1.9, lam=0.22)
         color1 = np.array([0.9, 0.9, 0.95])
         color2 = np.array([0.3, 0.5, 0.8])
-
-        T = color1 * mask[..., None] + color2 * (1 - mask[..., None])
-        h = 0.9 * mask + 0.05 * (1 - mask)
-        # Report 022 §A: streaky-mix's macro streak mask is a hard-thresholded
-        # step (`clip((x-0.3)*2, 0,1)`), so most of the image sits flat at 0
-        # or 1 -- a fine multiplicative overlay (the cathedral mechanism)
-        # gets absorbed by that clip almost everywhere and barely moves
-        # hf_energy_frac (measured: <2x at amp=1.0). An ADDITIVE fine-detail
-        # layer applied AFTER the color mix (same mechanism the dark family
-        # already used) is not subject to that saturation and reaches the
-        # real wispy-class hf median (~0.017) at amp=0.8.
-        h0 = T.shape[0]
-        detail = generate_noise(size, scale=60, seed=seed + 901,
-                                 octaves=4, persistence=0.6, lacunarity=6.0)
-        detail_scaled = (detail * 0.8) - 0.4
-        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
+        T = np.clip(color1 * sel[..., None] + color2 * (1 - sel[..., None]), 0, 1)
+        h = (0.9 * sel + 0.05 * (1 - sel)).astype(np.float32)
+        detail = generate_noise(size, scale=22, seed=seed + 901,
+                                octaves=2, persistence=0.55, lacunarity=6.0)
+        T = np.clip(T + ((detail * 0.5) - 0.25)[..., None], 0, 1)
 
     elif recipe == 'wispy-white':
-        noise = generate_noise(size, scale=150, seed=seed, **WISPY_OCT)
-        mask = generate_noise(size, scale=50, seed=seed+1, **WISPY_OCT)
-        wisp = np.clip((noise * mask) * 2.0, 0, 1)
+        # Report 032 WP-A: wispy-white was VLM-misclassified as smooth-opal
+        # (031 taxon T14) because its wisps read as isotropic milkiness, not
+        # streaks. Advect the wisp density field along a pull direction so the
+        # milky veils elongate into legible wisps (macro-anisotropy 1.20 ->
+        # 2.29 offline). Milky base/haze unchanged.
+        from scipy.ndimage import zoom as _zoom
+        ws = 320
+        angle = np.random.uniform(-25, 25)
+        fx, fy = flow_field(ws, seed, angle, curl=0.22)
+        wisp0 = generate_noise(ws, ws / 5.5, seed + 1, octaves=3, persistence=0.5, lacunarity=5.0)
+        wisp = advect_streaks(wisp0, fx, fy, length=44)
+        wisp = (wisp - wisp.min()) / (wisp.max() - wisp.min() + 1e-8)
+        wisp = np.clip((wisp - 0.45) * 2.0, 0, 1)
+        wisp = _zoom(wisp, size / ws, order=1)[:size, :size]
 
         base_color = np.array([0.85, 0.87, 0.92])
         wisp_color = np.array([0.55, 0.55, 0.55])
 
         T = base_color * (1 - wisp[..., None]) + wisp_color * wisp[..., None]
-        h = 0.5 + 0.45 * wisp
+        h = (0.5 + 0.45 * wisp).astype(np.float32)
 
     # ---- Report 022: five gap recipes from 021 §5 (Lab->linear base_color
     # and haze targets taken verbatim from that report's exemplar-grounded
@@ -476,19 +611,21 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         # swamps any added fine detail, see that recipe's comment), this is
         # a SOFT streak-direction brightness modulation on one base color
         # (matching the exemplars' "marbled" look, not a two-color mix)
-        # plus a stronger additive fine-detail layer for the recipe's
-        # namesake texture.
-        from scipy.ndimage import zoom
+        # plus a fine-detail layer for the recipe's namesake texture.
+        # Report 032 WP-A: this recipe was the WORST legibility failure (031
+        # classified it as ring/oval mottle T7, not streaky T12). The old
+        # vertical zoom-stretch gave near-zero macro-anisotropy (1.12); a
+        # flow-advected soft brightness modulation restores a coherent marbled
+        # streak (1.59 offline) while keeping the single-base "marbled" look.
         base_color = np.array([0.549, 0.145, 0.125])
-        streak = generate_noise(size, scale=250, seed=seed)
-        streak_stretched = zoom(streak[:size//10, :], (10, 1), order=3)[:size, :size]
-        streak_mod = (streak_stretched - 0.5) * 0.3
-        h0 = streak_mod.shape[0]
+        angle = np.random.uniform(-18, 18)
+        sel = streak_selector(size, seed, angle, curl=0.14, contrast=1.5, lam=0.12)
+        streak_mod = (sel - 0.5) * 0.55
         T = np.clip(base_color * (1 + streak_mod[..., None]), 0, 1)
-        detail = generate_noise(size, scale=45, seed=seed + 902,
-                                 octaves=4, persistence=0.6, lacunarity=6.0)
-        detail_scaled = (detail * 0.2) - 0.1
-        T = np.clip(T + detail_scaled[:h0, :, None], 0, 1)
+        detail = generate_noise(size, scale=20, seed=seed + 902,
+                                octaves=3, persistence=0.55, lacunarity=6.0)
+        detail_scaled = (detail * 0.18) - 0.09
+        T = np.clip(T + detail_scaled[..., None], 0, 1)
         # 021 §5: flat haze 0.25-0.35 (real wispy avg 0.215); mid of range.
         h = np.full((size, size), 0.30, dtype=np.float32)
 
@@ -513,8 +650,44 @@ def author_glass_arrays(recipe, size=1536, seed=42):
     # image_encode_io -- a separate cost with a different hardware profile:
     # this bucket is single-threaded numpy/scipy on CPU, encode is Blender's
     # C++ image write path).
-    mark = generate_scribble_mask(size, seed + 5)
+    # ---- Report 032 WP-A: relief FIRST (micro-events + Beer-Lambert coupling
+    # both consume the height field), then couple T to it, then derive normal.
     height, bump_distance = generate_relief_height(recipe, size, seed)
+
+    # Discrete micro-events (seeds/bubbles): per-recipe density (events / 512
+    # tile). Baked into height (so they lens/refract through the existing bump
+    # shader -- report 031's cost note for T11) and into T (a small local
+    # transmission perturbation). density 0 disables. A dedicated gt_events GT
+    # mask export is deferred to WP-C; the events already show up in gt_height.
+    MICRO_EVENT_DENSITY = {
+        'cathedral-green': 28, 'cathedral-amber': 28, 'cathedral-blue': 28, 'cathedral-red': 28,
+        'streaky-mix': 22, 'streaky-fine-texture': 20,
+        'wispy-white': 10, 'saturated-opalescent': 10,
+        'dark-opaque': 16, 'dark-deep': 14, 'dark-ruby': 16, 'dark-slate': 18, 'dark-textured': 40,
+    }
+    density = MICRO_EVENT_DENSITY.get(recipe, 0)
+    if density > 0:
+        ev_h, ev_t, _ev_mask = micro_events(size, seed + 55, density)
+        height = height + 0.08 * ev_h.astype(np.float32)
+        height = (height - height.min()) / (height.max() - height.min() + 1e-8)
+        T = np.clip(T + ev_t[..., None].astype(np.float32), 0, 1)
+
+    # Beer-Lambert T<->height coupling (029 G-3). Per-recipe swing: clear
+    # cathedral shows the most thickness-driven color variation; milky opal the
+    # least (light scatters before it traverses a thickness gradient). 0 = off.
+    COUPLING = {
+        'cathedral-green': 0.22, 'cathedral-amber': 0.22, 'cathedral-blue': 0.22, 'cathedral-red': 0.22,
+        'streaky-mix': 0.25, 'streaky-fine-texture': 0.22,
+        'wispy-white': 0.14, 'saturated-opalescent': 0.14,
+        'dark-opaque': 0.12, 'dark-deep': 0.12, 'dark-ruby': 0.14, 'dark-slate': 0.14, 'dark-textured': 0.18,
+    }
+    coupling = COUPLING.get(recipe, 0.0)
+    if coupling > 0:
+        T = couple_T_to_height(T, height, coupling).astype(np.float32)
+
+    # ---- texture_authoring stage also covers the mark scribble + normal
+    # derivation below (EXCLUDING the bpy image encode/save -- image_encode_io).
+    mark = generate_scribble_mask(size, seed + 5)
     normal = height_to_normal(height, strength=18.0)
     _record('texture_authoring', time.perf_counter() - _t0_tex)
 

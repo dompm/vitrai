@@ -1,0 +1,17 @@
+========================================
+Validation Results: Uniform-Backlight T-Agreement
+Total evaluated samples: 13
+========================================
+cathedral-amber: MAE = 0.025811  (n=1)
+cathedral-blue: MAE = 0.014711  (n=1)
+cathedral-green: MAE = 0.023172  (n=1)
+cathedral-red: MAE = 0.016308  (n=1)
+dark-deep: MAE = 0.001316  (n=1)
+dark-opaque: MAE = 0.004492  (n=1)
+dark-ruby: MAE = 0.001682  (n=1)
+dark-slate: MAE = 0.009524  (n=1)
+dark-textured: MAE = 0.003543  (n=1)
+saturated-opalescent: MAE = 0.013217  (n=1)
+streaky-fine-texture: MAE = 0.008256  (n=1)
+streaky-mix: MAE = 0.042573  (n=1)
+wispy-white: MAE = 0.034112  (n=1)

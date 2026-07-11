@@ -1,0 +1,28 @@
+========================================================================
+Report 032 WP-A offline evidence  (OLD=origin vs NEW, size=768)
+========================================================================
+
+(1) STREAK LEGIBILITY -- macro-scale directional anisotropy of T @lp32
+    (1.0 = isotropic; higher = legibly streaky)
+    recipe                    OLD    NEW      x
+    streaky-mix              1.64   1.38   0.84x
+    streaky-fine-texture     1.12   1.65   1.47x
+    wispy-white              1.20   1.96   1.63x
+
+(2) MIRROR-SYMMETRY ARTIFACT -- cathedral-green |corr with mirror| @1536
+    (gallery flagged seed700; lower = less spurious centered symmetry)
+      seed       OLD ud/lr       NEW ud/lr
+        42  -0.041/+0.072  +0.013/+0.041
+       300  +0.092/-0.151  +0.059/+0.013
+       700  +0.235/+0.123  +0.007/-0.032
+      1234  +0.012/+0.295  +0.028/+0.017
+
+(3) BEER-LAMBERT COUPLING -- corr(dT vs height-0.5) and mean-T preservation
+    cathedral-green        corr(T,height-0.5)=+0.924  meanT=0.3542
+    streaky-mix            corr(T,height-0.5)=-0.112  meanT=0.7345
+    helper: crest [0.503, 0.299, 0.178] > trough [0.318, 0.134, 0.056] (lighter+less sat at crest)
+
+(4) MICRO-EVENTS -- footprint coverage (was 0 pre-032)
+    cathedral-green        density= 28  coverage= 1.39%  h_delta[-0.59,+1.63]
+    dark-textured          density= 40  coverage= 1.91%  h_delta[-0.59,+1.93]
+    wispy-white            density= 10  coverage= 0.49%  h_delta[-0.59,+0.98]
