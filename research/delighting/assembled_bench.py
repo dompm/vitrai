@@ -64,6 +64,17 @@ CLASS_MAP = {"cathedral-green": "cathedral-clear", "cathedral-amber": "cathedral
              "wispy-white": "wispy", "streaky-mix": "wispy", "dark-opaque": "dark-opaque"}
 EROOD = 10  # piece-mask erosion (px)
 
+# Report 034 / EVAL_PROTOCOL.md sec 1a -- the metric-gaming guard. The drag test
+# rewards LOW dispersion across drag positions, but dispersion is bounded BELOW
+# by the grain floor (the irreducible authored-texture variation): a faithful
+# de-lighting method cannot be MORE consistent than the texture itself allows.
+# Relit dispersion significantly UNDER the grain floor therefore means the method
+# flattened real texture away -- a FAILURE, not a win. Flag it when relit falls
+# below (1 - FLATTEN_MARGIN) x grain_floor; the margin absorbs sampling noise so
+# the current classical baseline (relit ABOVE floor on both materials) never
+# false-fires.
+FLATTEN_MARGIN = 0.25
+
 
 # ----------------------------------------------------------------- io / space
 def load_exr(p):
@@ -338,8 +349,28 @@ def drag_test(A, T, gtT, gEV, I2_hat, pj, meta):
         de = float(np.sqrt(((lab - lab.mean(0)) ** 2).sum(-1)).mean())
         return {"lum_cv": cv, "lab_dE": de}
 
+    raw_d, relit_d, grain_d = disp(raw_means), disp(relit_means), disp(grain_means)
     return {"n_positions": len(raw_means),
-            "raw": disp(raw_means), "relit": disp(relit_means), "grain_floor": disp(grain_means)}
+            "raw": raw_d, "relit": relit_d, "grain_floor": grain_d,
+            "flatten_flag": flatten_flag(relit_d, grain_d)}
+
+
+def flatten_flag(relit_d, grain_d):
+    """Sub-floor flattening detector (EVAL_PROTOCOL.md sec 1a). A relit
+    dispersion significantly BELOW the grain floor cannot be honest consistency
+    -- the method must have smoothed authored texture away. Returns a per-lens
+    boolean flag plus the ratios, so a passing method reads all-False. lum_cv is
+    gain-invariant (the trustworthy lens); lab_dE is level-dependent so its ratio
+    is reported for context but treated the same way."""
+    out = {}
+    for lens in ("lum_cv", "lab_dE"):
+        floor = grain_d[lens]
+        ratio = float(relit_d[lens] / floor) if floor > 1e-9 else float("inf")
+        out[lens] = {"ratio_to_floor": ratio,
+                     "sub_floor_flatten": bool(relit_d[lens] < (1.0 - FLATTEN_MARGIN) * floor)}
+    out["any_sub_floor_flatten"] = bool(out["lum_cv"]["sub_floor_flatten"]
+                                        or out["lab_dE"]["sub_floor_flatten"])
+    return out
 
 
 def label(img_srgb_u8, text):

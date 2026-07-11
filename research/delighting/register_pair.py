@@ -100,6 +100,35 @@ def orb_register(src_u8, ref_u8):
     return warped, int(mask.sum())
 
 
+def registered_t_agreement(T_a, T_b, valid):
+    """PRIMARY cross-capture consistency metric (report 034 / EVAL_PROTOCOL.md
+    metric family 1). sRGB MAE + p95 between two intrinsic T maps sampled at the
+    SAME registered coordinates. This is the generalized form of this harness's
+    original T-agreement number, exposed as a plain callable so any future
+    training eval can score consistency directly on two aligned T maps -- whether
+    they come from a real registered pair (below), a synthetic same-seed multi-
+    lighting render (eval_cross_lighting.py's setting), or a model's two per-
+    capture predictions. Needs no background model, so it is the number to trust.
+    `valid` is a bool mask excluding marks/speculars/occluders."""
+    t_err = np.abs(lin_to_srgb(T_a) - lin_to_srgb(T_b))
+    return {
+        "T_agreement_mae_srgb255": float(t_err[valid].mean() * 255),
+        "T_agreement_p95_srgb255": float(np.percentile(t_err[valid], 95) * 255),
+    }
+
+
+def t_agreement_from_registered_photos(a_lin, b_lin, glass_class, mark_region="none",
+                                       anchor="class"):
+    """Extract T from two ALREADY-REGISTERED (pixel-aligned) linear-RGB captures
+    of the same sheet and score `registered_t_agreement`. Convenience wrapper for
+    callers that have aligned photos rather than aligned maps; returns
+    (metrics, maps_a, maps_b)."""
+    ma = extract_maps(a_lin, glass_class, mark_region, anchor=anchor)
+    mb = extract_maps(b_lin, glass_class, mark_region, anchor=anchor)
+    valid = ~(ma["mark_mask"] | ma["spec_mask"] | mb["mark_mask"] | mb["spec_mask"])
+    return registered_t_agreement(ma["T"], mb["T"], valid), ma, mb
+
+
 def load_u8(path, size):
     im = Image.open(path).convert("RGB")
     w0, h0 = im.size
@@ -164,14 +193,13 @@ def main():
     err = np.abs(lin_to_srgb(np.clip(pred_b, 0, 1)) - lin_to_srgb(np.clip(mb["lin_ns"], 0, 1)))
     valid = ~(mb["mark_mask"] | mb["spec_mask"])
 
-    t_err = np.abs(lin_to_srgb(T_a) - lin_to_srgb(T_b))
     tv = ~(ma["mark_mask"] | ma["spec_mask"] | mb["mark_mask"] | mb["spec_mask"])
 
     metrics = {
         "pair": f"{na}__{nb}", "glass_class": args.glass_class,
         "registration": "corners" if n_inliers is None else f"orb:{n_inliers}",
-        "T_agreement_mae_srgb255": float(t_err[tv].mean() * 255),
-        "T_agreement_p95_srgb255": float(np.percentile(t_err[tv], 95) * 255),
+        # primary consistency metric via the shared callable (report 034)
+        **registered_t_agreement(T_a, T_b, tv),
         "cross_recon_mae_srgb255": float(err[valid].mean() * 255),
         "cross_recon_p95_srgb255": float(np.percentile(err[valid], 95) * 255),
     }

@@ -45,6 +45,8 @@ register_pair.py  cross-lighting validation (M3): register two photos, compare m
 eval_preview_invariance.py  product preview eval: raw RGB copy vs T/h relight
 train_glassnet_zero.py  tiny PyTorch neural inverse-rendering baseline
 generate_synthetic.py  Blender/Cycles synthetic data generator; now exports Material-v2 height/normal GT
+render_farm.py    seed-sharding multi-process launcher for generate_synthetic (docs/RENDER_AT_SCALE.md)
+fetch_hdri_pack.py  pre-fetch the CC0 HDRI pack for generate_synthetic --hdri-dir
 sheet_texture_prior.py  high-risk prior: preserve hammered relief while suppressing sheet-photo contamination
 catalog_texture_audit.py  compare priors against scraped manufacturer catalog texture statistics
 catalog_prior_gate.py  score whether a sheet should receive catalog-prior assistance
