@@ -2417,26 +2417,26 @@ export function ResultPanel({
                   {tutorialStep === 'vector-draw-shape' && (
                     <>
                       <Line
-                        points={[400, 350, 750, 350, 575, 650, 400, 350]}
+                        points={[300, 300, 700, 300, 500, 700, 300, 300]}
                         stroke="#fbbf24"
                         strokeWidth={2 / es}
                         dash={[6 / es, 4 / es]}
                         listening={false}
                       />
-                      <Circle x={400} y={350} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
-                      <KonvaText x={396} y={344} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      <Circle x={300} y={300} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={296} y={294} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
                       
-                      <Circle x={750} y={350} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
-                      <KonvaText x={746} y={344} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      <Circle x={700} y={300} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={696} y={294} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
                       
-                      <Circle x={575} y={650} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
-                      <KonvaText x={571} y={644} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      <Circle x={500} y={700} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={496} y={694} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
                     </>
                   )}
                   {tutorialStep === 'vector-curve-edge' && (
                     <>
                       <Line
-                        points={[400, 350, 575, 250, 750, 350]}
+                        points={[300, 300, 500, 200, 700, 300]}
                         stroke="#fbbf24"
                         strokeWidth={2 / es}
                         dash={[6 / es, 4 / es]}
@@ -2444,7 +2444,7 @@ export function ResultPanel({
                         listening={false}
                       />
                       <Arrow
-                        points={[575, 350, 575, 275]}
+                        points={[500, 300, 500, 220]}
                         stroke="#10b981"
                         strokeWidth={3 / es}
                         fill="#10b981"
