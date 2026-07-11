@@ -422,7 +422,7 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                             rel="noopener noreferrer"
                             className="glass-library-product-link"
                             onClick={(e) => e.stopPropagation()}
-                            title={item.manufacturer === 'Bullseye' ? 'Buy on Bullseye Glass' : 'Buy on Stained Glass Express'}
+                            title={item.manufacturer === 'Bullseye' ? 'View on Bullseye Glass (Manufacturer)' : 'View on Stained Glass Express (Source Catalog)'}
                           >
                             🔗
                           </a>
