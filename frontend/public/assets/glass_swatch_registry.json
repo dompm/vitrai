@@ -13020,27 +13020,6 @@
     "front_lit": false
   },
   {
-    "id": "oceanside-of136rr",
-    "manufacturer": "Oceanside",
-    "base_sku": "OF136RR",
-    "resolved_sku": "OF136RR",
-    "name": "96 COE Dark Blue Rough Rolled",
-    "resolved_name": "96 COE Dark Blue Rough Rolled",
-    "category": "Textured/Baroque",
-    "image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Dk._Blue_Rough_Rolled.jpg?v=1742589164",
-    "product_url": "https://www.stainedglassexpress.com/products/oceanside-dark-blue-rough-rolled-glass",
-    "local_image": "/assets/catalog_images/oceanside-of136rr.jpg",
-    "cropped": true,
-    "crop_box": null,
-    "real_world_width_in": 9.6,
-    "real_world_height_in": 9.6,
-    "original_width_px": 2419,
-    "original_height_px": 2419,
-    "status": "Downloaded",
-    "color_family": "Blue",
-    "front_lit": false
-  },
-  {
     "id": "oceanside-of136s",
     "manufacturer": "Oceanside",
     "base_sku": "OF136S",

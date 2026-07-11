@@ -11,6 +11,15 @@
   "n_flagged": 168,
   "items": [
     {
+      "id": "oceanside-of136rr",
+      "file": "oceanside-of136rr.jpg",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Dark Blue Rough Rolled",
+      "reason": [
+        "perspective_side_view"
+      ]
+    },
+    {
       "id": "bullseye-0000090030f1010",
       "file": "bullseye-0000090030f1010.jpg",
       "manufacturer": "Bullseye",

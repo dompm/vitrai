@@ -553,8 +553,8 @@ def main():
         try:
             with open(quarantine_path, 'r') as f:
                 q_data = json.load(f)
-                # Keep high-confidence bad reasons (test_fire_tiles, reaction_demo_line, composite_streamer_line)
-                bad_reasons = {'test_fire_tiles', 'reaction_demo_line', 'composite_streamer_line'}
+                # Keep high-confidence bad reasons (test_fire_tiles, reaction_demo_line, composite_streamer_line, perspective_side_view)
+                bad_reasons = {'test_fire_tiles', 'reaction_demo_line', 'composite_streamer_line', 'perspective_side_view'}
                 for q_item in q_data.get('items', []):
                     item_id = q_item.get('id')
                     if item_id:
