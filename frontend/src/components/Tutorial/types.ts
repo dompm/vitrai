@@ -11,6 +11,10 @@ export type StepId =
   | 'refine-first-piece'
   | 'assign-first-glass'
   | 'position-first-texture'
+  | 'cut-second-piece'
+  | 'refine-second-piece'
+  | 'cut-remaining-pieces'
+  | 'refine-remaining-pieces'
   // vector-drawing steps
   | 'vector-blank-canvas'
   | 'vector-draw-shape'
@@ -38,6 +42,10 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
     'refine-first-piece',
     'assign-first-glass',
     'position-first-texture',
+    'cut-second-piece',
+    'refine-second-piece',
+    'cut-remaining-pieces',
+    'refine-remaining-pieces',
     'done',
   ],
   'vector-drawing': [
@@ -89,6 +97,10 @@ export const ANCHORED_STEPS: StepId[] = [
   'refine-first-piece',
   'assign-first-glass',
   'position-first-texture',
+  'cut-second-piece',
+  'refine-second-piece',
+  'cut-remaining-pieces',
+  'refine-remaining-pieces',
   'vector-blank-canvas',
   'vector-draw-shape',
   'vector-snap-angles',
@@ -134,6 +146,26 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   'position-first-texture': {
     id: 'position-first-texture',
     panel: 'glass',
+  },
+  'cut-second-piece': {
+    id: 'cut-second-piece',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="box"]',
+    panel: 'pattern',
+  },
+  'refine-second-piece': {
+    id: 'refine-second-piece',
+    spotlightTarget: '[data-tutorial-target="piece-refine-buttons"]',
+    panel: 'pattern',
+  },
+  'cut-remaining-pieces': {
+    id: 'cut-remaining-pieces',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="box"]',
+    panel: 'pattern',
+  },
+  'refine-remaining-pieces': {
+    id: 'refine-remaining-pieces',
+    spotlightTarget: '[data-tutorial-target="piece-refine-buttons"]',
+    panel: 'pattern',
   },
 
   // vector-drawing

@@ -4,7 +4,7 @@ import useImage from 'use-image';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
-import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, GT_PIECE_1, TrackId } from './types';
+import { STEPS, ANCHORED_STEPS, TUTORIAL_GROUND_TRUTH_POLYGONS, GT_PIECE_1, GT_PIECE_3, TrackId } from './types';
 import type { AnchoredStepId, StepId } from './types';
 import type { ToolId } from '../Toolbar';
 import { computeBleedRatio, findMatchedGroundTruth } from '../../utils/geometry';
@@ -221,6 +221,105 @@ export function Tutorial({
     }
   }, [step, project.pieces, pieceId, onAdvance]);
 
+  // AI-Tracing Step 7: Cut second piece (leaf)
+  useEffect(() => {
+    if (step !== 'cut-second-piece') return;
+    if (project.pieces.length > 1) {
+      const secondPiece = project.pieces.find(p => p.id !== pieceId);
+      if (secondPiece) {
+        onSetTrackedPiece(secondPiece.id);
+        onSelectPiece(secondPiece.id);
+
+        const matchedGt = findMatchedGroundTruth(secondPiece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+        const isLeaf3 = matchedGt === GT_PIECE_3;
+        const bleed = isLeaf3 ? computeBleedRatio(secondPiece.polygon, GT_PIECE_3) : 1.0;
+
+        if (!isLeaf3 || bleed > 0.05) {
+          onSetStep('refine-second-piece');
+        } else {
+          onSetStep('cut-remaining-pieces');
+        }
+      }
+    }
+  }, [step, project.pieces, pieceId, onSetTrackedPiece, onSelectPiece, onSetStep]);
+
+  // AI-Tracing Step 8: Refine second piece
+  useEffect(() => {
+    if (step !== 'refine-second-piece') return;
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (!piece) {
+      onSetStep('cut-second-piece');
+      return;
+    }
+
+    const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+    const isLeaf3 = matchedGt === GT_PIECE_3;
+    const bleed = isLeaf3 ? computeBleedRatio(piece.polygon, GT_PIECE_3) : 1.0;
+    const isClean = isLeaf3 && bleed <= 0.05;
+
+    if (isClean && patternRefineMode === null) {
+      onSetStep('cut-remaining-pieces');
+    }
+  }, [step, project.pieces, pieceId, patternRefineMode, onSetStep]);
+
+  // AI-Tracing Step 9: Cut remaining pieces
+  useEffect(() => {
+    if (step !== 'cut-remaining-pieces') return;
+    if (project.pieces.length > 0) {
+      const badPiece = project.pieces.find(p => {
+        const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+        if (!matchedGt) return true;
+        const bleed = computeBleedRatio(p.polygon, matchedGt);
+        return bleed > 0.05;
+      });
+
+      if (badPiece) {
+        onSetTrackedPiece(badPiece.id);
+        onSelectPiece(badPiece.id);
+        onSetStep('refine-remaining-pieces');
+      } else if (project.pieces.length >= 4) {
+        onAdvance();
+      }
+    }
+  }, [step, project.pieces, onSetTrackedPiece, onSelectPiece, onSetStep, onAdvance]);
+
+  // AI-Tracing Step 10: Refine remaining pieces
+  useEffect(() => {
+    if (step !== 'refine-remaining-pieces') return;
+    const piece = project.pieces.find(p => p.id === pieceId);
+
+    let isTrackedPieceClean = false;
+    if (!piece) {
+      isTrackedPieceClean = true;
+    } else {
+      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+      if (matchedGt) {
+        const bleed = computeBleedRatio(piece.polygon, matchedGt);
+        isTrackedPieceClean = bleed <= 0.05;
+      } else {
+        isTrackedPieceClean = false;
+      }
+    }
+
+    if (isTrackedPieceClean) {
+      const otherBad = project.pieces.find(p => {
+        const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+        if (!matchedGt) return true;
+        const bleed = computeBleedRatio(p.polygon, matchedGt);
+        return bleed > 0.05;
+      });
+
+      if (otherBad) {
+        onSetTrackedPiece(otherBad.id);
+        onSelectPiece(otherBad.id);
+      } else if (project.pieces.length >= 4) {
+        onAdvance();
+      } else {
+        onSetStep('cut-remaining-pieces');
+      }
+    }
+  }, [step, project.pieces, pieceId, onSetTrackedPiece, onSelectPiece, onSetStep, onAdvance]);
+
   // Vector CAD Step 1: Blank canvas intro
   useEffect(() => {
     if (step !== 'vector-blank-canvas') return;
@@ -381,6 +480,46 @@ export function Tutorial({
           : undefined;
       }
     }
+  } else if (step === 'refine-second-piece' && pieceId) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (piece) {
+      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+      const isLeaf3 = matchedGt === GT_PIECE_3;
+      const bleed = isLeaf3 ? computeBleedRatio(piece.polygon, GT_PIECE_3) : 1.0;
+      const isClean = isLeaf3 && bleed <= 0.05;
+
+      if (isClean && patternRefineMode !== null) {
+        customTitle = t('tutorialExitRefineTitle');
+        customBody = t('tutorialExitRefineBody');
+        currentSpotlightTarget = '[data-tutorial-target="piece-refine-remove"]';
+      } else if (matchedGt !== GT_PIECE_3) {
+        customTitle = t('tutorialStep8TitleOutOfPlace');
+        customBody = t('tutorialStep8BodyOutOfPlace');
+        currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
+      } else {
+        customTitle = t('tutorialStep8Title');
+        customBody = t('tutorialStep8Body');
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
+      }
+    }
+  } else if (step === 'refine-remaining-pieces' && pieceId) {
+    const piece = project.pieces.find(p => p.id === pieceId);
+    if (piece) {
+      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+      if (!matchedGt) {
+        customTitle = t('tutorialStep10TitleOutOfPlace');
+        customBody = t('tutorialStep10BodyOutOfPlace');
+        currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
+      } else {
+        customTitle = t('tutorialStep10Title');
+        customBody = t('tutorialStep10Body');
+        currentSpotlightTarget = patternRefineMode === null
+          ? '[data-tutorial-target="piece-refine-remove"]'
+          : undefined;
+      }
+    }
   }
 
   // Remove the spotlight on the tool icons if they are already in the requested mode
@@ -389,7 +528,7 @@ export function Tutorial({
   } else if (step === 'calibrate-sheet' && sheetTool === 'measure') {
     currentSpotlightTarget = undefined;
   } else if (
-    step === 'cut-first-piece' &&
+    (step === 'cut-first-piece' || step === 'cut-second-piece' || step === 'cut-remaining-pieces') &&
     patternTool === 'box'
   ) {
     currentSpotlightTarget = undefined;
@@ -416,7 +555,7 @@ export function Tutorial({
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
-          withBackdrop={currentSpotlightTarget !== '.canvas-well'}
+          withBackdrop={currentSpotlightTarget !== '.canvas-well' && !['cut-remaining-pieces', 'refine-remaining-pieces'].includes(step)}
         />
       )}
       {showLoadingDialog && (
