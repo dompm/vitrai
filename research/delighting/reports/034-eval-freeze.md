@@ -180,8 +180,16 @@ floor is computed over eval-ELIGIBLE products (no `non_transmissive_mirror` /
 "next-lowest-hash" would have reserved mirror product 220088, which the §9.3 consumption
 predicate excludes from every sheet metric: dead weight that buys no eval coverage. Frozen
 top-up (next-lowest-hash unreserved eligible, until ≥15% of eligible): **239270**
-(delphi-superior), **203533** (kokomo), **220043** (specialty-finish). All three are flag-free.
-**Final frozen holdout: 58/254 = 22.8%.** No v1.0-reserved product was removed.
+(delphi-superior), **203533** (kokomo), **220043** (specialty-finish). All three are free of
+product-level EXCLUSION flags (the eligibility criterion). Cross-audit nuances from
+harvest-033, recorded for honest reading of what they contribute: 239270 carries
+`opal_streaky_caution` (scores sheet-identity-unverified under §3c; its 2 raw cross-capture
+pairs are the report-030 "bell pepper" same-photo crops — identity coverage only);
+203533/220043 each carry 2-3 image-level flags (line_stock_photo/lineup gallery slots) and have
+no surviving registrable pairs — statistics-only contributors.
+**Final frozen holdout: 58/254 = 22.8%.** No v1.0-reserved product was removed. harvest-033
+cross-verified the list and synced the dataset card to this freeze point
+(`REAL_PAIRS_DATASET.md` §9.4 @ `6d6d7f5` on `research/delighting-033`, referencing `94f2d01`).
 
 **Schema additions wired into §3c use-gating:** per-image contamination flags are LISTS;
 `variant_duplicate_listing` duplicates are one identity (count once; reserve ALL if the hash

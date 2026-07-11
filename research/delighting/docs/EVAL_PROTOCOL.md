@@ -209,6 +209,12 @@ Three sources, reserved BEFORE first results:
    > **`239270`** (delphi-superior, Bell Pepper Opal) · **`203533`** (kokomo, Dark Purple
    > Light Seedy) · **`220043`** (specialty-finish, MLW Indian Hand-Stained).
 
+   (Cross-audited with harvest-033: all three are free of product-level EXCLUSION flags;
+   239270 carries `opal_streaky_caution` so it scores sheet-identity-unverified below, and
+   203533/220043 have image-level flags and no surviving registrable pairs — the top-ups
+   contribute identity/statistics coverage, not pair volume. Recorded in
+   `reports/034-eval-freeze.md` §7.)
+
    **Final frozen holdout: the 55 hash-rule products + these 3 = 58/254 = 22.8%.**
 
    Use-gating of reserved products (affects HOW they are scored, not WHO is reserved), per the
