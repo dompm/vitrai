@@ -187,9 +187,13 @@ For the 11 headline pairs ORB could NOT register (panels committed, one per prod
   173747 windsor blue — the two images show incompatible textures (smooth vs heavily
   seedy), likely different variants under one listing.
 
-Score: **11/15 products yield a usable same-sheet pair** (1 registrable cross-capture +
-7 statistics-only + 3 of the pairwise-matrix products below contributing registrable
-wild↔wild pairs), 1 sheet-identity-uncertain, 3 unusable.
+Combining §2.2 and §2.3 at the product level: **9/15 registrable cross-capture (SS2.2)
++ 2 more statistics-only-only (173810, 186204) = 11/15 products with a usable
+same-sheet pair**; 238607 counts as registrable at the wild↔wild level (its g1/g2/g3
+window shots register) even though its closeup is likely a different physical sheet;
+186196 and 220063 are unusable at the sheet level; 173747's registrable g1×g3 pair
+partially redeems its mismatched headline pair (the two window shots register; the
+smooth closeup remains a listing-variant mystery).
 
 ## 3. Yield estimate for a full crawl
 
