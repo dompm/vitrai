@@ -282,6 +282,7 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
+    updatePieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -603,13 +604,30 @@ export function App() {
     }
   }
 
-  function handleAddManualPiece(polygon: [number, number][], tierIndex?: number) {
+  function handleAddManualPiece(
+    polygon: [number, number][],
+    curvePoints: CurvePoint[] = [],
+    anchorTypes: ('corner' | 'smooth')[] = [],
+    tierIndex?: number,
+  ) {
     const others = project.pieces;
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const displayPolygon = flattenCurves(polygon, curvePoints);
+    // Curved paths are already snapped interactively at their true anchors.
+    // Snapping dense curve samples here would destroy their editable controls.
+    const snapped = curvePoints.length > 0
+      ? displayPolygon
+      : snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
     const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
-      addManualPiece(clipped, activeSheetId, tierIndex);
+      const keptCurves = curvePoints.length > 0 && arePolygonsEqual(displayPolygon, clipped, 0.1);
+      addManualPiece(
+        keptCurves ? polygon : clipped,
+        activeSheetId,
+        tierIndex,
+        keptCurves ? curvePoints : [],
+        keptCurves ? anchorTypes : [],
+      );
     }
   }
 
@@ -659,36 +677,21 @@ export function App() {
     });
   }
 
-  function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
+  function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) {
     const piece = project.pieces.find(p => p.id === pieceId);
     if (!piece) return;
-    const others = project.pieces.filter(p => p.id !== pieceId);
-    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
-    if (clipped.length >= 3) {
-      if (clipped.length !== piece.polygon.length) {
-        updatePiecePolygonAndCurves(pieceId, clipped, []);
-      } else {
-        updatePiecePolygon(pieceId, clipped);
-      }
-    }
+    // Curve handles are an explicit edit. Never silently flatten or replace
+    // them with boolean-clipped samples after the user releases a handle.
+    updatePieceCurves(pieceId, curvePoints, false, anchorTypes);
   }
 
-  function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[]) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (!piece) return;
-    const flatPolygon = flattenCurves(piece.polygon, curvePoints);
-    const others = project.pieces.filter(p => p.id !== pieceId);
-    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(flatPolygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
-
-    if (clipped.length >= 3 && !arePolygonsEqual(flatPolygon, clipped, 0.1)) {
-      updatePiecePolygonAndCurves(pieceId, clipped, []);
-    } else {
-      updatePieceCurves(pieceId, curvePoints);
-    }
+  function handleUpdatePieceGeometry(
+    pieceId: string,
+    polygon: [number, number][],
+    curvePoints: CurvePoint[],
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) {
+    updatePiecePolygonAndCurves(pieceId, polygon, curvePoints, false, anchorTypes);
   }
 
 
@@ -1062,7 +1065,7 @@ export function App() {
   };
 
   const penSegment = (() => {
-    if (patternTool === 'pen' && penStatus.coords && penStatus.lastPoint) {
+    if ((patternTool === 'pen' || patternTool === 'polygon') && penStatus.coords && penStatus.lastPoint) {
       const dx = penStatus.coords.x - penStatus.lastPoint.x;
       const dy = penStatus.coords.y - penStatus.lastPoint.y;
       const lengthPx = Math.hypot(dx, dy);
@@ -1260,8 +1263,8 @@ export function App() {
             onDeletePieces={deletePieces}
             onSmoothPiece={handleSmoothPiece}
             onSmoothPieces={handleSmoothPieces}
-            onUpdatePiecePolygon={handleUpdatePiecePolygon}
             onUpdatePieceCurves={handleUpdatePieceCurves}
+            onUpdatePiecePolygonAndCurves={handleUpdatePieceGeometry}
             onUpdatePrompt={handleUpdatePrompt}
             onUploadPattern={handleUploadPattern}
             onStartBlankCanvas={startBlankCanvas}
@@ -1370,10 +1373,15 @@ export function App() {
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
             onSelectPiece={selectPiece}
-            onUpdatePieceTransform={updatePieceTransform}
+            onTransformChange={updatePieceTransform}
+            onTransformsChange={updatePieceTransforms}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
+            showEmptyHint={
+              piecesOnActiveSheet.length === 0 &&
+              project.pieces.length > 0
+            }
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
@@ -1401,7 +1409,7 @@ export function App() {
               ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
               : t('statusNoScale')}
           </span>
-          {patternTool === 'pen' && penStatus.coords && (
+          {(patternTool === 'pen' || patternTool === 'polygon') && penStatus.coords && (
             <>
               <span className="status-bar-divider" />
               <span>

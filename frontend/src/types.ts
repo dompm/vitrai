@@ -30,9 +30,18 @@ export interface PromptPoint {
   label: 1 | 0; // 1 for positive, 0 for negative
 }
 
+/**
+ * Parametric curve metadata for the edge that starts at `polygon[edgeIdx]`.
+ *
+ * Older projects only contain `edgeIdx` and `ctrl`; those entries are
+ * quadratic Bezier curves. Cubic edges keep the first control point in
+ * `ctrl` for source compatibility and add `ctrl2` for the second handle.
+ */
 export interface CurvePoint {
-  edgeIdx: number;            // index of the start vertex of the curved edge
-  ctrl: [number, number];     // quadratic bezier control point (image coords)
+  edgeIdx: number;
+  ctrl: [number, number];
+  kind?: 'quadratic' | 'cubic';
+  ctrl2?: [number, number];
 }
 
 export interface Piece {
@@ -40,6 +49,7 @@ export interface Piece {
   label: string;
   polygon: [number, number][]; // clean vertex skeleton — never grows from curve edits
   curvePoints?: CurvePoint[];  // parametric curves on edges; absent = all straight
+  anchorTypes?: ('corner' | 'smooth')[]; // per polygon vertex; explicit Pen handle behavior
   glassSheetId: string;
   transform: TextureTransform;
   promptBox?: BoundingBox;
@@ -93,4 +103,3 @@ export interface Project {
   projectType?: 'flat' | 'lamp';
   lampConfig?: LampConfig;
 }
-

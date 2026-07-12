@@ -37,7 +37,7 @@ export async function loadProjectFromOPFS(name: string = 'default'): Promise<Pro
   const file = await handle.getFile();
   const raw = JSON.parse(await file.text());
   const result = parseProject(raw);
-  if (!result.ok) {
+  if (result.ok === false) {
     throw new Error(`Project "${name}" failed validation: ${result.reasonKey}`);
   }
   if (result.repairs.length > 0) {

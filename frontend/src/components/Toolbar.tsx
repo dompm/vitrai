@@ -1,9 +1,9 @@
-export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'pen' | 'pencil';
+export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'polygon' | 'pen' | 'pencil';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
 import {
-  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconRuler, IconEye,
+  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconRuler, IconEye, IconPolygon,
 } from './icons';
 
 interface ToolTooltipData {
@@ -45,6 +45,8 @@ export const PenIcon = () => (
     <line x1="3" y1="13" x2="5" y2="11" />
   </svg>
 );
+
+export const PolygonIcon = () => <IconPolygon />;
 
 export const PencilIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
