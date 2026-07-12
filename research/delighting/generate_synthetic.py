@@ -35,6 +35,30 @@ _T_SCRIPT_BEGIN = time.perf_counter()
 STAGE_TOTALS = {}
 STAGE_COUNTS = {}
 
+# ---------------------------------------------------------------------------
+# Report 037 WP-A: GT export v3. Module-level (not threaded through every
+# call signature -- see report 037 for the rationale) production-size flags,
+# populated once from argparse in main(). All default OFF/None so a plain
+# invocation (no new flags) stays byte-compatible with every existing
+# dataset, exactly like report 032 WP-B's --specular convention.
+#   no_tex_dump: drop tex_*.exr (58% of a validate sample, byte-regenerable
+#     from (recipe, seed) -- docs/GT_SPEC.md sec 1a/3).
+#   exr_codec:   None = leave Blender's stock ZIP codec; else one of the
+#     scene.render.image_settings.exr_codec enum values (DWAA for prod).
+#   gt_b:        render gt_B.exr (hidden-glass background, reduced samples).
+#   gt_aov:      render gt_veil/gt_index/gt_uv/gt_depth off the main render's
+#     compositor passes (docs/GT_SPEC.md sec 1e).
+# ---------------------------------------------------------------------------
+GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": False}
+
+
+def apply_exr_codec(scene):
+    """Set scene.render.image_settings.exr_codec from GT_OPTS, if requested.
+    A no-op (leaves Blender's stock ZIP) when --exr-codec wasn't passed, so
+    every existing EXR write site stays byte-compatible by default."""
+    if GT_OPTS["exr_codec"]:
+        scene.render.image_settings.exr_codec = GT_OPTS["exr_codec"]
+
 
 def _record(name, elapsed):
     STAGE_TOTALS[name] = STAGE_TOTALS.get(name, 0.0) + elapsed
@@ -375,8 +399,23 @@ def height_to_normal(height, strength=1.0):
     return (n * 0.5 + 0.5).astype(np.float32)
 
 def save_numpy_to_image(array, filepath, is_color=True):
+    """Report 037 WP-A note -- the disk write is LOAD-BEARING for rendering,
+    not just an export: a controlled probe (flat 0.09 texture, emission
+    passthrough, samples=1, Raw view) shows the renderer samples the
+    file-backed image -- the saved-EXR case renders 0.3318 == srgb_encode
+    (0.09) while an unsaved datablock with identical buffer + colorspace tag
+    renders 0.0900 raw. So the sRGB-shaped units every downstream file
+    carries (gt_T == srgb_encode(authored), the 003-023 T_ANCHOR convention)
+    ENTER the pipeline here, through the shader sampling the sRGB-shape-
+    encoded file this function writes -- a mechanism correction to report
+    025's "the in-memory datablock the shader consumes is correct linear"
+    inference (its practical conclusions -- decode files with srgb_to_lin --
+    stand). Consequently `--no-tex-dump` must NOT skip this save (a first
+    wiring tried that and every render silently changed units, caught by the
+    validate gate: cathedral-green MAE 0.0232 -> 0.0142); it instead deletes
+    the tex_* files AFTER the sample's renders complete (see main())."""
     H, W = array.shape[:2]
-    
+
     if not is_color:
         rgba = np.ones((H, W, 4), dtype=np.float32)
         rgba[..., 0] = array
@@ -385,22 +424,21 @@ def save_numpy_to_image(array, filepath, is_color=True):
     else:
         rgba = np.ones((H, W, 4), dtype=np.float32)
         rgba[..., :3] = array
-        
+
     pixels = rgba.flatten()
-    
+
     name = f"{os.path.basename(filepath)}_{random.randint(0, 99999999)}"
-    
+
     # Always create a new image to prevent Blender caching across variations
     img = bpy.data.images.new(name, width=W, height=H, alpha=False, float_buffer=True)
-        
-    img.pixels.foreach_set(pixels)
-    
+
     # To avoid Blender's sRGB view transform on PNGs, ALWAYS save as EXR
     if filepath.endswith('.png'):
         filepath = filepath[:-4] + '.exr'
+
+    img.pixels.foreach_set(pixels)
     img.filepath_raw = filepath
     img.file_format = 'OPEN_EXR'
-
     img.save()
 
     # We must set colorspace AFTER saving, otherwise Blender zeroes out the pixels!
@@ -755,6 +793,11 @@ def encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance):
     height_path = os.path.join(out_dir, "tex_height.png")
     normal_path = os.path.join(out_dir, "tex_normal.png")
 
+    # Report 037 WP-A --no-tex-dump: the tex_* files are the 141.7MB/58%
+    # prune (docs/GT_SPEC.md sec 1a/3) -- byte-regenerable from (recipe,
+    # seed). They MUST still be written here (the renderer samples the
+    # file-backed image; see save_numpy_to_image's docstring for the probe)
+    # -- the flag deletes them after the sample's renders complete (main()).
     with stage('image_encode_io'):
         img_T = save_numpy_to_image(T, T_path, is_color=True)
         img_h = save_numpy_to_image(h, h_path, is_color=False)
@@ -884,6 +927,7 @@ def add_frame_occluders(cam):
         bar = bpy.context.active_object
         bar.name = f"FrameOccluder_{border}"
         bar.scale = (x1 - x0, z1 - z0, 1.0)
+        bar.pass_index = 2  # report 037 gt_index: frame occluder label
 
         mat_frame = bpy.data.materials.new(name=f"FrameOccluderMat_{i}")
         mat_frame.use_nodes = True
@@ -986,6 +1030,12 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     bpy.ops.mesh.primitive_plane_add(size=0.5, align='WORLD', location=(0, 0, 0), rotation=(math.radians(90), 0, 0))
     glass_obj = bpy.context.active_object
     glass_obj.name = "GlassSheet"
+    # Report 037 WP-A gt_index (docs/GT_SPEC.md sec 1e): object-index labels
+    # for the "sheet vs occluder vs background" AOV. Background stays the
+    # default 0 (no object); marks are baked into the material texture, not
+    # separate geometry, so they stay covered by the existing gt_mark_mask
+    # channel, not gt_index (documented deviation, GT_SPEC updated).
+    glass_obj.pass_index = 1
 
     # Camera - zoomed in so the glass perfectly fills the frame
     bpy.ops.object.camera_add(location=(0, -0.4, 0), rotation=(math.radians(90), 0, 0))
@@ -1163,6 +1213,7 @@ def add_shadow_caster(out_dir):
     bpy.ops.mesh.primitive_plane_add(size=0.3, location=(cam.location.x, 0.05, cam.location.z), rotation=(math.radians(90), 0, 0))
     caster = bpy.context.active_object
     caster.name = "ShadowCaster"
+    caster.pass_index = 3  # report 037 gt_index: shadow-caster label
     
     mat = bpy.data.materials.new(name="CasterMat")
     mat.use_nodes = True
@@ -1282,6 +1333,7 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_heig
             scene.render.image_settings.file_format = 'OPEN_EXR'
             scene.render.image_settings.color_depth = '32'
             scene.render.image_settings.color_mode = color_mode
+            apply_exr_codec(scene)  # report 037 WP-A --exr-codec (default: no-op)
             rr.save_render(os.path.abspath(os.path.join(sample_dir, f"{gt_name}.exr")))
 
             scene.render.image_settings.file_format = 'PNG'
@@ -1320,7 +1372,191 @@ def render_sample(out_dir, prefix):
         scene.render.image_settings.file_format = 'OPEN_EXR'
         scene.render.image_settings.color_mode = 'RGB'
         scene.render.image_settings.color_depth = '32'
+        apply_exr_codec(scene)  # report 037 WP-A --exr-codec (default: no-op)
         img.save_render(os.path.abspath(os.path.join(out_dir, f"{prefix}photo_linear.exr")))
+
+
+# ===========================================================================
+# Report 037 WP-A: GT export v3 wiring -- `gt_veil/gt_index/gt_uv/gt_depth`
+# multilayer AOVs and `gt_B` (hidden-glass background). Spec: docs/GT_SPEC.md
+# sec 1e/4. Both are gated by GT_OPTS so a plain invocation is unaffected.
+# ===========================================================================
+
+def setup_aov_outputs(sample_dir):
+    """Build a compositor graph that writes gt_veil/gt_index/gt_uv/gt_depth
+    off the SAME main-render call (near-zero extra cost -- render-eff: cost
+    scales with render *calls*, not passes). Must be called AFTER setup_scene
+    (needs the glass/occluder/caster objects' pass_index to exist) and BEFORE
+    the targeted render_sample() call; pair with teardown_aov_outputs()
+    immediately after so the GT emission passes / gt_B / with-shadow render
+    don't redundantly re-evaluate this graph.
+
+    Blender 5.0 API note (probed empirically, docs/GT_SPEC.md sec 4): the
+    compositor's File Output node (`CompositorNodeOutputFile`) is
+    MULTILAYER-ONLY in this Blender version -- the old plain-EXR "one file
+    per socket" mode is gone. A multilayer file with items named
+    "<name>.R/.G/.B/.A" is NOT readable by cv2 (confirmed: cv2.imread
+    returns None even for a single-item multilayer EXR), so `extract.py`
+    readers need the `OpenEXR` python package (pip-installed into both the
+    project .venv and Blender's PYTHONPATH site-packages this iteration) --
+    NOT cv2 -- for these four files specifically. gt_T/gt_h/gt_height/
+    gt_normal/gt_mark_mask/photo_linear/gt_B are UNCHANGED (still written via
+    plain img.save()/save_render(), still cv2-readable) -- only the four NEW
+    AOV files need the new reader path. One output node per AOV (rather than
+    one shared multilayer file) keeps each file single-channel-set and named
+    exactly `gt_<name>.exr`, matching the GT_SPEC table.
+    """
+    scene = bpy.context.scene
+    vl = bpy.context.view_layer
+    vl.use_pass_glossy_direct = True
+    vl.use_pass_glossy_indirect = True
+    vl.use_pass_object_index = True
+    vl.use_pass_uv = True
+    vl.use_pass_z = True
+
+    ng = bpy.data.node_groups.new("GTv3_AOV", 'CompositorNodeTree')
+    scene.compositing_node_group = ng
+    scene.use_nodes = True
+    tree = scene.compositing_node_group
+    nodes = tree.nodes
+    links = tree.links
+    nodes.clear()
+
+    rl = nodes.new('CompositorNodeRLayers')
+    # Cache the socket objects immediately: probing showed the RLayers node's
+    # `.outputs` collection can transiently drop entries (e.g. "Transmission
+    # Direct") after other graph edits before the depsgraph re-syncs; caching
+    # right after creation and linking from the cache (rather than re-
+    # indexing rl.outputs by name later) sidesteps that.
+    rl_outs = {o.name: o for o in rl.outputs}
+
+    codec = GT_OPTS["exr_codec"] or 'ZIP'
+
+    def make_output(name, socket_type):
+        fo = nodes.new('CompositorNodeOutputFile')
+        fo.format.file_format = 'OPEN_EXR_MULTILAYER'
+        fo.format.color_depth = '32'
+        fo.format.exr_codec = codec
+        item = fo.file_output_items.new(socket_type=socket_type, name=name)
+        fo.directory = os.path.abspath(sample_dir)
+        fo.file_name = name
+        return fo, item
+
+    # gt_veil: front-surface reflection veil r_f*E_front (029 gap G-4 / MMv3
+    # G2) = glossy direct + indirect, summed via a compositor Add so a single
+    # RGBA item carries the full front-surface reflection contribution.
+    fo_veil, _ = make_output("gt_veil", 'RGBA')
+    # Blender 5.0 note: the compositor tree no longer registers its own
+    # Mix/Math nodes (`CompositorNodeMixRGB`/`CompositorNodeMath` are gone --
+    # probed: not in dir(bpy.types)); the "Everything Nodes" unification
+    # lets a `ShaderNodeMixRGB` be instantiated inside a CompositorNodeTree
+    # instead, confirmed working here.
+    add = nodes.new('ShaderNodeMixRGB')
+    add.blend_type = 'ADD'
+    add.inputs[0].default_value = 1.0
+    links.new(rl_outs['Glossy Direct'], add.inputs[1])
+    links.new(rl_outs['Glossy Indirect'], add.inputs[2])
+    links.new(add.outputs['Color'], fo_veil.inputs['gt_veil'])
+
+    # NOTE (measured on the seed-503 verification sample): in the MAIN render
+    # this pass is effectively a SHEET-ALPHA mask -- the deliberately
+    # oversized glass sheet is the camera's first-hit surface across the
+    # whole frame, and the Object Index pass does not see through
+    # transmission, so frame occluders (pass_index 2) and the shadow caster
+    # (3), both placed BEHIND the glass, never appear here (verified: unique
+    # value 1.0 on a sample whose meta records two occluder bars). The
+    # occluder labels come from `gt_index_B` instead -- the same pass
+    # attached to the hidden-glass gt_B render (render_hidden_background).
+    fo_index, _ = make_output("gt_index", 'FLOAT')
+    links.new(rl_outs['Object Index'], fo_index.inputs['gt_index'])
+
+    fo_uv, _ = make_output("gt_uv", 'VECTOR')
+    links.new(rl_outs['UV'], fo_uv.inputs['gt_uv'])
+
+    fo_depth, _ = make_output("gt_depth", 'FLOAT')
+    links.new(rl_outs['Depth'], fo_depth.inputs['gt_depth'])
+
+    return [fo_veil, fo_index, fo_uv, fo_depth]
+
+
+def teardown_aov_outputs():
+    """Disable the compositor graph after the one targeted render so the
+    with-shadow render, the 5 GT emission-passthrough renders, and gt_B don't
+    redundantly re-evaluate/re-write these files (they'd overwrite the same
+    paths with scene states that don't correspond to the intended AOVs).
+
+    Blender 5.0 note (found by testing, not assumed): `scene.use_nodes =
+    False` alone does NOT stop the compositor from evaluating -- the
+    AOV files kept being re-written on every subsequent render call in a
+    first pass of this code. The compositor is actually gated by whether
+    `scene.compositing_node_group` is assigned; clearing it to None is what
+    stops evaluation. `use_nodes = False` is kept too (belt-and-suspenders,
+    harmless deprecation warning) in case a future Blender restores the old
+    semantics."""
+    scene = bpy.context.scene
+    scene.compositing_node_group = None
+    scene.use_nodes = False
+
+
+def render_hidden_background(glass_obj, sample_dir):
+    """gt_B (docs/GT_SPEC.md sec 1e): the scene with the glass sheet hidden,
+    so the pure transmitted/lensed background B is a supervised layer (MMv3 /
+    report 027 Bet 1's `(T, B, veil)` log-space split). Everything else
+    (world/HDRI, dark wall, frame occluders) stays exactly as the real photo
+    saw it -- only the glass geometry is removed. Converges fast (no
+    transmission/caustic paths through glass left to resolve), so this runs
+    at a quarter of the main sample count. Must run AFTER the main photo
+    render (uses the same world/wall state) and BEFORE render_ground_truths
+    (which zeroes the world strength for the emission-GT trick)."""
+    scene = bpy.context.scene
+    orig_samples = scene.cycles.samples
+    orig_hide = glass_obj.hide_render
+
+    glass_obj.hide_render = True
+    scene.cycles.samples = max(8, orig_samples // 4)
+
+    # gt_index_B: the occluder/background object-index labels, which the
+    # MAIN render's gt_index cannot capture (the full-frame glass is always
+    # the first hit -- see setup_aov_outputs). With the glass hidden, the
+    # first-hit surface IS the frame occluder (2) / backlight geometry /
+    # world (0), so this render is where the occluder mask lives. Only wired
+    # when --gt-aov is also on (it's part of the AOV set, and needs the same
+    # OpenEXR-reader caveat).
+    if GT_OPTS["gt_aov"]:
+        vl = bpy.context.view_layer
+        vl.use_pass_object_index = True
+        ng = bpy.data.node_groups.new("GTv3_B_index", 'CompositorNodeTree')
+        scene.compositing_node_group = ng
+        scene.use_nodes = True
+        nodes, links = ng.nodes, ng.links
+        rl = nodes.new('CompositorNodeRLayers')
+        rl_outs = {o.name: o for o in rl.outputs}
+        fo = nodes.new('CompositorNodeOutputFile')
+        fo.format.file_format = 'OPEN_EXR_MULTILAYER'
+        fo.format.color_depth = '32'
+        fo.format.exr_codec = GT_OPTS["exr_codec"] or 'ZIP'
+        fo.file_output_items.new(socket_type='FLOAT', name="gt_index_B")
+        links.new(rl_outs['Object Index'], fo.inputs['gt_index_B'])
+        fo.directory = os.path.abspath(sample_dir)
+        fo.file_name = "gt_index_B"
+
+    with stage('gt_render'):
+        bpy.ops.render.render(write_still=False)
+    rr = bpy.data.images['Render Result']
+
+    if GT_OPTS["gt_aov"]:
+        teardown_aov_outputs()
+
+    with stage('image_encode_io'):
+        scene.render.image_settings.file_format = 'OPEN_EXR'
+        scene.render.image_settings.color_depth = '32'
+        scene.render.image_settings.color_mode = 'RGB'
+        apply_exr_codec(scene)
+        rr.save_render(os.path.abspath(os.path.join(sample_dir, "gt_B.exr")))
+
+    glass_obj.hide_render = orig_hide
+    scene.cycles.samples = orig_samples
+
 
 def parse_args():
     # Because blender consumes some arguments when run via `blender -b -P`, 
@@ -1348,11 +1584,35 @@ def parse_args():
                              "RNG) and lift the DarkWall to a dim-interior gray so the front "
                              "face has something plausible to reflect. Default OFF = "
                              "byte-compatible with all existing datasets.")
+    # Report 037 WP-A: GT export v3 production flags (docs/GT_SPEC.md).
+    # Production flag set for the 20k run: --no-tex-dump --exr-codec DWAA
+    # --gt-b --gt-aov (measured <=100MB/sample, see report 037 sec A).
+    parser.add_argument('--no-tex-dump', action='store_true',
+                        help="Report 037: drop tex_*.exr (58%% of a validate sample) -- "
+                             "byte-regenerable from (recipe, seed); the in-memory Image "
+                             "datablocks the shader needs are still built.")
+    parser.add_argument('--exr-codec', type=str, default=None,
+                        choices=['NONE', 'ZIP', 'PIZ', 'DWAA', 'DWAB', 'ZIPS', 'RLE', 'PXR24', 'B44', 'B44A'],
+                        help="Report 037: EXR compression codec for gt_*/photo_linear/gt_B/"
+                             "AOV writes (and tex_*.exr if not dumped-off). Default: Blender's "
+                             "stock ZIP (unset = byte-compatible). DWAA is the production choice.")
+    parser.add_argument('--gt-b', action='store_true',
+                        help="Report 037: render gt_B.exr, the hidden-glass background "
+                             "(reduced samples) -- MMv3/Bet-1's (T,B,veil) split.")
+    parser.add_argument('--gt-aov', action='store_true',
+                        help="Report 037: render gt_veil/gt_index/gt_uv/gt_depth off the "
+                             "main render's compositor passes (multilayer EXR per channel; "
+                             "read with OpenEXR, not cv2 -- see setup_aov_outputs docstring).")
     return parser.parse_args(argv)
 
 def main():
     args = parse_args()
-    
+
+    GT_OPTS["no_tex_dump"] = args.no_tex_dump
+    GT_OPTS["exr_codec"] = args.exr_codec
+    GT_OPTS["gt_b"] = args.gt_b
+    GT_OPTS["gt_aov"] = args.gt_aov
+
     recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white',
                'dark-deep', 'dark-ruby', 'dark-slate',
                # Report 022: five gap recipes (021 §5)
@@ -1471,23 +1731,54 @@ def main():
         
             if has_shadow:
                 caster = add_shadow_caster(sample_dir)
-                
+
                 # Render with shadow
                 metadata["shadow_mode"] = "with_shadow"
                 render_sample(sample_dir, "with_shadow_")
-                
+
                 # Hide caster and render without
                 caster.hide_render = True
                 metadata["shadow_mode"] = "without_shadow"
+                # Report 037 WP-A: attach the AOV compositor graph to THIS
+                # (without-shadow, canonical) main render only, then detach
+                # immediately -- see setup_aov_outputs/teardown_aov_outputs
+                # docstrings for why it must not follow into the GT/gt_B
+                # renders below.
+                if GT_OPTS["gt_aov"]:
+                    setup_aov_outputs(sample_dir)
                 render_sample(sample_dir, "without_shadow_")
-                
+                if GT_OPTS["gt_aov"]:
+                    teardown_aov_outputs()
+
             else:
                 metadata["shadow_mode"] = "none"
+                if GT_OPTS["gt_aov"]:
+                    setup_aov_outputs(sample_dir)
                 render_sample(sample_dir, "without_shadow_")
-                
+                if GT_OPTS["gt_aov"]:
+                    teardown_aov_outputs()
+
+            # Report 037 WP-A: gt_B, the hidden-glass background -- must run
+            # while world/wall state still matches the real photo (before
+            # render_ground_truths zeroes world strength for its emission
+            # trick).
+            if GT_OPTS["gt_b"]:
+                render_hidden_background(glass_obj, sample_dir)
+
             # Render aligned ground truths
             render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal)
-                
+
+            # Report 037 WP-A --no-tex-dump: delete the authored-texture dump
+            # AFTER all renders (they had to exist on disk during rendering --
+            # the renderer samples the file-backed image, see
+            # save_numpy_to_image). Byte-regenerable from (recipe, seed) in
+            # meta.json, so nothing is lost; this is the GT_SPEC sec 3 prune.
+            if GT_OPTS["no_tex_dump"]:
+                for _tex in ("tex_T", "tex_h", "tex_mark_mask", "tex_height", "tex_normal"):
+                    _p = os.path.join(sample_dir, _tex + ".exr")
+                    if os.path.exists(_p):
+                        os.remove(_p)
+
             with stage('image_encode_io'):
                 with open(os.path.join(sample_dir, 'meta.json'), 'w') as f:
                     json.dump(metadata, f, indent=2)
