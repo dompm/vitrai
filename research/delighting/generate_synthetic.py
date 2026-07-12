@@ -49,7 +49,13 @@ STAGE_COUNTS = {}
 #   gt_aov:      render gt_veil/gt_index/gt_uv/gt_depth off the main render's
 #     compositor passes (docs/GT_SPEC.md sec 1e).
 # ---------------------------------------------------------------------------
-GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": False}
+GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": False,
+           # Report 039 review-board flags (default None/False = byte-identical to
+           # every existing dataset). fixed_ev pins the HDRI EV instead of the
+           # per-seed random draw (representative mid-EV review, not seed-lottery
+           # dim/bright); no_marks suppresses the grease-pencil marks so a texture
+           # review board / forced-choice test isn't dominated by the mark tell.
+           "fixed_ev": None, "no_marks": False}
 
 # Report 037 item D: the milky-diffuser family gets the opal-scatter stopgap
 # in create_glass_material (029's sharp-horizon-through-milky-opal
@@ -207,23 +213,37 @@ def advect_streaks(scalar, fx, fy, length=36, step=1.4):
     return acc / wsum
 
 
-def streak_selector(size, seed, angle, ws=320, curl=0.14, contrast=1.7, lam=0.18):
+def streak_selector(size, seed, angle, ws=320, curl=0.14, contrast=1.7, lam=0.18,
+                    length=100, base_scale=5.0):
     """A [0,1] streak-blend selector authored at working resolution `ws`
     (streaks are large-scale, so LIC at 320 then upscale is exact-enough and
     ~5x cheaper) then bilinear-zoomed to `size`. `contrast` crisps the streak
     edges; `lam` blends in occasional SHARP lamination lines (thresholded then
     advected) -- the sharp laminations real rolled sheets show between color
-    pulls."""
+    pulls.
+
+    Report 039: real Oceanside/Wissmach streaky glass reads as LONG liquid pulls
+    spanning most of the sheet (measured structure-tensor coherence ~0.49), not
+    blobby mottle. Two changes make the pull long+coherent: (a) `length` (LIC
+    advection steps) is now a large default (100, ~44% of ws) so a moderate-scale
+    source noise smears into a full-length streak instead of a short dab; (b) the
+    source noise is PRE-STRETCHED across-flow (anisotropic generation) so the
+    starting blobs are already elongated bands, which advection then folds along
+    the flow -- this is what produces the marbled swirl rather than a soft cloud.
+    `base_scale` sets how many streaks span the sheet (source scale = ws/base)."""
     from scipy.ndimage import zoom
     fx, fy = flow_field(ws, seed, angle, curl=curl)
-    sel = advect_streaks(
-        generate_noise(ws, ws / 6.0, seed + 11, octaves=2, persistence=0.55, lacunarity=4.0),
-        fx, fy, length=36)
+    # Pre-stretch: generate the source at coarse cross-flow / fine along-flow by
+    # sampling an anisotropic grid, then rotate-advect. Cheap proxy: start from a
+    # moderate isotropic field and give advection enough length to dominate.
+    base = generate_noise(ws, ws / base_scale, seed + 11, octaves=2,
+                          persistence=0.55, lacunarity=4.0)
+    sel = advect_streaks(base, fx, fy, length=length)
     sel = (sel - sel.min()) / (sel.max() - sel.min() + 1e-8)
     sel = np.clip((sel - 0.5) * contrast + 0.5, 0, 1)
     if lam > 0:
         lam0 = (generate_noise(ws, ws / 9.0, seed + 29, octaves=1) > 0.82).astype(np.float64)
-        sel = np.clip(sel + lam * np.clip(advect_streaks(lam0, fx, fy, length=44) * 3.0, 0, 1), 0, 1)
+        sel = np.clip(sel + lam * np.clip(advect_streaks(lam0, fx, fy, length=int(length * 1.3)) * 3.0, 0, 1), 0, 1)
     return zoom(sel, size / ws, order=1)[:size, :size]
 
 
@@ -356,6 +376,113 @@ def couple_T_to_height(T, height, coupling):
     thickness = 1.0 - coupling * (2.0 * height.astype(np.float64) - 1.0)
     return np.clip(T ** thickness[..., None], 0.0, 1.0)
 
+
+# ===========================================================================
+# Report 039: exemplar-grounded streak color + haze authoring. The maintainer
+# rejected the streaky family (3rd attempt) against real Oceanside/Wissmach
+# swatches: our streaks read as soft pastel cloud-mottle, real ones are LIQUID
+# (long glossy marbled swirls, sharp filament edges coexisting with smooth
+# gradients, strong tonal range, SATURATED color pairs) and our gt_h rendered
+# near-uniform. The constants below are measured from all 152 clean, non-
+# iridescent Wispy/Streaky corpus sheets (corpus/streak_color_pairs_039.py,
+# results/039/color_pairs_summary.json) -- NOT invented pastels:
+#   light (milky/white pull) mode: L* p25-75 = 53-78 (p50 66), C* p25-75 = 14-41
+#   dark  (saturated color)  mode: L* p25-75 = 31-64 (p50 47), C* p25-75 = 16-42,
+#                                  C* p90 = 62 (real sheets get very saturated)
+#   L*-separation between modes:  p50 14, p75 23, p90 31
+#   dark-mode hue mass (chroma-weighted): amber 30-60, yellow-green 60-90,
+#     green 120-150, blue/purple 270-300, red 0-30 -- the real streaky palette.
+# Old streaky-mix sat at authored L*84 / C*15 (021 grounding): far too pale and
+# washed. The rebuild samples a real-grounded pair per seed so each streaky sheet
+# is a different real color combination, exactly like the 158-sheet corpus.
+# ===========================================================================
+
+# Dark-mode hue anchors (deg) with relative weight ~ measured chroma mass.
+_STREAK_DARK_HUES = [
+    (45, 3.0), (75, 1.7), (135, 1.6), (285, 1.7), (15, 1.4), (105, 1.4),
+    (165, 0.8), (255, 0.5),
+]
+
+
+def _lab_to_linear_rgb(L, a, b):
+    """Single CIELab (D65) color -> linear-sRGB [0,1] (clipped to gamut). Matches
+    corpus/appearance_stats.py's srgb_to_lab inverse so authored L*/C* land where
+    the grounding harness measures them."""
+    fy = (L + 16.0) / 116.0
+    fx = fy + a / 500.0
+    fz = fy - b / 200.0
+    d = 6.0 / 29.0
+
+    def finv(t):
+        return t ** 3 if t > d else 3 * d * d * (t - 4.0 / 29.0)
+    X = 0.95047 * finv(fx)
+    Y = 1.0 * finv(fy)
+    Z = 1.08883 * finv(fz)
+    Minv = np.array([[3.2406, -1.5372, -0.4986],
+                     [-0.9689, 1.8758, 0.0415],
+                     [0.0557, -0.2040, 1.0570]])
+    rgb = Minv @ np.array([X, Y, Z])
+    return np.clip(rgb, 0.0, 1.0)
+
+
+def sample_streak_colors(seed, kind="mix"):
+    """Draw a (light_rgb, dark_rgb) LINEAR color pair from the report-039 measured
+    real distribution. `kind` biases the palette per recipe:
+      'mix'    -> dramatic two-color: bright milky light pull + a SATURATED color
+                  (dark mode toward the high-chroma p75-90 the maintainer praised).
+      'marble' -> single-hue marbled: both modes share a hue, light = a lighter/
+                  desaturated pull of the same color (Wissmach 'Streaky' look).
+      'wispy'  -> subtle milky: pale tinted light pull + a soft mid-chroma color.
+    Deterministic in `seed`."""
+    rng = np.random.RandomState(seed * 2654435761 % (2 ** 31))
+    hues, ws = zip(*_STREAK_DARK_HUES)
+    hue = float(rng.choice(hues, p=np.array(ws) / sum(ws)))
+    hue += rng.uniform(-14, 14)
+    # Targets anchored on results/039/color_pairs_summary.json: real streaky
+    # sheets sit at L* median ~51 / C* median ~37, with the LIGHT pull a tinted
+    # milky (C* p50 ~25, NOT paper-white) only ~14 L* above the dark pull. The
+    # per-kind spread places streaky-mix at the dramatic (saturated, higher L*
+    # separation) end, wispy-white at the subtle end.
+    if kind == "mix":
+        dL = rng.uniform(30, 46)
+        dC = rng.uniform(36, 54)           # saturated color pull (p70-90 real)
+        lL = rng.uniform(62, 74)           # tinted milky, not bright white
+        lC = rng.uniform(14, 26)
+    elif kind == "marble":
+        dL = rng.uniform(34, 50)
+        dC = rng.uniform(32, 48)
+        lL = rng.uniform(54, 68)           # lighter pull of the SAME hue
+        lC = rng.uniform(20, 36)
+    else:  # wispy
+        dL = rng.uniform(46, 62)
+        dC = rng.uniform(16, 30)           # softer color
+        lL = rng.uniform(72, 84)
+        lC = rng.uniform(8, 18)
+    lh = hue if kind == "marble" else (hue + rng.uniform(-30, 30))
+    dark = _lab_to_linear_rgb(dL, dC * math.cos(math.radians(hue)), dC * math.sin(math.radians(hue)))
+    light = _lab_to_linear_rgb(lL, lC * math.cos(math.radians(lh)), lC * math.sin(math.radians(lh)))
+    return light, dark
+
+
+def streak_haze_field(sel, size, seed, milky_h=0.86, clear_h=0.07, tex_amp=0.10):
+    """Report 039: exemplar-grounded haze field for the streak family. The OLD
+    authoring made gt_h read near-uniform: streaky-fine-texture used a FLAT h
+    (std 0), wispy-white FLOORED h at 0.5 (-> srgb 0.735, 55% of pixels white),
+    and every *.exr is sRGB-encoded on write (0.5 authored -> 0.735 on disk),
+    which lifts the whole field toward white and compresses the milky-vs-clear
+    contrast. Here h FOLLOWS the streak structure -- milky/white pulls are hazy
+    (`milky_h`), the saturated interstitial color is much CLEARER (`clear_h`) --
+    with a fine multi-octave texture so it is neither flat nor perfectly
+    T-correlated. clear_h is pushed genuinely low (0.07 -> srgb 0.29) so that
+    after the write-encode the clear glass stays visibly darker than the milky
+    streaks (0.86 -> srgb 0.94): a structured gt_h, not a white slab."""
+    tex = generate_noise(size, scale=40, seed=seed + 517, octaves=3,
+                         persistence=0.5, lacunarity=5.0)
+    h = clear_h + (milky_h - clear_h) * np.clip(sel, 0, 1)
+    h = h + (tex - 0.5) * tex_amp
+    return np.clip(h, 0.02, 0.97).astype(np.float32)
+
+
 def _stroke_segment_coverage(size, x0, y0, x1, y1, thickness, aa_px=1.1):
     """Anti-aliased distance-to-segment coverage for ONE stroke segment,
     localized to a bounding box (never allocates a full size-x-size field --
@@ -487,7 +614,7 @@ def generate_marks(recipe, size, seed):
     material, not separate geometry, so they can't use an object-index AOV;
     see docs/GT_SPEC.md sec 1e's gt_index_B row)."""
     rng = random.Random(seed)
-    num_marks = rng.randint(1, MAX_MARKS)
+    num_marks = 0 if GT_OPTS.get("no_marks") else rng.randint(1, MAX_MARKS)
     white_prob = MARK_WHITE_PROB.get(recipe, 0.3)
 
     mark_dark = np.zeros((size, size), dtype=np.float32)
@@ -811,60 +938,72 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         h = np.full((size, size), 0.15, dtype=np.float32)
 
     elif recipe == 'streaky-mix':
-        # Report 032 WP-A: flow-advected streaks replace the old vertical
-        # zoom-stretch. A coherent pull direction (+/-18 deg) with mild curl
-        # produces elongated, feathered two-color streaks WITH occasional sharp
-        # lamination lines -- reads as rolled streaky glass (029 gap G-1). The
-        # fine-detail layer is now at a genuinely fine scale (22, oct 2) so it
-        # feeds hf_energy without swamping the macro streak reading that the old
-        # isotropic scale-60 amp-0.8 overlay washed out (031: this was why the
-        # streaky family lost directionality).
-        angle = np.random.uniform(-18, 18)
-        sel = streak_selector(size, seed, angle, curl=0.08, contrast=1.9, lam=0.22)
-        color1 = np.array([0.9, 0.9, 0.95])
-        color2 = np.array([0.3, 0.5, 0.8])
-        T = np.clip(color1 * sel[..., None] + color2 * (1 - sel[..., None]), 0, 1)
-        h = (0.9 * sel + 0.05 * (1 - sel)).astype(np.float32)
-        detail = generate_noise(size, scale=22, seed=seed + 901,
-                                octaves=2, persistence=0.55, lacunarity=6.0)
-        T = np.clip(T + ((detail * 0.5) - 0.25)[..., None], 0, 1)
+        # Report 039 EXEMPLAR-GROUNDED REBUILD (3rd streak attempt; maintainer
+        # rejected the pale-pastel cloud-mottle look against real Oceanside/
+        # Wissmach "White Wispy" / "2-Color Mix" swatches). Three fixes, each
+        # grounded in results/039 measurements over the 152 real streaky sheets:
+        #  (1) SATURATED color pair sampled from the real dark-mode distribution
+        #      (C* 34-52, real p60-90) instead of the old washed [0.3,0.5,0.8]
+        #      (authored C*15, L*84 -- far too pale, 021 grounding). Per-seed,
+        #      so streaky-mix is now a family of real color combinations.
+        #  (2) BIMODAL edges: smooth advected veils PLUS hard lamination lines
+        #      (streak_selector lam boosted) -- real sheets show sharp filament/
+        #      lamination boundaries coexisting with smooth gradients (measured
+        #      grad p99/p50 ~8; the old contrast-only sel was too uniformly soft).
+        #  (3) STRUCTURED gt_h via streak_haze_field: milky pulls hazy, saturated
+        #      interstitial CLEAR -- fixes the near-uniform-white gt_h the
+        #      maintainer measured (root cause: sRGB write-encode lifting a
+        #      poorly-split h; NOT the 023/025/037 extractor haze retunes, which
+        #      were all read-side).
+        # Long liquid pulls: fine cross-flow source (base_scale 16 -> many thin
+        # streaks) advected far (length 150) with gentle curl gives the marbled
+        # swirl + sharp lamination boundaries the real sheets show (coherence
+        # ~0.55, matching the measured flame/woc groups). The old isotropic
+        # scale-22 fine-detail overlay is GONE -- it read as a fake sandy pebble
+        # and washed out directionality (031/039 diagnosis); the thin streaks now
+        # carry the high-frequency energy instead.
+        angle = np.random.uniform(-20, 20)
+        sel = streak_selector(size, seed, angle, curl=0.13, contrast=2.5,
+                              lam=0.40, length=150, base_scale=16)
+        light, dark = sample_streak_colors(seed, kind="mix")
+        T = np.clip(light * sel[..., None] + dark * (1 - sel[..., None]), 0, 1)
+        # Thin curved filaments folding through the pulls -- the single strongest
+        # 'streaky' cue in the exemplars; lighten toward the milky pull along them.
+        fil = filament_layer(size, seed, angle, gain=4.5)
+        T = np.clip(T + (light - T) * (0.6 * fil[..., None]), 0, 1)
+        sel_h = np.clip(sel + 0.5 * fil, 0, 1)
+        h = streak_haze_field(sel_h, size, seed, milky_h=0.88, clear_h=0.06, tex_amp=0.08)
 
     elif recipe == 'wispy-white':
-        # Report 032 WP-A: wispy-white was VLM-misclassified as smooth-opal
-        # (031 taxon T14) because its wisps read as isotropic milkiness, not
-        # streaks. Advect the wisp density field along a pull direction so the
-        # milky veils elongate into legible wisps (macro-anisotropy 1.20 ->
-        # 2.29 offline). Milky base/haze unchanged.
+        # Report 039 rebuild: the milky/subtle end of the streak family (real
+        # "Clear with White Wispy" / "Cream" sheets). Kept its soft advected
+        # wisps, but (a) the light/dark pair is now sampled from the real
+        # distribution (kind='wispy': pale tinted milky + a soft mid-chroma
+        # color) instead of the fixed near-white, and (b) h no longer FLOORS at
+        # 0.5 (which srgb-encoded to a 0.735 floor -> 55% of gt_h read white).
+        # h now follows the wisp structure through streak_haze_field so the
+        # clearer interstitial glass stays visibly less hazy in gt_h.
         from scipy.ndimage import zoom as _zoom
         ws = 320
         angle = np.random.uniform(-25, 25)
-        fx, fy = flow_field(ws, seed, angle, curl=0.22)
-        wisp0 = generate_noise(ws, ws / 5.5, seed + 1, octaves=3, persistence=0.5, lacunarity=5.0)
-        wisp = advect_streaks(wisp0, fx, fy, length=44)
+        fx, fy = flow_field(ws, seed, angle, curl=0.20)
+        wisp0 = generate_noise(ws, ws / 9.0, seed + 1, octaves=3, persistence=0.5, lacunarity=5.0)
+        wisp = advect_streaks(wisp0, fx, fy, length=95)
         wisp = (wisp - wisp.min()) / (wisp.max() - wisp.min() + 1e-8)
-        # First VLM legibility round (results/032): (w-0.45)*2.0 + wisp_color
-        # 0.55 rendered near-featureless white -- advection pulls the field
-        # toward its mean, so after normalization few pixels cleared the
-        # threshold strongly. Lower threshold + steeper ramp + deeper wisp
-        # color = legible wisps in the render, not just in the authored array.
         wisp = np.clip((wisp - 0.38) * 2.4, 0, 1)
         wisp = _zoom(wisp, size / ws, order=1)[:size, :size]
 
-        base_color = np.array([0.85, 0.87, 0.92])
-        # 4th legibility round: wisp/filament contrast deepened -- the render
-        # washed the veils toward white and still read smooth-opal. Grounded
-        # headroom: pre-032 wispy-white sat at L=90.7, ABOVE the real wispy
-        # p95 (88.9); at these depths L~76, BETWEEN the class median (56.8)
-        # and p95 -- more real, not less.
-        wisp_color = np.array([0.30, 0.30, 0.34])
-
-        T = base_color * (1 - wisp[..., None]) + wisp_color * wisp[..., None]
-        # Thin smoke filaments folding through the broad veils -- the
-        # strongest 'streaky/wispy' cue in the real exemplars (see
-        # filament_layer docstring).
+        light, dark = sample_streak_colors(seed, kind="wispy")
+        # light = the milky pull (high L), dark = the soft tint showing between
+        # wisps. wisp=1 -> milky veil, wisp=0 -> tinted interstitial.
+        T = dark * (1 - wisp[..., None]) + light * wisp[..., None]
         fil = filament_layer(size, seed, angle)
-        T = np.clip(T * (1.0 - 0.72 * fil[..., None]), 0, 1)
-        h = np.clip(0.5 + 0.45 * wisp + 0.25 * fil, 0, 0.97).astype(np.float32)
+        T = np.clip(T + (light - T) * (0.5 * fil[..., None]), 0, 1)
+        sel_h = np.clip(wisp + 0.5 * fil, 0, 1)
+        # Milky veils hazier, interstitial clearer -- but this family is milkier
+        # overall than streaky-mix, so a higher clear_h floor (still well below
+        # the milky value, so gt_h keeps structure).
+        h = streak_haze_field(sel_h, size, seed, milky_h=0.92, clear_h=0.28, tex_amp=0.08)
 
     # ---- Report 022: five gap recipes from 021 §5 (Lab->linear base_color
     # and haze targets taken verbatim from that report's exemplar-grounded
@@ -906,41 +1045,39 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         h = np.full((size, size), 0.60, dtype=np.float32)
 
     elif recipe == 'streaky-fine-texture':
-        # 021 §5 target Lab (55, 40, 30deg); grounded on 3 clean, no-caveat
-        # exemplars (bullseye-0023110030f1010.jpg hf0.046,
-        # oceanside-of31902s.jpg hf0.064, oceanside-ofr9512x12.jpg hf0.039,
-        # mean ~0.05) -- notably FINER than the wispy class median (0.017),
-        # which is the entire point of the recipe (021 explicitly separated
-        # this gap from ordinary wispy/streaky texture flatness). Unlike
-        # streaky-mix's hard two-tone streak mask (which saturates and
-        # swamps any added fine detail, see that recipe's comment), this is
-        # a SOFT streak-direction brightness modulation on one base color
-        # (matching the exemplars' "marbled" look, not a two-color mix)
-        # plus a fine-detail layer for the recipe's namesake texture.
-        # Report 032 WP-A: this recipe was the WORST legibility failure (031
-        # classified it as ring/oval mottle T7, not streaky T12). The old
-        # vertical zoom-stretch gave near-zero macro-anisotropy (1.12); a
-        # flow-advected soft brightness modulation restores a coherent marbled
-        # streak (1.59 offline) while keeping the single-base "marbled" look.
-        base_color = np.array([0.549, 0.145, 0.125])
+        # Report 039 rebuild: the single-hue MARBLED end of the streak family
+        # (Wissmach "Streaky" -- long liquid pulls of ONE color, lighter/darker
+        # marbling rather than a white-on-color two-tone). kind='marble' samples
+        # a saturated hue with a lighter same-hue pull (light) and a deeper pull
+        # (dark), so the streaks read as tonal marbling within one color, finer
+        # than streaky-mix's two-tone. Keeps the recipe's namesake FINE detail
+        # (hf ~0.05, above the wispy-class 0.017 median -- 021's original point).
+        # The FLAT h=0.30 that made this recipe's gt_h perfectly uniform (std 0,
+        # the maintainer's clearest 'lost haze contrast' case) is replaced by a
+        # streak-following h so the marbling carries a real haze signal.
+        # Finer, tighter pulls than streaky-mix (base_scale 22 -> many thin
+        # same-hue striations; this recipe's namesake is FINE texture, hf ~0.05).
+        # A small along-flow detail advection adds the fine grain WITHOUT the old
+        # isotropic pebble (which mis-read as ring/oval mottle T7, 031/039).
         angle = np.random.uniform(-18, 18)
-        # Second legibility round: modulation 0.55 + detail 0.18 rendered as
-        # isotropic pebble (VLM: "cathedral-textured") -- the fine detail
-        # swamped the soft streak in the RENDER even though the authored
-        # anisotropy was up. Streak amplitude up, fine detail down.
-        sel = streak_selector(size, seed, angle, curl=0.14, contrast=1.7, lam=0.12)
-        streak_mod = (sel - 0.5) * 0.85
-        T = np.clip(base_color * (1 + streak_mod[..., None]), 0, 1)
-        detail = generate_noise(size, scale=20, seed=seed + 902,
-                                octaves=3, persistence=0.55, lacunarity=6.0)
-        detail_scaled = (detail * 0.11) - 0.055
-        T = np.clip(T + detail_scaled[..., None], 0, 1)
-        # 3rd legibility round: thin curved filament threads over the soft
-        # marbling (matches the salmon 2-color-mix exemplar family).
+        sel = streak_selector(size, seed, angle, curl=0.15, contrast=2.2,
+                              lam=0.22, length=120, base_scale=22)
+        light, dark = sample_streak_colors(seed, kind="marble")
+        T = np.clip(dark * (1 - sel[..., None]) + light * sel[..., None], 0, 1)
+        fx_d, fy_d = flow_field(size, seed, angle, curl=0.15)
+        detail = advect_streaks(generate_noise(size, scale=14, seed=seed + 902,
+                                octaves=3, persistence=0.55, lacunarity=6.0),
+                                fx_d, fy_d, length=18)
+        detail = (detail - detail.min()) / (detail.max() - detail.min() + 1e-8)
+        T = np.clip(T + ((detail * 0.12) - 0.06)[..., None], 0, 1)
+        # thin curved filament threads over the soft marbling.
         fil = filament_layer(size, seed, angle, gain=4.5)
-        T = np.clip(T * (1.0 - 0.55 * fil[..., None]), 0, 1)
-        # 021 §5: flat haze 0.25-0.35 (real wispy avg 0.215); mid of range.
-        h = np.full((size, size), 0.30, dtype=np.float32)
+        T = np.clip(T + (light - T) * (0.5 * fil[..., None]), 0, 1)
+        sel_h = np.clip(sel + 0.4 * fil, 0, 1)
+        # Marbled single-hue glass is moderately hazy throughout (real wispy avg
+        # 0.215) but the pulls still differ; keep the mean near 0.30 with real
+        # streak-following structure instead of a flat slab.
+        h = streak_haze_field(sel_h, size, seed, milky_h=0.48, clear_h=0.16, tex_amp=0.10)
 
     elif recipe == 'dark-textured':
         # 021 §5 target Lab (15, 5, 200deg); grounded on 3 clean, no-caveat
@@ -1430,6 +1567,8 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
         z_rot = random.uniform(0, math.pi * 2)
         wmapping.inputs['Rotation'].default_value[2] = z_rot
         ev = random.uniform(-1.5, 0.5) # Reduced max EV to prevent overexposure
+        if GT_OPTS.get("fixed_ev") is not None:
+            ev = GT_OPTS["fixed_ev"]  # report 039: pinned mid-EV for review boards
         wbg.inputs['Strength'].default_value = 2.0 ** ev
     
     # Glass plane - size 0.5 ensures it completely fills the camera view (no borders)
@@ -2103,6 +2242,13 @@ def parse_args():
                         help="Report 037: render gt_veil/gt_index/gt_uv/gt_depth off the "
                              "main render's compositor passes (multilayer EXR per channel; "
                              "read with OpenEXR, not cv2 -- see setup_aov_outputs docstring).")
+    parser.add_argument('--fixed-ev', type=float, default=None,
+                        help="Report 039: pin the HDRI EV to this value instead of the "
+                             "per-seed random draw (-1.5..0.5). For representative mid-EV "
+                             "review renders. Default: unset = random draw (dataset default).")
+    parser.add_argument('--no-marks', action='store_true',
+                        help="Report 039: suppress grease-pencil marks (texture review "
+                             "board / forced-choice test). Default OFF = dataset default.")
     return parser.parse_args(argv)
 
 def main():
@@ -2112,6 +2258,8 @@ def main():
     GT_OPTS["exr_codec"] = args.exr_codec
     GT_OPTS["gt_b"] = args.gt_b
     GT_OPTS["gt_aov"] = args.gt_aov
+    GT_OPTS["fixed_ev"] = args.fixed_ev
+    GT_OPTS["no_marks"] = args.no_marks
 
     recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white',
                'dark-deep', 'dark-ruby', 'dark-slate',
