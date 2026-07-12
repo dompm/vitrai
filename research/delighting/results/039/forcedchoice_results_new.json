@@ -1,0 +1,91 @@
+{
+ "model": "sonnet",
+ "n": 10,
+ "n_valid": 10,
+ "n_detected": 2,
+ "detection_rate": 0.2,
+ "chance": 0.25,
+ "renders": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-a08a6149a16cfd51d/research/delighting/results/039/board_renders",
+ "results": [
+  {
+   "lineup": "lineup_00.png",
+   "synth_pos": 3,
+   "guess": 2,
+   "detected": false,
+   "synth_src": "streaky-fine-texture__seed101__light3190",
+   "raw": "2"
+  },
+  {
+   "lineup": "lineup_01.png",
+   "synth_pos": 3,
+   "guess": 4,
+   "detected": false,
+   "synth_src": "streaky-fine-texture__seed202__light7683",
+   "raw": "4"
+  },
+  {
+   "lineup": "lineup_02.png",
+   "synth_pos": 2,
+   "guess": 3,
+   "detected": false,
+   "synth_src": "streaky-fine-texture__seed42__light0409",
+   "raw": "3"
+  },
+  {
+   "lineup": "lineup_03.png",
+   "synth_pos": 4,
+   "guess": 4,
+   "detected": true,
+   "synth_src": "streaky-mix__seed101__light3190",
+   "raw": "4"
+  },
+  {
+   "lineup": "lineup_04.png",
+   "synth_pos": 3,
+   "guess": 1,
+   "detected": false,
+   "synth_src": "streaky-mix__seed202__light7683",
+   "raw": "1"
+  },
+  {
+   "lineup": "lineup_05.png",
+   "synth_pos": 3,
+   "guess": 4,
+   "detected": false,
+   "synth_src": "streaky-mix__seed42__light0409",
+   "raw": "4"
+  },
+  {
+   "lineup": "lineup_06.png",
+   "synth_pos": 4,
+   "guess": 2,
+   "detected": false,
+   "synth_src": "wispy-white__seed101__light3190",
+   "raw": "2"
+  },
+  {
+   "lineup": "lineup_07.png",
+   "synth_pos": 2,
+   "guess": 3,
+   "detected": false,
+   "synth_src": "wispy-white__seed202__light7683",
+   "raw": "3"
+  },
+  {
+   "lineup": "lineup_08.png",
+   "synth_pos": 2,
+   "guess": 2,
+   "detected": true,
+   "synth_src": "wispy-white__seed42__light0409",
+   "raw": "2"
+  },
+  {
+   "lineup": "lineup_09.png",
+   "synth_pos": 2,
+   "guess": 4,
+   "detected": false,
+   "synth_src": "streaky-fine-texture__seed101__light3190",
+   "raw": "4"
+  }
+ ]
+}

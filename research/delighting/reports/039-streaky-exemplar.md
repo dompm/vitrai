@@ -32,15 +32,21 @@ Recipe changes in `generate_synthetic.py`.
 - **Rebuild**: per-seed saturated color pairs sampled from the real distribution
   (`sample_streak_colors`); long coherent liquid pulls + hard lamination edges
   (`streak_selector` rewritten); structured haze (`streak_haze_field`) so gt_h keeps
-  visible structure (std ~0.18, was ~0/floored). Rebuilt vs real: coherence
-  0.11 → **0.55**, bimodality 4.5 → **6.1** (real 6.8), colors saturated, gt_h
-  structured. Honest gap: `hf_energy_frac` still ~0.002 vs real 0.018 (§5).
-- **Forced-choice VLM realism** (§4): detection rate FILL_DET% (chance 25%), N calls
-  on FILL_MODEL, luminance-normalized lineups (so the test measures texture, not the
-  corpus-vs-render exposure gap). Prior version baseline: FILL_BASELINE.
+  visible structure (rendered gt_h 16-bit std 0.22, was ~0/floored). Rebuilt vs
+  real: coherence 0.11 → **0.54** (real 0.49), bimodality **9.1** (real 6.8),
+  L\*/C\*/tonal range on the real bands, gt_h structured. Honest gap: `hf_energy_frac` still ~0.002 vs real 0.018 (§5).
+- **Forced-choice VLM realism** (§4): detection rate 20% (2/10, chance 25%) vs the
+  old version's 70% (7/10) -- same test, same lineup seeds, sonnet, luminance-
+  normalized lineups (so the test measures texture, not the corpus-vs-render
+  exposure gap).
 - **Review board** for the maintainer's eye: `results/039/review_board_039.jpg`
   (real exemplar | our render, per sub-family) — the final gate.
-- **Validate gate**: FILL_VALIDATE. Appearance bands: FILL_BANDS.
+- **Validate gate (uniform-backlight T-agreement)**: streaky-mix MAE 0.0115,
+  streaky-fine-texture 0.0075, wispy-white 0.0109 -- all within the historical band
+  (037's cathedral-green reference: 0.0142). **Appearance bands** (021 harness):
+  streaky-mix L 55 / C 29, streaky-fine-texture L 52 / C 37, wispy-white L 62 / C 19
+  vs the real wispy class L 56.8 / C 28.5 -- all inside the class band; the old
+  recipes (L 84-89, C 2-15) were far outside.
 
 ## 1. Exemplars first (docs/STREAK_EXEMPLAR_NOTES.md)
 
@@ -99,7 +105,18 @@ streaky-mix was L 84.4 / C 15.0, old wispy-white L 89.1 / C 2.1, both outside).
 
 ## 4. Forced-choice realism test
 
-FILL_SECTION_4
+`results/039/forcedchoice_039.py`. Each lineup is a 2x2 grid: 3 random real clean
+Wispy/Streaky corpus crops + 1 of our rendered board samples (position shuffled,
+numbered). All four crops are luminance-normalized (mean/std matched) so the model
+cannot cheat on the corpus-vs-render exposure gap; the question is "which is the
+computer-generated render?". Chance = 25%.
+
+- **Rebuilt version: 2/10 detected = 20% -- at chance.** (`claude` CLI, sonnet;
+  `results/039/forcedchoice_results_new.json`; lineups in
+  `results/039/forcedchoice_new/`, gitignored.)
+- **Old version baseline: 7/10 detected = 70%.** (same test, same lineup seeds, renders
+  from the pre-039 generator at the same pinned EV with marks suppressed --
+  `results/039/forcedchoice_results_old.json`.)
 
 ## 5. Honest gaps
 
@@ -112,9 +129,15 @@ FILL_SECTION_4
    deliberate "handheld capture" model). Lineups are luminance-normalized to stop the
    model cheating on exposure, but residual lighting-geometry differences remain — the
    test measures texture realism approximately, not perfectly.
-3. **L\* runs ~10 points light** of the real median; a further pass could bias the
-   color sampler darker, but the current values sit inside the real p25-75 and the
-   visual read is right (review board).
+3. **Rendered saturation still trails the authored T.** The material's haze
+   scattering plus ambient-HDRI lighting mutes the saturated pull in the photo
+   relative to gt_T (visible on the review board). Authored statistics are on the
+   real bands; the residual is a renderer/lighting-domain question (same class as
+   report 025's "milky-class haze saturates under synthetic backlight" residual),
+   not a texture-authoring one.
+4. **Rendered gt_h structure confirmed on disk**: board renders' 16-bit gt_h.png
+   p5 0.30 / p50 0.81 / std 0.22 (was flat/floored) -- gt_h thumbnails are on the
+   review board under each render.
 
 ## Reproduction
 
@@ -128,7 +151,7 @@ python3 corpus/preview_streak_T_039.py         # authored-T + gt_h preview
 for r in streaky-mix streaky-fine-texture wispy-white; do for s in 42 101 202; do
   BLENDER -b -P generate_synthetic.py -- --out results/039/board_renders --seed $s \
     --count 1 --light-variations 1 --recipe $r --hdri-dir hdri_pack \
-    --no-tex-dump --exr-codec DWAA --fixed-ev 0.5 --no-marks; done; done
+    --no-tex-dump --exr-codec DWAA --fixed-ev -0.5 --no-marks; done; done
 python3 results/039/build_board_039.py         # results/039/review_board_039.jpg
 python3 results/039/forcedchoice_039.py --model sonnet --n 10
 ```

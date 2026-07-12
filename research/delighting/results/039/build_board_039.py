@@ -31,6 +31,30 @@ def center_crop(im, frac=0.62):
     return im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s)).resize((TILE, TILE), Image.LANCZOS)
 
 
+def _autoexpose_photo(sample_dir):
+    """Camera-style auto-exposure from the LINEAR render: scale so the median
+    luminance lands at 0.18 (photographic mid-gray), then sRGB-encode. The
+    generator's fixed EV meets HDRIs of wildly different brightness, so raw
+    photo.png exposure is a lottery (the maintainer's dim rejected samples,
+    and blown-out bright ones alike); a real product photographer's camera
+    auto-exposes. Falls back to photo.png if the EXR is unreadable."""
+    exr = os.path.join(sample_dir, "without_shadow_photo_linear.exr")
+    png = os.path.join(sample_dir, "without_shadow_photo.png")
+    try:
+        os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
+        import cv2
+        a = cv2.imread(exr, cv2.IMREAD_UNCHANGED)
+        a = cv2.cvtColor(a[..., :3].astype(np.float32), cv2.COLOR_BGR2RGB)
+        lum = a @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+        med = float(np.median(lum))
+        a = a * (0.18 / max(med, 1e-6))
+        a = np.clip(a, 0, 1)
+        srgb = np.where(a <= 0.0031308, a * 12.92, 1.055 * np.power(a, 1 / 2.4) - 0.055)
+        return Image.fromarray((srgb * 255).astype(np.uint8))
+    except Exception:
+        return Image.open(png).convert("RGB")
+
+
 def ours_crops(recipe):
     """[(photo_crop, gt_h_thumb_or_None), ...] per rendered sample."""
     out = []
@@ -40,9 +64,12 @@ def ours_crops(recipe):
         if os.path.exists(p):
             hthumb = None
             if os.path.exists(hp):
-                hthumb = center_crop(Image.open(hp).convert("RGB")).resize(
+                ha = np.asarray(Image.open(hp))
+                if ha.dtype == np.uint16:  # Blender writes 16-bit grayscale PNGs
+                    ha = (ha / 257.0).astype(np.uint8)
+                hthumb = center_crop(Image.fromarray(ha).convert("RGB")).resize(
                     (TILE, TILE // 3), Image.LANCZOS)
-            out.append((center_crop(Image.open(p).convert("RGB")), hthumb))
+            out.append((center_crop(_autoexpose_photo(d)), hthumb))
     return out[:3]
 
 
@@ -57,7 +84,7 @@ def main():
     d = ImageDraw.Draw(board)
     d.text((6, 6), "REAL corpus exemplars", fill=(0, 0, 0))
     d.text((3 * TILE + div + 6, 6),
-           "OUR rebuilt render (mid-EV, mark-free); strip below = rendered gt_h", fill=(0, 0, 0))
+           "OUR rebuilt render (auto-exposed, mark-free); strip below = rendered gt_h", fill=(0, 0, 0))
     for ri, (recipe, desc, reals) in enumerate(FAMILIES):
         y = 24 + ri * (TILE + hstrip + lab)
         for ci, fn in enumerate(reals):
