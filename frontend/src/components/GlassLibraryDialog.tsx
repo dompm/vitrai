@@ -30,6 +30,7 @@ interface SwatchItem {
   color_family?: string;
   product_url?: string;
   front_lit?: boolean;
+  lighting?: 'front-lit' | 'back-lit';
 }
 
 interface Props {
@@ -78,6 +79,7 @@ const ITEMS_PER_PAGE = 40;
 export function GlassLibraryDialog({ onPick, onClose }: Props) {
   const [library, setLibrary] = useState<SwatchItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState('');
   const [mfgFilter, setMfgFilter] = useState('All');
   const [catFilter, setCatFilter] = useState('All');
@@ -107,7 +109,11 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
         setLoading(false);
       })
       .catch(err => {
+        // Registry JSON absent or unparsable (e.g. a clean checkout before the
+        // swatch data has been fetched) -- show a clear setup message instead of
+        // a silent, forever-empty library.
         console.error(err);
+        setLoadError(true);
         setLoading(false);
       });
   }, []);
@@ -383,6 +389,14 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
               <div className="spinner"></div>
               <p>Loading glass formulas...</p>
             </div>
+          ) : loadError || library.length === 0 ? (
+            <div className="glass-library-empty">
+              <p>Glass library data not present.</p>
+              <p className="glass-library-empty-hint">
+                Run <code>python3 scripts/build_swatch_library.py</code> from the repo root to fetch
+                the swatch registry and catalog images (see the Glass swatch library section in the README).
+              </p>
+            </div>
           ) : paginatedItems.length === 0 ? (
             <div className="glass-library-empty">
               <p>No glass swatches match your criteria.</p>
@@ -402,11 +416,23 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                         alt={item.name}
                         loading="lazy"
                         className="glass-library-card-thumb"
+                        onError={e => {
+                          // Catalog images are untracked local data -- on a clean
+                          // checkout they 404. Show a hint instead of a broken image.
+                          const wrapper = e.currentTarget.closest('.glass-library-card-thumb-wrapper');
+                          if (wrapper && !wrapper.querySelector('.glass-library-thumb-missing')) {
+                            e.currentTarget.style.display = 'none';
+                            const note = document.createElement('div');
+                            note.className = 'glass-library-thumb-missing';
+                            note.textContent = 'Image not fetched — run scripts/build_swatch_library.py';
+                            wrapper.prepend(note);
+                          }
+                        }}
                       />
                       <span className={`glass-library-badge badge-${item.manufacturer.toLowerCase()}`}>
                         {item.manufacturer}
                       </span>
-                      {item.front_lit && (
+                      {(item.lighting === 'front-lit' || item.front_lit) && (
                         <span className="glass-library-front-lit-badge" title="Front-lit surface photo. May not match transmissive backlight color.">
                           ⚠️ Front-Lit
                         </span>
