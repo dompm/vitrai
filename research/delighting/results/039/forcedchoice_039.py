@@ -31,10 +31,28 @@ PROMPT = ("Read the image file at {path}. It is a 2x2 grid of four numbered crop
           "computer-generated render? Reply with ONLY the single digit 1, 2, 3, or 4.")
 
 
+import numpy as np
+
+
+def _normalize(im, tgt_mean=0.5, tgt_std=0.20):
+    """Match each crop's luminance mean+std to a common target so the forced-
+    choice test measures TEXTURE realism, not the exposure gap between bright
+    backlit corpus light-table photos and our HDRI-ambient renders (an unfair
+    tell if left in). Chroma is scaled with luma so hue is preserved."""
+    a = np.asarray(im, np.float32) / 255.0
+    lum = a @ np.array([0.2126, 0.7152, 0.0722])
+    m, s = lum.mean(), lum.std() + 1e-6
+    gain = tgt_std / s
+    new_lum = np.clip((lum - m) * gain + tgt_mean, 0, 1)
+    ratio = (new_lum / (lum + 1e-6))[..., None]
+    return Image.fromarray((np.clip(a * ratio, 0, 1) * 255).astype(np.uint8))
+
+
 def center_crop(im, frac=0.55):
     w, h = im.size
     s = int(min(w, h) * frac)
-    return im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s)).resize((TILE, TILE), Image.LANCZOS)
+    c = im.crop(((w - s) // 2, (h - s) // 2, (w - s) // 2 + s, (h - s) // 2 + s)).resize((TILE, TILE), Image.LANCZOS)
+    return _normalize(c)
 
 
 def build_lineup(idx, real_files, synth_png, rng):
@@ -56,10 +74,16 @@ def build_lineup(idx, real_files, synth_png, rng):
 
 
 def main():
+    global RENDERS, LINEUPS
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="sonnet")
     ap.add_argument("--n", type=int, default=10)
+    ap.add_argument("--renders", default=RENDERS,
+                    help="render dir (point at board_renders_old for the 'before' test)")
+    ap.add_argument("--tag", default="new", help="suffix for lineup/result files")
     args = ap.parse_args()
+    RENDERS = args.renders
+    LINEUPS = os.path.join(HERE, f"forcedchoice_{args.tag}")
     os.makedirs(LINEUPS, exist_ok=True)
     rng = random.Random(39)
 
@@ -98,8 +122,8 @@ def main():
     rate = n_det / n_valid if n_valid else float("nan")
     summary = {"model": args.model, "n": args.n, "n_valid": n_valid,
                "n_detected": n_det, "detection_rate": rate, "chance": 0.25,
-               "results": results}
-    json.dump(summary, open(os.path.join(HERE, "forcedchoice_results.json"), "w"), indent=1)
+               "renders": RENDERS, "results": results}
+    json.dump(summary, open(os.path.join(HERE, f"forcedchoice_results_{args.tag}.json"), "w"), indent=1)
     print(f"\nDetection rate: {n_det}/{n_valid} = {rate:.0%}  (chance 25%)")
 
 

@@ -39,4 +39,5 @@ results/vlm_realism_029/ours/
 results/vlm_realism_029/downscaled/
 results/corpus/swatch_picker_cache/
 results/039/board_renders/
-results/039/forcedchoice/
+results/039/board_renders_old/
+results/039/forcedchoice_*/

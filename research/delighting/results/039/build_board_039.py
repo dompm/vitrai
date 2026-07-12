@@ -32,33 +32,44 @@ def center_crop(im, frac=0.62):
 
 
 def ours_crops(recipe):
+    """[(photo_crop, gt_h_thumb_or_None), ...] per rendered sample."""
     out = []
     for d in sorted(glob.glob(os.path.join(RENDERS, f"{recipe}__*"))):
         p = os.path.join(d, "without_shadow_photo.png")
+        hp = os.path.join(d, "gt_h.png")
         if os.path.exists(p):
-            out.append(center_crop(Image.open(p).convert("RGB")))
+            hthumb = None
+            if os.path.exists(hp):
+                hthumb = center_crop(Image.open(hp).convert("RGB")).resize(
+                    (TILE, TILE // 3), Image.LANCZOS)
+            out.append((center_crop(Image.open(p).convert("RGB")), hthumb))
     return out[:3]
 
 
 def main():
     lab = 22
     div = 16
+    hstrip = TILE // 3 + 4  # rendered-gt_h thumb strip under each of our tiles
     rows = len(FAMILIES)
     W = 3 * TILE + div + 3 * TILE
-    H = rows * (TILE + lab) + 30
+    H = rows * (TILE + hstrip + lab) + 30
     board = Image.new("RGB", (W, H), (250, 250, 250))
     d = ImageDraw.Draw(board)
     d.text((6, 6), "REAL corpus exemplars", fill=(0, 0, 0))
-    d.text((3 * TILE + div + 6, 6), "OUR rebuilt render (mid-EV, mark-free)", fill=(0, 0, 0))
+    d.text((3 * TILE + div + 6, 6),
+           "OUR rebuilt render (mid-EV, mark-free); strip below = rendered gt_h", fill=(0, 0, 0))
     for ri, (recipe, desc, reals) in enumerate(FAMILIES):
-        y = 24 + ri * (TILE + lab)
+        y = 24 + ri * (TILE + hstrip + lab)
         for ci, fn in enumerate(reals):
             p = os.path.join(CATALOG, fn)
             if os.path.exists(p):
                 board.paste(center_crop(Image.open(p).convert("RGB")), (ci * TILE, y))
-        for ci, crop in enumerate(ours_crops(recipe)):
-            board.paste(crop, (3 * TILE + div + ci * TILE, y))
-        d.text((6, y + TILE + 3), f"{recipe}  ({desc})", fill=(20, 20, 20))
+        for ci, (crop, hthumb) in enumerate(ours_crops(recipe)):
+            x = 3 * TILE + div + ci * TILE
+            board.paste(crop, (x, y))
+            if hthumb is not None:
+                board.paste(hthumb, (x, y + TILE + 2))
+        d.text((6, y + TILE + hstrip + 3), f"{recipe}  ({desc})", fill=(20, 20, 20))
     out = os.path.join(HERE, "review_board_039.jpg")
     board.save(out, quality=90)
     print("wrote", out)

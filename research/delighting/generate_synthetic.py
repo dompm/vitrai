@@ -239,11 +239,21 @@ def streak_selector(size, seed, angle, ws=320, curl=0.14, contrast=1.7, lam=0.18
     base = generate_noise(ws, ws / base_scale, seed + 11, octaves=2,
                           persistence=0.55, lacunarity=4.0)
     sel = advect_streaks(base, fx, fy, length=length)
-    sel = (sel - sel.min()) / (sel.max() - sel.min() + 1e-8)
-    sel = np.clip((sel - 0.5) * contrast + 0.5, 0, 1)
+    # Report 039: median/IQR recentering instead of min-max. Min-max is outlier-
+    # driven; after long advection the field concentrates near its mean, and the
+    # old additive lam term then pushed the median to ~0.84 -- the sheet went
+    # ~80% light-mode and read WASHED (the rejection's 'washed colors'). Real
+    # sheets split light/dark ~50/50 (results/039 light_frac p50 = 0.5); pinning
+    # the median at 0.5 guarantees that split for every seed.
+    med = np.percentile(sel, 50)
+    spread = np.percentile(sel, 84) - np.percentile(sel, 16) + 1e-8
+    sel = np.clip((sel - med) / spread * 0.55 * contrast + 0.5, 0, 1)
     if lam > 0:
         lam0 = (generate_noise(ws, ws / 9.0, seed + 29, octaves=1) > 0.82).astype(np.float64)
-        sel = np.clip(sel + lam * np.clip(advect_streaks(lam0, fx, fy, length=int(length * 1.3)) * 3.0, 0, 1), 0, 1)
+        lam_lines = np.clip(advect_streaks(lam0, fx, fy, length=int(length * 1.3)) * 3.0, 0, 1)
+        # lamination lines push toward the light pull but are AREA-BALANCED:
+        # subtract the mean shift they introduce so the 50/50 split holds.
+        sel = np.clip(sel + lam * (lam_lines - lam_lines.mean()), 0, 1)
     return zoom(sel, size / ws, order=1)[:size, :size]
 
 
@@ -444,20 +454,22 @@ def sample_streak_colors(seed, kind="mix"):
     # per-kind spread places streaky-mix at the dramatic (saturated, higher L*
     # separation) end, wispy-white at the subtle end.
     if kind == "mix":
-        dL = rng.uniform(30, 46)
-        dC = rng.uniform(36, 54)           # saturated color pull (p70-90 real)
-        lL = rng.uniform(62, 74)           # tinted milky, not bright white
-        lC = rng.uniform(14, 26)
+        dL = rng.uniform(28, 44)
+        dC = rng.uniform(44, 62)           # saturated color pull (p75-90 real);
+        # sheet-median C dilutes through the sel blend, so the endpoint must sit
+        # ABOVE the real per-sheet median for the blended sheet to land on it.
+        lL = rng.uniform(60, 72)           # tinted milky, not bright white
+        lC = rng.uniform(16, 28)
     elif kind == "marble":
-        dL = rng.uniform(34, 50)
-        dC = rng.uniform(32, 48)
-        lL = rng.uniform(54, 68)           # lighter pull of the SAME hue
-        lC = rng.uniform(20, 36)
+        dL = rng.uniform(32, 48)
+        dC = rng.uniform(40, 56)
+        lL = rng.uniform(52, 66)           # lighter pull of the SAME hue
+        lC = rng.uniform(24, 40)
     else:  # wispy
-        dL = rng.uniform(46, 62)
-        dC = rng.uniform(16, 30)           # softer color
-        lL = rng.uniform(72, 84)
-        lC = rng.uniform(8, 18)
+        dL = rng.uniform(44, 60)
+        dC = rng.uniform(20, 34)           # softer color
+        lL = rng.uniform(70, 82)
+        lC = rng.uniform(10, 20)
     lh = hue if kind == "marble" else (hue + rng.uniform(-30, 30))
     dark = _lab_to_linear_rgb(dL, dC * math.cos(math.radians(hue)), dC * math.sin(math.radians(hue)))
     light = _lab_to_linear_rgb(lL, lC * math.cos(math.radians(lh)), lC * math.sin(math.radians(lh)))
