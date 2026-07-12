@@ -1,0 +1,50 @@
+{
+  "device": "mps",
+  "torch": "2.9.1",
+  "attempts": [
+    {
+      "ok": true,
+      "model_id": "prs-eth/marigold-iid-appearance-v1-1",
+      "license": "Apache-2.0",
+      "pipeline": "MarigoldIntrinsicsPipeline",
+      "load_seconds": 14.5,
+      "device": "mps",
+      "dtype": "torch.float32",
+      "vae_params": 83653863,
+      "unet_params": 865945288,
+      "vae_latent_channels": 4,
+      "unet_in_channels": 12,
+      "unet_cross_attention_dim": 1024,
+      "forward_seconds": 21.2,
+      "forward_output_shape": [
+        2,
+        256,
+        256,
+        3
+      ],
+      "candidate": "iid"
+    }
+  ],
+  "verified": {
+    "ok": true,
+    "model_id": "prs-eth/marigold-iid-appearance-v1-1",
+    "license": "Apache-2.0",
+    "pipeline": "MarigoldIntrinsicsPipeline",
+    "load_seconds": 14.5,
+    "device": "mps",
+    "dtype": "torch.float32",
+    "vae_params": 83653863,
+    "unet_params": 865945288,
+    "vae_latent_channels": 4,
+    "unet_in_channels": 12,
+    "unet_cross_attention_dim": 1024,
+    "forward_seconds": 21.2,
+    "forward_output_shape": [
+      2,
+      256,
+      256,
+      3
+    ],
+    "candidate": "iid"
+  }
+}
