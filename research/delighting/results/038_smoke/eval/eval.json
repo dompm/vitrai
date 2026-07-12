@@ -1,0 +1,61 @@
+{
+  "backbone": "tiny",
+  "ckpt": "results/038_smoke/adapter.pt",
+  "work_res": 256,
+  "n_test": 5,
+  "model": {
+    "invariance_T": 0.05760511942207813,
+    "T_mae": 0.19406763315200806,
+    "h_mae": 0.21998535394668578,
+    "retained_energy": 29.25423424431569,
+    "fine_grad_corr": -1.4440256435138341e-05,
+    "fcs": null,
+    "n_cross_lighting_groups": 2
+  },
+  "calibration": {
+    "spearman_conf_negerr": -0.2435795429015307,
+    "ece_tau8": 0.3080190253245831,
+    "n_pixels": 200000
+  },
+  "per_recipe_invariance": {
+    "dark-slate": 0.06475314497947693,
+    "saturated-opalescent": 0.05045709386467934
+  },
+  "frozen_reference": {
+    "invariance_T": {
+      "raw": 0.0946,
+      "exposure_norm": null,
+      "quotient": 0.0815,
+      "classical": 0.0932,
+      "glassnet": null
+    },
+    "T_mae": {
+      "raw": null,
+      "quotient": null,
+      "classical": 0.108,
+      "glassnet": null
+    },
+    "h_mae": {
+      "classical": 0.155
+    },
+    "retained_energy": {
+      "classical": 1.27,
+      "quotient": 1.24,
+      "flatten_control": 0.03
+    },
+    "fcs": {
+      "classical": 0.509,
+      "quotient": 0.589,
+      "flatten_control": 0.0
+    }
+  },
+  "gate": {
+    "sub_floor_flatten_flag": false,
+    "texture_hallucination_flag": true,
+    "texture_ok": false,
+    "beats_classical_primary": true,
+    "beats_quotient_primary": true,
+    "GO": false,
+    "note": "held-out-identity synthetic; GO requires beating classical AND quotient on invariance_T with fine retained-energy in the healthy band [0.5, 2.5] \u2014 neither flattening nor hallucinating texture"
+  }
+}

@@ -54,8 +54,12 @@ FROZEN = {
     "retained_energy": {"classical": 1.27, "quotient": 1.24, "flatten_control": 0.03},
     "fcs": {"classical": 0.509, "quotient": 0.589, "flatten_control": 0.00},
 }
-# gate thresholds
-FLATTEN_RETAINED_FLOOR = 0.5   # below this fine retained-energy => flattening (control=0.03)
+# gate thresholds (EVAL_PROTOCOL §1a/§1b). Fine retained-energy must sit in a healthy
+# band: too LOW = flattening (the 8σ-blur control is 0.03; classical 1.27); too HIGH =
+# texture HALLUCINATION (report 012's "invented not measured" — a map that injects far
+# more high-freq than the authored gt_T has). Classical/quotient live ~1.2-1.3.
+FLATTEN_RETAINED_FLOOR = 0.5
+HALLUCINATE_RETAINED_CEIL = 2.5
 
 
 def _to_t(a, device):
@@ -156,8 +160,13 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
         rec = ds.load_full(i, variant="without")
         if rec is None:
             continue
-        preds.append(predict(model, rec, device, work))
-        print(f"  {preds[-1]['recipe']:22s} seed{preds[-1]['seed']}")
+        try:
+            preds.append(predict(model, rec, device, work))
+            print(f"  {preds[-1]['recipe']:22s} seed{preds[-1]['seed']}")
+        except RuntimeError as e:
+            print(f"  [skip {rec['recipe']} seed{rec['seed']}] {str(e)[:80]}")
+        if device == "mps":
+            torch.mps.empty_cache()
 
     # --- GT accuracy + texture family 2 (per sample) ---
     T_maes, h_maes, retained, fcs, fine_corr = [], [], [], [], []
@@ -202,16 +211,23 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
     }
 
     # --- continuation gate ---
-    flattened = model_row["retained_energy"] < FLATTEN_RETAINED_FLOOR
+    re = model_row["retained_energy"]
+    flattened = re < FLATTEN_RETAINED_FLOOR
+    hallucinated = re > HALLUCINATE_RETAINED_CEIL
+    texture_ok = (not flattened) and (not hallucinated)
     beat_classical = inv_macro is not None and inv_macro < FROZEN["invariance_T"]["classical"]
     beat_quotient = inv_macro is not None and inv_macro < FROZEN["invariance_T"]["quotient"]
     gate = {
         "sub_floor_flatten_flag": bool(flattened),
+        "texture_hallucination_flag": bool(hallucinated),
+        "texture_ok": bool(texture_ok),
         "beats_classical_primary": bool(beat_classical),
         "beats_quotient_primary": bool(beat_quotient),
-        "GO": bool(beat_classical and beat_quotient and not flattened),
+        "GO": bool(beat_classical and beat_quotient and texture_ok),
         "note": ("held-out-identity synthetic; GO requires beating classical AND quotient "
-                 "on invariance_T without the flatten flag"),
+                 "on invariance_T with fine retained-energy in the healthy band "
+                 f"[{FLATTEN_RETAINED_FLOOR}, {HALLUCINATE_RETAINED_CEIL}] — neither "
+                 "flattening nor hallucinating texture"),
     }
 
     report = {"backbone": backbone, "ckpt": ckpt, "work_res": work,
@@ -269,6 +285,7 @@ def _write_table(rep, path):
         f"- beats classical on primary: {rep['gate']['beats_classical_primary']}",
         f"- beats quotient on primary: {rep['gate']['beats_quotient_primary']}",
         f"- sub-floor flatten flag: {rep['gate']['sub_floor_flatten_flag']}",
+        f"- texture-hallucination flag: {rep['gate'].get('texture_hallucination_flag')}",
         f"- **GO: {rep['gate']['GO']}**",
     ]
     with open(path, "w") as f:

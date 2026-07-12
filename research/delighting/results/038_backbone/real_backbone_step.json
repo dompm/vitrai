@@ -1,0 +1,18 @@
+{
+  "backbone": "marigold-depth",
+  "device": "mps",
+  "lora_ok": true,
+  "trainable_params": 1727415,
+  "unet_in": 8,
+  "unet_out": 4,
+  "load_s": 8.2,
+  "forward_s": 1.9,
+  "backward_s": 3.6,
+  "grad_tensors": "278/278",
+  "T_shape": [
+    1,
+    3,
+    256,
+    256
+  ]
+}

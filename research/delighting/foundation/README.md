@@ -37,7 +37,10 @@ $PY foundation/verify_backbone.py --dry             # class-import + tiny forwar
 $PY foundation/dataset.py $R022                     # print the holdout partition
 $PY foundation/train.py --smoke --data $R022 --out results/038_smoke
 $PY foundation/eval_foundation.py --ckpt results/038_smoke/adapter.pt --backbone tiny \
-     --data $R022 --out results/038_smoke/eval
+     --data $R022 --out results/038_smoke/eval --work 256   # 256 keeps the tiny UNet's
+                                                            # self-attention off the MPS
+                                                            # memory ceiling; the A100 run
+                                                            # uses the default 512
 $PY foundation/modal_app.py --selfcheck             # Modal import-check (no account)
 ```
 
