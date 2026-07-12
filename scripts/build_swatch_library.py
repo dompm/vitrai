@@ -150,6 +150,100 @@ MAX_CANDIDATE_IMAGES = 10  # defensive cap; report 035's validation sample saw 2
 STABILITY_MARGIN = 0.15    # anti-churn threshold -- see apply_stability_rule() below
 
 
+# ==================================================================================
+# MANUAL OVERRIDES (ownership cleanup, glass-library-integration-review.md)
+# ==================================================================================
+# Bullseye Reactive Cloud Opalescent (both size variants, base_sku prefix 000009):
+# both the original vendor photo (`_01`) and the delighting-024 `-v2` recovery
+# (`_02`) are the SAME hybrid "genuine sheet + small reaction-demo tile corner
+# insert" style shot -- Bullseye's live product feed only ever publishes these two
+# images for this product line (verified live, both addenda). The review's
+# Addendum re-adjudication settled on KEEP, not QUARANTINE: ~82-85% of the frame is
+# real, uniform, representative glass in every available photo, and the demo-tile
+# cluster is consistently confined to the top-left corner (bounding box never
+# extends past roughly x:0-620 of 1200). Its own "actionable middle path" -- a crop
+# of the right ~54% of the frame -- removes the tile cluster entirely without
+# needing a better vendor source that doesn't exist. Applied here instead of the
+# old blanket `is_reactive_cloud` rule that just dropped both SKUs from the
+# registry (see Decision 3, glass-library-integration-review.md Addendum, citing
+# research/delighting/results/corpus/refetch_manifest.json `recovered` entries).
+REACTIVE_CLOUD_CROP_OVERRIDE = {
+    'bullseye-0000090030f1010': {
+        'v2_filename': 'bullseye-0000090030f1010-v2.jpg',
+        'v2_url': 'https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000009-0030-F_02.jpg',
+        'crop_filename': 'bullseye-0000090030f1010-cropped.jpg',
+        'crop_box': [650, 0, 1200, 1200],
+    },
+    'bullseye-0000090050f1010': {
+        'v2_filename': 'bullseye-0000090050f1010-v2.jpg',
+        'v2_url': 'https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000009-0050-F_02.jpg',
+        'crop_filename': 'bullseye-0000090050f1010-cropped.jpg',
+        'crop_box': [650, 0, 1200, 1200],
+    },
+}
+
+# White-on-white false-quarantine override (036 report / Decision 4): the picker's
+# pale-sheet credit requires fg_frac <= 0.02 to recognize a full-bleed pale sheet,
+# but these two are genuinely uniform WHITE sheets photographed on a white studio
+# ground -- their fg_frac (0.23-0.40) is too high for that credit and too low to
+# read as full-bleed coverage, so they score 0.37-0.43, just under the picker's
+# 0.45 floor. This is a documented picker blind spot (report 035, not stress-tested
+# for near-white-on-white), not a real image-quality problem -- both source photos
+# are clean, uniform, well-lit sheet photography (spot-checked and confirmed good
+# pre-picker). Restoring their known-good images explicitly here, rather than
+# lowering the floor globally, which would let genuinely bad photos back in
+# elsewhere in the catalog.
+WHITE_ON_WHITE_OVERRIDE = {
+    # Opaque White Opalescent, 3 mm
+    'bullseye-0000130030f1010': 'https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000013-0030-F_01.jpg?v=1765591007',
+    # White, Light Silver Gray 2-Color Mix, Cascade, Iridescent, silver, 3 mm
+    'bullseye-002249ca37f1010': 'https://cdn.shopify.com/s/files/1/0737/5237/9665/files/002249-CA37-F_01.jpg?v=1765591807',
+}
+
+
+def apply_manual_overrides(item_id, pick_info):
+    """Bypass the picker floor for the explicit, reviewed WHITE_ON_WHITE_OVERRIDE
+    list only -- never lowers the floor globally. No-op for every other id."""
+    if pick_info['status'] == 'Quarantined' and item_id in WHITE_ON_WHITE_OVERRIDE:
+        url = WHITE_ON_WHITE_OVERRIDE[item_id]
+        cs = dict(pick_info.get('candidate_scores') or {})
+        return {'status': 'Downloaded', 'url': url, 'score': cs.get(_strip_query(url)),
+                'candidate_scores': cs, 'manual_override': True}
+    return pick_info
+
+
+def crop_reactive_cloud_image(override):
+    """Physically crop the -v2 recovery to x:[650,1200], y:[0,1200] of its 1200x1200
+    frame, saved under a distinct filename so the original -v2 (kept as evidence /
+    reference for the adjudication) is left untouched. Fetches the -v2 source from
+    the vendor if not already cached locally (e.g. a fresh checkout)."""
+    v2_path = os.path.join(IMAGE_DIR, override['v2_filename'])
+    out_path = os.path.join(IMAGE_DIR, override['crop_filename'])
+    if os.path.exists(out_path):
+        with Image.open(out_path) as img:
+            return out_path, img.size[0], img.size[1]
+
+    if not os.path.exists(v2_path):
+        try:
+            r = requests.get(override['v2_url'], headers=HEADERS, timeout=10)
+            if r.status_code == 200:
+                with open(v2_path, 'wb') as f:
+                    f.write(r.content)
+        except Exception as e:
+            print(f"  Failed to fetch reactive-cloud -v2 source {override['v2_url']}: {e}")
+            return None, None, None
+
+    if not os.path.exists(v2_path):
+        return None, None, None
+
+    img = Image.open(v2_path)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+    cropped = img.crop(tuple(override['crop_box']))
+    cropped.save(out_path, "JPEG")
+    return out_path, cropped.size[0], cropped.size[1]
+
+
 def _strip_query(url):
     """Compare CDN URLs by path only. Shopify bumps the `?v=` cache-busting query
     param on re-upload even when the underlying photo is byte-identical, so query-
@@ -489,6 +583,7 @@ def main():
                 seen_skus.add(sku)
                 category = classify_glass(title, sku, 'Oceanside')
                 item_id = f"oceanside-{clean_sku(sku)}"
+                pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
                 base = {
                     "id": item_id, "manufacturer": "Oceanside", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
@@ -527,6 +622,7 @@ def main():
                 seen_skus.add(sku)
                 category = classify_glass(title, sku, 'Wissmach')
                 item_id = f"wissmach-{clean_sku(sku)}"
+                pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
                 base = {
                     "id": item_id, "manufacturer": "Wissmach", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
@@ -567,6 +663,7 @@ def main():
                 seen_skus.add(sku)
                 category = classify_glass(title, sku, 'Youghiogheny')
                 item_id = f"youghiogheny-{clean_sku(sku)}"
+                pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
                 base = {
                     "id": item_id, "manufacturer": "Youghiogheny", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
@@ -610,6 +707,7 @@ def main():
                 seen_skus.add(sku)
                 category = classify_glass(title, sku, 'Bullseye')
                 item_id = f"bullseye-{clean_sku(sku)}"
+                pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
                 base = {
                     "id": item_id, "manufacturer": "Bullseye", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
@@ -796,20 +894,26 @@ def main():
             v2_filename = f"{base_name}-v2{ext}"
             v2_path = os.path.join(IMAGE_DIR, v2_filename)
 
-            # Explicitly exclude Reactive Cloud (000009) since its -v2 is still bad
-            # (see glass-library-integration-review.md Addendum: the -v2 recovery for
-            # these two SKUs is a lateral move, not a fix -- KEEP the original).
-            is_reactive_cloud = '000009' in base_sku
+            # Decision 3: Bullseye Reactive Cloud (000009-0030/-0050) gets KEEP+crop
+            # via REACTIVE_CLOUD_CROP_OVERRIDE (see its docstring) instead of the old
+            # blanket is_reactive_cloud drop -- takes priority over the legacy
+            # quarantine list below since it's a more specific, reviewed verdict for
+            # exactly these two ids.
+            reactive_override = REACTIVE_CLOUD_CROP_OVERRIDE.get(item_id)
             is_v2 = False
 
-            if item_id in quarantine_set:
-                if os.path.exists(v2_path) and not is_reactive_cloud:
+            if reactive_override:
+                local_img_filename = reactive_override['crop_filename']
+                item['_manual_crop'] = item_id
+                item['image_url'] = reactive_override['v2_url']
+            elif item_id in quarantine_set:
+                if os.path.exists(v2_path):
                     local_img_filename = v2_filename
                     is_v2 = True
                 else:
                     print(f"  Quarantined (legacy list): skipping {item['id']} ({item['name']})")
                     continue
-            elif os.path.exists(v2_path) and not is_reactive_cloud:
+            elif os.path.exists(v2_path):
                 local_img_filename = v2_filename
                 is_v2 = True
 
@@ -834,6 +938,7 @@ def main():
     for item in deduped:
         target_filename = item.pop('_target_filename')
         is_v2 = item.pop('_is_v2')
+        manual_crop_id = item.pop('_manual_crop', None)
         candidate_scores = item.pop('_candidate_scores', {})
         pick_score = item.get('pick_score')
         item.pop('_local_filename', None)
@@ -843,15 +948,32 @@ def main():
         filepath = os.path.join(IMAGE_DIR, target_filename)
         same_as_before = bool(old_url) and _strip_query(old_url) == _strip_query(item.get('image_url') or '')
 
-        if is_v2:
-            force = False  # manual recovery file -- always fast-cache-return it
+        if is_v2 or manual_crop_id:
+            force = False  # manual recovery/crop file -- always fast-cache-return it
         else:
             force = not (same_as_before and os.path.exists(filepath))
 
         if force:
             changed_count += 1
 
-        calib = download_and_calibrate_image(item['image_url'], target_filename, item, item['category'], force=force)
+        if manual_crop_id:
+            # Decision 3: physically crop the -v2 recovery rather than a network
+            # fetch+auto-crop -- see crop_reactive_cloud_image()/the override dict.
+            override = REACTIVE_CLOUD_CROP_OVERRIDE[manual_crop_id]
+            crop_path, cw, ch = crop_reactive_cloud_image(override)
+            if crop_path:
+                crop_w_frac = (override['crop_box'][2] - override['crop_box'][0]) / 1200.0
+                calib = {
+                    "asset_url": f"/assets/catalog_images/{override['crop_filename']}",
+                    "original_width_px": cw, "original_height_px": ch,
+                    "cropped": True, "crop_box": override['crop_box'],
+                    "calibrated_width_in": round(10.0 * crop_w_frac, 2),
+                    "calibrated_height_in": 10.0,
+                }
+            else:
+                calib = None
+        else:
+            calib = download_and_calibrate_image(item['image_url'], target_filename, item, item['category'], force=force)
         if not calib:
             if os.path.exists(filepath):
                 # A re-fetch attempt failed (network hiccup) but we still have a
@@ -894,9 +1016,15 @@ def main():
         # here (Phase C), after the download/crop step, instead of during dedup.
         local_img_path = os.path.join(IMAGE_DIR, target_filename)
         item['color_family'] = get_color_family_hybrid(item['name'], item['base_sku'], item['category'], local_img_path)
+        # Decision 5: per-manufacturer front-lit/iridized priors (reports 015/019) --
+        # Oceanside's `*irid*` SKU pattern and Youghiogheny's dark-opaque tile lines
+        # are known front-lit surface-photography subsets, not transmissive backlit
+        # sheet shots. `lighting` is the UI-facing field (badge/tooltip); `front_lit`
+        # is kept as a plain-bool alias for any existing consumers.
         is_irid = 'irid' in item['base_sku'].lower() or 'iridescent' in item['name'].lower()
         is_opaque_dark = (item['manufacturer'] == 'Youghiogheny' and any(k in item['name'].lower() for k in ['opaque', 'stipple', 'black']))
         item['front_lit'] = bool(is_irid or is_opaque_dark)
+        item['lighting'] = 'front-lit' if item['front_lit'] else 'back-lit'
 
         item.pop('_stability_kept', None)
         final_registry.append(item)
@@ -1180,8 +1308,9 @@ def generate_diff_report(existing_by_id, final_registry, quarantine_log, stabili
 
     reactive_hits = [v for v in final_by_id.values() if '000009' in v.get('base_sku', '')]
     lines.append(f"- Bullseye Reactive Cloud (000009-*): {len(reactive_hits)} entries in final registry "
-                 "(kept per the review addendum's re-adjudication -- the -v2 recovery is a lateral move, "
-                 "not a fix, for these two SKUs).")
+                 "(KEEP+crop per Decision 3 -- the -v2 recovery, cropped to x:[650,1200] of its 1200x1200 "
+                 "frame, excludes the reaction-demo tile corner insert entirely; see "
+                 "REACTIVE_CLOUD_CROP_OVERRIDE).")
 
     lines.append("\n## Quarantined this run (picker)\n")
     lines.append(f"{len(quarantine_log)} product(s) had no gallery candidate clear the picker floor "
