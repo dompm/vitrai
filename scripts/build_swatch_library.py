@@ -202,10 +202,23 @@ WHITE_ON_WHITE_OVERRIDE = {
 
 
 def apply_manual_overrides(item_id, pick_info):
-    """Bypass the picker floor for the explicit, reviewed WHITE_ON_WHITE_OVERRIDE
-    list only -- never lowers the floor globally. No-op for every other id."""
-    if pick_info['status'] == 'Quarantined' and item_id in WHITE_ON_WHITE_OVERRIDE:
+    """Bypass the picker floor for the explicit, reviewed override lists only --
+    never lowers the floor globally. No-op for every other id.
+
+    Covers both WHITE_ON_WHITE_OVERRIDE and REACTIVE_CLOUD_CROP_OVERRIDE: the
+    reactive-cloud KEEP+crop decision must hold even if a future picker run
+    floors both of that product's candidates (they are hybrid sheet+demo-tile
+    shots, borderline by construction), because the Phase B dedup loop skips
+    picker-Quarantined rows before the crop override is consulted."""
+    if pick_info['status'] != 'Quarantined':
+        return pick_info
+    if item_id in WHITE_ON_WHITE_OVERRIDE:
         url = WHITE_ON_WHITE_OVERRIDE[item_id]
+        cs = dict(pick_info.get('candidate_scores') or {})
+        return {'status': 'Downloaded', 'url': url, 'score': cs.get(_strip_query(url)),
+                'candidate_scores': cs, 'manual_override': True}
+    if item_id in REACTIVE_CLOUD_CROP_OVERRIDE:
+        url = REACTIVE_CLOUD_CROP_OVERRIDE[item_id]['v2_url']
         cs = dict(pick_info.get('candidate_scores') or {})
         return {'status': 'Downloaded', 'url': url, 'score': cs.get(_strip_query(url)),
                 'candidate_scores': cs, 'manual_override': True}
