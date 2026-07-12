@@ -1,0 +1,22 @@
+========================================
+Validation Results: Uniform-Backlight T-Agreement
+Total evaluated samples: 13
+========================================
+cathedral-amber: MAE = 0.025812  (n=1)
+cathedral-blue: MAE = 0.014714  (n=1)
+cathedral-green: MAE = 0.023184  (n=1)
+cathedral-red: MAE = 0.016308  (n=1)
+dark-deep: MAE = 0.001316  (n=1)
+dark-opaque: MAE = 0.004494  (n=1)
+dark-ruby: MAE = 0.001682  (n=1)
+dark-slate: MAE = 0.009524  (n=1)
+dark-textured: MAE = 0.003544  (n=1)
+saturated-opalescent: MAE = 0.013218  (n=1)
+streaky-fine-texture: MAE = 0.008401  (n=1)
+streaky-mix: MAE = 0.042573  (n=1)
+wispy-white: MAE = 0.026435  (n=1)
+
+# Item A gate (default flags -- no --no-tex-dump/--exr-codec/--gt-b/--gt-aov).
+# Reference: report 032 sec 5 committed values. Every recipe reproduces the
+# 032 MAE to the 4th decimal (max delta 0.0001, cathedral-amber/wispy-white
+# rounding) -- the A wiring is byte-neutral when its flags are off.

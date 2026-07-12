@@ -264,6 +264,45 @@ CHROMA_DEV_MAX, CHROMA_DEV_MIN = 2.5, 1.0
 
 
 # ---------------------------------------------------------------- basic ops
+def load_aov_exr(path):
+    """Report 037 WP-A: read one of the GT export v3 AOV files
+    (gt_veil/gt_index/gt_uv/gt_depth.exr). These are written by
+    generate_synthetic.py's --gt-aov via the Blender 5.0 compositor's
+    CompositorNodeOutputFile node, which (probed empirically, no other
+    option exists in this Blender version -- see setup_aov_outputs'
+    docstring) is MULTILAYER-ONLY: even a single-channel-group export gets
+    OpenEXR "part name + per-channel suffix" naming (e.g. "gt_veil.R"), which
+    cv2.imread cannot parse (confirmed: returns None). gt_T/gt_h/gt_height/
+    gt_normal/gt_mark_mask/gt_B/photo_linear are UNCHANGED plain single-part
+    EXRs (written via the older img.save()/save_render() path) and stay
+    cv2-readable -- this reader is ONLY needed for the four new AOV files.
+    Requires the `OpenEXR` pip package (installed alongside this report into
+    both the project .venv and Blender's PYTHONPATH site-packages).
+
+    Returns a float32 numpy array: (H,W) for single-channel (gt_index,
+    gt_depth), (H,W,3) for gt_veil (RGB) and gt_uv (X,Y,Z -- Z is unused,
+    UV is authored as a 2D map). Values are RAW render-linear (these are
+    Cycles pass outputs, not authored-texture writes, so the report-025
+    sRGB-shaped-encode caveat that applies to tex_*/gt_T/gt_h/etc. does
+    NOT apply here -- no srgb_to_lin decode needed).
+    """
+    import OpenEXR
+    f = OpenEXR.File(path)
+    part = f.parts[0]
+    channels = part.channels
+    keys = sorted(channels.keys())
+    if len(keys) == 1:
+        # Either a genuine single scalar channel (gt_index.V, gt_depth.V) or
+        # an RGBA group the binding already stacked into one entry (gt_veil).
+        px = channels[keys[0]].pixels
+        if px.ndim == 3 and px.shape[-1] >= 3:
+            return px[..., :3].astype(np.float32)
+        return px.astype(np.float32)
+    # Multiple per-axis channels (e.g. "gt_uv.X"/"gt_uv.Y"/"gt_uv.Z"): stack
+    # in name order (X,Y,Z or R,G,B,A).
+    return np.stack([channels[k].pixels for k in keys], axis=-1).astype(np.float32)
+
+
 def srgb_to_lin(a):
     return np.where(a <= 0.04045, a / 12.92, ((a + 0.055) / 1.055) ** 2.4)
 

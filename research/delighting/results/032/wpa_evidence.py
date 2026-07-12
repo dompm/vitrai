@@ -89,7 +89,12 @@ p("\n(3) BEER-LAMBERT COUPLING -- corr(dT vs height-0.5) and mean-T preservation
 # reconstruct the pre-coupling T by disabling coupling: compare NEW T to its own
 # height via the shipped helper on a cathedral recipe.
 for r in ["cathedral-green", "streaky-mix"]:
-    T, h, mark, height, normal, bd = NEW.author_glass_arrays(r, size=SIZE, seed=42)
+    # Report 037 note: author_glass_arrays' return tuple grew (mark_dark,
+    # mark_white, mark_index replace the old single `mark`) after this
+    # report-032 evidence script was authored; unpacking widened so this
+    # frozen comparison (vs the already-committed wpa_offline_evidence.txt)
+    # doesn't hard-crash for a future reader -- not re-verified against 037.
+    T, h, mark, mark_white, mark_index, height, normal, bd = NEW.author_glass_arrays(r, size=SIZE, seed=42)
     base = NEW.couple_T_to_height(T, height, 0.0)   # identity -> current T
     # measure sign of coupling directly on the helper
     flat = np.full_like(height, 0.5)

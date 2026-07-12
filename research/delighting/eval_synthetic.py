@@ -94,6 +94,18 @@ CLASS_MAP = {
     "saturated-opalescent": "opalescent",
     "streaky-fine-texture": "wispy",
     "dark-textured": "dark-opaque",
+    # Report 037 item C: four new taxa recipes (031 §2/4/5), class-mapped by
+    # structural/relief family -- baroque-rolling-wave shares the cathedral-
+    # clear family's transmissive base (its differentiator is relief scale,
+    # not oracle class); fracture-streamer/confetti-shard are Voronoi-cell
+    # body patterns over a near-clear/white base, closer to wispy's
+    # patchy-color-variation family than a flat cathedral read; ring-mottle
+    # follows dark-ruby's proven-convincing precedent for this taxon (031
+    # §3) -- same oracle class, distinct authored hue.
+    "baroque-rolling-wave": "cathedral-clear",
+    "fracture-streamer": "wispy",
+    "confetti-shard": "wispy",
+    "ring-mottle": "dark-opaque",
 }
 
 
