@@ -180,7 +180,7 @@ def recipe_T(recipe, size=512, seed=42):
     the exact array generate_synthetic.author_glass_arrays produces (includes
     the report-032 flow-advected streaks, micro-events, and T<->height
     coupling), so appearance grounding sees the SHIPPED recipe, not a copy."""
-    T, _h, _mark, _height, _normal, _bd = _GS.author_glass_arrays(recipe, size=size, seed=seed)
+    T, _h, _mark, _mark_white, _mark_index, _height, _normal, _bd = _GS.author_glass_arrays(recipe, size=size, seed=seed)
     return T.astype(np.float64)
 
 
@@ -188,7 +188,9 @@ RECIPES = ["cathedral-green", "cathedral-amber", "dark-opaque", "dark-deep",
            "dark-ruby", "dark-slate", "streaky-mix", "wispy-white",
            # Report 022: five gap recipes (021 §5)
            "cathedral-blue", "cathedral-red", "saturated-opalescent",
-           "streaky-fine-texture", "dark-textured"]
+           "streaky-fine-texture", "dark-textured",
+           # Report 037 item C: four new taxa (031 §2/4/5)
+           "baroque-rolling-wave", "fracture-streamer", "confetti-shard", "ring-mottle"]
 # rough family->extractor-class mapping, for placing recipes on the same
 # coverage map as the real per-class distributions
 RECIPE_CLASS = {
@@ -200,6 +202,10 @@ RECIPE_CLASS = {
     "cathedral-blue": "cathedral-clear", "cathedral-red": "cathedral-clear",
     "saturated-opalescent": "opalescent",
     "streaky-fine-texture": "wispy", "dark-textured": "dark-opaque",
+    # Report 037 item C: four new taxa, same mapping rationale as
+    # eval_synthetic.py's CLASS_MAP (kept in sync -- see that file's comment).
+    "baroque-rolling-wave": "cathedral-clear", "fracture-streamer": "wispy",
+    "confetti-shard": "wispy", "ring-mottle": "dark-opaque",
 }
 
 

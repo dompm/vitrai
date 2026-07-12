@@ -31,14 +31,18 @@ rewritten to `.exr`). These are the *authored* numpy arrays, before rendering.
 |---|---|---|---:|
 | `tex_T.exr` | authored transmittance color T (pre-render) | RGB; colorspace tag `Linear Rec.709`, but **the bytes on disk are sRGB-shaped** relative to the authored linear array (report 025: `img.save()` bakes an sRGB-shaped encode into the file regardless of format; the in-memory datablock the shader consumes is correct). Decode with `srgb_to_lin` for external readers. | 28.3 MB |
 | `tex_h.exr` | authored haze/roughness scalar h | BW; `Non-Color`; sRGB-shaped on disk (same 025 caveat). | 28.3 MB |
-| `tex_mark_mask.exr` | authored grease-pencil/paint mark coverage | BW; `Non-Color`. | 28.3 MB |
+| `tex_mark_mask.exr` | authored **dark** grease-pencil/marker mark coverage (report 037 item B narrowed this to dark-only — white marks moved to `tex_mark_white`) | BW; `Non-Color`. | 28.3 MB |
+| `tex_mark_white.exr` | authored **white** grease-pencil/paint-pen mark coverage — report 037 item B. Disjoint from `tex_mark_mask` (each authored mark is one color; see `generate_marks`). | BW; `Non-Color`. | 28.3 MB |
+| `tex_mark_index.exr` | authored per-mark instance id, **normalized** `id / MAX_MARKS` (`MAX_MARKS=4`) — report 037 item B. NOT a raw integer: report 025's sRGB-shape bake is only verified for `[0,1]` inputs, so raw ids (which can exceed 1) are avoided. Decode: `round(srgb_to_lin(pixel) * MAX_MARKS)`; `0` = no mark. | BW; `Non-Color`. | 28.3 MB |
 | `tex_height.exr` | authored surface relief height (unitless [0,1]) | BW; `Non-Color`. Report 032: now includes micro-event donuts (seeds/bubbles) baked into relief. | 28.3 MB |
 | `tex_normal.exr` | app-facing tangent normal from height | RGB; `Linear Rec.709` (packed `n*0.5+0.5`). Regenerable from `tex_height`. | 28.3 MB |
 
-**All five are regenerable exactly from `(recipe, seed)`** — the authoring is a
+**All seven are regenerable exactly from `(recipe, seed)`** — the authoring is a
 pure deterministic function (`author_glass_arrays`), verified byte-stable in
-`RENDER_AT_SCALE.md` §5. They are **141.7 MB — 58% of a 242 MB sample** and
-carry no information the seed + code don't. This is the single biggest prune.
+`RENDER_AT_SCALE.md` §5. Report 032's five totaled **141.7 MB — 58% of a
+242 MB sample** and carry no information the seed + code don't; the two new
+mark channels add ~2×28.3 MB pre-prune (negligible after `--no-tex-dump`,
+same as the other five). This is the single biggest prune.
 
 ### 1b. Rendered ground truth `gt_*` — [shipped]
 
@@ -53,9 +57,31 @@ decode with `extract.srgb_to_lin`.
 |---|---|---|---:|
 | `gt_T.exr` / `.png` | transmitted color T in camera space (the primary supervised target; T calibration 003–023) | RGB; EXR 32-bit / PNG 16-bit; sRGB-shaped. | 25.3 / 9.4 MB |
 | `gt_h.exr` / `.png` | haze/roughness in camera space | BW; sRGB-shaped. | 1.6 / 0.06 MB |
-| `gt_mark_mask.exr` / `.png` | mark coverage in camera space | BW. | 0.01 / 0.02 MB |
+| `gt_mark_mask.exr` / `.png` | **dark**-mark coverage in camera space (report 037: narrowed from "any mark" to dark-only) | BW. | 0.01 / 0.02 MB |
+| `gt_mark_white.exr` / `.png` | **white**-mark coverage in camera space — report 037 item B. Disjoint from `gt_mark_mask`. | BW. | 0.01 / 0.02 MB |
+| `gt_mark_index.exr` / `.png` | per-mark instance id in camera space, normalized `id/MAX_MARKS` — report 037 item B, texture-space per-mark GT (see §1e's `gt_index_B` row for why marks can't use an object-index AOV). Decode: `round(srgb_to_lin(pixel) * 4)`. Verified round-trip on a real render: clean id clusters recovered, small AA-edge noise at mark boundaries (same soft-edge behavior as `gt_mark_mask`). | BW. | 0.01 / 0.02 MB |
 | `gt_height.exr` / `.png` | surface relief in camera space | BW; sRGB-shaped. | 9.0 / 3.4 MB |
 | `gt_normal.exr` / `.png` | relief normal in camera space | RGB (packed). | 26.0 / 9.9 MB |
+
+**Report 037 item B (mark overhaul)**: `generate_marks()` (replaces the old
+`generate_scribble_mask`) authors 1–4 marks per sample, each an anti-aliased
+(smoothstep distance-field, not a fixed-sigma blur) stroke in one of 4 shape
+families (scribble / straight+kink / dot / crossing tick), one of 2 colors
+(dark marker or white grease-pencil/paint-pen, recipe-weighted — white is the
+majority on the dark family since a real dark marker is illegible there, the
+reverse on light/clear recipes), with random thickness. **Finding during
+verification**: a plain reflective BSDF for the white marker renders BLACK,
+not white — measured directly (dark-deep, seed 7): white-mark pixels averaged
+0.055 photo luminance vs 0.247 background (i.e. darker than the glass itself).
+Root cause: the scene's front hemisphere is deliberately near-unlit (`DarkWall`
+wall_gray=0 without `--specular`), so an opaque reflector there renders black
+regardless of base color — the dark marker "worked" only by coincidence (dark
+base + no light = dark result, same as light base + no light). Fixed with a
+modest constant self-emission added to the white marker's BSDF (Emission
+color (0.85,0.83,0.77) strength 0.6, `ShaderNodeAddShader`) so it reads
+reliably bright (0.69 measured post-fix on the same pixels) regardless of
+scene front-lighting, while still responding to a real front light source
+(a future `--specular`/IBL pass) additively rather than being capped.
 
 ### 1c. Photos — [shipped]
 
@@ -74,6 +100,21 @@ transform `Standard`.
 Recipe/class label, HDRI name+rotation+EV, camera pose, `has_frame` +
 `frame_occluders` params (the dark-occluder-through-clear-glass audit trail),
 `has_shadow`, `bump_distance_m`, IOR, blender version, seed. ~0.7 KB.
+
+**Report 037 item D additions**: `camera_pose.jitter` (`loc_x/loc_z/rot_x/
+rot_z`) — the per-sample camera-randomization draw, previously applied but
+never recorded (so nobody could audit how much pose variety a given sample
+actually got); the range itself widened from ±0.02 m/±0.05 rad to
+±0.045 m/±0.09 rad. `frame_occluders[].material` — the window-frame material
+family (`dark_wood`/`black_metal`/`weathered_wood`/`white_trim`/
+`brushed_aluminum`, see `FRAME_MATERIAL_FAMILIES`), alongside the existing
+`darkness` field (now an approximate luminance of the chosen material's base
+color, not a raw uniform draw — kept for backward-compat naming). Note: half
+the material families are near-black (preserving the original dark-
+occluder-through-clear-glass audit trait), but `white_trim`/`weathered_wood`/
+`brushed_aluminum` are meaningfully LIGHTER than before — widening what the
+occluder trap actually exercises (a bright occluder behind clear/light glass
+is a different, also-real capture scenario, not just decoration).
 
 ### 1e. Production GT — [shipped, report 037] behind `--gt-b` / `--gt-aov`
 

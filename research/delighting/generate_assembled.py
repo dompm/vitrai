@@ -321,13 +321,14 @@ def build_flat_scene(scene, hdri_path, recipe, sample_dir, seed, uniform=False):
     glass.name = "GlassSheet"
     cam = add_camera(scene)
     add_dark_wall()
-    img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
-    create_glass_material(glass, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=False)
+    img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
+    create_glass_material(glass, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance, use_bump=False)
     # NB: render_ground_truths' signature was extended upstream (img_height,
-    # img_normal added) after report 014 was authored; pass all 5 so the caller
-    # matches the current generate_synthetic.py (not edited here -- see module
-    # docstring).
-    return scene, glass, cam, wmap, wbg, (img_T, img_h, img_mark, img_height, img_normal)
+    # img_normal added after report 014; img_mark_white/img_mark_index added
+    # report 037 item B) after report 014 was authored; pass all 7 so the
+    # caller matches the current generate_synthetic.py (not edited here --
+    # see module docstring).
+    return scene, glass, cam, wmap, wbg, (img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal)
 
 
 def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces, uniform=False):
@@ -342,7 +343,7 @@ def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces, un
     cam = add_camera(scene)
     add_dark_wall()
     add_lead_strips()
-    img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
+    img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance = create_glass_textures(recipe, sample_dir, size=1536, seed=seed)
     for p in pieces:
         cx, cz = p["world_center"]
         s = p["half_size"]
@@ -351,7 +352,7 @@ def build_assembled_scene(scene, hdri_path, recipe, sample_dir, seed, pieces, un
         obj.name = f"Piece_{p['name']}"
         u0, v0, u1, v1 = p["uv_rect"]
         set_uv_rect(obj, u0, v0, u1, v1, s)
-        create_glass_material(obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=False)
+        create_glass_material(obj, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance, use_bump=False)
     return scene, cam, wmap, wbg
 
 

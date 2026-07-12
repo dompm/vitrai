@@ -51,6 +51,12 @@ STAGE_COUNTS = {}
 # ---------------------------------------------------------------------------
 GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": False}
 
+# Report 037 item D: the milky-diffuser family gets the opal-scatter stopgap
+# in create_glass_material (029's sharp-horizon-through-milky-opal
+# impossibility). Same two recipes generate_relief_height already groups as
+# the "milky/diffusing glass families" (shared relief mechanism).
+OPAL_SCATTER_RECIPES = {'wispy-white', 'saturated-opalescent'}
+
 
 def apply_exr_codec(scene):
     """Set scene.render.image_settings.exr_codec from GT_OPTS, if requested.
@@ -277,6 +283,66 @@ def micro_events(size, seed, density, r_range=(3.0, 8.0)):
     return hd, tg, mask
 
 
+def voronoi_cells(size, seed, n_points):
+    """Voronoi partition of the texture plane: `n_points` random seeds,
+    per-pixel nearest-seed id and a 'distance to the cell boundary' scalar
+    (2nd-nearest minus nearest seed distance -- small near edges, growing
+    toward cell interiors). Report 037 item C: the shared generator behind
+    the fracture-streamer (T9, thin boundary lines) and confetti-shard (T10,
+    filled cells) taxa -- report 031 sec5 recommends exactly this ("often
+    the SAME physical product as T9... authoring both together in one
+    Voronoi-cell generator is the efficient path"). Uses
+    scipy.spatial.cKDTree for the nearest/2nd-nearest query -- cheap even at
+    n_points in the dozens and size 1536 (one vectorized query).
+    Returns (cell_id int array, edge_dist float32 array), both (size,size)."""
+    from scipy.spatial import cKDTree
+    rng = np.random.RandomState(seed)
+    pts = rng.uniform(0, size, size=(n_points, 2))
+    tree = cKDTree(pts)
+    yy, xx = np.mgrid[0:size, 0:size]
+    query = np.stack([yy.ravel(), xx.ravel()], axis=-1).astype(np.float64)
+    dist, idx = tree.query(query, k=2)
+    cell_id = idx[:, 0].reshape(size, size)
+    edge_dist = (dist[:, 1] - dist[:, 0]).reshape(size, size)
+    return cell_id, edge_dist.astype(np.float32)
+
+
+def ring_mottle_blobs(size, seed, n_blobs, r_range=(28.0, 90.0)):
+    """Dense overlapping round/oval opacity field for the ring-mottle taxon
+    (T7, report 031 sec2/3/4/5) -- report 037 item C, an explicit blob-
+    placement model replacing dark-ruby's accidental fBm resemblance (031
+    sec3: "dark-ruby unintentionally reads as this"). Same 'stamp a local
+    radial profile, localized to a bounding box' pattern as micro_events(),
+    scaled up to body-filling size/density/opacity instead of micro_events'
+    sparse subtle donuts. Blobs are alpha-composited (later draws partially
+    occlude earlier ones, like real overlapping opaque deposits), each
+    slightly oval (independent x/y radius after rotation) and soft-edged.
+    Returns an opacity field in [0,1] -- 0 = base body color, 1 = fully
+    blob color (see the ring-mottle recipe branch for the color composite)."""
+    rng = np.random.RandomState(seed)
+    opacity = np.zeros((size, size), dtype=np.float32)
+    for _ in range(n_blobs):
+        cx, cy = rng.uniform(0, size, 2)
+        rx = rng.uniform(*r_range)
+        ry = rx * rng.uniform(0.6, 1.3)  # oval, not perfectly round
+        ang = rng.uniform(0, math.pi)
+        R = int(math.ceil(max(rx, ry) * 1.4))
+        x0, x1 = max(0, int(cx - R)), min(size, int(cx + R))
+        y0, y1 = max(0, int(cy - R)), min(size, int(cy + R))
+        if x1 <= x0 or y1 <= y0:
+            continue
+        yy, xx = np.mgrid[y0:y1, x0:x1].astype(np.float32)
+        dx, dy = xx - cx, yy - cy
+        ca, sa = math.cos(ang), math.sin(ang)
+        u = (dx * ca + dy * sa) / rx
+        v = (-dx * sa + dy * ca) / ry
+        d = np.sqrt(u * u + v * v)
+        alpha = np.clip(1.5 - 1.5 * d, 0, 1) ** 2  # soft radial falloff, opaque core
+        sub = opacity[y0:y1, x0:x1]
+        opacity[y0:y1, x0:x1] = sub + alpha * (1 - sub)  # alpha-over compositing
+    return opacity
+
+
 def couple_T_to_height(T, height, coupling):
     """Beer-Lambert T<->height coupling (report 029 gap G-3, the most-actionable
     NEW finding: color/lighting rode ON TOP of relief as independent fields).
@@ -290,37 +356,174 @@ def couple_T_to_height(T, height, coupling):
     thickness = 1.0 - coupling * (2.0 * height.astype(np.float64) - 1.0)
     return np.clip(T ** thickness[..., None], 0.0, 1.0)
 
-def generate_scribble_mask(size, seed):
-    np.random.seed(seed)
-    mask = np.zeros((size, size), dtype=np.float32)
-    num_lines = np.random.randint(1, 4)
-    
-    for _ in range(num_lines):
-        # Random walk for scribble
-        x, y = np.random.randint(0, size, 2)
-        steps = np.random.randint(50, 200)
-        
-        # Smooth random walk using low frequency noise to drive direction
-        angle = np.random.uniform(0, 2 * np.pi)
-        for s in range(steps):
-            if 0 <= x < size and 0 <= y < size:
-                # Draw a thick dot
-                r = np.random.randint(2, 6)
-                ymin = max(0, int(y-r))
-                ymax = min(size, int(y+r))
-                xmin = max(0, int(x-r))
-                xmax = min(size, int(x+r))
-                mask[ymin:ymax, xmin:xmax] = 1.0
-            
-            # Change angle slightly
-            angle += np.random.normal(0, 0.3)
-            x += np.cos(angle) * np.random.uniform(2, 8)
-            y += np.sin(angle) * np.random.uniform(2, 8)
-            
-    # Soften edges slightly
-    from scipy.ndimage import gaussian_filter
-    mask = gaussian_filter(mask, sigma=1.0)
-    return np.clip(mask, 0, 1)
+def _stroke_segment_coverage(size, x0, y0, x1, y1, thickness, aa_px=1.1):
+    """Anti-aliased distance-to-segment coverage for ONE stroke segment,
+    localized to a bounding box (never allocates a full size-x-size field --
+    matches the old generate_scribble_mask's per-step local-box approach, so
+    a multi-segment scribble stays cheap). Returns (coverage, (y0,y1,x0,x1))
+    or None if the segment's box falls entirely off-canvas. `coverage` is a
+    true smoothstep falloff (not a hard threshold + blur), report 037 item B
+    -- the old mask was a binary fill blurred by a fixed sigma=1.0, which
+    doesn't scale with stroke thickness and isn't a real AA edge."""
+    r = thickness / 2.0 + aa_px + 1.0
+    bx0 = max(0, int(min(x0, x1) - r)); bx1 = min(size, int(max(x0, x1) + r) + 1)
+    by0 = max(0, int(min(y0, y1) - r)); by1 = min(size, int(max(y0, y1) + r) + 1)
+    if bx1 <= bx0 or by1 <= by0:
+        return None
+    yy, xx = np.mgrid[by0:by1, bx0:bx1].astype(np.float32)
+    dx, dy = x1 - x0, y1 - y0
+    seg_len2 = dx * dx + dy * dy
+    if seg_len2 < 1e-6:
+        t = np.zeros_like(xx)
+    else:
+        t = np.clip(((xx - x0) * dx + (yy - y0) * dy) / seg_len2, 0.0, 1.0)
+    px, py = x0 + t * dx, y0 + t * dy
+    dist = np.sqrt((xx - px) ** 2 + (yy - py) ** 2)
+    edge0, edge1 = thickness / 2.0 - aa_px, thickness / 2.0 + aa_px
+    s = np.clip((edge1 - dist) / max(edge1 - edge0, 1e-6), 0.0, 1.0)
+    cov = (s * s * (3.0 - 2.0 * s)).astype(np.float32)  # smoothstep
+    return cov, (by0, by1, bx0, bx1)
+
+
+def _blend_into(canvas, piece):
+    if piece is None:
+        return
+    cov, (y0, y1, x0, x1) = piece
+    np.maximum(canvas[y0:y1, x0:x1], cov, out=canvas[y0:y1, x0:x1])
+
+
+def _draw_scribble(canvas, rng, size, thickness):
+    """Random-walk multi-segment stroke (the original shape), rebuilt as
+    explicit AA segments with a start/end taper (pen lift-off)."""
+    x, y = rng.uniform(0, size), rng.uniform(0, size)
+    steps = rng.randint(18, 55)
+    angle = rng.uniform(0, 2 * math.pi)
+    for s in range(steps):
+        angle += rng.gauss(0, 0.35)
+        nx = x + math.cos(angle) * rng.uniform(6, 20)
+        ny = y + math.sin(angle) * rng.uniform(6, 20)
+        taper = min(1.0, 4.0 * s / steps, 4.0 * (steps - s) / steps)
+        _blend_into(canvas, _stroke_segment_coverage(
+            size, x, y, nx, ny, thickness * (0.5 + 0.5 * taper)))
+        x, y = nx, ny
+
+
+def _draw_straight(canvas, rng, size, thickness):
+    """A single confident straight-ish stroke (e.g. an underline or a price
+    tick), 1-2 segments with a slight kink, no random-walk wobble."""
+    x0, y0 = rng.uniform(0, size), rng.uniform(0, size)
+    length = rng.uniform(0.12, 0.4) * size
+    angle = rng.uniform(0, 2 * math.pi)
+    x1 = x0 + math.cos(angle) * length
+    y1 = y0 + math.sin(angle) * length
+    _blend_into(canvas, _stroke_segment_coverage(size, x0, y0, x1, y1, thickness))
+    if rng.random() < 0.4:  # occasional kink -- a checkmark / bent tick
+        angle2 = angle + rng.uniform(0.6, 1.4) * rng.choice([-1, 1])
+        x2 = x1 + math.cos(angle2) * length * rng.uniform(0.3, 0.6)
+        y2 = y1 + math.sin(angle2) * length * rng.uniform(0.3, 0.6)
+        _blend_into(canvas, _stroke_segment_coverage(size, x1, y1, x2, y2, thickness))
+
+
+def _draw_dot(canvas, rng, size, thickness):
+    """A small blob / smudge -- a degenerate zero-length segment renders as
+    a round dot via the same distance-field code."""
+    x, y = rng.uniform(0, size), rng.uniform(0, size)
+    r = thickness * rng.uniform(0.9, 1.6)
+    _blend_into(canvas, _stroke_segment_coverage(size, x, y, x, y, r))
+
+
+def _draw_tick(canvas, rng, size, thickness):
+    """Two short crossing segments -- an X / tally-mark cue, distinct from
+    the scribble and straight-line families."""
+    cx, cy = rng.uniform(0, size), rng.uniform(0, size)
+    half = rng.uniform(0.015, 0.035) * size
+    a1 = rng.uniform(0, math.pi)
+    a2 = a1 + rng.uniform(1.0, 2.1)
+    for a in (a1, a2):
+        _blend_into(canvas, _stroke_segment_coverage(
+            size, cx - math.cos(a) * half, cy - math.sin(a) * half,
+            cx + math.cos(a) * half, cy + math.sin(a) * half, thickness))
+
+
+# report 021 gap recipes + dark family read markedly darker/more saturated in
+# reality, where a real glazier's DARK pencil/marker is illegible -- white
+# grease-pencil/paint-pen marks are the norm there instead (029's mark note).
+# Clear/light recipes see the reverse: dark marker is what's legible. This
+# dict is the fraction of a sample's marks (when it has any) drawn WHITE.
+MARK_WHITE_PROB = {
+    'dark-opaque': 0.75, 'dark-deep': 0.8, 'dark-ruby': 0.75, 'dark-slate': 0.75,
+    'dark-textured': 0.75, 'cathedral-green': 0.35, 'cathedral-amber': 0.3,
+    'cathedral-blue': 0.35, 'cathedral-red': 0.3, 'saturated-opalescent': 0.3,
+    'streaky-mix': 0.2, 'streaky-fine-texture': 0.2, 'wispy-white': 0.05,
+    # Report 037 item C new taxa: white-mark probability by base brightness,
+    # same reasoning as the rest of the table (dark base -> dark marker
+    # illegible -> white grease-pencil is the norm).
+    'baroque-rolling-wave': 0.3, 'fracture-streamer': 0.25,
+    'confetti-shard': 0.2, 'ring-mottle': 0.7,
+}
+MAX_MARKS = 4  # upper bound on generate_marks' num_marks; also the gt_mark_index normalization divisor
+
+_MARK_SHAPES = [
+    ('scribble', 0.45, _draw_scribble),
+    ('straight', 0.25, _draw_straight),
+    ('dot', 0.15, _draw_dot),
+    ('tick', 0.15, _draw_tick),
+]
+
+
+def generate_marks(recipe, size, seed):
+    """Report 037 item B mark overhaul (replaces generate_scribble_mask):
+    AA strokes (smoothstep distance field, not a fixed-sigma blur), WHITE +
+    dark marks (recipe-weighted -- real white grease-pencil is the norm on
+    dark glass, dark marker/pencil on light glass), shape/thickness variety
+    (scribble/straight/dot/tick), and a per-mark index so downstream GT can
+    supervise mark INSTANCES, not just "any mark" coverage.
+
+    Returns (mark_dark, mark_white, mark_index): each (size,size) float32.
+    mark_dark/mark_white are per-color union coverage in [0,1] (what drives
+    the two marker BSDFs in create_glass_material); mark_index is a 1-based
+    per-pixel id of whichever mark has the strongest coverage there (0 =
+    no mark) -- texture-space per-mark GT (marks are baked into the
+    material, not separate geometry, so they can't use an object-index AOV;
+    see docs/GT_SPEC.md sec 1e's gt_index_B row)."""
+    rng = random.Random(seed)
+    num_marks = rng.randint(1, MAX_MARKS)
+    white_prob = MARK_WHITE_PROB.get(recipe, 0.3)
+
+    mark_dark = np.zeros((size, size), dtype=np.float32)
+    mark_white = np.zeros((size, size), dtype=np.float32)
+    mark_index = np.zeros((size, size), dtype=np.float32)
+    index_cov = np.zeros((size, size), dtype=np.float32)
+
+    shape_names = [s[0] for s in _MARK_SHAPES]
+    shape_weights = [s[1] for s in _MARK_SHAPES]
+    shape_fns = {s[0]: s[2] for s in _MARK_SHAPES}
+
+    for i in range(1, num_marks + 1):
+        shape = rng.choices(shape_names, weights=shape_weights, k=1)[0]
+        thickness = rng.uniform(4.0, 14.0) if shape == 'dot' else rng.uniform(2.0, 8.0)
+        canvas = np.zeros((size, size), dtype=np.float32)
+        shape_fns[shape](canvas, rng, size, thickness)
+
+        is_white = rng.random() < white_prob
+        if is_white:
+            np.maximum(mark_white, canvas, out=mark_white)
+        else:
+            np.maximum(mark_dark, canvas, out=mark_dark)
+
+        take = canvas > index_cov
+        # Report 025's "sRGB-shaped on disk" bake (every gt_*/tex_* file
+        # goes through it, this render_ground_truths' emission-passthrough
+        # re-render included) is only exercised/verified for [0,1] inputs.
+        # A raw integer id (1,2,3,4) would round-trip through that encode
+        # out of its normal range with unknown clipping behavior -- so the
+        # id is stored NORMALIZED (id / MAX_MARKS, MAX_MARKS matching this
+        # function's num_marks upper bound) and must be decoded as
+        # `round(srgb_to_lin(pixel) * MAX_MARKS)` (see docs/GT_SPEC.md sec 1b).
+        mark_index = np.where(take, float(i) / MAX_MARKS, mark_index)
+        index_cov = np.where(take, canvas, index_cov)
+
+    return mark_dark, mark_white, mark_index
 
 def generate_relief_height(recipe, size, seed):
     """Ground-truth surface relief for Glass Material v2.
@@ -350,32 +553,60 @@ def generate_relief_height(recipe, size, seed):
         # authored color -- share the relief statistics, not a new surface.
         height = hammered
         bump_distance = rng.uniform(0.0016, 0.0045)
-    elif recipe in ("dark-opaque", "dark-deep", "dark-ruby", "dark-slate", "dark-textured"):
+    elif recipe in ("dark-opaque", "dark-deep", "dark-ruby", "dark-slate", "dark-textured", "ring-mottle"):
         # Report 017: the three new dark-family recipes (very-dark neutral,
         # dark-tinted, medium-dark) share dark-opaque's hammered-relief
         # statistics -- same family of dense rolled glass at different
         # absolute darkness/tint, not a different surface finish. Report 022
         # adds dark-textured (021 gap recipe) to the same family -- it is
-        # purely a T/h texture-detail fix, not a new relief profile.
+        # purely a T/h texture-detail fix, not a new relief profile. Report
+        # 037 item C: ring-mottle (T7 formalized) joins the same family --
+        # it shares dark-ruby's proven-convincing relief precedent (031
+        # sec3), the blob body pattern is authored separately in T.
         height = 0.65 * hammered + 0.35 * generate_noise(size, scale=28, seed=seed + 104)
         bump_distance = rng.uniform(0.0010, 0.0030)
-    elif recipe in ("streaky-mix", "streaky-fine-texture"):
+    elif recipe in ("streaky-mix", "streaky-fine-texture", "fracture-streamer"):
         # Streaky sheets are smoother, with relief that follows the pull
         # direction instead of isotropic hammered cells. Report 022:
         # streaky-fine-texture (021 gap recipe) is the same pulled-glass
         # relief family as streaky-mix, its gap is in T/h texture detail.
+        # Report 037 item C: fracture-streamer (T9) joins the same family --
+        # real "Collage"/streamer glass is typically a fairly flat cast/
+        # pulled sheet, not heavily hammered, so the thin branching color
+        # lines (authored in T) read against a comparably smooth surface.
         low = generate_noise(size, scale=220, seed=seed + 105)
         source_rows = max(1, size // 12)
         stretched = zoom(low[:source_rows, :], (size / source_rows, 1), order=3)[:size, :size]
         height = 0.70 * stretched + 0.30 * gaussian_filter(fine, sigma=5.0)
         bump_distance = rng.uniform(0.00015, 0.0007)
-    elif recipe in ("wispy-white", "saturated-opalescent"):
+    elif recipe in ("wispy-white", "saturated-opalescent", "confetti-shard"):
         # Report 022: saturated-opalescent (021 gap recipe, the first
         # opalescent-class recipe) shares wispy-white's soft, cellular
         # diffuser relief -- both are milky/diffusing glass families: same
-        # relief mechanism, different authored color/haze.
+        # relief mechanism, different authored color/haze. Report 037 item
+        # C: confetti-shard (T10) joins the same family -- real "Collage"
+        # confetti glass is typically a smooth cast sheet (031 sec5/6: same
+        # product family as fracture-streamer/T9's line-network variant),
+        # closer to wispy-white's soft diffuser surface than the hammered
+        # cathedral/dark families.
         height = 0.50 * hammered + 0.50 * generate_noise(size, scale=90, seed=seed + 106)
         bump_distance = rng.uniform(0.0008, 0.0025)
+    elif recipe == 'baroque-rolling-wave':
+        # T3 (031 sec2/4/5, rank #3): large-scale rolling-wave SURFACE
+        # relief, cm-scale, COARSER than the T2 granite/hammered relief
+        # every other recipe shares. 031 sec5: "a coarser-scale extension of
+        # report 022's fBm octave system (lower octave count, larger
+        # lacunarity/scale, higher amplitude)". Built from ONLY the
+        # broadest-scale noise (no fine/mid layers -- that's what makes it
+        # read as smooth rolling waves, not pebbled granite) at an even
+        # larger scale than `broad` above, plus a much bigger bump_distance
+        # so the wave amplitude is visually distinct from every hammered
+        # family's mm-scale relief.
+        rolling = generate_noise(size, scale=420, seed=seed + 108, octaves=2,
+                                  persistence=0.65, lacunarity=4.0)
+        secondary = generate_noise(size, scale=260, seed=seed + 109, octaves=1)
+        height = 0.75 * rolling + 0.25 * secondary
+        bump_distance = rng.uniform(0.006, 0.014)  # 2-8x every other family's amplitude
     else:
         raise ValueError(f"Unknown recipe: {recipe}")
 
@@ -723,6 +954,82 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.29, dtype=np.float32)
 
+    # ---- Report 037 item C: four new taxa recipes (report 031 sec2/4/5's
+    # ranked missing-variety list; targets are STRUCTURAL, per 031 -- none of
+    # these taxa has an explicit real-exemplar Lab centroid the way 021 sec5's
+    # five gap recipes did, so authored colors below are plausible choices
+    # chosen for corpus-hue diversity, not independently re-grounded via
+    # nearest-neighbor search. Flagged honestly in report 037; a follow-up
+    # gap_exemplars.py-style grounding pass is future work, not blocking.
+    elif recipe == 'baroque-rolling-wave':
+        # T3 (031 sec2/4/5, rank #3): large-scale rolling-wave SURFACE
+        # relief, cm-scale, coarser than the T2 "granite" hammered relief
+        # already in every other recipe. 031 sec5: "a coarser-scale
+        # extension of report 022's fBm octave system... the generator
+        # mechanism already exists" -- so T/h authoring here mirrors the
+        # cathedral family (clear glass; T3 is a RELIEF-scale taxon, not a
+        # color one) and the actual differentiator is generate_relief_height's
+        # dedicated 'baroque-rolling-wave' branch below.
+        base_color = np.array([0.30, 0.42, 0.36])  # pale seafoam/aqua-green -- distinct hue from the existing cathedral pair
+        noise = generate_noise(size, scale=220, seed=seed, **CATHEDRAL_OCT)
+        noise_scaled = (noise * 0.16) - 0.08
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        h = np.full((size, size), 0.10, dtype=np.float32)
+
+    elif recipe == 'fracture-streamer':
+        # T9 (031 sec2/4/5, rank #4): thin dark/colored branching crack-like
+        # lines, BODY, over a lightly-tinted near-clear base. 031 sec5:
+        # "(a) texture authoring only... a thin branching line-network mask
+        # (Voronoi-cell-boundary or similar)".
+        base_color = np.array([0.42, 0.40, 0.44])  # near-clear cool-grey base -- lets the streamer lines read
+        noise = generate_noise(size, scale=200, seed=seed, **WISPY_OCT)
+        noise_scaled = (noise * 0.10) - 0.05
+        T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
+        n_pts = int(30 * (size / 1536.0) ** 2) + 18
+        _cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
+        line = np.clip(1.0 - edge_dist / 6.0, 0, 1) ** 2  # thin AA boundary network
+        line_color = np.array([0.05, 0.03, 0.03])  # dark branching streamer tint
+        T = np.clip(T * (1 - line[..., None]) + line_color * line[..., None], 0, 1)
+        h = np.full((size, size), 0.12, dtype=np.float32)
+
+    elif recipe == 'confetti-shard':
+        # T10 (031 sec2/4/5, rank #5): flat angular non-overlapping color
+        # pieces embedded in a clear/white BODY. 031 sec5: "a filled-region
+        # variant of the same Voronoi-cell idea behind T9... often the
+        # literal same product line as T9 (see exemplars)" -- shares
+        # voronoi_cells with fracture-streamer, filled instead of outlined.
+        base_color = np.array([0.72, 0.71, 0.68])  # near-white/clear cast base
+        n_pts = int(22 * (size / 1536.0) ** 2) + 12
+        cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
+        rng_c = np.random.RandomState(seed + 901)
+        n_cells = int(cell_id.max()) + 1
+        palette = rng_c.uniform(0.05, 0.85, size=(n_cells, 3))
+        fill_prob = 0.55  # not every cell is a colored "shard" -- some stay clear body
+        is_shard = rng_c.random(n_cells) < fill_prob
+        cell_color = np.where(is_shard[:, None], palette, base_color[None, :])
+        T = cell_color[cell_id].astype(np.float64)
+        edge = np.clip(1.0 - edge_dist / 2.5, 0, 1) ** 3  # thin AA seam between shards
+        T = np.clip(T * (1 - 0.25 * edge[..., None]), 0, 1)  # subtle seam darkening, not a full boundary blackout
+        h = np.full((size, size), 0.10, dtype=np.float32)
+
+    elif recipe == 'ring-mottle':
+        # T7 formalized (031 sec2/3/4/5): dense overlapping round/oval
+        # opaque blobs, BODY -- an explicit generative model (ring_mottle_
+        # blobs), replacing dark-ruby's accidental fBm resemblance (031
+        # sec3: "dark-ruby unintentionally reads as this... unintended but
+        # convincing"). Grounded on the same dark-tinted family as dark-ruby
+        # (the one proven-convincing precedent for this taxon) but a
+        # distinct warm amber/rose hue for corpus coverage diversity.
+        base_color = np.array([0.10, 0.045, 0.03])
+        blob_color = np.array([0.34, 0.12, 0.07])
+        n_blobs = int(70 * (size / 1536.0) ** 2) + 30
+        blobs = ring_mottle_blobs(size, seed + 950, n_blobs)
+        T = (base_color[None, None, :] * (1 - blobs[..., None])
+             + blob_color[None, None, :] * blobs[..., None])
+        noise = generate_noise(size, scale=50, seed=seed, **DARK_OCT)
+        T = np.clip(T + ((noise * 0.006) - 0.003)[..., None], 0, 1)
+        h = np.full((size, size), 0.22, dtype=np.float32)
+
     else:
         raise ValueError(f"Unknown recipe: {recipe}")
 
@@ -746,6 +1053,12 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         'streaky-mix': 22, 'streaky-fine-texture': 20,
         'wispy-white': 10, 'saturated-opalescent': 10,
         'dark-opaque': 16, 'dark-deep': 14, 'dark-ruby': 16, 'dark-slate': 18, 'dark-textured': 40,
+        # Report 037 item C: baroque-rolling-wave (cathedral-family clear
+        # glass) gets a modest dose too; fracture-streamer/confetti-shard/
+        # ring-mottle deliberately omitted (default 0) -- their authored
+        # Voronoi/blob body pattern IS the taxon signal, and stacking
+        # micro-event donuts on top risks diluting its legibility.
+        'baroque-rolling-wave': 15,
     }
     density = MICRO_EVENT_DENSITY.get(recipe, 0)
     if density > 0:
@@ -762,21 +1075,30 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         'streaky-mix': 0.25, 'streaky-fine-texture': 0.22,
         'wispy-white': 0.14, 'saturated-opalescent': 0.14,
         'dark-opaque': 0.12, 'dark-deep': 0.12, 'dark-ruby': 0.14, 'dark-slate': 0.14, 'dark-textured': 0.18,
+        # Report 037 item C: baroque-rolling-wave (clear cathedral-family
+        # glass, same physical rationale as the other cathedral recipes).
+        # fracture-streamer/confetti-shard/ring-mottle deliberately omitted
+        # (default 0) -- coupling T to height would blur their discrete
+        # Voronoi/blob-authored color structure against the underlying
+        # smooth relief field, undercutting the taxon's flat/crisp look.
+        'baroque-rolling-wave': 0.20,
     }
     coupling = COUPLING.get(recipe, 0.0)
     if coupling > 0:
         T = couple_T_to_height(T, height, coupling).astype(np.float32)
 
-    # ---- texture_authoring stage also covers the mark scribble + normal
-    # derivation below (EXCLUDING the bpy image encode/save -- image_encode_io).
-    mark = generate_scribble_mask(size, seed + 5)
+    # ---- texture_authoring stage also covers the marks + normal derivation
+    # below (EXCLUDING the bpy image encode/save -- image_encode_io). Report
+    # 037 item B: generate_marks replaces generate_scribble_mask with AA
+    # strokes, white+dark marks, shape/thickness variety, per-mark index.
+    mark_dark, mark_white, mark_index = generate_marks(recipe, size, seed + 5)
     normal = height_to_normal(height, strength=18.0)
     _record('texture_authoring', time.perf_counter() - _t0_tex)
 
-    return T, h, mark, height, normal, bump_distance
+    return T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance
 
 
-def encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance):
+def encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance):
     """The bpy half: upload each numpy array into a fresh bpy.data.images
     datablock and write it to disk. MUST run every light variation --
     bpy.ops.wm.read_factory_settings(use_empty=True) in setup_scene() wipes
@@ -790,6 +1112,8 @@ def encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance):
     T_path = os.path.join(out_dir, "tex_T.png")
     h_path = os.path.join(out_dir, "tex_h.png")
     mark_path = os.path.join(out_dir, "tex_mark_mask.png")
+    mark_white_path = os.path.join(out_dir, "tex_mark_white.png")
+    mark_index_path = os.path.join(out_dir, "tex_mark_index.png")
     height_path = os.path.join(out_dir, "tex_height.png")
     normal_path = os.path.join(out_dir, "tex_normal.png")
 
@@ -801,11 +1125,13 @@ def encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance):
     with stage('image_encode_io'):
         img_T = save_numpy_to_image(T, T_path, is_color=True)
         img_h = save_numpy_to_image(h, h_path, is_color=False)
-        img_mark = save_numpy_to_image(mark, mark_path, is_color=False)
+        img_mark = save_numpy_to_image(mark_dark, mark_path, is_color=False)
+        img_mark_white = save_numpy_to_image(mark_white, mark_white_path, is_color=False)
+        img_mark_index = save_numpy_to_image(mark_index, mark_index_path, is_color=False)
         img_height = save_numpy_to_image(height, height_path, is_color=False)
         img_normal = save_numpy_to_image(normal, normal_path, is_color=True)
 
-    return img_T, img_h, img_mark, img_height, img_normal, bump_distance
+    return img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance
 
 
 def create_glass_textures(recipe, out_dir, size=1536, seed=42, cache=None):
@@ -814,12 +1140,12 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42, cache=None):
     light variations, keyed by (recipe, seed) -- see main()."""
     key = (recipe, seed, size)
     if cache is not None and key in cache:
-        T, h, mark, height, normal, bump_distance = cache[key]
+        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance = cache[key]
     else:
-        T, h, mark, height, normal, bump_distance = author_glass_arrays(recipe, size=size, seed=seed)
+        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance = author_glass_arrays(recipe, size=size, seed=seed)
         if cache is not None:
-            cache[key] = (T, h, mark, height, normal, bump_distance)
-    return encode_glass_textures(out_dir, T, h, mark, height, normal, bump_distance)
+            cache[key] = (T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance)
+    return encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance)
 
 def download_polyhaven_hdri(out_dir):
     """Downloads a small outdoor HDRI from polyhaven if not present."""
@@ -877,6 +1203,82 @@ FRAME_BORDERS = ['top', 'bottom', 'left', 'right']
 OCCLUDER_Y = 0.01  # depth offset behind the glass (matches the old WindowFrame position)
 
 
+# Report 037 item D: textured window-frame material families (replaces the
+# flat near-black-only bar). Half the weight stays near-black (dark_wood /
+# black_metal) to preserve the original dark-occluder-through-clear-glass
+# audit trait (029/031: these pixels must be visible but must NOT leak into
+# extracted T -- a near-black occluder is the sharpest version of that test);
+# the other half adds real wood/metal variety per the report 037 brief.
+# (base_color, roughness, metallic, is_wood) -- is_wood picks the grain vs
+# brushed-streak bump orientation below.
+FRAME_MATERIAL_FAMILIES = [
+    ("dark_wood", (0.012, 0.008, 0.006), 0.75, 0.0, True),
+    ("black_metal", (0.010, 0.010, 0.011), 0.30, 0.65, False),
+    ("weathered_wood", (0.30, 0.19, 0.11), 0.70, 0.0, True),
+    ("white_trim", (0.55, 0.53, 0.48), 0.55, 0.0, True),
+    ("brushed_aluminum", (0.42, 0.43, 0.45), 0.35, 0.85, False),
+]
+
+
+def _build_frame_material(name, rng):
+    """Wood/metal window-frame material (report 037 item D): a color/
+    roughness family (FRAME_MATERIAL_FAMILIES) plus procedural texture --
+    wood grain (a stretched Noise Texture bump, elongated along the bar's
+    long axis) or brushed-metal streaks (a high-frequency 1D-ish Noise
+    Texture at low bump strength) -- and a Noise-driven Roughness so the
+    surface isn't a flat single value. Metal families get nonzero Metallic
+    (colored/mirror-like environment reflection = the "+ bounce" the brief
+    asks for -- a plausible amount of light bouncing off the frame into the
+    scene, distinct from the near-zero-reflectance flat matte bars before).
+    Uses Blender's native procedural nodes (Noise Texture), not an authored/
+    tracked numpy channel -- this is scene dressing, not Material-v2 GT."""
+    label, base_color, roughness, metallic, is_wood = rng.choice(FRAME_MATERIAL_FAMILIES)
+    # slight per-instance color jitter so repeated bars in one sample (or
+    # across samples of the same family) aren't identical
+    jitter = rng.uniform(0.85, 1.15)
+    color = tuple(min(1.0, max(0.0, c * jitter)) for c in base_color)
+
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
+    principled = nodes["Principled BSDF"]
+    principled.inputs["Base Color"].default_value = (*color, 1)
+    principled.inputs["Metallic"].default_value = metallic
+    if "Specular IOR Level" in principled.inputs:
+        principled.inputs["Specular IOR Level"].default_value = rng.uniform(0.4, 0.7)
+
+    tex_coord = nodes.new('ShaderNodeTexCoord')
+    mapping = nodes.new('ShaderNodeMapping')
+    links.new(tex_coord.outputs['Object'], mapping.inputs['Vector'])
+    if is_wood:
+        # grain: stretched along one axis (long, thin streaks)
+        mapping.inputs['Scale'].default_value = (4.0, 60.0, 1.0)
+        grain_scale = rng.uniform(8.0, 20.0)
+    else:
+        # brushed metal: fine, less anisotropic-stretched than wood grain
+        mapping.inputs['Scale'].default_value = (10.0, 30.0, 1.0)
+        grain_scale = rng.uniform(20.0, 40.0)
+
+    noise_rough = nodes.new('ShaderNodeTexNoise')
+    noise_rough.inputs['Scale'].default_value = grain_scale
+    noise_rough.inputs['Detail'].default_value = 3.0
+    links.new(mapping.outputs['Vector'], noise_rough.inputs['Vector'])
+
+    rough_map = nodes.new('ShaderNodeMapRange')
+    rough_map.inputs['To Min'].default_value = max(0.05, roughness - 0.18)
+    rough_map.inputs['To Max'].default_value = min(1.0, roughness + 0.12)
+    links.new(noise_rough.outputs['Fac'], rough_map.inputs['Value'])
+    links.new(rough_map.outputs['Result'], principled.inputs['Roughness'])
+
+    bump = nodes.new('ShaderNodeBump')
+    bump.inputs['Strength'].default_value = 0.15 if is_wood else 0.06
+    links.new(noise_rough.outputs['Fac'], bump.inputs['Height'])
+    links.new(bump.outputs['Normal'], principled.inputs['Normal'])
+
+    return mat, label
+
+
 def add_frame_occluders(cam):
     """Create 1-2 near-black bars hugging edge(s) of the frame, like a real
     photo of a sheet held near a window edge. Returns the occluder params
@@ -900,7 +1302,6 @@ def add_frame_occluders(cam):
     for i, border in enumerate(borders):
         reach_frac = random.uniform(0.08, 0.35)   # fraction of the visible half-extent
         jitter_frac = random.uniform(-0.04, 0.04)  # irregular inner edge, not perfectly flush
-        darkness = random.uniform(0.005, 0.02)     # near-black, slightly varied
 
         if border in ('top', 'bottom'):
             thickness = max(0.005, (reach_frac + jitter_frac) * vis_half_z)
@@ -929,13 +1330,18 @@ def add_frame_occluders(cam):
         bar.scale = (x1 - x0, z1 - z0, 1.0)
         bar.pass_index = 2  # report 037 gt_index: frame occluder label
 
-        mat_frame = bpy.data.materials.new(name=f"FrameOccluderMat_{i}")
-        mat_frame.use_nodes = True
-        mat_frame.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (darkness, darkness, darkness, 1)
+        # Report 037 item D: textured wood/metal frame material (replaces
+        # the flat near-black-only bar) -- see _build_frame_material and
+        # FRAME_MATERIAL_FAMILIES above.
+        mat_frame, material_label = _build_frame_material(f"FrameOccluderMat_{i}", random)
         bar.data.materials.append(mat_frame)
+        approx_luminance = sum(mat_frame.node_tree.nodes["Principled BSDF"]
+                                .inputs["Base Color"].default_value[:3]) / 3.0
 
         params.append({"border": border, "thickness": round(thickness, 4),
-                        "reach_frac": round(reach_frac, 4), "darkness": round(darkness, 4)})
+                        "reach_frac": round(reach_frac, 4),
+                        "material": material_label,
+                        "darkness": round(approx_luminance, 4)})
 
     return params
 
@@ -1042,11 +1448,22 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     cam = bpy.context.active_object
     scene.camera = cam
 
-    # Randomize camera slightly
-    cam.location.x += random.uniform(-0.02, 0.02)
-    cam.location.z += random.uniform(-0.02, 0.02)
-    cam.rotation_euler.x += random.uniform(-0.05, 0.05)
-    cam.rotation_euler.z += random.uniform(-0.05, 0.05)
+    # Randomize camera slightly. Report 037 item D: widened from the
+    # original +-0.02m / +-0.05rad -- real handheld captures of a sheet
+    # against a window show more pose variety than that tight a range, and
+    # the old range was never meta-recorded so nobody could audit how much
+    # jitter a given sample actually got. Now captured into `camera_jitter`
+    # (returned below, folded into meta.json's camera_pose by main()).
+    jx = random.uniform(-0.045, 0.045)
+    jz = random.uniform(-0.045, 0.045)
+    jrx = random.uniform(-0.09, 0.09)
+    jrz = random.uniform(-0.09, 0.09)
+    cam.location.x += jx
+    cam.location.z += jz
+    cam.rotation_euler.x += jrx
+    cam.rotation_euler.z += jrz
+    camera_jitter = {"loc_x": round(jx, 5), "loc_z": round(jz, 5),
+                      "rot_x": round(jrx, 5), "rot_z": round(jrz, 5)}
 
     frame_params = []
     if has_frame:
@@ -1074,9 +1491,9 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     wall.data.materials.append(mat_wall)
 
     _record('scene_build', time.perf_counter() - _t0_scene)
-    return glass_obj, cam, ev, z_rot, frame_params
+    return glass_obj, cam, ev, z_rot, frame_params, camera_jitter
 
-def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance, use_bump=True,
+def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance, use_bump=True,
                           specular_ior_level=None):
     mat = bpy.data.materials.new(name="GlassMat")
     
@@ -1096,6 +1513,9 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe,
     
     tex_mark = nodes.new('ShaderNodeTexImage')
     tex_mark.image = img_mark
+
+    tex_mark_white = nodes.new('ShaderNodeTexImage')
+    tex_mark_white.image = img_mark_white
 
     tex_height = nodes.new('ShaderNodeTexImage')
     tex_height.image = img_height
@@ -1135,18 +1555,91 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_height, recipe,
     
     # Haze drives the roughness of the transmission
     links.new(tex_h.outputs['Color'], principled.inputs['Roughness'])
-    
-    # Add grease pencil marks on top
+
+    # Report 037 item D: opal-scatter stopgap (029's sharp-horizon-through-
+    # milky-opal impossibility -- a real milky opal sheet backlit by a scene
+    # with a sharp horizon/edge shows that edge SOFTENED by internal
+    # scattering; a single Principled transmission lobe can't reproduce that
+    # without pushing roughness so high it flattens EVERYTHING transmitted,
+    # not just distant hard edges, which would also wreck the near-field
+    # gt_T agreement the --validate gate checks). A second, much-rougher
+    # transmission lobe -- mixed in by LOCAL haze, capped well below full
+    # weight -- approximates extra scatter on the already-hazy milky family
+    # without touching the primary lobe everything else (including the
+    # validate gate, whose target IS the primary lobe's tex_T) depends on.
+    # This is a STOPGAP, not a real BSSRDF/scatter-PSF term -- 031 sec5 and
+    # report 032 sec6 both already named MMv3-G1's point-spread-function
+    # pass as the actual fix; not oversold here.
+    principled_shader = principled.outputs['BSDF']
+    if recipe in OPAL_SCATTER_RECIPES:
+        scatter_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+        scatter_bsdf.inputs['IOR'].default_value = 1.5
+        scatter_bsdf.inputs['Roughness'].default_value = 1.0  # near-fully-diffuse transmission
+        if 'Transmission Weight' in scatter_bsdf.inputs:
+            scatter_bsdf.inputs['Transmission Weight'].default_value = 1.0
+        else:
+            scatter_bsdf.inputs['Transmission'].default_value = 1.0
+        links.new(math_node.outputs['Vector'], scatter_bsdf.inputs['Base Color'])
+
+        scatter_fac = nodes.new('ShaderNodeMath')
+        scatter_fac.operation = 'MULTIPLY'
+        scatter_fac.inputs[1].default_value = 0.6  # cap: scatter lobe never fully replaces the primary lobe
+        links.new(tex_h.outputs['Color'], scatter_fac.inputs[0])
+
+        mix_scatter = nodes.new('ShaderNodeMixShader')
+        links.new(scatter_fac.outputs['Value'], mix_scatter.inputs['Fac'])
+        links.new(principled.outputs['BSDF'], mix_scatter.inputs[1])
+        links.new(scatter_bsdf.outputs['BSDF'], mix_scatter.inputs[2])
+        principled_shader = mix_scatter.outputs['Shader']
+
+    # Report 037 item B: dark grease-pencil/marker AND white grease-pencil/
+    # paint-pen marks, each its own BSDF mixed in via its own coverage
+    # channel (tex_mark / tex_mark_white -- generate_marks keeps the two
+    # colors on disjoint per-mark coverage, so the two mixes rarely fight
+    # over the same pixel). White grease pencil/paint-pen is matte and
+    # slightly off-white/warm (chalky pigment), not a pure specular white.
     mark_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
     mark_bsdf.inputs['Base Color'].default_value = (0.01, 0.01, 0.01, 1)
     mark_bsdf.inputs['Roughness'].default_value = 0.8
-    
+
+    mark_white_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
+    mark_white_bsdf.inputs['Base Color'].default_value = (0.88, 0.86, 0.80, 1)
+    mark_white_bsdf.inputs['Roughness'].default_value = 0.9
+
+    # A plain reflective BSDF for the white marker does NOT work in this
+    # scene: measured directly (dark-deep, white-mark pixels vs background)
+    # the "white" mark rendered DARKER than the surrounding glass (0.055 vs
+    # 0.247 mean photo luminance) -- the front hemisphere this material
+    # would need to reflect is near-unlit by construction (DarkWall
+    # wall_gray=0 without --specular; see report 032/037's veil notes), so
+    # ANY opaque reflector there renders black regardless of its base color
+    # (the dark marker "worked" only by coincidence: dark base + no light =
+    # dark result, which is also what a light base + no light gives). Real
+    # white grease-pencil/paint-pen is legible because SOME front-side
+    # ambient/flash light exists in an actual photo shoot, which this
+    # scene's lighting model deliberately doesn't provide. Modeled instead
+    # as a modest constant self-emission (the pigment "catches" a baseline
+    # amount of light regardless of scene front-lighting), added to the
+    # BSDF so a real front light source (a future --specular/IBL pass)
+    # still makes it brighter, not capped.
+    mark_white_emit = nodes.new('ShaderNodeEmission')
+    mark_white_emit.inputs['Color'].default_value = (0.85, 0.83, 0.77, 1)
+    mark_white_emit.inputs['Strength'].default_value = 0.6
+    mark_white_add = nodes.new('ShaderNodeAddShader')
+    links.new(mark_white_bsdf.outputs['BSDF'], mark_white_add.inputs[0])
+    links.new(mark_white_emit.outputs['Emission'], mark_white_add.inputs[1])
+
     mix_mark = nodes.new('ShaderNodeMixShader')
     links.new(tex_mark.outputs['Color'], mix_mark.inputs['Fac'])
-    links.new(principled.outputs['BSDF'], mix_mark.inputs[1])
+    links.new(principled_shader, mix_mark.inputs[1])
     links.new(mark_bsdf.outputs['BSDF'], mix_mark.inputs[2])
-    
-    links.new(mix_mark.outputs['Shader'], out_node.inputs['Surface'])
+
+    mix_mark_white = nodes.new('ShaderNodeMixShader')
+    links.new(tex_mark_white.outputs['Color'], mix_mark_white.inputs['Fac'])
+    links.new(mix_mark.outputs['Shader'], mix_mark_white.inputs[1])
+    links.new(mark_white_add.outputs['Shader'], mix_mark_white.inputs[2])
+
+    links.new(mix_mark_white.outputs['Shader'], out_node.inputs['Surface'])
     
     # Hammered/rolled surface relief (affects glossy and transmitted lensing).
     # Height-texture-driven (tracked material channel, UV-mapped so relief
@@ -1250,7 +1743,7 @@ def add_shadow_caster(out_dir):
     _record('scene_build', time.perf_counter() - _t0_scene)
     return caster
 
-def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal):
+def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal):
     _t0_scene = time.perf_counter()
     scene = bpy.context.scene
 
@@ -1321,6 +1814,13 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_heig
         ("gt_T", img_T, 'RGB'),
         ("gt_h", img_h, 'BW'),
         ("gt_mark_mask", img_mark, 'BW'),
+        # Report 037 item B: white-mark coverage (disjoint from gt_mark_mask
+        # -- generate_marks keeps dark/white marks on separate channels) and
+        # a per-mark index (0 = no mark, else 1-based id of the strongest-
+        # coverage mark at that pixel) -- texture-space per-mark GT, since
+        # marks are baked into the material and can't use an object-index AOV.
+        ("gt_mark_white", img_mark_white, 'BW'),
+        ("gt_mark_index", img_mark_index, 'BW'),
         ("gt_height", img_height, 'BW'),
         ("gt_normal", img_normal, 'RGB'),
     ]
@@ -1617,7 +2117,9 @@ def main():
                'dark-deep', 'dark-ruby', 'dark-slate',
                # Report 022: five gap recipes (021 §5)
                'cathedral-blue', 'cathedral-red', 'saturated-opalescent',
-               'streaky-fine-texture', 'dark-textured']
+               'streaky-fine-texture', 'dark-textured',
+               # Report 037 item C: four new taxa (031 §2/4/5 ranked gaps)
+               'baroque-rolling-wave', 'fracture-streamer', 'confetti-shard', 'ring-mottle']
     
     os.makedirs(args.out, exist_ok=True)
 
@@ -1683,22 +2185,22 @@ def main():
 
             # 1. Setup scene FIRST (clears factory settings)
             if args.validate:
-                glass_obj, cam, ev, z_rot, frame_params = setup_scene(None, has_frame=has_frame)
+                glass_obj, cam, ev, z_rot, frame_params, camera_jitter = setup_scene(None, has_frame=has_frame)
             else:
-                glass_obj, cam, ev, z_rot, frame_params = setup_scene(
+                glass_obj, cam, ev, z_rot, frame_params, camera_jitter = setup_scene(
                     hdri_path, has_frame=has_frame, wall_gray=wall_gray)
 
             # 2. Create textures (numpy compute cached across this glass
             # piece's light variations; bpy encode always redone -- see
             # create_glass_textures/_texture_cache comments above)
-            img_T, img_h, img_mark, img_height, img_normal, bump_distance = create_glass_textures(
+            img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance = create_glass_textures(
                 recipe, sample_dir, size=1536, seed=seed, cache=_texture_cache
             )
 
             # 3. Create material
             with stage('scene_build'):
                 mat = create_glass_material(
-                    glass_obj, img_T, img_h, img_mark, img_height, recipe, bump_distance,
+                    glass_obj, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance,
                     specular_ior_level=spec_level
                 )
         
@@ -1712,7 +2214,12 @@ def main():
                 "frame_occluders": frame_params,
                 "camera_pose": {
                     "location": list(cam.location),
-                    "rotation": list(cam.rotation_euler)
+                    "rotation": list(cam.rotation_euler),
+                    # Report 037 item D: the +-0.02m/+-0.05rad jitter was
+                    # widened to +-0.045m/+-0.09rad and is now meta-recorded
+                    # (previously untracked -- nobody could audit how much
+                    # pose variety a given sample actually got).
+                    "jitter": camera_jitter,
                 },
                 "blender_version": bpy.app.version_string,
                 "seed": seed,
@@ -1723,7 +2230,7 @@ def main():
                     "wall_gray": wall_gray,
                 },
                 "material_v2": {
-                    "channels": ["T", "h", "height", "normal", "mark_mask"],
+                    "channels": ["T", "h", "height", "normal", "mark_mask", "mark_white", "mark_index"],
                     "bump_distance_m": bump_distance,
                     "ior": 1.5
                 }
@@ -1766,7 +2273,7 @@ def main():
                 render_hidden_background(glass_obj, sample_dir)
 
             # Render aligned ground truths
-            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_height, img_normal)
+            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal)
 
             # Report 037 WP-A --no-tex-dump: delete the authored-texture dump
             # AFTER all renders (they had to exist on disk during rendering --
@@ -1774,7 +2281,7 @@ def main():
             # save_numpy_to_image). Byte-regenerable from (recipe, seed) in
             # meta.json, so nothing is lost; this is the GT_SPEC sec 3 prune.
             if GT_OPTS["no_tex_dump"]:
-                for _tex in ("tex_T", "tex_h", "tex_mark_mask", "tex_height", "tex_normal"):
+                for _tex in ("tex_T", "tex_h", "tex_mark_mask", "tex_mark_white", "tex_mark_index", "tex_height", "tex_normal"):
                     _p = os.path.join(sample_dir, _tex + ".exr")
                     if os.path.exists(_p):
                         os.remove(_p)
