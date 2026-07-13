@@ -1,0 +1,28 @@
+Report 043 item 1 (MMv3-G1 sigma_s/a_glow split) -- validate gate evidence.
+Run: --validate --seed 42 --count 1 --light-variations 1, per recipe, on the
+043 working tree (items 1+2 applied). check_validation.py output:
+
+  cathedral-green:       MAE = 0.026196   (origin baseline 0.0262, report 037 BCD: matches)
+  dark-deep:             MAE = 0.002976   (origin ~0.003 with 037 marks: matches)
+  streaky-mix:           MAE = 0.011525   (origin baseline 0.0115, report 039: matches)
+  wispy-white:           MAE = 0.007509   (origin baseline 0.0109, report 039: IMPROVED)
+  saturated-opalescent:  MAE = 0.006237   (origin baseline 0.0132, report 037: IMPROVED)
+
+Non-opal recipes reproduce their committed baselines (sigma_s == old h for
+them, byte-equivalent shader path). The opal pair IMPROVES: the 037 stopgap's
+second lobe biased the uniform-backlight transmission slightly away from
+gt_T; the single-lobe sigma_s path plus a correctly-wired Translucent glow
+(Color = T, NOT the squared T^2 the Principled thin-sheet trick needs -- see
+create_glass_material comment; the wrong wiring measured 0.1065 on
+wispy-white before the fix) agrees better.
+
+Razor-edge scatter test (wispy-white seed 601, black_metal frame occluder
+behind the sheet, production flags): 10-90% edge rise width through the
+milky glass, measured on 55 row profiles centered on the gt_B occluder edge:
+  gt_B (physical background):  1 px  (stays razor sharp -- ground truth intact)
+  photo BEFORE (origin):      29 px
+  photo AFTER  (item 1):      58 px  (2x wider genuine LOCAL blur; the 037
+                                      stopgap could only dim toward the
+                                      global mean, not widen the PSF)
+Veil is untouched by item 1 (0.228 -> 0.253 mean, wall constant) -- the veil
+collapse is item 2's wall fix, isolated separately.

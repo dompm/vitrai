@@ -36,13 +36,16 @@ rewritten to `.exr`). These are the *authored* numpy arrays, before rendering.
 | `tex_mark_index.exr` | authored per-mark instance id, **normalized** `id / MAX_MARKS` (`MAX_MARKS=4`) — report 037 item B. NOT a raw integer: report 025's sRGB-shape bake is only verified for `[0,1]` inputs, so raw ids (which can exceed 1) are avoided. Decode: `round(srgb_to_lin(pixel) * MAX_MARKS)`; `0` = no mark. | BW; `Non-Color`. | 28.3 MB |
 | `tex_height.exr` | authored surface relief height (unitless [0,1]) | BW; `Non-Color`. Report 032: now includes micro-event donuts (seeds/bubbles) baked into relief. | 28.3 MB |
 | `tex_normal.exr` | app-facing tangent normal from height | RGB; `Linear Rec.709` (packed `n*0.5+0.5`). Regenerable from `tex_height`. | 28.3 MB |
+| `tex_sigma_s.exr` | authored forward-scatter PSF width σ_s (MMv3 G1, report 043 item 1) — drives the one transmission lobe's Roughness (the graded LOCAL background blur; replaces the 037 opal-stopgap second lobe). `h` is now the OUTPUT_CONTRACT §0 compatibility projection `a_glow + (1−a_glow)·σ_s`, not an independent field. | BW; `Non-Color`; sRGB-shaped on disk (025 caveat). | 28.3 MB |
+| `tex_a_glow.exr` | authored diffuse self-glow / opal opacity a_glow (MMv3 G1, report 043 item 1) — weight of a dedicated Translucent-BSDF mix (true Lambertian transmission). Zero everywhere except the opal family (`decompose_haze`). | BW; `Non-Color`; sRGB-shaped on disk. | 28.3 MB |
 
-**All seven are regenerable exactly from `(recipe, seed)`** — the authoring is a
+**All nine are regenerable exactly from `(recipe, seed)`** — the authoring is a
 pure deterministic function (`author_glass_arrays`), verified byte-stable in
 `RENDER_AT_SCALE.md` §5. Report 032's five totaled **141.7 MB — 58% of a
 242 MB sample** and carry no information the seed + code don't; the two new
-mark channels add ~2×28.3 MB pre-prune (negligible after `--no-tex-dump`,
-same as the other five). This is the single biggest prune.
+mark channels and the two report-043 MMv3 channels add ~4×28.3 MB pre-prune
+(negligible after `--no-tex-dump`, which deletes all nine, same as the other
+five). This is the single biggest prune.
 
 ### 1b. Rendered ground truth `gt_*` — [shipped]
 
@@ -62,6 +65,21 @@ decode with `extract.srgb_to_lin`.
 | `gt_mark_index.exr` / `.png` | per-mark instance id in camera space, normalized `id/MAX_MARKS` — report 037 item B, texture-space per-mark GT (see §1e's `gt_index_B` row for why marks can't use an object-index AOV). Decode: `round(srgb_to_lin(pixel) * 4)`. Verified round-trip on a real render: clean id clusters recovered, small AA-edge noise at mark boundaries (same soft-edge behavior as `gt_mark_mask`). | BW. | 0.01 / 0.02 MB |
 | `gt_height.exr` / `.png` | surface relief in camera space | BW; sRGB-shaped. | 9.0 / 3.4 MB |
 | `gt_normal.exr` / `.png` | relief normal in camera space | RGB (packed). | 26.0 / 9.9 MB |
+| `gt_sigma_s.exr` / `.png` | forward-scatter PSF width σ_s in camera space (MMv3 G1, report 043 item 1) | BW; sRGB-shaped. | 7.6 / 3.1 MB (DWAA, wispy-white — structured field; near-flat recipes compress far smaller) |
+| `gt_a_glow.exr` / `.png` | opal self-glow opacity a_glow in camera space (MMv3 G1, report 043 item 1). Round-trip verified on a real render: `srgb_to_lin(gt_h) == a_glow + (1−a_glow)·σ_s` to DWAA tolerance (mean residual 1.4e-4). | BW; sRGB-shaped. | 7.9 / 3.0 MB (same caveat) |
+
+**Report 043 size delta + reader caveat**: the two new GT channels cost
+**+19 MB measured** on a production-shaped wispy-white sample (65 MB → 84 MB,
+`--no-tex-dump --exr-codec DWAA --gt-b --gt-aov`) — still ≤100 MB (§3 target)
+but a +29% delta at 20k scale (~+380 GB); if the budget tightens, `gt_h` is
+now redundant with (σ_s, a_glow) via the §0 projection and is the natural
+prune (kept for OUTPUT_CONTRACT compatibility). Reader caveat discovered
+while verifying (pre-existing, NOT introduced by 043): **BW single-channel
+EXRs written with `--exr-codec DWAA` are not cv2-readable** (`cv2.imread`
+returns None for the DWAA+Y-channel combination — affects `gt_h`,
+`gt_height`, `gt_sigma_s`, `gt_a_glow`, mark channels on any DWAA dataset);
+read them via `extract.load_aov_exr` (OpenEXR package, works on both plain
+and multilayer files) and decode with `srgb_to_lin` as usual.
 
 **Report 037 item B (mark overhaul)**: `generate_marks()` (replaces the old
 `generate_scribble_mask`) authors 1–4 marks per sample, each an anti-aliased

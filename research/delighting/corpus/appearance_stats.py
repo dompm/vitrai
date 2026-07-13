@@ -180,7 +180,7 @@ def recipe_T(recipe, size=512, seed=42):
     the exact array generate_synthetic.author_glass_arrays produces (includes
     the report-032 flow-advected streaks, micro-events, and T<->height
     coupling), so appearance grounding sees the SHIPPED recipe, not a copy."""
-    T, _h, _mark, _mark_white, _mark_index, _height, _normal, _bd = _GS.author_glass_arrays(recipe, size=size, seed=seed)
+    T, _h, _mark, _mark_white, _mark_index, _height, _normal, _bd, _sigma_s, _a_glow = _GS.author_glass_arrays(recipe, size=size, seed=seed)
     return T.astype(np.float64)
 
 
