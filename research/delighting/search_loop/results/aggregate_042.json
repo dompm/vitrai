@@ -1,0 +1,192 @@
+{
+  "per_product": [
+    {
+      "pid": "bullseye-0013050051f1010",
+      "n_candidates": 15,
+      "n_verified": 8,
+      "contexts": {
+        "flat-swatch": 8
+      },
+      "n_context_classes": 1,
+      "multi_context": false,
+      "elapsed_s": 76.9
+    },
+    {
+      "pid": "bullseye-0010150051f1010",
+      "n_candidates": 15,
+      "n_verified": 11,
+      "contexts": {
+        "other": 5,
+        "flat-swatch": 3,
+        "backlit-window": 3
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 153.3
+    },
+    {
+      "pid": "bullseye-0019340030f1010",
+      "n_candidates": 15,
+      "n_verified": 0,
+      "contexts": {},
+      "n_context_classes": 0,
+      "multi_context": false,
+      "elapsed_s": 51.2
+    },
+    {
+      "pid": "bullseye-0004210050f1010",
+      "n_candidates": 15,
+      "n_verified": 5,
+      "contexts": {
+        "flat-swatch": 5
+      },
+      "n_context_classes": 1,
+      "multi_context": false,
+      "elapsed_s": 48.3
+    },
+    {
+      "pid": "oceanside-of43176s",
+      "n_candidates": 15,
+      "n_verified": 6,
+      "contexts": {
+        "backlit-window": 1,
+        "flat-swatch": 4,
+        "held-in-hand": 1
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 62.3
+    },
+    {
+      "pid": "oceanside-ofr85",
+      "n_candidates": 15,
+      "n_verified": 7,
+      "contexts": {
+        "flat-swatch": 4,
+        "held-in-hand": 2,
+        "backlit-window": 1
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 117.1
+    },
+    {
+      "pid": "oceanside-of6338s",
+      "n_candidates": 15,
+      "n_verified": 1,
+      "contexts": {
+        "other": 1
+      },
+      "n_context_classes": 1,
+      "multi_context": false,
+      "elapsed_s": 51.4
+    },
+    {
+      "pid": "oceanside-of134rr",
+      "n_candidates": 15,
+      "n_verified": 7,
+      "contexts": {
+        "backlit-window": 4,
+        "flat-swatch": 1,
+        "held-in-hand": 2
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 72.4
+    },
+    {
+      "pid": "youghiogheny-yd5907x9",
+      "n_candidates": 15,
+      "n_verified": 6,
+      "contexts": {
+        "flat-swatch": 5,
+        "backlit-window": 1
+      },
+      "n_context_classes": 2,
+      "multi_context": true,
+      "elapsed_s": 130.3
+    },
+    {
+      "pid": "youghiogheny-yu6505g",
+      "n_candidates": 15,
+      "n_verified": 0,
+      "contexts": {},
+      "n_context_classes": 0,
+      "multi_context": false,
+      "elapsed_s": 34.7
+    },
+    {
+      "pid": "youghiogheny-y1097sp",
+      "n_candidates": 15,
+      "n_verified": 8,
+      "contexts": {
+        "flat-swatch": 4,
+        "other": 2,
+        "backlit-window": 2
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 82.6
+    },
+    {
+      "pid": "wissmach-wi18flem",
+      "n_candidates": 15,
+      "n_verified": 6,
+      "contexts": {
+        "flat-swatch": 3,
+        "backlit-window": 1,
+        "other": 1,
+        "held-in-hand": 1
+      },
+      "n_context_classes": 4,
+      "multi_context": true,
+      "elapsed_s": 119.7
+    },
+    {
+      "pid": "wissmach-w101ll",
+      "n_candidates": 15,
+      "n_verified": 2,
+      "contexts": {
+        "flat-swatch": 1,
+        "held-in-hand": 1
+      },
+      "n_context_classes": 2,
+      "multi_context": true,
+      "elapsed_s": 79.3
+    },
+    {
+      "pid": "wissmach-w29d",
+      "n_candidates": 15,
+      "n_verified": 2,
+      "contexts": {
+        "other": 1,
+        "flat-swatch": 1
+      },
+      "n_context_classes": 2,
+      "multi_context": true,
+      "elapsed_s": 71.8
+    },
+    {
+      "pid": "wissmach-wwo708",
+      "n_candidates": 15,
+      "n_verified": 5,
+      "contexts": {
+        "flat-swatch": 3,
+        "other": 1,
+        "backlit-window": 1
+      },
+      "n_context_classes": 3,
+      "multi_context": true,
+      "elapsed_s": 57.8
+    }
+  ],
+  "context_mix": {
+    "flat-swatch": 42,
+    "other": 11,
+    "backlit-window": 14,
+    "held-in-hand": 7
+  },
+  "total_verified": 74,
+  "total_candidates": 225,
+  "products_multi_context": 10
+}

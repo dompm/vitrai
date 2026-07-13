@@ -1,0 +1,7 @@
+# raw scraped candidate images: local-disk only, never committed
+# (same research-use posture as realpairs/data/images, see docs/REAL_PAIRS_DATASET.md §5)
+candidate_images/
+# reference swatches are copies of the gitignored frontend catalog images
+reference_swatches/
+.venv/
+__pycache__/

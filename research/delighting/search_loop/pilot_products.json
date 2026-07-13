@@ -1,0 +1,17 @@
+[
+  {"id": "bullseye-0013050051f1010", "manufacturer": "Bullseye", "name": "Sunset Coral Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible", "category": "Cathedral", "search_name": "Sunset Coral Transparent Iridescent"},
+  {"id": "bullseye-0010150051f1010", "manufacturer": "Bullseye", "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible", "category": "Clear", "search_name": "Alchemy Clear Silver to Gold"},
+  {"id": "bullseye-0019340030f1010", "manufacturer": "Bullseye", "name": "Copper Tint, Double-rolled, 3 mm, Fusible", "category": "Cathedral", "search_name": "Copper Tint"},
+  {"id": "bullseye-0004210050f1010", "manufacturer": "Bullseye", "name": "Petal Pink Opalescent, Thin-rolled, 2 mm, Fusible", "category": "Opalescent", "search_name": "Petal Pink Opalescent"},
+  {"id": "oceanside-of43176s", "manufacturer": "Oceanside", "name": "96 COE Vienna Spirit", "category": "Wispy/Streaky", "search_name": "Vienna Spirit"},
+  {"id": "oceanside-ofr85", "manufacturer": "Oceanside", "name": "96 COE Jungle Fog Fusers Reserve", "category": "Wispy/Streaky", "search_name": "Jungle Fog Fusers Reserve"},
+  {"id": "oceanside-of6338s", "manufacturer": "Oceanside", "name": "96 COE White, Navy, Aqua \"South Beach\"", "category": "Opalescent", "search_name": "South Beach"},
+  {"id": "oceanside-of134rr", "manufacturer": "Oceanside", "name": "96 COE Medium Blue Rough Rolled", "category": "Textured/Baroque", "search_name": "Medium Blue Rough Rolled"},
+  {"id": "youghiogheny-yd5907x9", "manufacturer": "Youghiogheny", "name": "Yellow with Red True Dichro", "category": "Cathedral", "search_name": "Yellow with Red True Dichro"},
+  {"id": "youghiogheny-yu6505g", "manufacturer": "Youghiogheny", "name": "White Opal Granite", "category": "Textured/Baroque", "search_name": "White Opal Granite"},
+  {"id": "youghiogheny-y1097sp", "manufacturer": "Youghiogheny", "name": "White Ice, Ruby, Bubblegum Pink Stipple", "category": "Opalescent", "search_name": "White Ice Ruby Bubblegum Pink Stipple"},
+  {"id": "wissmach-wi18flem", "manufacturer": "Wissmach", "name": "Red Flemish", "category": "Cathedral", "search_name": "Red Flemish"},
+  {"id": "wissmach-w101ll", "manufacturer": "Wissmach", "name": "Evergreen Streaky", "category": "Wispy/Streaky", "search_name": "Evergreen Streaky"},
+  {"id": "wissmach-w29d", "manufacturer": "Wissmach", "name": "Thunderbird Opal", "category": "Opalescent", "search_name": "Thunderbird Opal"},
+  {"id": "wissmach-wwo708", "manufacturer": "Wissmach", "name": "Clover Wisspy", "category": "Cathedral", "search_name": "Clover Wisspy"}
+]

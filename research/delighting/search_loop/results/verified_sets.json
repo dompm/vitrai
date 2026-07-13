@@ -1,0 +1,831 @@
+{
+  "bullseye-0013050051f1010": {
+    "product": {
+      "id": "bullseye-0013050051f1010",
+      "manufacturer": "Bullseye",
+      "name": "Sunset Coral Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "category": "Cathedral",
+      "search_name": "Sunset Coral Transparent Iridescent"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/00.jpg",
+        "url": "https://creativeglassshop.co.uk/30918-home_default/bullseye-sunset-coral---transparent---rainbow-iridescent---2mm---fusible-glass-sheets.jpg",
+        "source_page": "https://creativeglassshop.co.uk/bullseye-textured-irid/7889-bullseye-sunset-coral---transparent---rainbow-iridescent---2mm---fusible-glass-sheets.html",
+        "title": "Bullseye Sunset Coral - Iridescent - Transparent - 2mm - Fusible",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to pink/lavender/yellow iridescent gradient matches"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/02.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001305-0031-F_03.jpg?v=1765591102&width=3840",
+        "source_page": "https://shop.bullseyeglass.com/products/sunset-coral-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+        "title": "Sunset Coral Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fu ...",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "orange to white/pink/lavender iridescent swatch, matches reference closely"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/03.jpg",
+        "url": "https://www.swartglass.com/assets/images/Sunset_Coral_Rainbow_Irid_Thin_001305-0051-F-HALF_by_Bullseye_Glass_Co.jpg",
+        "source_page": "https://www.swartglass.com/90-COE--001305-0051--Sunset-Coral-Rainbow-Iridescent-Thin_p_2564.html",
+        "title": "Bullseye Glass-90 COE - 001305-0051 - Sunset Coral-Rainbow -Iridescent ...",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "orange to cream/pink/blue iridescent gradient, matches"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/06.jpg",
+        "url": "https://i.etsystatic.com/11893191/r/il/3fd79e/7592408849/il_1140xN.7592408849_7arp.jpg",
+        "source_page": "https://www.etsy.com/listing/768297063/sunset-coral-rainbow-iridescent-bullseye",
+        "title": "Sunset Coral Rainbow Iridescent (bullseye 1305) Stained Glass Sheet, 8. ...",
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "orange texture transitioning to cream, matches reference stipple texture"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/07.jpg",
+        "url": "http://shop.bullseyeglass.com/cdn/shop/files/001305-0031-F_01.jpg?v=1765591102",
+        "source_page": "https://shop.bullseyeglass.com/products/sunset-coral-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+        "title": "Sunset Coral Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fu ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange-tan to cream/pink/lavender/gold iridescent, matches"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/08.jpg",
+        "url": "https://www.swartglass.com/assets/images/Sunset_Coral_Rainbow_Irid_Thin_001305-0051-F-HALF_by_Bullseye_Glass_Co1.jpg",
+        "source_page": "https://www.swartglass.com/90-COE--001305-0051--Sunset-Coral-Rainbow-Iridescent-Thin_p_2564.html",
+        "title": "Bullseye Glass-90 COE - 001305-0051 - Sunset Coral-Rainbow -Iridescent ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange textured close-up transitioning to pink/blue iridescent"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/11.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001305-0030-F_01.jpg?v=1765590942&width=832",
+        "source_page": "https://shop.bullseyeglass.com/products/sunset-coral-transparent-double-rolled-3-mm-fusible",
+        "title": "Sunset Coral Transparent, Double-rolled, 3 mm, Fusible \u2013 Bullseye Glass Co.",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to pink/lavender iridescent close-up, matches"
+      },
+      {
+        "file": "candidate_images/bullseye-0013050051f1010/12.jpg",
+        "url": "https://www.creativeglassshop.eu/32086-large_default/bullseye-light-coral-striker-transparent-rainbow-iridescent-3mm-fusible-glass-sheets.jpg",
+        "source_page": "https://www.creativeglassshop.eu/en/bullseye-textured-irid/9990-bullseye-light-coral-striker-transparent-rainbow-iridescent-3mm-fusible-glass-sheets.html",
+        "title": "Bullseye Light Coral Striker - Transparent - Rainbow Iridescent - 3mm ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to cream/pink/lavender/gold iridescent with color chip, matches"
+      }
+    ]
+  },
+  "bullseye-0010150051f1010": {
+    "product": {
+      "id": "bullseye-0010150051f1010",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "category": "Clear",
+      "search_name": "Alchemy Clear Silver to Gold"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/00.jpg",
+        "url": "https://creativeglassshop.co.uk/32867-large_default/bullseye-alchemy-clear---silver-to-gold---transparent---3mm---fusible.jpg",
+        "source_page": "https://creativeglassshop.co.uk/bullseye-transparent/11081-bullseye-alchemy-clear---silver-to-gold---transparent---3mm---fusible.html",
+        "title": "Bullseye Alchemy Clear - Silver to Gold - Transparent - 3mm - Fusible",
+        "context": "other",
+        "confidence": 0.8,
+        "reason": "official reaction-sample tile (coral+gold) for this exact product, 001015"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/01.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001015-0050-F_02.jpg?v=1765591054&width=3840",
+        "source_page": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-thin-rolled-2-mm-fusible",
+        "title": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, 2 mm, Fusible ...",
+        "context": "other",
+        "confidence": 0.8,
+        "reason": "same coral+gold reaction tile, larger crop"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/02.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001015-0031-F_01.jpg?v=1765591054&width=3840",
+        "source_page": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+        "title": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, r ...",
+        "context": "other",
+        "confidence": 0.6,
+        "reason": "crop of same reference tile showing only the gold half"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/03.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001015-0050-M-0202_01.jpg?v=1765592047&width=832",
+        "source_page": "https://shop.bullseyeglass.com/products/alchemy-clear-transparent-silver-to-gold-thin-rolled-2-mm-color-sample-2x2-in",
+        "title": "Alchemy Clear Transparent, Silver to Gold, Thin-rolled, 2 mm, Color Sa ...",
+        "context": "other",
+        "confidence": 0.7,
+        "reason": "close-up crop of the coral+gold reaction tile"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/04.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001015-0031-F_03.jpg?v=1765591053&width=3840",
+        "source_page": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+        "title": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, r ...",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "plain silver-white iridescent sheet with rainbow sheen, matches reference closely"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/05.jpg",
+        "url": "https://i.etsystatic.com/42882211/r/il/1f1c9b/6406132202/il_1080xN.6406132202_lbnu.jpg",
+        "source_page": "https://www.etsy.com/listing/1806959104/vintage-bullseye-stained-glass-sheet",
+        "title": "Vintage Bullseye Stained Glass Sheet, Gold Mottled, 9.5\u201dx14\u201d D - Etsy",
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "golden dot/waffle iridescent texture backlit, plausible transmission look of same coating"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/07.jpg",
+        "url": "https://i.etsystatic.com/42882211/r/il/17323e/7187426732/il_680x540.7187426732_j8jg.jpg",
+        "source_page": "https://www.etsy.com/listing/4367102608/vintage-bullseye-gold-white-stained",
+        "title": "Vintage Bullseye Gold White Stained Glass Sheet~9\u201dx14\u201d C - Etsy",
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "same golden dot texture family, backlit close-up"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/08.jpg",
+        "url": "https://www.bullseyeglass.com/wp-content/uploads/alchemy_glass_notes_thumb.jpg",
+        "source_page": "https://www.bullseyeglass.com/alchemy-glasses/",
+        "title": "Bullseye Glass | Product Use Article | Alchemy Glasses",
+        "context": "other",
+        "confidence": 0.9,
+        "reason": "official Bullseye product page showing the exact 001015 Silver to Gold sample tile"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/09.jpg",
+        "url": "https://shop.bullseyeglass.com/cdn/shop/files/001016-0031-F_02.jpg?v=1765591055&width=3840",
+        "source_page": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+        "title": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "plain iridescent sheet with subtle rainbow gradient, matches reference"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/10.jpg",
+        "url": "https://www.creativeglassshop.eu/31543-large_default/bullseye-clear-transparent-gold-iridescent-2mm-fusible-glass-sheets.jpg",
+        "source_page": "https://www.creativeglassshop.eu/en/bullseye-textured-irid/9030-bullseye-clear-transparent-gold-iridescent-2mm-fusible-glass-sheets.html",
+        "title": "Bullseye Clear - Transparent - Gold Iridescent - 2mm - Fusible Glass Sheets",
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "pale cream-to-gold gradient consistent with iridescent coating, less distinct rainbow"
+      },
+      {
+        "file": "candidate_images/bullseye-0010150051f1010/12.jpg",
+        "url": "https://i.etsystatic.com/42882211/r/il/796449/7415412903/il_794xN.7415412903_s513.jpg",
+        "source_page": "https://www.etsy.com/listing/4400361237/vintage-1980s-bullseye-rich-gold-stained",
+        "title": "Vintage 1980\u2019s Bullseye Rich Gold Stained Glass Sheet~ 9.5\u201dx14\u201d A - Etsy",
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "golden dot texture backlit with hot glare spot, same texture family as other window shots"
+      }
+    ]
+  },
+  "bullseye-0019340030f1010": {
+    "product": {
+      "id": "bullseye-0019340030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Copper Tint, Double-rolled, 3 mm, Fusible",
+      "category": "Cathedral",
+      "search_name": "Copper Tint"
+    },
+    "verified_images": []
+  },
+  "bullseye-0004210050f1010": {
+    "product": {
+      "id": "bullseye-0004210050f1010",
+      "manufacturer": "Bullseye",
+      "name": "Petal Pink Opalescent, Thin-rolled, 2 mm, Fusible",
+      "category": "Opalescent",
+      "search_name": "Petal Pink Opalescent"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/bullseye-0004210050f1010/04.jpg",
+        "url": "https://www.franklinartglass.com/wp-content/uploads/pink.jpg",
+        "source_page": "https://www.franklinartglass.com/product/bullseye-petal-pink-opalescent-double-rolled-glass-000421-0030/",
+        "title": "Bullseye Petal Pink Opalescent Double Rolled 90 C.O.E. Glass (000421 ...",
+        "context": "flat-swatch",
+        "confidence": 0.6,
+        "reason": "solid pale pink flat swatch, consistent with reference"
+      },
+      {
+        "file": "candidate_images/bullseye-0004210050f1010/06.jpg",
+        "url": "https://www.bullseyeglass.com/wp-content/uploads/000421-0030-F.jpg",
+        "source_page": "https://www.bullseyeglass.com/000421-petal-pink-opalescent/",
+        "title": "Bullseye Glass | About Our Glass | Petal Pink Opalescent (000421)",
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "solid glossy pink sheet, same family though slightly more saturated"
+      },
+      {
+        "file": "candidate_images/bullseye-0004210050f1010/11.jpg",
+        "url": "https://i.etsystatic.com/49824084/r/il/12e618/6465551015/il_1080xN.6465551015_hv2t.jpg",
+        "source_page": "https://www.etsy.com/listing/1809266418/petal-pink-10x10-fusible-bullseye",
+        "title": "Petal Pink, 10x10, Fusible, Bullseye, Stained Glass Sheet, READ ...",
+        "context": "flat-swatch",
+        "confidence": 0.98,
+        "reason": "label explicitly reads Bullseye Petal Pink, Opalescent, Double-rolled, matching product code"
+      },
+      {
+        "file": "candidate_images/bullseye-0004210050f1010/12.jpg",
+        "url": "https://www.bullseyeglass.com/wp-content/uploads/000421-0001-F_01.jpg",
+        "source_page": "https://www.bullseyeglass.com/000421-petal-pink-opalescent/",
+        "title": "Bullseye Glass | About Our Glass | Petal Pink Opalescent (000421)",
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "solid smooth pale pink gradient, consistent with reference color/texture"
+      },
+      {
+        "file": "candidate_images/bullseye-0004210050f1010/13.jpg",
+        "url": "https://i.etsystatic.com/18905335/r/il/95efae/6997024631/il_1080xN.6997024631_2o54.jpg",
+        "source_page": "https://www.etsy.com/listing/1249026463/0421-petal-pink-opalescent-bullseye-90",
+        "title": "0421 Petal Pink Opalescent Bullseye 90 COE Glass Sheet 10x10\" 90COE ...",
+        "context": "flat-swatch",
+        "confidence": 0.5,
+        "reason": "solid uniform pink flat sheet similar to reference"
+      }
+    ]
+  },
+  "oceanside-of43176s": {
+    "product": {
+      "id": "oceanside-of43176s",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Vienna Spirit",
+      "category": "Wispy/Streaky",
+      "search_name": "Vienna Spirit"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/oceanside-of43176s/00.jpg",
+        "url": "https://m.media-amazon.com/images/I/81c5jnH2V5L._AC_SL1500_.jpg",
+        "source_page": "https://www.amazon.com/Stained-Glass-Spirit-Oceanside-Mosaic/dp/B0875J3N55",
+        "title": "Amazon.com: Stained Glass Sheet Spirit Vienna Clear Ivory Cobalt COE 96 ...",
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "same blue/white wispy streaky blend, held to daylight with scenery visible through"
+      },
+      {
+        "file": "candidate_images/oceanside-of43176s/01.jpg",
+        "url": "http://rockymountainglasscrafts.com/cdn/shop/files/55c86787-df6f-5241-ab11-dbaa5bbc44f0.jpg?v=1729950666",
+        "source_page": "https://rockymountainglasscrafts.com/products/431-76-spirit-vienna-12-x-12-inch-spectrum-system-96-sheet-glass-3mm",
+        "title": "431.76 Vienna Spirit 12 x 12 Inch Oceanside Compatible 96 COE Sheet Gl ...",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching blue/white streaky blob pattern, clean lightbox shot"
+      },
+      {
+        "file": "candidate_images/oceanside-of43176s/05.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/191279_60.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-compatible-glass-96-coe/spirit-opal-art-mixes/oceanside-vienna-spirit-96-coe",
+        "title": "Oceanside Vienna Spirit - 96 COE | Opal Art Mixes",
+        "context": "held-in-hand",
+        "confidence": 0.9,
+        "reason": "same blue/white streaky pattern, product code '43176' handwritten matches reference SKU"
+      },
+      {
+        "file": "candidate_images/oceanside-of43176s/06.jpg",
+        "url": "https://www.artglasssupplies.com/images/oceansideglassspiritviennacoe9601.jpg",
+        "source_page": "https://artglasssupplies.com/coe96-opalart-spirit",
+        "title": "COE96 OpalArt & Spirit | Art Glass Supplies",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching blue/white diagonal wispy streaky pattern"
+      },
+      {
+        "file": "candidate_images/oceanside-of43176s/12.webp",
+        "url": "https://www.artglasssupplies.com/imagesc/oceanside-glass-spirit-vienna-coe96-sku-16601-680x680_H600.webp",
+        "source_page": "https://www.artglasssupplies.com/oceanside-glass-spirit-vienna-coe96",
+        "title": "Oceanside Glass Spirit Vienna COE96 Glass - ArtGlassSupplies - COE96 OpalA",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching blue/white diagonal wispy streaky pattern, Oceanside watermark"
+      },
+      {
+        "file": "candidate_images/oceanside-of43176s/14.jpg",
+        "url": "http://www.stainedglassexpress.com/cdn/shop/files/Vienna_Spirit_6.jpg?crop=center&height=1200&v=1766005553&width=1200",
+        "source_page": "https://www.stainedglassexpress.com/products/oceanside-vienna-spirit-fusible-glass",
+        "title": "96 COE Vienna Spirit - Stained Glass Express",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching blue/white/gray wispy streaky blob pattern"
+      }
+    ]
+  },
+  "oceanside-ofr85": {
+    "product": {
+      "id": "oceanside-ofr85",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Jungle Fog Fusers Reserve",
+      "category": "Wispy/Streaky",
+      "search_name": "Jungle Fog Fusers Reserve"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/oceanside-ofr85/00.jpg",
+        "url": "https://artistryinglass.on.ca/images/product/Jungle_Fog.jpg",
+        "source_page": "https://artistryinglass.on.ca/jungle-fog-fusers-reserve-by-sys96-and-oceanside-compatible",
+        "title": "Artistry In Glass > FUSERS RESERVE > JUNGLE FOG FUSERS RESERVE by SYS96 ...",
+        "context": "flat-swatch",
+        "confidence": 0.95,
+        "reason": "same glossy green/teal streaky swirl with Fusers Reserve mark"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/03.jpg",
+        "url": "http://www.stainedglassexpress.com/cdn/shop/files/96_COE_Jungle_Fog.jpg?crop=center&height=1200&v=1751405208&width=1200",
+        "source_page": "https://www.stainedglassexpress.com/products/96-coe-jungle-fog-fusers-reserve",
+        "title": "96 COE Jungle Fog Fusers Reserve \u2013 Stained Glass Express",
+        "context": "flat-swatch",
+        "confidence": 0.95,
+        "reason": "matching glossy green/teal streaky swirl pattern"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/05.jpg",
+        "url": "https://i.etsystatic.com/49824084/r/il/e5fff5/6827867527/il_1588xN.6827867527_9ss8.jpg",
+        "source_page": "https://www.etsy.com/listing/1861241407/odyssey-fusers-reserve-oceanside-stained",
+        "title": "Odyssey, Fusers Reserve, Oceanside, Stained Glass Sheet, 96coe - Etsy",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching glossy green/teal streaky swirl pattern"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/08.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/239971_40.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-compatible-glass-96-coe/spirit-opal-art-mixes/oceanside-jungle-fog-fusers-reserve-opalart-96-coe",
+        "title": "Oceanside Jungle Fog Fusers Reserve OpalArt - 96 COE | Spirit Mixes",
+        "context": "held-in-hand",
+        "confidence": 0.75,
+        "reason": "bold green/white wavy swirl held up, matches stripe pattern"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/12.jpg",
+        "url": "https://www.swartglass.com/assets/images/social/fusers-reserve-fr-94-97-98.jpg",
+        "source_page": "https://swartglass.com/",
+        "title": "Stained Glass Supplies, Fusing Glass & Tools | SW Art Glass",
+        "context": "flat-swatch",
+        "confidence": 0.7,
+        "reason": "Fusers Reserve teal/green swirl, same family though more saturated"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/13.jpg",
+        "url": "https://www.swartglass.com/assets/images/oceanside-fusible/aurora-fusers-reserve-oceanside-3.jpg",
+        "source_page": "https://www.swartglass.com/Aurora-Oceanside-Glass-Fusers-Reserve-96-COE_p_20372.html",
+        "title": "Aurora Fusers Reserve Oceanside Sheet Glass 96 COE Limited",
+        "context": "backlit-window",
+        "confidence": 0.7,
+        "reason": "muted green wavy stripes held against window, matches pattern"
+      },
+      {
+        "file": "candidate_images/oceanside-ofr85/14.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/239971_20.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-compatible-glass-96-coe/spirit-opal-art-mixes/oceanside-jungle-fog-fusers-reserve-opalart-96-coe",
+        "title": "Oceanside Jungle Fog Fusers Reserve OpalArt - 96 COE | Spirit Mixes",
+        "context": "held-in-hand",
+        "confidence": 0.7,
+        "reason": "green/white bold wavy swirl against window, similar to reference"
+      }
+    ]
+  },
+  "oceanside-of6338s": {
+    "product": {
+      "id": "oceanside-of6338s",
+      "manufacturer": "Oceanside",
+      "name": "96 COE White, Navy, Aqua \"South Beach\"",
+      "category": "Opalescent",
+      "search_name": "South Beach"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/oceanside-of6338s/07.jpg",
+        "url": "https://www.bradstreetglass.com/cdn/shop/files/SP_335.2_White_Light_Blue_Spectrum1_e78280a9-3081-470e-85b2-15387893f627_1024x1024@2x.jpg?v=1694907136",
+        "source_page": "https://www.bradstreetglass.com/products/white-light-blue-opal-stained-glass-sheet-96-coe-oceanside-sf335-2",
+        "title": "White Light Blue Opal Stained Glass Sheet 96 COE Oceanside SF335.2",
+        "context": "other",
+        "confidence": 0.55,
+        "reason": "similar light blue/white streaky opalescent texture, though lacks distinct navy streaks of reference"
+      }
+    ]
+  },
+  "oceanside-of134rr": {
+    "product": {
+      "id": "oceanside-of134rr",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Medium Blue Rough Rolled",
+      "category": "Textured/Baroque",
+      "search_name": "Medium Blue Rough Rolled"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/oceanside-of134rr/00.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/229985_10.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-glass/rough-rolled/oceanside-medium-blue-transparent-rough-rolled",
+        "title": "Oceanside Medium Blue Transparent Rough Rolled",
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "same medium blue rough-rolled texture and light-to-dark gradient"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/01.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/229985_50.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-glass/rough-rolled/oceanside-medium-blue-transparent-rough-rolled",
+        "title": "Oceanside Medium Blue Transparent Rough Rolled",
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "matching blue rough-rolled texture, shop display shot"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/08.jpg",
+        "url": "https://www.instacart.com/image-server/1200x1200/www.instacart.com/assets/domains/product-image/file/large_6b3b0961-451c-4070-beb9-efb8d203ebbc.jpg",
+        "source_page": "https://www.instacart.com/products/31532260-oceanside-compatible-rough-rolled-fusible-stained-glass-sheet-sky-blue-12-x-12-in",
+        "title": "Oceanside Compatible Rough Rolled Fusible Stained Glass Sheet - Sky ...",
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/11.jpg",
+        "url": "https://www.bradstreetglass.com/cdn/shop/products/SP_132RR_Light_Blue_Rough_Rolled_Spectrum1.JPG?v=1688780951&width=990",
+        "source_page": "https://www.bradstreetglass.com/products/light-blue-rough-rolled-cathedral-stained-glass-sheet-translucent-spectrum-132rr",
+        "title": "Light Blue Rough Rolled Stained Glass Sheet Oceanside SF132RR ...",
+        "context": "held-in-hand",
+        "confidence": 0.55,
+        "reason": "similar rough-rolled crinkle texture though darker tone, possibly lighting/reflection"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/12.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/229973_40.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-glass/rough-rolled/oceanside-light-blue-transparent-rough-rolled",
+        "title": "Oceanside Light Blue Transparent Rough Rolled",
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/13.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/230005_10.jpg",
+        "source_page": "https://www.delphiglass.com/oceanside-glass/rough-rolled/oceanside-dark-blue-transparent-rough-rolled",
+        "title": "Oceanside Dark Blue Transparent Rough Rolled",
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "file": "candidate_images/oceanside-of134rr/14.jpg",
+        "url": "https://i.etsystatic.com/49824084/r/il/23860f/6581233798/il_680x540.6581233798_fvy2.jpg",
+        "source_page": "https://www.etsy.com/listing/1847261642/medium-blue-rough-rolled-stained-glass",
+        "title": "Medium Blue, Rough Rolled, Stained Glass Sheet, Original Spectrum, READ ...",
+        "context": "held-in-hand",
+        "confidence": 0.75,
+        "reason": "matching medium-dark blue rough-rolled mottled texture"
+      }
+    ]
+  },
+  "youghiogheny-yd5907x9": {
+    "product": {
+      "id": "youghiogheny-yd5907x9",
+      "manufacturer": "Youghiogheny",
+      "name": "Yellow with Red True Dichro",
+      "category": "Cathedral",
+      "search_name": "Yellow with Red True Dichro"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/00.jpg",
+        "url": "http://www.stainedglassexpress.com/cdn/shop/files/Yellow_w-_Red_and_White_True_Dichro_-_Stained_Glass_Express_-4993653.jpg?crop=center&height=1200&v=1751468706&width=1200",
+        "source_page": "https://www.stainedglassexpress.com/products/youghiogheny-yellow-with-red-and-white-true-dichro-glass",
+        "title": "Yellow with Red, White True Dichro \u2013 Stained Glass Express",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "same fiery orange/pink/maroon streaky swirl family"
+      },
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/01.jpg",
+        "url": "https://i.pinimg.com/736x/1d/0b/8e/1d0b8ecc7956b18864d7ae622a1f3293.jpg",
+        "source_page": "https://www.pinterest.com/pin/youghiogheny-yellow-with-red-and-cobalt-blue-true-dichro--295619163044437962/",
+        "title": "Youghiogheny Yellow with Red and Cobalt Blue True Dichro | Stained ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching orange/yellow ground with dark maroon streak shapes"
+      },
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/11.jpg",
+        "url": "https://i.etsystatic.com/22934454/r/il/fd6528/6836769124/il_1080xN.6836769124_o82x.jpg",
+        "source_page": "https://www.etsy.com/listing/1222423030/youghiogheny-mottled-red-orange-yellow",
+        "title": "Youghiogheny Mottled Red Orange & Yellow Stained Glass A07 - Etsy",
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "vivid red/yellow fire swirl matches reference texture and color"
+      },
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/12.jpg",
+        "url": "https://prairiestudioglass.com/wp-content/uploads/2026/04/20220826_141603.jpg",
+        "source_page": "https://prairiestudioglass.com/product/youghiogheny-5090-lemon-yellow-stipple-red-opalescent/",
+        "title": "Youghiogheny 5090 Lemon Yellow Stipple with Red Opalescent - Prairie ...",
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "yellow/red/maroon fiery pattern consistent with reference"
+      },
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/13.jpg",
+        "url": "https://prairiestudioglass.com/wp-content/uploads/2022/08/20220826_141630.jpg",
+        "source_page": "https://prairiestudioglass.com/product/youghiogheny-5090-lemon-yellow-stipple-red-opalescent/",
+        "title": "Youghiogheny 5090 Lemon Yellow Stipple with Red Opalescent - Prairie ...",
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "same red-orange-yellow streaky swirl seen backlit through window"
+      },
+      {
+        "file": "candidate_images/youghiogheny-yd5907x9/14.jpg",
+        "url": "https://prairiestudioglass.com/wp-content/uploads/2022/08/Youghiogheny-5090-Lemon-Yellow-Stipple-with-Red-Opalescent1.jpg",
+        "source_page": "https://prairiestudioglass.com/youghiogheny-5090-lemon-yellow-stipple-with-red-opalescent1/",
+        "title": "Youghiogheny 5090 Lemon Yellow Stipple with Red Opalescent(1) - Prairie ...",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "yellow-orange-red fiery streak pattern closely matches reference"
+      }
+    ]
+  },
+  "youghiogheny-yu6505g": {
+    "product": {
+      "id": "youghiogheny-yu6505g",
+      "manufacturer": "Youghiogheny",
+      "name": "White Opal Granite",
+      "category": "Textured/Baroque",
+      "search_name": "White Opal Granite"
+    },
+    "verified_images": []
+  },
+  "youghiogheny-y1097sp": {
+    "product": {
+      "id": "youghiogheny-y1097sp",
+      "manufacturer": "Youghiogheny",
+      "name": "White Ice, Ruby, Bubblegum Pink Stipple",
+      "category": "Opalescent",
+      "search_name": "White Ice Ruby Bubblegum Pink Stipple"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/00.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/176329_40.jpg",
+        "source_page": "https://www.delphiglass.com/youghiogheny-glass/stipple/youghiogheny-ice-white-ruby-bubblegum-stipple",
+        "title": "Ice White, Ruby, Bubblegum Stipple | Glass",
+        "context": "flat-swatch",
+        "confidence": 0.7,
+        "reason": "ruby streaky veins on white, denser crop of same pattern"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/01.jpg",
+        "url": "https://i.etsystatic.com/23517502/r/il/4f16ec/2920880613/il_1080xN.2920880613_tuy4.jpg",
+        "source_page": "https://www.etsy.com/listing/1220861576/pink-and-ice-white-stipple-ripple",
+        "title": "Pink and Ice White Stipple Ripple - Youghiogheny - 1007 R SP -very ...",
+        "context": "other",
+        "confidence": 0.75,
+        "reason": "same white base with ruby streaky veins, leaned up in shop"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/03.jpg",
+        "url": "http://www.stainedglassexpress.com/cdn/shop/files/White_Ice_Ruby_Blue_Gold_Pink_Stipple.jpg?crop=center&height=1200&v=1767393677&width=1200",
+        "source_page": "https://www.stainedglassexpress.com/products/yough-ice-white-red-bl-pk-stipple",
+        "title": "White Ice, Ruby, Blue, Gold Pink Stipple \u2013 Stained Glass Express",
+        "context": "flat-swatch",
+        "confidence": 0.6,
+        "reason": "streaky veins on light base, though more magenta-toned"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/05.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/229645_50.jpg",
+        "source_page": "https://www.delphiglass.com/youghiogheny-glass/reproduction/youghiogheny-white-and-bubblegum-pink-ripple-reproduction",
+        "title": "White And Bubblegum Pink Ripple Reproduction | Glass",
+        "context": "other",
+        "confidence": 0.35,
+        "reason": "extreme close-up, maroon/glossy but pattern unverifiable"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/07.jpg",
+        "url": "https://shoprainbowartglass.com/10900-large_default/y1097sprh-ice-white-copper-ruby-bubblegum-ripple-1234x1234.jpg",
+        "source_page": "https://shoprainbowartglass.com/stipple-glass/5771-y1097sprh-ice-white-copper-ruby-bubblegum-ripple-1234x1234",
+        "title": "Y1097SPRH-Youghiogheny Ice White/Copper Ruby/Bubblegum Ripple (1097RSP ...",
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "ruby-red streaky veins on cream base, matches reference"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/08.jpg",
+        "url": "https://i.etsystatic.com/23517502/r/il/4f16ec/2920880613/il_680x540.2920880613_tuy4.jpg",
+        "source_page": "https://www.etsy.com/listing/949214426/pink-and-ice-white-stipple-ripple",
+        "title": "Pink and Ice White Stipple Ripple - Youghiogheny - 1007 R SP ...",
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "glowing saturated red streaky, likely same glass backlit"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/10.jpg",
+        "url": "https://shoprainbowartglass.com/11167-large_default/y1007sph-ice-white-pink-1234x1234.jpg",
+        "source_page": "https://shoprainbowartglass.com/stipple-glass/5710-y1007sph-ice-white-pink-1234x1234",
+        "title": "Y1007SPH-Youghiogheny Ice White/Pink (1007SP) | Rainbow Art Glass",
+        "context": "flat-swatch",
+        "confidence": 0.5,
+        "reason": "red-pink marbled swirl, plausible same color family, softer streaks"
+      },
+      {
+        "file": "candidate_images/youghiogheny-y1097sp/12.jpg",
+        "url": "https://i.etsystatic.com/15053094/r/il/de34d1/5253362027/il_1080xN.5253362027_1r2n.jpg",
+        "source_page": "https://www.etsy.com/listing/1548365353/youghiogheny-ice-white-pink-ripple",
+        "title": "Youghiogheny Ice White & Pink Ripple Stipple Glass (1007RSP) 8\u201d X 6\u201d - Etsy",
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "labeled backlit shot showing matching ruby streaky veins on white"
+      }
+    ]
+  },
+  "wissmach-wi18flem": {
+    "product": {
+      "id": "wissmach-wi18flem",
+      "manufacturer": "Wissmach",
+      "name": "Red Flemish",
+      "category": "Cathedral",
+      "search_name": "Red Flemish"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/wissmach-wi18flem/00.jpg",
+        "url": "https://www.stainedglassexpress.com/cdn/shop/files/Wissmach_Red_Flemish_2.jpg?v=1750264990&width=1500",
+        "source_page": "https://www.stainedglassexpress.com/products/wissmach-red-flemish",
+        "title": "Red Flemish \u2013 Stained Glass Express",
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching red cellular/wave texture and color, close corner shot on table"
+      },
+      {
+        "file": "candidate_images/wissmach-wi18flem/01.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/235082_10.jpg",
+        "source_page": "https://www.delphiglass.com/wissmach-glass/flemish/wissmach-red-transparent-flemish",
+        "title": "Wissmach Red Transparent Flemish | Glass",
+        "context": "backlit-window",
+        "confidence": 0.85,
+        "reason": "same flemish wavy/cell pattern, backlit against sky and trees"
+      },
+      {
+        "file": "candidate_images/wissmach-wi18flem/05.jpg",
+        "url": "https://images.delphiglass.com/image_1500/235082.jpg",
+        "source_page": "https://www.delphiglass.com/wissmach-glass/flemish/wissmach-red-transparent-flemish",
+        "title": "Wissmach Red Transparent Flemish | Glass",
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "close-up shows matching red cellular wave texture"
+      },
+      {
+        "file": "candidate_images/wissmach-wi18flem/06.jpg",
+        "url": "https://www.delphiglass.com/syscat/image_add/235082_40.jpg",
+        "source_page": "https://www.delphiglass.com/wissmach-glass/flemish/wissmach-red-transparent-flemish",
+        "title": "Wissmach Red Transparent Flemish | Glass",
+        "context": "other",
+        "confidence": 0.6,
+        "reason": "same bumpy cell texture visible under shop lighting despite cluttered background"
+      },
+      {
+        "file": "candidate_images/wissmach-wi18flem/07.jpg",
+        "url": "https://i.pinimg.com/736x/24/06/93/240693c827547dff99de9d6126562cce.jpg",
+        "source_page": "https://ph.pinterest.com/pin/629870697925482013/",
+        "title": "Medium Red Flemish- Stained Glass Sheet",
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "matching wavy cell texture with sparkle highlights, close-up crop"
+      },
+      {
+        "file": "candidate_images/wissmach-wi18flem/09.jpg",
+        "url": "https://i.etsystatic.com/11893191/r/il/cb1108/6491153537/il_1080xN.6491153537_2qwa.jpg",
+        "source_page": "https://www.etsy.com/listing/1828747205/dark-red-transparent-wissmach-90-138-x-6",
+        "title": "Dark Red, Transparent (wissmach 90-138\" X 6\") Stained Glass Sheet or ...",
+        "context": "held-in-hand",
+        "confidence": 0.8,
+        "reason": "hand holding glass with matching bumpy cell texture and color"
+      }
+    ]
+  },
+  "wissmach-w101ll": {
+    "product": {
+      "id": "wissmach-w101ll",
+      "manufacturer": "Wissmach",
+      "name": "Evergreen Streaky",
+      "category": "Wispy/Streaky",
+      "search_name": "Evergreen Streaky"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/wissmach-w101ll/04.jpg",
+        "url": "https://static.platform.michaels.com/2c-prd/152781736928480.jpg?fit=inside|1280:1280",
+        "source_page": "https://www.michaels.com/product/wissmach-stained-glass-sheet-dark-green-and-amber-streaky-crystal-257561264015147011",
+        "title": "Wissmach Stained Glass Sheet: Dark Green and Amber, Streaky Crystal ...",
+        "context": "flat-swatch",
+        "confidence": 0.65,
+        "reason": "vertical light-medium green/khaki streaky, closest pattern and tone match"
+      },
+      {
+        "file": "candidate_images/wissmach-w101ll/05.jpg",
+        "url": "https://i.etsystatic.com/42882211/r/il/ec6d2d/7548007270/il_680x540.7548007270_q7ut.jpg",
+        "source_page": "https://www.etsy.com/listing/4432195007/vintage-wissmach-streaky-green-smooth",
+        "title": "Vintage Wissmach Streaky Green Smooth Stained Glass Sheet, 8.5\"x11.5 ...",
+        "context": "held-in-hand",
+        "confidence": 0.55,
+        "reason": "bright streaky opal green with light/white blending, similar family though slightly more saturated"
+      }
+    ]
+  },
+  "wissmach-w29d": {
+    "product": {
+      "id": "wissmach-w29d",
+      "manufacturer": "Wissmach",
+      "name": "Thunderbird Opal",
+      "category": "Opalescent",
+      "search_name": "Thunderbird Opal"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/wissmach-w29d/01.jpg",
+        "url": "https://m.media-amazon.com/images/I/914Gis5mnaL._AC_.jpg",
+        "source_page": "https://www.amazon.com/Wissmach-Stained-Glass-Sun-Moon/dp/B08FZRPHFJ",
+        "title": "Amazon.com: White Opal swirled with crystal Wissmach Stained Glass ...",
+        "context": "other",
+        "confidence": 0.55,
+        "reason": "rightmost panel in sheet lineup shows matching orange-red streaky opal"
+      },
+      {
+        "file": "candidate_images/wissmach-w29d/02.jpg",
+        "url": "https://i.etsystatic.com/12333407/r/il/a5ed28/7386373292/il_1140xN.7386373292_3902.jpg",
+        "source_page": "https://www.etsy.com/listing/4403328284/dark-red-opal-crystal-wissmach-stained",
+        "title": "Dark Red Opal Crystal Wissmach Stained Glass Sheet | for DIY Crafts ...",
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "red/orange streaky opal, close match to reference"
+      }
+    ]
+  },
+  "wissmach-wwo708": {
+    "product": {
+      "id": "wissmach-wwo708",
+      "manufacturer": "Wissmach",
+      "name": "Clover Wisspy",
+      "category": "Cathedral",
+      "search_name": "Clover Wisspy"
+    },
+    "verified_images": [
+      {
+        "file": "candidate_images/wissmach-wwo708/00.jpg",
+        "url": "https://m.media-amazon.com/images/I/71wNDMO2F4L._AC_SL1500_.jpg",
+        "source_page": "https://www.amazon.com/Green-Iridescent-Wissmach-Stained-Glass/dp/B075MMCB78",
+        "title": "Amazon.com: Green, White Wispy Iridescent Wissmach Stained Glass Sheet ...",
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "same bright green wispy/streaky translucent pattern"
+      },
+      {
+        "file": "candidate_images/wissmach-wwo708/01.jpg",
+        "url": "https://i.etsystatic.com/50046774/r/il/172bc4/5898896798/il_1588xN.5898896798_2yuf.jpg",
+        "source_page": "https://www.etsy.com/listing/1709768085/vintage-wissmach-yellow-and-clear-wispy",
+        "title": "Vintage Wissmach Yellow and Clear Wispy Stained Glass Sheet Panel - Etsy",
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "same green family but more swirled/cloudy than linear wispy"
+      },
+      {
+        "file": "candidate_images/wissmach-wwo708/03.jpg",
+        "url": "https://i.etsystatic.com/42882211/r/il/40055e/6899450773/il_680x540.6899450773_q97b.jpg",
+        "source_page": "https://www.etsy.com/listing/4303315808/vintage-wissmach-stained-glass-sheet",
+        "title": "Vintage Wissmach Stained Glass Sheet, Crystally Green Granite, 9\u201dx14 ...",
+        "context": "other",
+        "confidence": 0.45,
+        "reason": "multi-color swatch card; top-right diamond resembles the streaky green but rest are unrelated colors"
+      },
+      {
+        "file": "candidate_images/wissmach-wwo708/09.jpg",
+        "url": "https://static.platform.michaels.com/2c-prd/61756372608224.jpeg?fit=inside|1280:1280",
+        "source_page": "https://www.michaels.com/product/wissmach-stained-glass-sheet-blue-wpurple-white-wispy-257746251385257988",
+        "title": "Wissmach Stained Glass Sheet: Blue w/Purple & White Wispy, Size: 12\"x8 ...",
+        "context": "backlit-window",
+        "confidence": 0.7,
+        "reason": "green streaky wispy pattern backlit through window"
+      },
+      {
+        "file": "candidate_images/wissmach-wwo708/11.jpg",
+        "url": "https://www.bradstreetglass.com/cdn/shop/products/WI_WO27_Selenium_Orange_Wisspy_Opal_Wissmach4.jpg?v=1490643737&width=1445",
+        "source_page": "https://www.bradstreetglass.com/products/selenium-orange-wisspy-opal-stained-glass-sheet-wi-wo27",
+        "title": "Selenium Orange Wispy Opal Stained Glass Sheet Wissmach WO27 ...",
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "bright green wispy streaky pattern matches reference closely"
+      }
+    ]
+  }
+}
