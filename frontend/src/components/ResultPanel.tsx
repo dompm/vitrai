@@ -1166,6 +1166,14 @@ export function ResultPanel({
       if (resolved && !isInsideDrawableBounds(resolved)) clearDraftHoverFeedback();
     });
   }
+  function clearPenPreview() {
+    penHoverSchedulerRef.current.cancel();
+    setHoverPoint(null);
+    setHoverSnapped(false);
+    setActiveAlignmentGuides([]);
+    setActiveLengthGuide(null);
+    setActiveSnapLabels([]);
+  }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
   const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
@@ -1219,24 +1227,14 @@ export function ResultPanel({
       onAddManualPiece(activePolygonPointsRef.current);
     }
     setActivePolygonPoints([]);
-    penHoverSchedulerRef.current.cancel();
-    setHoverPoint(null);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides([]);
-    setActiveLengthGuide(null);
-    setActiveSnapLabels([]);
+    clearPenPreview();
   }
 
   function clearActivePen() {
     setActivePenAnchors([]);
     setPenDragIndex(null);
     penDragIndexRef.current = null;
-    penHoverSchedulerRef.current.cancel();
-    setHoverPoint(null);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides([]);
-    setActiveLengthGuide(null);
-    setActiveSnapLabels([]);
+    clearPenPreview();
   }
 
   function commitActivePen() {
@@ -1342,9 +1340,7 @@ export function ResultPanel({
       else if (refineModeRef.current) onRefineModeChange(null);
       else if (activePolygonPointsRef.current.length > 0) {
         setActivePolygonPoints([]);
-        setHoverPoint(null);
-        setHoverSnapped(false);
-        setActiveSnapLabels([]);
+        clearPenPreview();
       } else if (activePenAnchorsRef.current.length > 0) clearActivePen();
       else handleToolChange('select');
     }
@@ -1660,7 +1656,7 @@ export function ResultPanel({
 
     if (id !== 'polygon') {
       setActivePolygonPoints([]);
-      setHoverPoint(null);
+      clearPenPreview();
       setHoverSnapped(false);
       lastMousePosRef.current = null;
       setActiveAlignmentGuides([]);
@@ -2119,8 +2115,7 @@ export function ResultPanel({
               onPointerCancel={handlePointerCancel}
               onPointerLeave={() => {
                 if (activeTool === 'polygon' || activeTool === 'pen') {
-                  setHoverPoint(null);
-                  setActiveSnapLabels([]);
+                  clearDraftHoverFeedback();
                 }
               }}
               onContextMenu={e => e.evt.preventDefault()}

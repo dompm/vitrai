@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PencilController } from '../interaction/pencilController';
+import { createRafScheduler } from '../interaction/rafScheduler';
 
 describe('PencilController', () => {
   let frame: FrameRequestCallback | null;
@@ -30,5 +31,14 @@ describe('PencilController', () => {
     controller.clear();
     expect(controller.rawPointCount).toBe(0);
     expect(controller.getSnapshot().flatPoints).toEqual([]);
+  });
+
+  it('does not publish cancelled frame work later', () => {
+    const scheduler = createRafScheduler();
+    const task = vi.fn();
+    scheduler.schedule(task);
+    scheduler.cancel();
+    frame?.(0);
+    expect(task).not.toHaveBeenCalled();
   });
 });
