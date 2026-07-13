@@ -487,6 +487,189 @@ def text_signals(text, n_candidates):
 
 
 # --------------------------------------------------------------------------------
+# component (f): Bullseye grip-photo detector / flat-chip demotion
+# --------------------------------------------------------------------------------
+# LOCAL ADDITION -- branch fix/bullseye-grip-picks, not yet upstreamed to
+# research/delighting (flag for re-sync at the next vendor refresh; see the module
+# header's "do not hand-edit divergently" note -- this is a clearly-delineated new
+# component, not a divergent edit of (a)-(e)).
+#
+# Diagnosis (10-product sample, see the task's report): Bullseye's own product
+# photography mixes two very different shots for the "standard" Fusible sheet --
+# (1) a tight full-bleed macro crop of the glass surface with NO background at all
+# (reads to components (a)/(d) above as if it were a perfect edge-to-edge backlit
+# sheet photo -- audit=1.0, coverage=1.0 -- even though it shows none of the sheet's
+# actual silhouette/edges) and, where the vendor shot it, (2) a whole-sheet-on-white
+# studio photo, sometimes with the sheet held in binder-clip grips (dark hardware on
+# the right edge) plus a small warm/red product label and a sharpie-written batch
+# number -- the far more representative "real sheet, real texture" photo. Because
+# audit_flagger flags (2) as weak/advisory `product_on_white` (audit component drops
+# to 0.35) or, even unflagged, (2)'s white studio border caps `fg_frac` well under
+# 1.0 for the coverage component, the macro crop (1) was winning almost every time a
+# real sheet-on-white candidate existed alongside it -- confirmed on Red Opalescent
+# (both variants) and Spring Green Opalescent Double-rolled, where a genuine grip
+# photo lost to the macro crop by a 0.04-0.28 base-score margin. (Mineral Green,
+# Periwinkle, Mink and Artichoke Opalescent, also named in the original complaint,
+# turned out on inspection to have NO grip/whole-sheet photo in their live galleries
+# at all -- see the task report; this component is a no-op for those, by design,
+# since `any_whole_sheet` never fires.)
+#
+# This is a signed, RELATIVE, Bullseye-only adjustment (same shape as component (e)'s
+# text_adj) -- it never fires against a product's own images unless one of its
+# sibling candidates is itself judged a whole-sheet-on-white photo, so a product with
+# no real sheet-on-white photo at all is left untouched (its macro crop is still the
+# best available image, and the floor/existing components still govern it).
+#
+# `bullseye_features()` returns NAMED, independently-interpretable signals (not a
+# single opaque scalar) -- flat_chip_flag / grip_flag / grip_confidence / crop
+# geometry -- so a downstream judge (a VLM re-ranker is being piloted separately,
+# landing in its own file) can use them as priors/tiebreakers without re-deriving
+# pixel signals itself.
+_BE_WHITE_MIN = 0.80        # per-pixel near-white test (min channel) -- looser than
+                             # 019's 228/255=0.894, since studio backdrops in this
+                             # corpus run slightly warm/grey, not paper-white
+_BE_WHITE_SAT_MAX = 0.12
+_BE_DARK_VAL_MAX = 0.35     # clamp hardware: near-black
+_BE_DARK_SAT_MAX = 0.35
+BULLSEYE_GRIP_BONUS = 0.35        # pushes a confidently-detected grip photo (clamp
+                                   # hardware visible) above a same-product flat-chip
+                                   # macro crop -- calibrated to comfortably clear the
+                                   # observed 0.04-0.28 base-score gaps
+BULLSEYE_WHOLE_SHEET_BONUS = 0.15  # smaller bonus for a whole-sheet-on-white photo
+                                    # without confirmed clamp hardware -- still a real
+                                    # sheet photo, less certain than a grip
+BULLSEYE_FLAT_CHIP_PENALTY = 0.30  # demotes a full-bleed macro crop, but ONLY when a
+                                    # sibling candidate is itself whole-sheet/grip --
+                                    # never applied in absolute terms
+
+
+def _bullseye_sheet_signals(a):
+    """Cheap numpy/PIL(+cv2)-only pixel signals for one Bullseye candidate. No ML."""
+    h, w = a.shape[:2]
+    af = a.astype(np.float32) / 255.0
+    mx = af.max(-1); mn = af.min(-1)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0.0)
+    val = mx
+    white = (mn >= _BE_WHITE_MIN) & (sat <= _BE_WHITE_SAT_MAX)
+    white_frac = float(white.mean())
+    frame = h * w
+
+    def _components(mask_bool):
+        if cv2 is not None:
+            u8 = (mask_bool.astype(np.uint8)) * 255
+            u8 = cv2.morphologyEx(u8, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+            n, lblimg = cv2.connectedComponents((u8 > 0).astype(np.uint8), connectivity=8)
+            return [(lblimg == i) for i in range(1, n)]
+        from scipy import ndimage  # pragma: no cover -- cv2 fallback
+        lblimg, n = ndimage.label(mask_bool)
+        return [(lblimg == i) for i in range(1, n + 1)]
+
+    fg_comps = _components(~white)
+    biggest_frac = 0.0
+    sheet_bbox = (0.0, 0.0, 1.0, 1.0)
+    if fg_comps:
+        sizes = [int(c.sum()) for c in fg_comps]
+        bi = int(np.argmax(sizes))
+        biggest_frac = float(sizes[bi] / frame)
+        ys, xs = np.where(fg_comps[bi])
+        if len(xs):
+            sheet_bbox = (float(xs.min() / w), float(ys.min() / h),
+                          float((xs.max() + 1) / w), float((ys.max() + 1) / h))
+
+    # dark clamp hardware: compact blobs touching the extreme right edge, not
+    # spanning more than ~35% of the width (excludes a genuinely near-black sheet
+    # color, which would span the whole frame edge-to-edge).
+    dark = (val < _BE_DARK_VAL_MAX) & (sat < _BE_DARK_SAT_MAX)
+    dark_comps = _components(dark)
+    clamp_blobs = 0
+    clamp_left = 1.0
+    for c in dark_comps:
+        frac = float(c.sum()) / frame
+        if frac < 0.0015:
+            continue
+        ys, xs = np.where(c)
+        x0, x1 = int(xs.min()), int(xs.max()) + 1
+        if x1 >= w - 2 and (x1 - x0) < 0.35 * w:
+            clamp_blobs += 1
+            clamp_left = min(clamp_left, x0 / w)
+
+    return {
+        'white_frac': round(white_frac, 4), 'biggest_frac': round(biggest_frac, 4),
+        'clamp_blobs': clamp_blobs,
+        'clamp_left_frac': round(clamp_left, 3) if clamp_blobs else None,
+        'sheet_bbox_frac': tuple(round(v, 4) for v in sheet_bbox),
+    }
+
+
+def bullseye_features(path):
+    """Public per-candidate feature dict for a Bullseye photo. Named, independently-
+    interpretable signals -- see component-(f) docstring above for why (VLM judge
+    priors/tiebreakers), not just a single scalar.
+
+    Returns: {'is_full_bleed', 'is_whole_sheet_on_white', 'grip_flag',
+              'grip_confidence', 'flat_chip_flag', 'crop_box_frac' (x0,y0,x1,y1 as
+              fractions of the source image, or None), plus the raw pixel signals}.
+    """
+    a = _load(path)
+    sig = _bullseye_sheet_signals(a)
+    is_full_bleed = sig['white_frac'] <= 0.01 and sig['biggest_frac'] >= 0.97
+    is_whole_sheet = (not is_full_bleed) and (0.45 <= sig['biggest_frac'] <= 0.95) and sig['white_frac'] >= 0.08
+    grip_flag = bool(is_whole_sheet and sig['clamp_blobs'] >= 1)
+    grip_confidence = round(min(1.0, sig['clamp_blobs'] / 2.0), 3) if grip_flag else 0.0
+
+    crop_box_frac = None
+    if is_whole_sheet:
+        x0, y0, x1, y1 = sig['sheet_bbox_frac']
+        # right cut: whichever is tightest of (a) detected clamp hardware and (b) a
+        # fixed conservative 80%-of-sheet-width ratio -- the fixed ratio is the
+        # primary defense against the label (small warm/red card) when the label's
+        # own color is too close to the glass's own hue to separate by color alone
+        # (observed on Red/Orange Opalescent during calibration -- a color-distance
+        # label detector left a visible label sliver on those two specific hues).
+        fixed_cut = x0 + 0.80 * (x1 - x0)
+        cut = fixed_cut if sig['clamp_left_frac'] is None else min(fixed_cut, sig['clamp_left_frac'])
+        crop_right = max(x0 + 0.30 * (x1 - x0), cut - 0.02)
+        # top inset: best-effort sharpie-strip removal -- calibration sample showed
+        # the batch number written within roughly the top 12% of the sheet's own
+        # bbox (either corner); conservative inset per the task brief ("a slightly
+        # smaller clean crop beats a full sheet with hardware").
+        crop_top = y0 + 0.12 * (y1 - y0)
+        crop_box_frac = (round(x0, 4), round(crop_top, 4), round(crop_right, 4), round(y1, 4))
+
+    return {
+        'is_full_bleed': is_full_bleed, 'is_whole_sheet_on_white': is_whole_sheet,
+        'grip_flag': grip_flag, 'grip_confidence': grip_confidence,
+        'flat_chip_flag': is_full_bleed, 'crop_box_frac': crop_box_frac,
+        **sig,
+    }
+
+
+def bullseye_photo_prior(candidates):
+    """Signed per-position adjustment (same shape as component (e)'s text_adj) plus
+    the raw feature dict per candidate (for logging/audit and the VLM judge pilot).
+    Only meaningful for Bullseye -- callers gate this on manufacturer, see `pick()`."""
+    feats = {}
+    for i, c in enumerate(candidates):
+        try:
+            feats[i + 1] = bullseye_features(c)
+        except Exception as e:
+            feats[i + 1] = {'error': str(e), 'is_full_bleed': False,
+                             'is_whole_sheet_on_white': False, 'grip_flag': False}
+    any_whole_sheet = any(f.get('is_whole_sheet_on_white') for f in feats.values())
+    adj = {}
+    for pos, f in feats.items():
+        a = 0.0
+        if f.get('grip_flag'):
+            a += BULLSEYE_GRIP_BONUS
+        elif f.get('is_whole_sheet_on_white'):
+            a += BULLSEYE_WHOLE_SHEET_BONUS
+        if f.get('is_full_bleed') and any_whole_sheet:
+            a -= BULLSEYE_FLAT_CHIP_PENALTY
+        adj[pos] = a
+    return adj, feats
+
+
+# --------------------------------------------------------------------------------
 # per-image scoring + pick
 # --------------------------------------------------------------------------------
 
@@ -532,16 +715,25 @@ def pick(candidates, text=None, name=None, manufacturer=None, floor=FLOOR):
     floor:      minimum final score to be eligible for the pick.
 
     Returns {'pick': int|None (0-indexed into candidates), 'scores': [...],
-             'override': bool, 'text_notes': [...], 'line_flags': [...]}.
+             'override': bool, 'text_notes': [...], 'line_flags': [...],
+             'bullseye_features': {pos: feature-dict} (empty unless manufacturer is
+             Bullseye -- component (f), see its docstring)}.
     """
     n = len(candidates)
     if n == 0:
-        return {'pick': None, 'scores': [], 'override': False, 'text_notes': [], 'line_flags': []}
+        return {'pick': None, 'scores': [], 'override': False, 'text_notes': [], 'line_flags': [],
+                'bullseye_features': {}}
 
     per_image = [score_image(c) for c in candidates]
     text_adj, override_pos, text_notes = text_signals(text or '', n)
     line_reasons = line_flags(name, manufacturer)
     line_penalty = LINE_PENALTY if line_reasons else 0.0
+
+    # component (f): Bullseye grip-photo prior -- see its docstring above. No-op
+    # (empty dicts) for every other manufacturer.
+    bullseye_adj, bullseye_feats = {}, {}
+    if (manufacturer or '').strip().lower() == 'bullseye':
+        bullseye_adj, bullseye_feats = bullseye_photo_prior(candidates)
 
     scores = []
     for i, si in enumerate(per_image):
@@ -552,20 +744,20 @@ def pick(candidates, text=None, name=None, manufacturer=None, floor=FLOOR):
         # them (this was caught by the steel-gray-opal validation case, where a
         # sharp full-sheet photo and a blurry-but-backlit crop tied at 1.0 after
         # clipping until this was fixed -- see reports/035-swatch-picker.md).
-        final = max(0.0, si['base_score'] + text_adj.get(pos, 0.0) - line_penalty)
+        final = max(0.0, si['base_score'] + text_adj.get(pos, 0.0) + bullseye_adj.get(pos, 0.0) - line_penalty)
         scores.append({'index': i, 'position': pos, 'final_score': round(final, 4),
                         'base_score': si['base_score'], 'text_adjustment': round(text_adj.get(pos, 0.0), 3),
-                        'line_penalty': line_penalty,
+                        'line_penalty': line_penalty, 'bullseye_adjustment': round(bullseye_adj.get(pos, 0.0), 3),
                         'components': si['components'], 'reasons': si['reasons']})
 
     if override_pos is not None:
         return {'pick': override_pos - 1, 'scores': scores, 'override': True, 'text_notes': text_notes,
-                'line_flags': line_reasons}
+                'line_flags': line_reasons, 'bullseye_features': bullseye_feats}
 
     best = max(scores, key=lambda s: s['final_score'])
     pick_idx = best['index'] if best['final_score'] >= floor else None
     return {'pick': pick_idx, 'scores': scores, 'override': False, 'text_notes': text_notes,
-            'line_flags': line_reasons}
+            'line_flags': line_reasons, 'bullseye_features': bullseye_feats}
 
 
 # --------------------------------------------------------------------------------
