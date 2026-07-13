@@ -31,6 +31,8 @@ import argparse
 import glob
 import json
 import os
+import re
+import subprocess
 import sys
 import time
 
@@ -57,11 +59,51 @@ except ImportError:
 
 
 # ------------------------------------------------------------------ RAM/disk guards
-def ram_free_frac():
-    if psutil is None:
-        return 1.0  # can't check; don't false-block
-    vm = psutil.virtual_memory()
-    return vm.available / vm.total
+#
+# NOTE (fixed after a false trip at gate1 step 70): macOS "free %" is not a pressure
+# signal — by design, reclaimable cached/inactive/purgeable pages count as "used", so
+# free_frac sitting near 5-10% is a HEALTHY steady state, not memory pressure. The
+# correct signals are (a) the kernel's own jetsam pressure level, (b) this process's
+# actual RSS, and (c) whether swap is GROWING (already-high-but-stable swap is fine;
+# rapid growth means active thrashing). Trip on any of: pressure level >= 2 (warn/
+# critical), RSS > 9GB, or swap used growing > 2GB within a 5-minute window.
+_swap_history = []  # [(timestamp, used_mb), ...] rolling window, module-level
+
+
+def vm_pressure_level():
+    """1=normal, 2=warn, 4=critical (kern.memorystatus_vm_pressure_level). Unreadable
+    -> 1 (normal) so a sysctl hiccup never false-trips the guard."""
+    try:
+        out = subprocess.run(["sysctl", "-n", "kern.memorystatus_vm_pressure_level"],
+                             capture_output=True, text=True, timeout=5).stdout.strip()
+        return int(out)
+    except Exception:
+        return 1
+
+
+def swap_used_mb():
+    try:
+        out = subprocess.run(["sysctl", "vm.swapusage"], capture_output=True, text=True,
+                             timeout=5).stdout
+        m = re.search(r"used\s*=\s*([\d.]+)M", out)
+        return float(m.group(1)) if m else None
+    except Exception:
+        return None
+
+
+def swap_growth_mb(window_sec=300):
+    """Growth in swap-used over the trailing `window_sec`, or None until the window
+    has enough history. A single high-but-flat reading never trips this."""
+    now = time.time()
+    used = swap_used_mb()
+    if used is None:
+        return None
+    _swap_history.append((now, used))
+    while len(_swap_history) > 1 and now - _swap_history[0][0] > window_sec:
+        _swap_history.pop(0)
+    if len(_swap_history) < 2 or (now - _swap_history[0][0]) < 30:
+        return None  # not enough history yet to judge a trend
+    return used - _swap_history[0][1]
 
 
 def proc_rss_gb():
@@ -75,13 +117,60 @@ def disk_free_gb(path="/"):
     return shutil.disk_usage(path).free / 1e9
 
 
+def mps_mem_stats():
+    """Real GPU-side (Metal/unified-memory) allocation, distinct from process RSS —
+    MPS buffers largely live outside the anon-RSS accounting psutil reports, which is
+    why a real 866M-param backbone can show <1GB process RSS (see report 040)."""
+    if not torch.backends.mps.is_available():
+        return {}
+    try:
+        return {"mps_current_alloc_gb": round(torch.mps.current_allocated_memory() / 1e9, 3),
+                "mps_driver_alloc_gb": round(torch.mps.driver_allocated_memory() / 1e9, 3)}
+    except Exception:
+        return {}
+
+
+_pressure_strikes = [0]  # consecutive "warn" (level==2) readings; debounced (see below)
+
+
 def guard_or_exit(log_path, tag):
-    frac = ram_free_frac()
+    """Trip on: sustained pressure warn (3 consecutive checks — a SINGLE warn blip is
+    expected noise from the concurrent Blender render's known bursty CPU/GPU use, per
+    the 040 brief; only a run of them means real contention), any CRITICAL reading
+    (never debounced), RSS > 9GB, fast-growing swap, or disk < 10GB."""
+    level = vm_pressure_level()
     rss = proc_rss_gb()
     free_disk = disk_free_gb()
-    if frac < 0.12 or rss > 9.0:
-        msg = (f"[{tag}] RAM GUARD TRIPPED: free_frac={frac:.2%} rss={rss:.2f}GB "
+    growth = swap_growth_mb()
+
+    if level >= 4:
+        msg = (f"[{tag}] RAM GUARD TRIPPED: memorystatus_vm_pressure_level={level} "
+               f"CRITICAL rss={rss:.2f}GB — stopping cleanly.")
+        print(msg)
+        with open(log_path, "a") as f:
+            f.write(msg + "\n")
+        return False
+    if level == 2:
+        _pressure_strikes[0] += 1
+    else:
+        _pressure_strikes[0] = 0
+    if _pressure_strikes[0] >= 3:
+        msg = (f"[{tag}] RAM GUARD TRIPPED: memorystatus_vm_pressure_level=2 (warn) "
+               f"sustained over {_pressure_strikes[0]} consecutive checks rss={rss:.2f}GB "
                f"— stopping cleanly.")
+        print(msg)
+        with open(log_path, "a") as f:
+            f.write(msg + "\n")
+        return False
+    if rss > 9.0:
+        msg = f"[{tag}] RAM GUARD TRIPPED: process rss={rss:.2f}GB > 9GB — stopping cleanly."
+        print(msg)
+        with open(log_path, "a") as f:
+            f.write(msg + "\n")
+        return False
+    if growth is not None and growth > 2048:
+        msg = (f"[{tag}] RAM GUARD TRIPPED: swap growing fast (+{growth:.0f}MB over "
+               f"~5min) — stopping cleanly.")
         print(msg)
         with open(log_path, "a") as f:
             f.write(msg + "\n")
@@ -244,8 +333,15 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
                                 lora_rank=lora_rank, cache_only=True).to(device)
     tp = model.trainable_parameters()
     n_tr = sum(p.numel() for p in tp)
+    n_total = sum(p.numel() for p in model.parameters())
     logline(f"[{tag}] trainable params: {n_tr/1e3:.1f}k  lora_ok={model.lora_ok}  "
            f"meta={model.meta}  unet_in/out={model.unet_in}/{model.unet_out}")
+    logline(f"[{tag}] REAL-BACKBONE CHECK: total model params={n_total/1e6:.1f}M "
+           f"(866M-UNet + 83.7M-VAE expected for marigold-iid) "
+           f"proc_rss={proc_rss_gb():.2f}GB {mps_mem_stats()} — process RSS is NOT "
+           f"GPU memory on MPS (unified-memory buffers live in the Metal driver's own "
+           f"allocation, not anon RSS), so a small psutil RSS does not imply a small "
+           f"model; total param count is the real check.")
 
     batch, meta = build_fixed_batch(ds, device, crop)
     logline(f"[{tag}] fixed batch: photo[{batch['photo'].min():.3f},{batch['photo'].max():.3f}] "
@@ -291,6 +387,9 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
             logline(f"  [{tag}] step {step:4d}  total={parts['total']:.4f}  "
                    f"T={parts['T']:.4f} h={parts['h']:.4f} B={parts['B']:.4f}  "
                    f"{parts['sec']:.0f}s  rss={parts['rss_gb']}GB")
+        if step % 100 == 0:
+            logline(f"  [{tag}] guard telemetry: pressure_level={vm_pressure_level()} "
+                   f"free_disk={disk_free_gb():.1f}GB swap_used={swap_used_mb()}MB")
 
         if step % snapshot_every == 0 or step == steps - 1:
             with torch.no_grad():
