@@ -431,6 +431,26 @@ export function useProject() {
     [updateProject]
   );
 
+  const commitPieceTransforms = useCallback((
+    updates: Array<{ pieceId: string; transform: TextureTransform }>,
+  ) => {
+    if (updates.length === 0) return;
+    const updateMap = new Map(updates.map(update => [update.pieceId, update.transform]));
+    updateProject(prev => {
+      let changed = false;
+      const pieces = prev.pieces.map(piece => {
+        const transform = updateMap.get(piece.id);
+        if (!transform || (
+          piece.transform.x === transform.x && piece.transform.y === transform.y &&
+          piece.transform.rotation === transform.rotation && piece.transform.scale === transform.scale
+        )) return piece;
+        changed = true;
+        return { ...piece, transform };
+      });
+      return changed ? { ...prev, pieces } : prev;
+    });
+  }, [updateProject]);
+
   const updatePieceTransforms = useCallback((
     updates: { pieceId: string; transform: Partial<TextureTransform> }[],
     skipHistory = false,
@@ -1222,6 +1242,7 @@ export function useProject() {
     selectPieces,
     updatePieceTransform,
     updatePieceTransforms,
+    commitPieceTransforms,
     updatePatternCrop,
     updateSheetCrop,
     deletePiece,

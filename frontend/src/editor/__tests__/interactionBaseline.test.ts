@@ -37,7 +37,7 @@ describe('current Pen behavior', () => {
   const pieces = makeInteractionPieces(25, 6);
 
   it('snaps to the nearest eligible vertex inside 14 screen pixels', () => {
-    expect(findPenSnapTarget([49, 30], pieces, 1)).toEqual([48, 30]);
+    expect(findPenSnapTarget([49, 30], pieces, 1)?.pt).toEqual([48, 30]);
     expect(findPenSnapTarget([1200, 900], pieces, 1)).toBeNull();
   });
 

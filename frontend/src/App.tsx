@@ -22,6 +22,7 @@ import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
 import { parseProject } from './storage/projectSchema';
 import type { ToolId } from './components/Toolbar';
+import { PieceTransformPreviewStore } from './editor/interaction/pieceTransformPreviewStore';
 import './App.css';
 
 interface SheetTabProps {
@@ -272,6 +273,7 @@ function SheetTab({
 
 export function App() {
   const { t, i18n } = useTranslation();
+  const [pieceTransformPreviewStore] = useState(() => new PieceTransformPreviewStore());
   const {
     project,
     isLoaded,
@@ -282,7 +284,7 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    updatePieceTransforms,
+    commitPieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -335,6 +337,12 @@ export function App() {
   // Always-current project, for async handlers that resolve after re-renders.
   const projectRef = useRef(project);
   projectRef.current = project;
+
+  useEffect(() => {
+    pieceTransformPreviewStore.reconcile(project.pieces);
+  }, [pieceTransformPreviewStore, project.pieces]);
+
+  useEffect(() => () => pieceTransformPreviewStore.cancelAll(), [pieceTransformPreviewStore]);
 
   const [backendStatus, setBackendStatus] = useState('');
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
@@ -1283,6 +1291,7 @@ export function App() {
             )}
           </div>
           <ResultPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
             project={project}
             selectedPieceIds={selectedPieceIds}
             pendingPieceIds={pendingPieceIds}
@@ -1333,6 +1342,7 @@ export function App() {
             <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
               <Lamp3DPreview
                 project={project}
+                pieceTransformPreviewStore={pieceTransformPreviewStore}
                 selectedPieceIds={selectedPieceIds}
                 onSelectPiece={selectPiece}
                 onUpdateLampConfig={updateLampConfig}
@@ -1407,12 +1417,13 @@ export function App() {
 
         {activeSheet ? (
           <SheetPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
             onSelectPiece={selectPiece}
             onTransformChange={updatePieceTransform}
-            onTransformsChange={updatePieceTransforms}
+            onCommitTransforms={commitPieceTransforms}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}

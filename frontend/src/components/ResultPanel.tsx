@@ -7,7 +7,7 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
-import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
+import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
@@ -26,6 +26,7 @@ import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint
 import { getSnapFractions } from '../utils/snapping';
 import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../utils/vectorMath';
 import { getPieceGeometry, type PieceGeometry } from '../editor/geometry/pieceGeometry';
+import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -72,9 +73,10 @@ interface PieceOverlayProps {
   solderColor: string;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   selectionDisabled: boolean;
+  previewStore: PieceTransformPreviewStore;
 }
 
-const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled }: PieceOverlayProps) {
+const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -82,7 +84,7 @@ const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl
     const id = setInterval(() => setPulseHi(h => !h), 750);
     return () => clearInterval(id);
   }, [isPending]);
-  const { x: tx, y: ty, rotation, scale } = piece.transform;
+  const { x: tx, y: ty, rotation, scale } = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
   const { flatPoints: flatPts, centroid, bounds, clipFunc: clipPolygon } = geometry;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
@@ -144,6 +146,7 @@ const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl
 });
 
 interface ResultPanelProps {
+  pieceTransformPreviewStore: PieceTransformPreviewStore;
   project: Project;
   selectedPieceIds: string[];
   pendingPieceIds: ReadonlySet<string>;
@@ -752,7 +755,7 @@ export function findLengthSnap(
 }
 
 export function ResultPanel({
-  project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  pieceTransformPreviewStore, project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePieceCurves, onUpdatePiecePolygonAndCurves, onUpdatePrompt,
@@ -2142,6 +2145,7 @@ export function ResultPanel({
                         solderColor={SOLDER_COLORS[project.solderColor ?? 'black'] ?? SOLDER_COLORS.black}
                         onSelectPiece={onSelectPiece}
                         selectionDisabled={Boolean(refineMode)}
+                        previewStore={pieceTransformPreviewStore}
                       />
                     );
                   })}

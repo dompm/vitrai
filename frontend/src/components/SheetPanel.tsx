@@ -21,6 +21,7 @@ import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
 import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
+import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -137,7 +138,8 @@ interface PieceOutlineProps {
   isSelected: boolean;
   effectiveScale: number;
   onSelect?: (multi?: boolean) => void;
-  onTransformChange?: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  previewStore: PieceTransformPreviewStore;
+  onPreviewTransform?: (transform: TextureTransform, flush?: boolean) => void;
   onRotateStart?: (e: KonvaEventObject<PointerEvent>) => void;
   fillOnly?: boolean;
   strokeOnly?: boolean;
@@ -149,10 +151,11 @@ interface PieceOutlineProps {
 }
 
 const PieceOutline = memo(function PieceOutline({
-  piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart,
+  piece, isSelected, effectiveScale, onSelect, previewStore, onPreviewTransform, onRotateStart,
   fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
-  const { x, y, rotation, scale } = piece.transform;
+  const renderedTransform = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
+  const { x, y, rotation, scale } = renderedTransform;
   const geometry = getPieceGeometry(piece.polygon, piece.curvePoints);
   const { centroid } = geometry;
   const relPts = useMemo(
@@ -214,12 +217,14 @@ const PieceOutline = memo(function PieceOutline({
     const position = { x: snapped.x, y: snapped.y };
     e.target.position(position);
     onSnapChange?.({ x: snapped.guideX, y: snapped.guideY });
-    onTransformChange?.(position, true);
+    const current = previewStore.get(piece.id) ?? renderedTransform;
+    onPreviewTransform?.({ ...current, ...position });
   }
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
     onSnapChange?.({ x: null, y: null });
-    onTransformChange?.({ x: e.target.x(), y: e.target.y() }, false);
+    const current = previewStore.get(piece.id) ?? renderedTransform;
+    onPreviewTransform?.({ ...current, x: e.target.x(), y: e.target.y() }, true);
   }
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
@@ -287,12 +292,13 @@ const PackIcon = () => (
 );
 
 interface SheetPanelProps {
+  pieceTransformPreviewStore: PieceTransformPreviewStore;
   sheet: GlassSheet;
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onTransformsChange: (updates: { pieceId: string; transform: Partial<TextureTransform> }[], skipHistory?: boolean) => void;
+  onCommitTransforms: (updates: Array<{ pieceId: string; transform: TextureTransform }>) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -303,7 +309,7 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onTransformsChange, onCropChange, onScaleChange, onImageLoad,
+  pieceTransformPreviewStore, sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCommitTransforms, onCropChange, onScaleChange, onImageLoad,
   showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false,
 }: SheetPanelProps) {
   const { t } = useTranslation();
@@ -395,12 +401,18 @@ export function SheetPanel({
   const marqueeJustEndedRef = useRef(false);
   const [moveSnapGuides, setMoveSnapGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
 
-  function handlePieceTransform(pieceId: string, transform: Partial<TextureTransform>, skipHistory = false) {
+  function handlePieceTransform(pieceId: string, transform: TextureTransform, flush = false) {
     const targetX = transform.x;
     const targetY = transform.y;
-    const isGroupMove = selectedPieceIds.length > 1 && targetX !== undefined && targetY !== undefined;
+    const isGroupMove = selectedPieceIds.length > 1;
     if (!isGroupMove) {
-      onTransformChange(pieceId, transform, skipHistory);
+      const update = { pieceId, transform };
+      if (flush) {
+        pieceTransformPreviewStore.flushMany([update]);
+        onCommitTransforms([update]);
+      } else {
+        pieceTransformPreviewStore.scheduleMany([update]);
+      }
       return;
     }
     if (!groupMoveStartRef.current) {
@@ -416,15 +428,19 @@ export function SheetPanel({
     const gesture = groupMoveStartRef.current;
     const draggedStart = gesture.transforms.get(gesture.draggedId);
     if (!draggedStart) return;
-    if (targetX === undefined || targetY === undefined) return;
     const dx = targetX - draggedStart.x;
     const dy = targetY - draggedStart.y;
     const updates = [...gesture.transforms.entries()].map(([id, start]) => ({
       pieceId: id,
-      transform: { x: start.x + dx, y: start.y + dy },
+      transform: { ...start, x: start.x + dx, y: start.y + dy },
     }));
-    onTransformsChange(updates, skipHistory);
-    if (!skipHistory) groupMoveStartRef.current = null;
+    if (flush) {
+      pieceTransformPreviewStore.flushMany(updates);
+      onCommitTransforms(updates);
+      groupMoveStartRef.current = null;
+    } else {
+      pieceTransformPreviewStore.scheduleMany(updates);
+    }
   }
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
@@ -534,13 +550,14 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
+      const renderedTransform = pieceTransformPreviewStore.get(rotatingPiece.id) ?? rotatingPiece.transform;
       let newRotation =
-        Math.atan2(y - rotatingPiece.transform.y, x - rotatingPiece.transform.x) + Math.PI / 2;
+        Math.atan2(y - renderedTransform.y, x - renderedTransform.x) + Math.PI / 2;
       if (e.evt.shiftKey) {
         newRotation = Math.round(newRotation / ROTATION_SNAP_RADIANS) * ROTATION_SNAP_RADIANS;
       }
       rotationValueRef.current = newRotation;
-      onTransformChange(rotatingPieceId!, { rotation: newRotation }, true);
+      pieceTransformPreviewStore.schedule(rotatingPiece.id, { ...renderedTransform, rotation: newRotation });
       return;
     }
 
@@ -578,11 +595,9 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
-      onTransformChange(
-        rotatingPieceId!,
-        { rotation: rotationValueRef.current ?? rotatingPiece.transform.rotation },
-        false,
-      );
+      const finalTransform = pieceTransformPreviewStore.get(rotatingPieceId!) ?? rotatingPiece.transform;
+      pieceTransformPreviewStore.flush(rotatingPieceId!, finalTransform);
+      onCommitTransforms([{ pieceId: rotatingPieceId!, transform: finalTransform }]);
     }
     rotationValueRef.current = null;
     setRotatingPieceId(null);
@@ -592,7 +607,15 @@ export function SheetPanel({
   function handlePointerCancel() {
     // A canceled rotation keeps the last visible angle and finalizes one history entry.
     if (rotatingPieceId && rotationValueRef.current != null) {
-      onTransformChange(rotatingPieceId, { rotation: rotationValueRef.current }, false);
+      const piece = pieces.find(candidate => candidate.id === rotatingPieceId);
+      if (piece) {
+        const finalTransform = pieceTransformPreviewStore.get(rotatingPieceId) ?? {
+          ...piece.transform,
+          rotation: rotationValueRef.current,
+        };
+        pieceTransformPreviewStore.flush(rotatingPieceId, finalTransform);
+        onCommitTransforms([{ pieceId: rotatingPieceId, transform: finalTransform }]);
+      }
     }
     setMarqueeBox(null);
     setMoveSnapGuides({ x: null, y: null });
@@ -881,6 +904,7 @@ export function SheetPanel({
                     piece={piece}
                     isSelected={selectedPieceIdSet.has(piece.id)}
                     effectiveScale={es}
+                    previewStore={pieceTransformPreviewStore}
                     fillOnly
                     listening={false}
                   />
@@ -896,9 +920,10 @@ export function SheetPanel({
                   piece={piece}
                   isSelected={selectedPieceIdSet.has(piece.id)}
                   effectiveScale={es}
+                  previewStore={pieceTransformPreviewStore}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  onTransformChange={(t, skip) => handlePieceTransform(piece.id, t, skip)}
+                  onPreviewTransform={(transform, flush) => handlePieceTransform(piece.id, transform, flush)}
                   snapPieces={pieces}
                   snapBounds={sheetSnapBounds}
                   onSnapChange={setMoveSnapGuides}
@@ -932,6 +957,7 @@ export function SheetPanel({
                     piece={piece}
                     isSelected={true}
                     effectiveScale={es}
+                    previewStore={pieceTransformPreviewStore}
                     handleOnly
                     onRotateStart={(e) => beginRotation(piece, e)}
                   />
