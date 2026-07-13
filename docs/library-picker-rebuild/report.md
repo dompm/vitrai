@@ -115,3 +115,118 @@ Anti-churn margin threshold: **0.15** (picker FLOOR is 0.45). An image is only s
 20 most significant image changes (maintainer validation cases prioritized, then largest picker-score margin). Old pick on top, new pick on bottom of each cell.
 
 ![contact sheet](./contact_sheet.jpg)
+
+## Addendum: full uncropped-Bullseye sweep (fix/bullseye-grip-sweep)
+
+PR #124's crop phase only ran on picks that CHANGED that run -- a product whose
+already-shipped pick was itself an uncropped grip/whole-sheet photo never got
+scrubbed, since `apply_bullseye_churn_gate` only fires when the old and new
+`image_url` differ. This pass closes that gap: every one of the 217 Bullseye
+rows shipped with `cropped: false` was loaded (pixels, not URL/filename
+heuristics) and run through the same grip/whole-sheet detector and
+authoritative full-res border scrub as #124, with the same hard-reject
+discipline -- a crop that fails self-verification or loses more than 20% of
+its area is never shipped; the uncropped pick is kept and the product is
+listed as uncertain instead.
+
+**Result: 8 of 217 newly cropped, 19 hard-rejected to the uncertain list
+(kept uncropped), 188 correctly left alone, 3 handled as named special
+cases below.** Bullseye now stands at 358 cropped / 209 uncropped of 567.
+
+### A real bug found and fixed in `_scrub_crop_box`
+
+The sweep's first pass (before any code change) found only 2 legitimate
+crops and hard-rejected 24, including four products the task explicitly
+named as confirmed clamp+label+sharpie photos (Butterscotch Opalescent,
+Marigold Yellow Opalescent, Plum Striker Opalescent, Gold Purple
+Opalescent). Investigating those four turned up a genuine ordering bug in
+`scripts/swatch_picker.py`'s `_scrub_crop_box`: the left/right contamination
+check (`col_bad`) was computed using the crop box's **pre**-row-trim row
+range, so a contamination band confined to the top/bottom (e.g. the bright
+specular reflection strip along the sheet's own cut edge, already documented
+in the function's tunables) got double-counted as contaminating every
+column too, forcing a false, symmetric full-window left+right trim on top
+of the already-correct top/bottom cut -- reliably blowing the 20% area-loss
+budget on photos that were otherwise perfectly croppable.
+
+Fixed by recomputing `col_bad` after the top/bottom cut is applied, using
+the row-trimmed range (see the `LOCAL FIX` comment at the call site). The
+function's final self-verification band is unchanged and still independently
+catches any residual contamination regardless of ordering, so the fix only
+removes a false positive -- it does not weaken the hard-reject safety net.
+Re-running the sweep with the fix found 5 more legitimate crops (the four
+named products above, plus Violet Striker Transparent Double-rolled), for
+7 total from the general sweep. This needs the same upstream re-sync to
+`research/delighting` as component (f) itself (see the module header).
+
+Of the remaining 19 hard-rejects: 18 were visually confirmed to be
+**false-positive** whole-sheet-on-white detections -- full-bleed macro shots
+of pale/light glass (Light Peach Cream Opalescent, Cream Opalescent, several
+Iridescent-rainbow "Light ..." Transparent lines, etc.) whose own pale
+coloring reads as partial "white background" to the Bullseye-specific
+`_bullseye_sheet_signals` white-pixel test, even though no clamp, label, or
+studio background is actually present -- these are correctly left uncropped
+as-is, no action needed. The remaining one (Light Pink Striker Transparent,
+Double-rolled) is a genuine grip photo where even a fresh full-resolution
+candidate box could not clear the 20%-loss bar (best achievable was ~75%
+area kept); per the hard-reject policy it stays uncropped, listed as
+uncertain, pending either a smaller minimum-hardware-only crop margin or a
+second source photo.
+
+A separate scan for dark clamp-hardware signals across every remaining
+uncropped row also surfaced 7 Black Opalescent variants with a detected
+`clamp_blobs >= 1` that turned out, on inspection, to be a **false positive**
+of a different kind: these are clean full-bleed macro shots of black glass
+with no hardware at all -- the dark-blob detector's near-black threshold
+occasionally fires on the glass's own deep-black color reaching the frame
+edge. Confirmed visually and left untouched.
+
+### New contamination class: black mount/frame corner
+
+`bullseye-0003130050f1010` (Dense White Opalescent, Thin-rolled) shipped
+with a black mount/frame wedge visible in **both** the top-left and
+bottom-left corners (not just top-left as first reported) -- a contamination
+class the existing white-background scrub cannot see at all, since it only
+looks for *near-white* contamination and this sheet's own opalescent-white
+color reads as "background" to that test, leaving the actual foreground
+(the black wedges) too small to trigger the whole-sheet/grip heuristic in
+the first place. Pixel analysis showed the black region confined to a
+~32px band at the very top and bottom of the 1200px frame (a rectangular
+crop losing only ~10% of the area), not the wider corner triangle it first
+appeared to be. Wrote a bespoke dark-corner scrub (same self-verification
+and hard-reject discipline as `_scrub_crop_box`, just gated on a near-black
+mask instead of near-white) and applied it: crop box `[41, 41, 1196, 1163]`
+of the 1200x1200 source, area kept 90%, self-verification passed. This is a
+one-off script, not merged into `swatch_picker.py` -- flagging for a future
+pass to generalize if more products with this contamination class turn up.
+
+### Named special cases
+
+- **Clear Transparent, Single-rolled, 3 mm** (`bullseye-0011010000f1010`):
+  confirmed the shipped photo is a perspective/angled side-view of the cut
+  edge, not a straight-on flat sheet shot. Fetched the product's full
+  Shopify gallery directly -- it has exactly **one** image, the side view
+  already shipped. No flat alternative exists to switch to. Kept as-is;
+  added to a needs-second-source/VLM-judge list (clear glass is a
+  known-hard case for this photography set generally).
+- **Light Mineral Green Transparent, Double-rolled, Iridescent, rainbow,
+  3 mm** (`bullseye-0012470031f1010`): fetched all 3 gallery candidates and
+  scored them through the full picker. All three show the *same* washed
+  green-to-cream iridescent gradient -- that is the true appearance of this
+  finish, not a framing artifact, so no candidate fixes the maintainer's
+  complaint. The picker's own raw argmax actually prefers candidate `_01`
+  (score 0.95 vs. the shipped `_02`'s 0.68), but `_01` is a tight full-bleed
+  macro crop with no visible sheet silhouette -- exactly the flat-chip
+  anti-pattern PR #124 exists to demote, not promote. Switching to it would
+  regress the whole-sheet-photography quality bar this effort has been
+  enforcing elsewhere in the catalog. Kept the shipped `_02`; added to the
+  needs-second-source/VLM-judge list with this reasoning attached rather
+  than auto-switching.
+
+### Board
+
+Old pick on top, new pick on bottom, for all 8 rows changed by this sweep
+(7 general-sweep grip crops + the Dense White Opalescent black-corner crop).
+
+![bullseye grip review addendum](./bullseye_grip_review_addendum.jpg)
+

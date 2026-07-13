@@ -662,9 +662,8 @@ def _scrub_crop_box(a, crop_box_frac):
     if x1 - x0 < 4 or y1 - y0 < 4:
         return _fail('degenerate_box', 0)
 
-    # cut each edge past the deepest contaminated row/col within its scan window
+    # cut top/bottom past the deepest contaminated row within its scan window
     row_bad = white[:, x0:x1].mean(axis=1) > _SCRUB_WHITE_FRAC_MAX   # indexed by absolute y
-    col_bad = white[y0:y1, :].mean(axis=0) > _SCRUB_WHITE_FRAC_MAX   # indexed by absolute x
     win_y = max(4, int(round(_SCRUB_WINDOW_FRAC * (y1 - y0))))
     win_x = max(4, int(round(_SCRUB_WINDOW_FRAC * (x1 - x0))))
 
@@ -676,6 +675,26 @@ def _scrub_crop_box(a, crop_box_frac):
     if bot_bad.size:
         trimmed['bottom'] = (y1 - max(y1 - win_y, y0)) - int(bot_bad.min())
         y1 -= trimmed['bottom']
+
+    # cut left/right past the deepest contaminated col within its scan window --
+    # LOCAL FIX (fix/bullseye-grip-sweep): recomputed AFTER the top/bottom cut
+    # above, using the row-trimmed y0/y1, not the original. A contamination band
+    # that spans nearly the full frame WIDTH but is confined to a narrow row
+    # range near the top/bottom (the common case: a bright specular reflection
+    # strip along the sheet's own cut edge, already documented in this
+    # function's tunables block) was previously measured against the PRE-trim
+    # row range, so the very rows the top/bottom cut above was about to remove
+    # inflated col_bad for EVERY column and forced a false, symmetric left+right
+    # trim on top of the already-correct top/bottom cut. Confirmed on 4 grip
+    # photos during the fix/bullseye-grip-sweep task (Butterscotch, Marigold
+    # Yellow, Plum Striker, Gold Purple Opalescent) -- all hard-rejected on
+    # area_loss purely from this double-count; recomputing col_bad on the
+    # post-row-trim range found zero genuine left/right contamination in any of
+    # them. Safe change: the final self-verification band below still catches
+    # any left/right contamination this misses, regardless of ordering -- this
+    # only removes a false positive, never bypasses the safety net. Needs the
+    # same upstream re-sync as component (f); see module header.
+    col_bad = white[y0:y1, :].mean(axis=0) > _SCRUB_WHITE_FRAC_MAX   # indexed by absolute x
     left_bad = np.where(col_bad[x0:min(x0 + win_x, x1)])[0]
     if left_bad.size:
         trimmed['left'] = int(left_bad.max()) + 1
