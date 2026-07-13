@@ -194,3 +194,45 @@ export function queryAlignment(index: PenSnapIndex, cursor: [number, number], ef
     ],
   };
 }
+
+export function queryShiftAlignment(
+  index: PenSnapIndex,
+  cursor: [number, number],
+  lastPoint: [number, number],
+  theta: number,
+  effectiveScale: number,
+  thresholdPx: number,
+) {
+  const cos = Math.cos(theta);
+  const sin = Math.sin(theta);
+  let bestDistance = thresholdPx;
+  let snapped: [number, number] = cursor;
+  let guide: { type: 'v' | 'h'; from: [number, number]; to: [number, number] } | null = null;
+  for (const vertex of index.vertices) {
+    if (Math.abs(cos) > 1e-5) {
+      const radius = (vertex.x - lastPoint[0]) / cos;
+      if (radius >= 0) {
+        const projected: [number, number] = [vertex.x, lastPoint[1] + radius * sin];
+        const distance = Math.hypot(cursor[0] - projected[0], cursor[1] - projected[1]) * effectiveScale;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          snapped = projected;
+          guide = { type: 'v', from: [vertex.x, vertex.y], to: projected };
+        }
+      }
+    }
+    if (Math.abs(sin) > 1e-5) {
+      const radius = (vertex.y - lastPoint[1]) / sin;
+      if (radius >= 0) {
+        const projected: [number, number] = [lastPoint[0] + radius * cos, vertex.y];
+        const distance = Math.hypot(cursor[0] - projected[0], cursor[1] - projected[1]) * effectiveScale;
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          snapped = projected;
+          guide = { type: 'h', from: [vertex.x, vertex.y], to: projected };
+        }
+      }
+    }
+  }
+  return { snapped, guides: guide ? [guide] : [] };
+}

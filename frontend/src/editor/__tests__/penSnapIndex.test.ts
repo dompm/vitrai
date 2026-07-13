@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('react-konva', () => ({ Stage: () => null, Layer: () => null, Image: () => null, Line: () => null, Group: () => null, Rect: () => null, Circle: () => null, Text: () => null }));
 vi.mock('use-image', () => ({ default: () => [null] }));
-import { findAlignmentGuides, findPenSnapTarget } from '../../components/ResultPanel';
-import { createPenSnapIndex, queryAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
+import { findAlignmentGuides, findPenSnapTarget, findShiftAlignmentGuides } from '../../components/ResultPanel';
+import { createPenSnapIndex, queryAlignment, queryShiftAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
 import { makeInteractionPieces } from '../performance/fixtures';
 
 describe('Pen snap index parity', () => {
@@ -19,6 +19,11 @@ describe('Pen snap index parity', () => {
       const scale = 0.5 + random() * 3;
       expect(queryVertexSnap(index, cursor, scale, 14)).toEqual(findPenSnapTarget(cursor, pieces, scale));
       expect(queryAlignment(index, cursor, scale, 14)).toEqual(findAlignmentGuides(cursor, pieces, scale));
+      const last: [number, number] = [random() * 1100, random() * 300];
+      const theta = Math.round(random() * 8) * Math.PI / 4;
+      expect(queryShiftAlignment(index, cursor, last, theta, scale, 14)).toEqual(
+        findShiftAlignmentGuides(cursor, last, theta, pieces, scale),
+      );
     }
   });
 

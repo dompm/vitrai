@@ -32,7 +32,7 @@ import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
 import { ViewportGroup, ViewportSubscriber } from '../editor/viewport/viewportStore';
-import { createPenSnapIndex, queryAlignment, queryLengthSnap, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
+import { createPenSnapIndex, queryAlignment, queryLengthSnap, queryShiftAlignment, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -849,7 +849,9 @@ export function resolvePenPoint({
       point = [last[0] + length.matchLength * Math.cos(theta), last[1] + length.matchLength * Math.sin(theta)];
       lengthGuide = { matchLength: length.matchLength, center: last, snappedPoint: point, matchingSegment: length.matchingSegment };
     } else if (shiftPressed) {
-      const aligned = findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
+      const aligned = snapIndex
+        ? queryShiftAlignment(snapIndex, cursor, last, theta, effectiveScale, PEN_SNAP_PX)
+        : findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
       if (aligned.guides.length > 0) {
         point = aligned.snapped;
         alignmentGuides = aligned.guides;
