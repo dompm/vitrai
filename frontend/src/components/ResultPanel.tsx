@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, useRef, useMemo } from 'react';
+import { forwardRef, memo, useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -765,6 +765,57 @@ interface PenResolution {
   labels: string[];
 }
 
+interface PenPreviewHandle {
+  schedule(resolve: () => PenResolution | null): void;
+  publish(preview: PenResolution | null): void;
+  clear(): void;
+}
+
+const EMPTY_PEN_PREVIEW: PenResolution = {
+  point: [0, 0], vertexSnapped: false, alignmentGuides: [], lengthGuide: null, labels: [],
+};
+
+const PenPreviewHost = forwardRef<PenPreviewHandle, {
+  active: boolean;
+  lastPoint: [number, number] | null;
+  onStatusChange?: ResultPanelProps['onPenStatusChange'];
+  children: (preview: PenResolution & { visible: boolean }) => React.ReactNode;
+}>(function PenPreviewHost({ active, lastPoint, onStatusChange, children }, ref) {
+  const [preview, setPreview] = useState(EMPTY_PEN_PREVIEW);
+  const [visible, setVisible] = useState(false);
+  const scheduler = useRef(createRafScheduler());
+  function publish(next: PenResolution | null) {
+    if (next) {
+      setPreview(next);
+      setVisible(true);
+    } else {
+      setVisible(false);
+      setPreview(EMPTY_PEN_PREVIEW);
+    }
+  }
+  useImperativeHandle(ref, () => ({
+    schedule(resolve) {
+      scheduler.current.schedule(() => publish(resolve()));
+    },
+    publish(next) {
+      scheduler.current.cancel();
+      publish(next);
+    },
+    clear() {
+      scheduler.current.cancel();
+      publish(null);
+    },
+  }), []);
+  useEffect(() => () => scheduler.current.cancel(), []);
+  useEffect(() => {
+    onStatusChange?.({
+      coords: active && visible ? { x: preview.point[0], y: preview.point[1] } : null,
+      lastPoint: active && lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
+    });
+  }, [active, visible, preview.point, lastPoint, onStatusChange]);
+  return children({ ...preview, visible });
+});
+
 export function resolvePenPoint({
   cursor, activePoints, shiftPressed, effectiveScale, crop, patternWidth,
   patternHeight, pieces, translate,
@@ -867,13 +918,8 @@ export function ResultPanel({
   }
 
   function clearDraftHoverFeedback() {
-    penHoverSchedulerRef.current.cancel();
     lastMousePosRef.current = null;
-    setHoverPoint(null);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides([]);
-    setActiveLengthGuide(null);
-    setActiveSnapLabels([]);
+    penPreviewRef.current?.clear();
   }
 
   useEffect(() => {
@@ -886,8 +932,7 @@ export function ResultPanel({
   const [activePenAnchors, setActivePenAnchors] = useState<BezierAnchor[]>([]);
   const [penDragIndex, setPenDragIndex] = useState<number | null>(null);
   const penDragIndexRef = useRef<number | null>(null);
-  const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
-  const [hoverSnapped, setHoverSnapped] = useState(false);
+  const penPreviewRef = useRef<PenPreviewHandle>(null);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
   const activePenAnchorsRef = useRef(activePenAnchors);
@@ -927,18 +972,12 @@ export function ResultPanel({
   const effectiveScaleRef = useRef(vp.effectiveScale);
   effectiveScaleRef.current = vp.effectiveScale;
 
-  const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
-  const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
-  const [activeSnapLabels, setActiveSnapLabels] = useState<string[]>([]);
-  const penHoverSchedulerRef = useRef(createRafScheduler());
-  useEffect(() => () => penHoverSchedulerRef.current.cancel(), []);
-
-  function publishHoverPoint(
+  function resolveHoverPoint(
     imageX: number,
     imageY: number,
     shiftPressed: boolean,
     suppressSnap = false,
-  ): [number, number] | null {
+  ): PenResolution | null {
     if (activeTool !== 'polygon' && activeTool !== 'pen') return null;
     suppressSnap = suppressSnap || !snapEnabled;
 
@@ -950,12 +989,7 @@ export function ResultPanel({
     if (suppressSnap) {
       const raw: [number, number] = [imageX, imageY];
       const result = shiftPressed && lastPt ? constrainToAngle(raw, lastPt) : raw;
-      setHoverPoint(result);
-      setHoverSnapped(false);
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
-      return result;
+      return { point: result, vertexSnapped: false, alignmentGuides: [], lengthGuide: null, labels: [] };
     }
 
     // True polygon anchors are the highest-priority snap targets. Flattened
@@ -968,12 +1002,13 @@ export function ResultPanel({
       const constrained = shiftPressed && lastPt ? constrainToAngle(snap.pt, lastPt) : snap.pt;
       const exact = Math.hypot(constrained[0] - snap.pt[0], constrained[1] - snap.pt[1]) * effectiveScaleRef.current < 0.75;
       const result = exact ? snap.pt : constrained;
-      setHoverPoint(result);
-      setHoverSnapped(exact);
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels(exact && snap.label ? [snap.label] : []);
-      return result;
+      return {
+        point: result,
+        vertexSnapped: exact,
+        alignmentGuides: [],
+        lengthGuide: null,
+        labels: exact && snap.label ? [snap.label] : [],
+      };
     }
 
     const edgeTarget = snapSettings.edges
@@ -983,23 +1018,14 @@ export function ResultPanel({
       const constrained = shiftPressed && lastPt ? constrainToAngle(edgeTarget, lastPt) : edgeTarget;
       const exact = Math.hypot(constrained[0] - edgeTarget[0], constrained[1] - edgeTarget[1]) * effectiveScaleRef.current < 0.75;
       const result = exact ? edgeTarget : constrained;
-      setHoverPoint(result);
-      setHoverSnapped(exact);
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
-      return result;
+      return { point: result, vertexSnapped: exact, alignmentGuides: [], lengthGuide: null, labels: [] };
     }
 
     // 1b. Lamp seam edge snap — project onto nearest seam line.
     if (unrolledLampRef.current) {
       const edgeSnap = findLampEdgeSnap([imageX, imageY], unrolledLampRef.current, effectiveScaleRef.current, PEN_SNAP_PX);
       if (edgeSnap) {
-        setHoverPoint(edgeSnap);
-        setHoverSnapped(true);
-        setActiveAlignmentGuides([]);
-        setActiveLengthGuide(null);
-        return edgeSnap;
+        return { point: edgeSnap, vertexSnapped: true, alignmentGuides: [], lengthGuide: null, labels: [] };
       }
     }
 
@@ -1100,12 +1126,13 @@ export function ResultPanel({
     }
 
     const result: [number, number] = [finalX, finalY];
-    setActiveSnapLabels(edgeSnap.labels);
-    setHoverPoint(result);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides(alignmentGuides);
-    setActiveLengthGuide(lengthGuide);
-    return result;
+    return {
+      point: result,
+      vertexSnapped: false,
+      alignmentGuides,
+      lengthGuide,
+      labels: edgeSnap.labels,
+    };
   }
 
   function resolveEditedAnchor(
@@ -1139,19 +1166,14 @@ export function ResultPanel({
         : { x: result[0], y: result[1], guides: [] as AlignmentGuide[], labels: [] as string[] };
       result = [canvas.x, canvas.y];
       guides = [...guides, ...canvas.guides];
-      setActiveSnapLabels(canvas.labels);
-    } else {
-      setActiveSnapLabels([]);
     }
     if (shiftPressed) {
       const constrained = constrainToAngle(result, dragOrigin);
       if (Math.hypot(constrained[0] - result[0], constrained[1] - result[1]) * effectiveScaleRef.current > 0.75) {
         guides = [];
-        setActiveSnapLabels([]);
       }
       result = constrained;
     }
-    setActiveAlignmentGuides(guides);
     return result;
   }
 
@@ -1161,18 +1183,16 @@ export function ResultPanel({
     shiftPressed: boolean,
     suppressSnap = false,
   ) {
-    penHoverSchedulerRef.current.schedule(() => {
-      const resolved = publishHoverPoint(imageX, imageY, shiftPressed, suppressSnap);
-      if (resolved && !isInsideDrawableBounds(resolved)) clearDraftHoverFeedback();
+    penPreviewRef.current?.schedule(() => {
+      const resolution = resolveHoverPointRef.current(imageX, imageY, shiftPressed, suppressSnap);
+      return resolution && isInsideDrawableBounds(resolution.point) ? resolution : null;
     });
   }
+  const resolveHoverPointRef = useRef(resolveHoverPoint);
+  resolveHoverPointRef.current = resolveHoverPoint;
+
   function clearPenPreview() {
-    penHoverSchedulerRef.current.cancel();
-    setHoverPoint(null);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides([]);
-    setActiveLengthGuide(null);
-    setActiveSnapLabels([]);
+    penPreviewRef.current?.clear();
   }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
@@ -1261,22 +1281,9 @@ export function ResultPanel({
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
 
-  const onPenStatusChangeRef = useRef(onPenStatusChange);
-  onPenStatusChangeRef.current = onPenStatusChange;
-
   const lastPoint = activeTool === 'pen'
     ? activePenAnchors[activePenAnchors.length - 1]?.point ?? null
     : activePolygonPoints[activePolygonPoints.length - 1] ?? null;
-  useEffect(() => {
-    if (activeTool === 'polygon' || activeTool === 'pen') {
-      onPenStatusChangeRef.current?.({
-        coords: hoverPoint ? { x: hoverPoint[0], y: hoverPoint[1] } : null,
-        lastPoint: lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
-      });
-    } else {
-      onPenStatusChangeRef.current?.({ coords: null, lastPoint: null });
-    }
-  }, [hoverPoint, lastPoint, activeTool]);
 
   // Capture only draft undo so it wins over the app-level history handler.
   // All other shortcuts remain in bubble phase, allowing open modals to stop
@@ -1448,8 +1455,9 @@ export function ResultPanel({
           return;
         }
       }
-      penHoverSchedulerRef.current.cancel();
-      const resolved = publishHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      const resolution = resolveHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey);
+      penPreviewRef.current?.publish(resolution);
+      const resolved = resolution?.point ?? [x, y];
       if (!isInsideDrawableBounds(resolved)) {
         clearDraftHoverFeedback();
         return;
@@ -1468,8 +1476,9 @@ export function ResultPanel({
           return;
         }
       }
-      penHoverSchedulerRef.current.cancel();
-      const resolved = publishHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      const resolution = resolveHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey);
+      penPreviewRef.current?.publish(resolution);
+      const resolved = resolution?.point ?? [x, y];
       if (!isInsideDrawableBounds(resolved)) {
         clearDraftHoverFeedback();
         return;
@@ -1657,11 +1666,7 @@ export function ResultPanel({
     if (id !== 'polygon') {
       setActivePolygonPoints([]);
       clearPenPreview();
-      setHoverSnapped(false);
       lastMousePosRef.current = null;
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
     }
     if (id !== 'pen') clearActivePen();
     if (id !== 'pencil') {
@@ -2280,7 +2285,21 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {activeTool === 'polygon' && (activePolygonPoints.length > 0 || hoverPoint) && (
+                  <PenPreviewHost
+                    ref={penPreviewRef}
+                    active={activeTool === 'polygon' || activeTool === 'pen'}
+                    lastPoint={lastPoint}
+                    onStatusChange={onPenStatusChange}
+                  >
+                  {(preview) => {
+                    const hoverPoint = preview.visible ? preview.point : null;
+                    const hoverSnapped = preview.vertexSnapped;
+                    const activeAlignmentGuides = preview.alignmentGuides;
+                    const activeLengthGuide = preview.lengthGuide;
+                    const activeSnapLabels = preview.labels;
+                    return (
+                    <>
+                  {activeTool === 'polygon' && (activePolygonPoints.length > 0 || preview.visible) && (
                     <Group>
                       {/* Alignment Guides */}
                       {activeAlignmentGuides.map((guide, idx) => (
@@ -2496,6 +2515,9 @@ export function ResultPanel({
                       })}
                     </Group>
                   )}
+                  </>
+                  ); }}
+                  </PenPreviewHost>
                   {activeTool === 'pencil' && <PencilOverlay controller={pencilController} effectiveScale={es} />}
                   {marqueeBox && (
                     <Rect
@@ -2662,8 +2684,6 @@ export function ResultPanel({
                                 setDragStartPolygon(null);
                                 setActiveDragPolygon(null);
                                 setActiveDragCurvePoints(null);
-                                setActiveAlignmentGuides([]);
-                                setActiveSnapLabels([]);
                               }}
                               onMouseEnter={(e) => {
                                 const stage = e.target.getStage();
