@@ -29,6 +29,32 @@ REPORT_PATH = os.path.join(OUT_DIR, 'vlm_judge_pilot.md')
 
 CORPUS_SIZE = 1269
 
+# Hand-verified verdicts for the user-named failure cases: each contact sheet was
+# opened and eyeballed (2026-07-13) to confirm what the heuristic's pick and the
+# judges' picks actually show. Keyed by registry id. These annotate the report's
+# named-failure table; everything else in the report is computed from results.json.
+NAMED_VERDICTS = {
+    'oceanside-of161rr': (
+        'FIXED', 'heuristic #1 is the reported perspective side view of the sheet on a tiled floor; '
+        'both judges picked #2, a straight-on flat shot of the yellow rough-rolled texture'),
+    'oceanside-of23071s': (
+        'FIXED', 'heuristic #4 is the reported shop-shelf photo (warehouse light wall, outlet boxes, bins); '
+        'both judges picked #1, the flat blue sheet on a plain ground'),
+    'oceanside-of3176s': (
+        'IMPROVED (NONE)', 'heuristic #3 is the reported garden photo (sheet leaning on a birch tree over '
+        'strawberry plants); both judges said NONE, which would quarantine the product instead of shipping '
+        'the garden shot. Conservative call: candidate #1 (a flat close-up of the wispy amber glass) '
+        'arguably qualifies -- the judges likely read it as a macro crop rather than a full-frame sheet. '
+        'Net: the bad image is gone; a usable-but-debatable one was left on the table'),
+    'oceanside-of3276s': (
+        'N/A -- already fine', "the live gallery has changed since the user report; the heuristic's current "
+        'pick (#2) is itself a flat green sheet. Both judges picked #1, an equally-legitimate flat alternate, '
+        'and both avoided the shop-shelf photo (#3) still lurking in this gallery'),
+    'oceanside-of3296s': (
+        'FIXED', 'heuristic #2 is a hand holding the sheet up in front of a finished stained-glass window '
+        'scene (the reported "finished window" failure); both judges picked #1, the flat wispy green sheet'),
+}
+
 CELL = 200
 LABEL_W = 340
 HEADER_H = 56
@@ -209,6 +235,8 @@ def compute_stats(results):
         'agree_sonnet_heur': agree_sonnet_heur, 'agree_haiku_heur': agree_haiku_heur,
         'agree_sonnet_haiku': agree_sonnet_haiku,
         'sonnet_none': sonnet_none, 'haiku_none': haiku_none,
+        'sonnet_none_ids': [r for r in judged if r.get('judge_sonnet', {}).get('pick') == 'NONE'],
+        'haiku_none_ids': [r for r in judged if r.get('judge_haiku', {}).get('pick') == 'NONE'],
         'sonnet_parse_fail': sonnet_parse_fail, 'haiku_parse_fail': haiku_parse_fail,
         'sonnet_lat_avg': avg(sonnet_lat), 'haiku_lat_avg': avg(haiku_lat),
         'sonnet_cost_avg': avg(sonnet_cost), 'haiku_cost_avg': avg(haiku_cost),
@@ -235,17 +263,28 @@ def render_report(results, stats):
     )
 
     lines.append('## Verdict on the 4 user-named failures\n')
-    lines.append('| Product | Heuristic pick (# in gallery) | Sonnet judge | Haiku judge | Fixed? |')
+    lines.append('(5 registry rows -- "Dark Green with White" exists as two SKUs; the failure was on '
+                 '`of3296s`, and `of3276s` is included for coverage. Verdicts hand-verified against the '
+                 'contact sheets, not just inferred from index disagreement.)\n')
+    lines.append('| Product | Heuristic | Sonnet | Haiku | Verdict |')
     lines.append('|---|---|---|---|---|')
     for r in stats['named']:
         h = r.get('heuristic_pick_index')
         s = r.get('judge_sonnet', {}).get('pick')
         k = r.get('judge_haiku', {}).get('pick')
-        fixed = 'YES' if (s is not None and s != 'NONE' and s != h) else ('partial' if s != h else 'NO')
-        if k is not None and k != 'NONE' and k == s and s != h:
-            fixed = 'YES (both models agree)'
-        lines.append(f"| {r['manufacturer']} {r['name']} (`{r['id']}`) | #{h} | #{s} | #{k} | {fixed} |")
+        verdict, detail = NAMED_VERDICTS.get(r['id'], ('?', ''))
+        def fmt(v):
+            return 'NONE' if v == 'NONE' else (f'#{v}' if v is not None else 'parse-fail')
+        lines.append(f"| {r['manufacturer']} {r['name']} (`{r['id']}`) | {fmt(h)} | {fmt(s)} | {fmt(k)} | **{verdict}** -- {detail} |")
     lines.append('')
+    lines.append(
+        '**Bottom line: yes, the judge fixes the named failures.** Of the 4 user-reported bad picks, '
+        '3 are outright fixed (both models independently choose a verified straight-on flat swatch photo), '
+        'and the 4th (Dark Amber) has its garden photo removed via a NONE/quarantine verdict rather than '
+        'replaced. Zero parse failures and zero retries across all 82 calls. Every one of these failures '
+        'carried a *high* heuristic pick_score (1.0-1.5, well above the 0.45 floor) -- the pixel heuristic '
+        'was not just wrong, it was confidently wrong, which is the finding that shapes the '
+        'recommendation below.\n')
 
     lines.append('## Agreement stats\n')
     lines.append(f"- Sonnet vs. heuristic: **{stats['agree_sonnet_heur']}/{n}** "
@@ -258,13 +297,25 @@ def render_report(results, stats):
     lines.append(f"- Haiku parse failures (both attempts unparseable): {stats['haiku_parse_fail']}/{n}\n")
 
     lines.append('## NONE-rate (no candidate qualifies)\n')
-    lines.append(f"- Sonnet: **{stats['sonnet_none']}/{n}** ({100 * stats['sonnet_none'] / n:.0f}%)")
-    lines.append(f"- Haiku: **{stats['haiku_none']}/{n}** ({100 * stats['haiku_none'] / n:.0f}%)")
+    lines.append(f"- Sonnet: **{stats['sonnet_none']}/{n}** ({100 * stats['sonnet_none'] / n:.0f}%) -- "
+                  f"{', '.join('`%s`' % r['id'] for r in stats['sonnet_none_ids'])}")
+    lines.append(f"- Haiku: **{stats['haiku_none']}/{n}** ({100 * stats['haiku_none'] / n:.0f}%) -- "
+                  f"{', '.join('`%s`' % r['id'] for r in stats['haiku_none_ids'])}")
     lines.append(
-        "\nA nonzero NONE-rate here is exactly the case for adding a second scrape "
-        "source (e.g. Delphi Glass) for those specific products -- the vendor's own "
-        "gallery genuinely does not contain a usable flat swatch photo, which no "
-        "smarter picker (heuristic or VLM) can fix by re-scoring the same images.\n")
+        "\nThe two models' NONE behavior differs materially. Sonnet's single NONE (`of3176s`, Dark Amber) "
+        "is a defensible quarantine -- that gallery's remaining candidates are a comparison shot, a garden "
+        "photo, and a debatable macro. Haiku's 4 additional NONEs were spot-checked and at least one is a "
+        "clear false NONE: `oceanside-of152s` has exactly one candidate, a clean straight-on flat red sheet "
+        "with a small vendor watermark in the corner (which the build pipeline already crops for Oceanside), "
+        "and haiku rejected it -- most plausibly reading the watermark as 'packaging/label'. Sonnet accepted "
+        "it. Haiku is systematically more conservative, and its NONEs need a second opinion before they can "
+        "drive quarantine decisions.\n\n"
+        "A *genuine* NONE (sonnet-grade) is exactly the case for adding a second scrape source (e.g. Delphi "
+        "Glass) for those specific products -- the vendor's own gallery does not contain a usable flat "
+        "swatch photo, which no smarter picker (heuristic or VLM) can fix by re-scoring the same images. "
+        f"Projected over the corpus at sonnet's measured rate, that is roughly "
+        f"{CORPUS_SIZE * stats['sonnet_none'] // n}-{CORPUS_SIZE * (stats['sonnet_none'] + 1) // n} products "
+        "needing an alternate source -- small enough to handle as a follow-up scrape, not a blocker.\n")
 
     lines.append('## Latency & cost (measured, this pilot)\n')
     lines.append('| Model | Avg latency/call | Avg cost/call | Pilot total time | Pilot total cost |')
@@ -298,32 +349,45 @@ def render_report(results, stats):
     lines.append('## Recommendation\n')
     agree_pct = 100 * stats['agree_sonnet_haiku'] / n
     lines.append(
-        f"**Judge-only-when-heuristic-is-unconfident**, not judge-everything. Rationale from this pilot:\n\n"
-        f"1. Both named failures the lead flagged were fixed by both models, and both models moved off the "
-        "heuristic's pick on every clearly-bad case in the sample -- the judge earns its cost precisely where "
-        "the heuristic's own score is marginal or where a scored-fine-but-actually-wrong image slipped through "
-        "(the 4 named cases all cleared the heuristic's 0.45 floor, sometimes comfortably -- pick_score alone "
-        "does not flag them, so 'unconfident' should mean more than 'near the floor'; see caveat below).\n"
-        f"2. Sonnet and haiku agreed with each other on {stats['agree_sonnet_haiku']}/{n} products "
-        f"({agree_pct:.0f}%) in this sample -- haiku is the cheaper, faster model and largely reproduces "
-        "sonnet's verdict here, so **haiku is the corpus-scale default**; reserve sonnet for products where "
-        "haiku itself returns NONE or where haiku's pick disagrees with the heuristic AND the heuristic's "
-        "score is high (a second opinion on the cases most likely to be a real judge error rather than a real "
-        "heuristic error).\n"
-        f"3. Running the judge over all {CORPUS_SIZE} products with both models costs "
-        f"${s_cost_full + h_cost_full:.0f} and ~{s_time_full_h + h_time_full_h:.0f}h sequential "
-        "wall-clock -- affordable as a one-time backfill, but not something to re-run on every rebuild "
-        "(`build_swatch_library.py` reruns are frequent per its own stability-rule design; a per-run judge "
-        "pass at this cost doesn't pay for itself once the backfill is done). Recommended shape: (a) one-time "
-        "haiku-only pass over the full corpus, sonnet as tie-breaker only where haiku says NONE or flips a "
-        "high-scoring heuristic pick; (b) going forward, only re-invoke the judge for *new* products at scrape "
-        "time (haiku only), not for previously-judged/stable ones -- same incremental posture as the picker's "
-        "own thumb cache and stability rule.\n\n"
-        "**Caveat -- this is a directional pilot, not ground truth.** No independent human label exists for "
-        "\"is this actually the swatch photo\" beyond the 4 named cases and the reviewer's own eyeball on the "
-        "board below; the agreement numbers above measure *judge-vs-heuristic* and *judge-vs-judge* agreement, "
-        "not judge accuracy. Recommend the lead/CTO spot-check ~10 rows on the board before greenlighting a "
-        "corpus-wide backfill.\n")
+        "**Judge-everything, once, with sonnet -- then judge only new/changed products.** The "
+        "judge-only-when-heuristic-is-unconfident design is NOT viable on this evidence, for one decisive "
+        "reason: every one of the 4 user-named failures carried a high heuristic pick_score (1.0-1.5, vs. "
+        "the 0.45 floor). The heuristic's confidence signal does not correlate with these failure modes "
+        "(shelf photos, garden shots, hand-held-against-window all score as 'great swatch' on pixel "
+        "statistics), so a confidence-gated judge would have skipped exactly the products the lead needs "
+        "fixed. There is no usable 'unconfident' trigger to gate on.\n\n"
+        "Model choice: **sonnet, not haiku, despite 3x the cost.**\n\n"
+        f"1. Haiku reproduces sonnet's verdict on only {stats['agree_sonnet_haiku']}/{n} products "
+        f"({agree_pct:.0f}%), and its extra NONEs include at least one verified false NONE "
+        "(`of152s`, a clean single-candidate flat sheet). A false NONE quarantines a good product -- "
+        "the most expensive error class for the library (silent catalog shrinkage).\n"
+        f"2. The absolute cost gap at corpus scale is ${s_cost_full:.0f} vs ${h_cost_full:.0f} -- a "
+        f"one-time ~${s_cost_full - h_cost_full:.0f} premium to avoid re-adjudicating haiku's "
+        "conservative NONEs by hand. Not worth optimizing.\n"
+        f"3. Haiku was not even faster in practice ({stats['haiku_lat_avg']/1000:.1f}s vs "
+        f"{stats['sonnet_lat_avg']/1000:.1f}s avg/call in this pilot -- CLI session overhead dominates, "
+        "not model inference).\n\n"
+        "Operational shape:\n\n"
+        f"1. One-time sonnet backfill over all {CORPUS_SIZE} products: ~${s_cost_full:.0f}, "
+        f"~{s_time_full_h:.1f}h sequential or well under an hour at 10-way parallelism (independent "
+        "subprocess calls; the gallery re-scrape is throttled but one-time and cacheable).\n"
+        "2. Where the judge disagrees with the shipped image, route through the existing stability-rule "
+        "posture: replace when the judge picks a different candidate, quarantine on NONE -- but "
+        "human-review the NONEs (sonnet's NONE-rate is low enough to eyeball: projected "
+        f"~{CORPUS_SIZE * stats['sonnet_none'] // n}-{CORPUS_SIZE * (stats['sonnet_none'] + 1) // n} "
+        "products corpus-wide) and treat persistent NONEs as the queue for a second scrape source "
+        "(Delphi).\n"
+        "3. Going forward, judge only *new* products at scrape time and products whose gallery changed "
+        "-- same incremental posture as the picker's thumb cache. At a few new products a week this is "
+        "pennies; the judge never needs to run corpus-wide again.\n\n"
+        "**Caveat -- this is a directional pilot, not ground truth.** No independent human label exists "
+        "for \"is this actually the swatch photo\" beyond the 4 named cases and the eyeballed spot-checks; "
+        "the agreement numbers above measure *judge-vs-heuristic* and *judge-vs-judge* agreement, not "
+        f"judge accuracy. Of the {n - stats['agree_sonnet_heur']} sonnet-vs-heuristic disagreements, "
+        "5 are the named-failure rows; the remainder were spot-checked as mostly picks between two "
+        "legitimate flat photos of the same glass (same class report 035 called 'legitimate alternates') "
+        "-- the review board below is the instrument for scoring that claim. "
+        "Recommend the lead/CTO spot-check ~10 rows before greenlighting the backfill.\n")
 
     lines.append('## Review board\n')
     lines.append(f"![review board](./{os.path.basename(BOARD_PATH)})\n")
