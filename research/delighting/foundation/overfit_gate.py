@@ -38,19 +38,30 @@ import time
 
 import numpy as np
 
+# Must be set before `import torch` (transitively pulled in by the `backbone` import
+# below) — the MPS allocator reads this once at first use. Caps the driver allocation
+# so this job leaves headroom for the concurrent Blender render on the 16GB box (team
+# guidance: try 0.5 => ~8GB ceiling; bump to 0.6 if that raises allocation errors).
+# A pre-set value from the launching shell always wins (setdefault).
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.5")
+# torch's MPS allocator defaults the low watermark to 1.4 (effectively "disabled") when
+# unset, which conflicts with a HIGH ratio below that (RuntimeError: invalid low
+# watermark ratio 1.4) -- must set both together.
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.4")
+os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 DELIGHT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 sys.path.insert(0, DELIGHT)
 
+import cv2  # noqa: E402
+import torch  # noqa: E402
+
 from dataset import GlassDelightDataset, parse_seed, seed_is_test  # noqa: E402
 from backbone import FoundationDelighter  # noqa: E402
 from train import compute_losses  # noqa: E402
 from extract import lin_to_srgb  # noqa: E402
-
-os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
-import cv2  # noqa: E402
-import torch  # noqa: E402
 
 try:
     import psutil
@@ -60,13 +71,16 @@ except ImportError:
 
 # ------------------------------------------------------------------ RAM/disk guards
 #
-# NOTE (fixed after a false trip at gate1 step 70): macOS "free %" is not a pressure
-# signal — by design, reclaimable cached/inactive/purgeable pages count as "used", so
-# free_frac sitting near 5-10% is a HEALTHY steady state, not memory pressure. The
-# correct signals are (a) the kernel's own jetsam pressure level, (b) this process's
-# actual RSS, and (c) whether swap is GROWING (already-high-but-stable swap is fine;
-# rapid growth means active thrashing). Trip on any of: pressure level >= 2 (warn/
-# critical), RSS > 9GB, or swap used growing > 2GB within a 5-minute window.
+# History: first cut used macOS "free %" (not a real signal — cached/inactive/purgeable
+# pages count as "used" by design, so free% near zero is normal). Second cut used
+# kern.memorystatus_vm_pressure_level with a 3-strike debounce on "warn" — still wrong:
+# on a 16GB box running Blender + a 951M-param model concurrently, SUSTAINED warn is the
+# expected operating point (macOS compressing memory / dropping caches), not danger, and
+# it kept false-tripping. FINAL policy: warn is LOGGED, never trips. Only trip on
+# critical (level 4, immediate), swap GROWING (not swap being high — that's normal here
+# too) > ~2GB over a rolling 15-minute window, this process's own footprint (RSS or MPS
+# driver allocation) > 9GB, or disk < 10GB. Load average is logged every check so the
+# report can show whether the box got sluggish, even though it isn't a trip criterion.
 _swap_history = []  # [(timestamp, used_mb), ...] rolling window, module-level
 
 
@@ -91,9 +105,10 @@ def swap_used_mb():
         return None
 
 
-def swap_growth_mb(window_sec=300):
-    """Growth in swap-used over the trailing `window_sec`, or None until the window
-    has enough history. A single high-but-flat reading never trips this."""
+def swap_growth_mb(window_sec=900):
+    """Growth in swap-used over the trailing `window_sec` (default 15min per the final
+    guard policy), or None until the window has enough history. A high-but-flat swap
+    reading never trips this — only growth does."""
     now = time.time()
     used = swap_used_mb()
     if used is None:
@@ -104,6 +119,13 @@ def swap_growth_mb(window_sec=300):
     if len(_swap_history) < 2 or (now - _swap_history[0][0]) < 30:
         return None  # not enough history yet to judge a trend
     return used - _swap_history[0][1]
+
+
+def load_avg():
+    try:
+        return tuple(round(x, 2) for x in os.getloadavg())
+    except Exception:
+        return None
 
 
 def proc_rss_gb():
@@ -130,57 +152,41 @@ def mps_mem_stats():
         return {}
 
 
-_pressure_strikes = [0]  # consecutive "warn" (level==2) readings; debounced (see below)
-
-
 def guard_or_exit(log_path, tag):
-    """Trip on: sustained pressure warn (3 consecutive checks — a SINGLE warn blip is
-    expected noise from the concurrent Blender render's known bursty CPU/GPU use, per
-    the 040 brief; only a run of them means real contention), any CRITICAL reading
-    (never debounced), RSS > 9GB, fast-growing swap, or disk < 10GB."""
+    """Trip ONLY on: pressure level 4 (critical, immediate), swap growing > 2GB over a
+    rolling 15-minute window, this process's own footprint (RSS or MPS driver
+    allocation) > 9GB, or disk < 10GB. Sustained "warn" (level 2) is logged, never trips
+    — it's the expected steady state when Blender and a 951M-param model share 16GB."""
     level = vm_pressure_level()
     rss = proc_rss_gb()
+    mps_driver_gb = mps_mem_stats().get("mps_driver_alloc_gb", 0.0)
     free_disk = disk_free_gb()
     growth = swap_growth_mb()
+    la = load_avg()
+
+    def trip(reason):
+        msg = f"[{tag}] RAM/DISK GUARD TRIPPED: {reason} — stopping cleanly."
+        print(msg)
+        with open(log_path, "a") as f:
+            f.write(msg + "\n")
+        return False
 
     if level >= 4:
-        msg = (f"[{tag}] RAM GUARD TRIPPED: memorystatus_vm_pressure_level={level} "
-               f"CRITICAL rss={rss:.2f}GB — stopping cleanly.")
-        print(msg)
-        with open(log_path, "a") as f:
-            f.write(msg + "\n")
-        return False
-    if level == 2:
-        _pressure_strikes[0] += 1
-    else:
-        _pressure_strikes[0] = 0
-    if _pressure_strikes[0] >= 3:
-        msg = (f"[{tag}] RAM GUARD TRIPPED: memorystatus_vm_pressure_level=2 (warn) "
-               f"sustained over {_pressure_strikes[0]} consecutive checks rss={rss:.2f}GB "
-               f"— stopping cleanly.")
-        print(msg)
-        with open(log_path, "a") as f:
-            f.write(msg + "\n")
-        return False
-    if rss > 9.0:
-        msg = f"[{tag}] RAM GUARD TRIPPED: process rss={rss:.2f}GB > 9GB — stopping cleanly."
-        print(msg)
-        with open(log_path, "a") as f:
-            f.write(msg + "\n")
-        return False
+        return trip(f"memorystatus_vm_pressure_level={level} CRITICAL rss={rss:.2f}GB")
     if growth is not None and growth > 2048:
-        msg = (f"[{tag}] RAM GUARD TRIPPED: swap growing fast (+{growth:.0f}MB over "
-               f"~5min) — stopping cleanly.")
-        print(msg)
-        with open(log_path, "a") as f:
-            f.write(msg + "\n")
-        return False
+        return trip(f"swap growing fast (+{growth:.0f}MB over ~15min)")
+    if rss > 9.0:
+        return trip(f"process rss={rss:.2f}GB > 9GB")
+    if mps_driver_gb > 9.0:
+        return trip(f"MPS driver allocation={mps_driver_gb:.2f}GB > 9GB")
     if free_disk < 10.0:
-        msg = f"[{tag}] DISK GUARD TRIPPED: free={free_disk:.1f}GB — stopping cleanly."
-        print(msg)
+        return trip(f"disk free={free_disk:.1f}GB < 10GB")
+
+    if level == 2:
         with open(log_path, "a") as f:
-            f.write(msg + "\n")
-        return False
+            f.write(f"[{tag}] guard: pressure=warn (expected/normal, not tripping) "
+                   f"rss={rss:.2f}GB mps_driver={mps_driver_gb:.2f}GB load_avg={la} "
+                   f"swap_used={swap_used_mb()}MB\n")
     return True
 
 
@@ -346,6 +352,10 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
 
     model = FoundationDelighter(backbone=backbone, dtype=torch.float32, freeze_backbone=True,
                                 lora_rank=lora_rank, cache_only=True).to(device)
+    if hasattr(model.unet, "enable_gradient_checkpointing"):
+        model.unet.enable_gradient_checkpointing()
+        logline(f"[{tag}] gradient checkpointing enabled on the UNet "
+               f"(trades ~30% speed for activation-memory headroom)")
     tp = model.trainable_parameters()
     n_tr = sum(p.numel() for p in tp)
     n_total = sum(p.numel() for p in model.parameters())
@@ -356,7 +366,8 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
            f"proc_rss={proc_rss_gb():.2f}GB {mps_mem_stats()} — process RSS is NOT "
            f"GPU memory on MPS (unified-memory buffers live in the Metal driver's own "
            f"allocation, not anon RSS), so a small psutil RSS does not imply a small "
-           f"model; total param count is the real check.")
+           f"model; total param count is the real check. "
+           f"PYTORCH_MPS_HIGH_WATERMARK_RATIO={os.environ.get('PYTORCH_MPS_HIGH_WATERMARK_RATIO')}")
 
     batch, meta = build_fixed_batch(ds, device, crop)
     logline(f"[{tag}] fixed batch: photo[{batch['photo'].min():.3f},{batch['photo'].max():.3f}] "
@@ -367,6 +378,8 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     logline(f"[{tag}] VAE-floor (frozen VAE encode->decode of gt_T, no UNet): "
            f"MAE={diag['vae_roundtrip_T_mae']:.4f} "
            f"(recon range [{diag['recon_min']:.3f},{diag['recon_max']:.3f}])")
+    if torch.backends.mps.is_available():
+        torch.mps.empty_cache()  # clear pre-training-loop scratch (VAE-floor pass etc.)
 
     opt = torch.optim.AdamW(tp, lr=lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, steps)
@@ -395,9 +408,12 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     model.train()
     stopped_reason = "completed"
     for step in range(start_step, steps):
-        if step % 20 == 0 and not guard_or_exit(log_path, tag):
-            stopped_reason = "ram_or_disk_guard"
-            break
+        if step % 20 == 0:
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
+            if not guard_or_exit(log_path, tag):
+                stopped_reason = "ram_or_disk_guard"
+                break
         if max_minutes and (time.time() - t0) / 60.0 > max_minutes:
             logline(f"[{tag}] time budget ({max_minutes}min) hit at step {step}")
             stopped_reason = "time_budget"
@@ -422,7 +438,8 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
                    f"{parts['sec']:.0f}s  rss={parts['rss_gb']}GB")
         if step % 100 == 0:
             logline(f"  [{tag}] guard telemetry: pressure_level={vm_pressure_level()} "
-                   f"free_disk={disk_free_gb():.1f}GB swap_used={swap_used_mb()}MB")
+                   f"free_disk={disk_free_gb():.1f}GB swap_used={swap_used_mb()}MB "
+                   f"load_avg={load_avg()} {mps_mem_stats()}")
 
         if step % snapshot_every == 0 or step == steps - 1:
             with torch.no_grad():

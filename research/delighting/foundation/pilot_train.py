@@ -28,7 +28,12 @@ import os
 import sys
 import time
 
-import torch
+# must be set before `import torch` — see overfit_gate.py's note on this same setting
+# (both ratios needed together or the MPS allocator errors: "invalid low watermark ratio")
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.5")
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.4")
+
+import torch  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DELIGHT = os.path.dirname(HERE)
@@ -68,9 +73,13 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
 
     model = FoundationDelighter(backbone=backbone, dtype=torch.float32, freeze_backbone=True,
                                 lora_rank=lora_rank, cache_only=cache_only).to(device)
+    if hasattr(model.unet, "enable_gradient_checkpointing"):
+        model.unet.enable_gradient_checkpointing()
+        logline("[pilot] gradient checkpointing enabled on the UNet")
     tp = model.trainable_parameters()
     logline(f"[pilot] trainable params: {sum(p.numel() for p in tp)/1e3:.1f}k  "
-           f"lora_ok={model.lora_ok}")
+           f"lora_ok={model.lora_ok}  "
+           f"PYTORCH_MPS_HIGH_WATERMARK_RATIO={os.environ.get('PYTORCH_MPS_HIGH_WATERMARK_RATIO')}")
     opt = torch.optim.AdamW(tp, lr=lr, weight_decay=1e-4)
 
     t_start = time.time()
