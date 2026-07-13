@@ -92,10 +92,16 @@ def compute_losses(out, batch, w):
     l_mk = (F.binary_cross_entropy_with_logits(out["mark_logit"], batch["mark"], reduction="none") * valid).sum() / valid.sum().clamp_min(1)
     # confidence: predict its OWN T error (EVAL_PROTOCOL §1d). target = exp(-err/tau),
     # high where the model's T is accurate. err detached so conf can't cheat by hurting T.
-    with torch.no_grad():
-        err = torch.abs(out["T"].detach() - batch["T"]).mean(1, keepdim=True)  # sRGB-ish
-        conf_target = torch.exp(-err / 0.05)
-    l_conf = (torch.abs(out["conf"] - conf_target) * valid).sum() / valid.sum().clamp_min(1)
+    # out["T"] is None on steps where the caller passed need_T=False (report 040: decode()
+    # is now a metric/visualization convenience, not on the training path) -- conf just
+    # gets no supervision that step rather than forcing an unwanted decode.
+    if out["T"] is not None:
+        with torch.no_grad():
+            err = torch.abs(out["T"].detach() - batch["T"]).mean(1, keepdim=True)  # sRGB-ish
+            conf_target = torch.exp(-err / 0.05)
+        l_conf = (torch.abs(out["conf"] - conf_target) * valid).sum() / valid.sum().clamp_min(1)
+    else:
+        l_conf = torch.zeros((), device=out["z_T_hat"].device, dtype=out["z_T_hat"].dtype)
 
     total = (w["T"] * l_T + w["h"] * l_h + w["B"] * l_B +
              w["shadow"] * l_sh + w["mark"] * l_mk + w["conf"] * l_conf)
@@ -138,10 +144,16 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     log, t0 = [], time.time()
     model.train()
     for step in range(steps):
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         batch = collate(ds, bs, device)
         with torch.no_grad():
             batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
-        out = model(batch["photo"].clamp(0, None))
+        # decode() only when this step will actually log/use pixel-space T (report 040:
+        # T's training signal is latent-only now; decode() is a metric/visualization
+        # convenience that can OOM a larger batch on its own forward-pass memory).
+        need_T = (step % log_every == 0) or (step == steps - 1)
+        out = model(batch["photo"].clamp(0, None), need_T=need_T)
         loss, parts = compute_losses(out, batch, weights)
         opt.zero_grad()
         loss.backward()

@@ -30,8 +30,8 @@ import time
 
 # must be set before `import torch` — see overfit_gate.py's note on this same setting
 # (both ratios needed together or the MPS allocator errors: "invalid low watermark ratio")
-os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.6")
-os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.5")
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.75")
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.65")
 
 import torch  # noqa: E402
 
@@ -113,6 +113,11 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
             if (time.time() - t_start) / 3600.0 >= max_hours:
                 stopped_reason = "max_hours"
                 break
+            # every step, not every 20 -- cheap, and gate2 showed MPS's caching
+            # allocator can accumulate freed-but-cached blocks across steps at larger
+            # batch sizes until it hits the ceiling (see overfit_gate.py's note).
+            if torch.backends.mps.is_available():
+                torch.mps.empty_cache()
             if global_step % 20 == 0 and not guard_or_exit(log_path, "pilot"):
                 stopped_reason = "ram_or_disk_guard"
                 break
@@ -120,7 +125,11 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
             batch = collate(ds, bs, device)
             with torch.no_grad():
                 batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
-            out = model(batch["photo"].clamp(0, None))
+            # decode() only when this step will log (report 040: T's training signal is
+            # latent-only; decode() is a metric convenience that can OOM a larger batch
+            # on its own forward-pass memory even with no backward graph through it).
+            need_T = (global_step % 20 == 0)
+            out = model(batch["photo"].clamp(0, None), need_T=need_T)
             loss, parts = compute_losses(out, batch, weights)
             opt.zero_grad()
             loss.backward()

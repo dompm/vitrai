@@ -191,8 +191,18 @@ class FoundationDelighter(nn.Module):
             img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
         return (img.float() * 0.5 + 0.5)  # -> [0,1]
 
-    def forward(self, photo01):
-        """photo01: (B,3,H,W) in [0,1] scene-referred-ish. Returns dict of full-res maps."""
+    def forward(self, photo01, need_T=True):
+        """photo01: (B,3,H,W) in [0,1] scene-referred-ish. Returns dict of full-res maps.
+
+        `need_T=False` skips the VAE decode entirely (out["T"] is None) -- T is now
+        supervised in latent space (z_T_hat), so decode() is purely a visualization/
+        metric convenience, not on the training path. Report 040: at larger batch
+        sizes (gate2's 8-sample fixed batch) decode()'s own forward-pass memory (no
+        backward needed, but real activations for a batch of full-res images through
+        the VAE decoder) was enough to OOM by itself even with T's gradient path
+        already latent-only -- so callers should only pass need_T=True on the steps
+        that actually consume out["T"] (periodic pixel-space metrics/snapshots), not
+        every step."""
         B, _, H, W = photo01.shape
         z_rgb = self.encode(photo01).float()
         extra = max(self.unet_in - z_rgb.shape[1], 0)
@@ -204,9 +214,11 @@ class FoundationDelighter(nn.Module):
         # read the primary intrinsic latent from the first block of the UNet output
         z_T_hat = self.unet(zc, timestep=t, encoder_hidden_states=ehs).sample[:, :self.latent_ch].float()
 
-        T = self.decode(z_T_hat).clamp(0, 1)                      # (B,3,H,W) via frozen VAE
-        if T.shape[-2:] != (H, W):
-            T = F.interpolate(T, size=(H, W), mode="bilinear", align_corners=False)
+        T = None
+        if need_T:
+            T = self.decode(z_T_hat).clamp(0, 1)                  # (B,3,H,W) via frozen VAE
+            if T.shape[-2:] != (H, W):
+                T = F.interpolate(T, size=(H, W), mode="bilinear", align_corners=False)
 
         feat = torch.cat([z_rgb, z_T_hat], dim=1)
         aux = self.aux(feat, (H, W))

@@ -43,14 +43,19 @@ import numpy as np
 # so this job leaves headroom for the concurrent Blender render on the 16GB box (team
 # guidance: try 0.5 => ~8GB ceiling; bump to 0.6 if that raises allocation errors).
 # A pre-set value from the launching shell always wins (setdefault).
-os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.6")
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.75")
 # torch's MPS allocator defaults the low watermark to 1.4 (effectively "disabled") when
 # unset, which conflicts with a HIGH ratio below that (RuntimeError: invalid low
 # watermark ratio 1.4) -- must set both together.
-os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.5")
-# 0.5 hit its ceiling (5.92GB) once the decode() gradient-flow fix (report 040) made
-# backward pass through the frozen VAE decoder too, needing ~5.81GB -- bumped to 0.6
-# per team guidance's fallback.
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.65")
+# History: 0.5 hit its ceiling (5.92GB) when decode() briefly needed backward memory
+# (since fixed -- T is latent-supervised now, decode() is no_grad/eval-only again).
+# 0.6 (7.10GB ceiling) then hit gate2's batch=8 no_grad decode forward pass by just
+# 256MB ("MPS allocated: 5.98 GiB... max allowed: 7.10 GiB") -- a real multi-sample
+# scaling cost (decode() runs on the whole batch every step for the periodic pixel-MAE
+# metric + confidence-loss target), not a leak. Bumped to 0.75 (~8.9GB ceiling) for
+# headroom on the largest fixed-batch gate (8 samples); the >9GB own-footprint guard
+# is the actual safety net if this is ever still too tight.
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -433,9 +438,14 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     model.train()
     stopped_reason = "completed"
     for step in range(start_step, steps):
+        # every step, not every 20: gate2's larger (8-sample) batch showed MPS's caching
+        # allocator accumulating freed-but-cached blocks across steps until it hit the
+        # ceiling (OOM on step 1's encode() at 7.80/8.88GB, right after step 0's decode()
+        # succeeded at 7.95GB peak) -- empty_cache() is cheap, the sysctl-based guard
+        # checks stay throttled below since those have real subprocess overhead.
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         if step % 20 == 0:
-            if torch.backends.mps.is_available():
-                torch.mps.empty_cache()
             if not guard_or_exit(log_path, tag):
                 stopped_reason = "ram_or_disk_guard"
                 break
@@ -444,7 +454,12 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
             stopped_reason = "time_budget"
             break
 
-        out = model(batch["photo"].clamp(0, None))
+        is_snapshot_step = (step % snapshot_every == 0) or (step == steps - 1)
+        # decode() only on snapshot steps (report 040: it's a metric/visualization
+        # convenience now, not on the training path -- and gate2's 8-sample batch was
+        # enough to OOM on decode()'s own forward-pass memory even without a backward
+        # graph through it).
+        out = model(batch["photo"].clamp(0, None), need_T=is_snapshot_step)
         loss, parts = compute_losses(out, batch, weights)
         opt.zero_grad()
         loss.backward()
@@ -466,7 +481,7 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
                    f"free_disk={disk_free_gb():.1f}GB swap_used={swap_used_mb()}MB "
                    f"load_avg={load_avg()} {mps_mem_stats()}")
 
-        if step % snapshot_every == 0 or step == steps - 1:
+        if is_snapshot_step:
             # decoded-pixel T MAE: a LOGGED METRIC only (no_grad), never the training
             # loss (that's the latent MSE above) -- this is what lets the contact sheet
             # and the gate pass/fail verdict keep speaking in pixel units even though
