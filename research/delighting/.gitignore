@@ -44,3 +44,5 @@ results/039/forcedchoice_*/
 results/041/raw_sample/
 pairsources/
 coglass/data/
+coglass/data_registry_snapshot.json
+coglass/__pycache__/
