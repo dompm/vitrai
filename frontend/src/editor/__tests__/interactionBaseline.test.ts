@@ -17,6 +17,7 @@ import {
   findPenSnapTarget,
   findShiftAlignmentGuides,
   getCanvasSnapping,
+  resolvePenPoint,
   simplifyPath,
 } from '../../components/ResultPanel';
 import { makeInteractionPieces, makeInteractionProject, INTERACTION_SHEET_ID } from '../performance/fixtures';
@@ -79,6 +80,18 @@ describe('current Pen behavior', () => {
     expect(vertex?.pt).toEqual([48, 30]);
     expect(findAlignmentGuides([49, 30], pieces, 1).guides.length).toBeGreaterThan(0);
     expect(getCanvasSnapping(49, 30, { left: 50, right: 0, top: 0, bottom: 0 }, 200, 100, 1, translate).x).toBe(50);
+  });
+
+  it('uses the same complete resolver for synchronous click results', () => {
+    const result = resolvePenPoint({
+      cursor: [49, 30], activePoints: [[0, 0], [10, 0]], shiftPressed: false,
+      effectiveScale: 1, crop: { left: 50, right: 0, top: 0, bottom: 0 },
+      patternWidth: 200, patternHeight: 100, pieces, translate,
+    });
+    expect(result.point).toEqual([48, 30]);
+    expect(result.vertexSnapped).toBe(true);
+    expect(result.alignmentGuides).toEqual([]);
+    expect(result.labels).toEqual([]);
   });
 
   it('locks the close-to-start screen threshold', () => {

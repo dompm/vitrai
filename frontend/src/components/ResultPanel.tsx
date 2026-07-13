@@ -27,6 +27,9 @@ import { getSnapFractions } from '../utils/snapping';
 import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../utils/vectorMath';
 import { getPieceGeometry, type PieceGeometry } from '../editor/geometry/pieceGeometry';
 import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
+import { PencilController } from '../editor/interaction/pencilController';
+import { createRafScheduler } from '../editor/interaction/rafScheduler';
+import { PencilOverlay } from './canvas/PencilOverlay';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -754,6 +757,68 @@ export function findLengthSnap(
   return null;
 }
 
+interface PenResolution {
+  point: [number, number];
+  vertexSnapped: boolean;
+  alignmentGuides: AlignmentGuide[];
+  lengthGuide: LengthGuide | null;
+  labels: string[];
+}
+
+export function resolvePenPoint({
+  cursor, activePoints, shiftPressed, effectiveScale, crop, patternWidth,
+  patternHeight, pieces, translate,
+}: {
+  cursor: [number, number]; activePoints: [number, number][]; shiftPressed: boolean;
+  effectiveScale: number; crop: Crop; patternWidth: number; patternHeight: number;
+  pieces: Piece[]; translate: (key: string) => string;
+}): PenResolution {
+  const vertex = findPenSnapTarget(cursor, pieces, effectiveScale);
+  if (vertex) return {
+    point: vertex.pt,
+    vertexSnapped: true,
+    alignmentGuides: [],
+    lengthGuide: null,
+    labels: vertex.label ? [vertex.label] : [],
+  };
+
+  let point: [number, number] = cursor;
+  let alignmentGuides: AlignmentGuide[] = [];
+  let lengthGuide: LengthGuide | null = null;
+  if (activePoints.length > 0) {
+    const last = activePoints[activePoints.length - 1];
+    let theta = Math.atan2(cursor[1] - last[1], cursor[0] - last[0]);
+    if (shiftPressed) theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+    const length = findLengthSnap(cursor, last, pieces, activePoints, effectiveScale);
+    if (length) {
+      point = [last[0] + length.matchLength * Math.cos(theta), last[1] + length.matchLength * Math.sin(theta)];
+      lengthGuide = { matchLength: length.matchLength, center: last, snappedPoint: point, matchingSegment: length.matchingSegment };
+    } else if (shiftPressed) {
+      const aligned = findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
+      if (aligned.guides.length > 0) {
+        point = aligned.snapped;
+        alignmentGuides = aligned.guides;
+      } else {
+        const radius = Math.hypot(cursor[0] - last[0], cursor[1] - last[1]);
+        point = [last[0] + radius * Math.cos(theta), last[1] + radius * Math.sin(theta)];
+      }
+    } else {
+      const aligned = findAlignmentGuides(cursor, pieces, effectiveScale);
+      point = aligned.snapped;
+      alignmentGuides = aligned.guides;
+    }
+  } else {
+    const aligned = findAlignmentGuides(cursor, pieces, effectiveScale);
+    point = aligned.snapped;
+    alignmentGuides = aligned.guides;
+  }
+  const canvas = getCanvasSnapping(point[0], point[1], crop, patternWidth, patternHeight, effectiveScale, translate);
+  return {
+    point: [canvas.x, canvas.y], vertexSnapped: false,
+    alignmentGuides: [...alignmentGuides, ...canvas.guides], lengthGuide, labels: canvas.labels,
+  };
+}
+
 export function ResultPanel({
   pieceTransformPreviewStore, project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
@@ -802,6 +867,7 @@ export function ResultPanel({
   }
 
   function clearDraftHoverFeedback() {
+    penHoverSchedulerRef.current.cancel();
     lastMousePosRef.current = null;
     setHoverPoint(null);
     setHoverSnapped(false);
@@ -864,8 +930,10 @@ export function ResultPanel({
   const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
   const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
   const [activeSnapLabels, setActiveSnapLabels] = useState<string[]>([]);
+  const penHoverSchedulerRef = useRef(createRafScheduler());
+  useEffect(() => () => penHoverSchedulerRef.current.cancel(), []);
 
-  function updateHoverPoint(
+  function publishHoverPoint(
     imageX: number,
     imageY: number,
     shiftPressed: boolean,
@@ -1087,6 +1155,18 @@ export function ResultPanel({
     return result;
   }
 
+  function updateHoverPoint(
+    imageX: number,
+    imageY: number,
+    shiftPressed: boolean,
+    suppressSnap = false,
+  ) {
+    penHoverSchedulerRef.current.schedule(() => {
+      const resolved = publishHoverPoint(imageX, imageY, shiftPressed, suppressSnap);
+      if (resolved && !isInsideDrawableBounds(resolved)) clearDraftHoverFeedback();
+    });
+  }
+
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
   const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
   const [dragStartPolygon, setDragStartPolygon] = useState<[number, number][] | null>(null);
@@ -1095,7 +1175,9 @@ export function ResultPanel({
   const [activeDragCurvePoints, setActiveDragCurvePoints] = useState<CurvePoint[] | null>(null);
   const dragStartCurvePointsRef = useRef<CurvePoint[]>([]);
 
-  const [pencilPoints, setPencilPoints] = useState<[number, number][]>([]);
+  const [pencilController] = useState(() => new PencilController());
+  const [isPencilDrawing, setIsPencilDrawing] = useState(false);
+  useEffect(() => () => pencilController.clear(), [pencilController]);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -1137,6 +1219,7 @@ export function ResultPanel({
       onAddManualPiece(activePolygonPointsRef.current);
     }
     setActivePolygonPoints([]);
+    penHoverSchedulerRef.current.cancel();
     setHoverPoint(null);
     setHoverSnapped(false);
     setActiveAlignmentGuides([]);
@@ -1148,6 +1231,7 @@ export function ResultPanel({
     setActivePenAnchors([]);
     setPenDragIndex(null);
     penDragIndexRef.current = null;
+    penHoverSchedulerRef.current.cancel();
     setHoverPoint(null);
     setHoverSnapped(false);
     setActiveAlignmentGuides([]);
@@ -1368,7 +1452,8 @@ export function ResultPanel({
           return;
         }
       }
-      const resolved = updateHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      penHoverSchedulerRef.current.cancel();
+      const resolved = publishHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
       if (!isInsideDrawableBounds(resolved)) {
         clearDraftHoverFeedback();
         return;
@@ -1387,7 +1472,8 @@ export function ResultPanel({
           return;
         }
       }
-      const resolved = updateHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      penHoverSchedulerRef.current.cancel();
+      const resolved = publishHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
       if (!isInsideDrawableBounds(resolved)) {
         clearDraftHoverFeedback();
         return;
@@ -1403,7 +1489,8 @@ export function ResultPanel({
     if (activeTool === 'pencil') {
       capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      setPencilPoints([[x, y]]);
+      pencilController.start([x, y]);
+      setIsPencilDrawing(true);
       return;
     }
 
@@ -1466,14 +1553,13 @@ export function ResultPanel({
       lastMousePosRef.current = { x, y };
       const isShift = e.evt ? e.evt.shiftKey : false;
       setIsShiftDown(isShift);
-      const resolved = updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
-      if (resolved && !isInsideDrawableBounds(resolved)) clearDraftHoverFeedback();
+      updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
       return;
     }
     if (activeTool === 'pencil') {
-      if (pencilPoints.length > 0) {
+      if (pencilController.rawPointCount > 0) {
         const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-        setPencilPoints(prev => [...prev, [x, y]]);
+        pencilController.capture([x, y]);
       }
       return;
     }
@@ -1527,13 +1613,14 @@ export function ResultPanel({
       return;
     }
     if (activeTool === 'pencil') {
+      const pencilPoints = pencilController.finish();
+      setIsPencilDrawing(false);
       if (pencilPoints.length >= 3) {
         const simplified = simplifyPath(pencilPoints, 2 / vp.effectiveScale);
         if (simplified.length >= 3) {
           onAddManualPiece(simplified);
         }
       }
-      setPencilPoints([]);
       return;
     }
     vp.endPan();
@@ -1550,7 +1637,8 @@ export function ResultPanel({
     }
     setDrawingBox(null);
     setMarqueeBox(null);
-    setPencilPoints([]);
+    pencilController.clear();
+    setIsPencilDrawing(false);
     vp.endPan();
   }
 
@@ -1581,7 +1669,8 @@ export function ResultPanel({
     }
     if (id !== 'pen') clearActivePen();
     if (id !== 'pencil') {
-      setPencilPoints([]);
+      pencilController.clear();
+      setIsPencilDrawing(false);
     }
     setDraggedCorner(null);
     setDraggedMidpoint(null);
@@ -2412,16 +2501,7 @@ export function ResultPanel({
                       })}
                     </Group>
                   )}
-                  {activeTool === 'pencil' && pencilPoints.length > 0 && (
-                    <Line
-                      points={pencilPoints.flat()}
-                      stroke={CANVAS.amber}
-                      strokeWidth={2.5 / es}
-                      lineJoin="round"
-                      lineCap="round"
-                      dash={[4 / es, 3 / es]}
-                    />
-                  )}
+                  {activeTool === 'pencil' && <PencilOverlay controller={pencilController} effectiveScale={es} />}
                   {marqueeBox && (
                     <Rect
                       x={Math.min(marqueeBox.x1, marqueeBox.x2)}
@@ -2830,7 +2910,7 @@ export function ResultPanel({
               } : piece;
 
               const isDrawing = drawingBox !== null
-                || pencilPoints.length > 0
+                || isPencilDrawing
                 || (activeTool === 'polygon' && activePolygonPoints.length > 0)
                 || (activeTool === 'pen' && activePenAnchors.length > 0)
                 || draggedCorner !== null
