@@ -1,6 +1,7 @@
 import { act, create } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ViewportStore, ViewportSubscriber } from '../viewport/viewportStore';
+vi.mock('react-konva', () => ({ Group: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
+import { ViewportGroup, ViewportStore, ViewportSubscriber } from '../viewport/viewportStore';
 
 describe('ViewportStore', () => {
   let frame: FrameRequestCallback | null;
@@ -36,5 +37,16 @@ describe('ViewportStore', () => {
     act(() => { frame?.(0); });
     expect(parentRender).toHaveBeenCalledTimes(1);
     expect(viewportRender).toHaveBeenCalledTimes(2);
+  });
+
+  it('updates a viewport group without recreating stable expensive canvas children', () => {
+    const store = new ViewportStore();
+    const expensivePieceRender = vi.fn();
+    function ExpensivePiece() { expensivePieceRender(); return <span>piece</span>; }
+    const stablePiece = <ExpensivePiece />;
+    act(() => { create(<ViewportGroup store={store}>{stablePiece}</ViewportGroup>); });
+    for (let event = 0; event < 100; event += 1) store.update({ pan: { x: event, y: event } });
+    act(() => { frame?.(0); });
+    expect(expensivePieceRender).toHaveBeenCalledTimes(1);
   });
 });

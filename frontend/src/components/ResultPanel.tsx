@@ -31,7 +31,7 @@ import { PencilController } from '../editor/interaction/pencilController';
 import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
-import { ViewportSubscriber } from '../editor/viewport/viewportStore';
+import { ViewportGroup, ViewportSubscriber } from '../editor/viewport/viewportStore';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -2106,7 +2106,7 @@ export function ResultPanel({
             </div>
           </div>
         ) : (
-          <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <>
+          <>
             <Stage
               width={vp.dims.w} height={vp.dims.h}
               onPointerDown={handlePointerDown}
@@ -2121,9 +2121,7 @@ export function ResultPanel({
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer listening={false}>
-                <Group
-                  x={viewport.pan.x} y={viewport.pan.y}
-                  scaleX={es} scaleY={es}
+                <ViewportGroup store={vp.store}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
                     clipY: project.patternCrop.top,
@@ -2140,7 +2138,8 @@ export function ResultPanel({
                           closed
                           fill="#fffefa"
                           stroke="rgba(40, 30, 15, 0.32)"
-                          strokeWidth={1.5 / es}
+                          strokeWidth={1.5}
+                          strokeScaleEnabled={false}
                           listening={false}
                         />
                       ))}
@@ -2150,7 +2149,8 @@ export function ResultPanel({
                             key={`tierseam-${si}-${i}`}
                             points={[s.x1, s.y1, s.x2, s.y2]}
                             stroke="rgba(40, 30, 15, 0.18)"
-                            strokeWidth={0.8 / es}
+                            strokeWidth={0.8}
+                            strokeScaleEnabled={false}
                             listening={false}
                           />
                         ))
@@ -2165,7 +2165,8 @@ export function ResultPanel({
                           closed
                           fill="#fffefa"
                           stroke="rgba(40, 30, 15, 0.32)"
-                          strokeWidth={1.5 / es}
+                          strokeWidth={1.5}
+                          strokeScaleEnabled={false}
                           listening={false}
                         />
                       ))}
@@ -2196,12 +2197,10 @@ export function ResultPanel({
                       opacity={activeTool === 'box' ? 0.5 : 1}
                     />
                   )}
-                </Group>
+                </ViewportGroup>
               </Layer>
               <Layer>
-                <Group
-                  x={viewport.pan.x} y={viewport.pan.y}
-                  scaleX={es} scaleY={es}
+                <ViewportGroup store={vp.store}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
                     clipY: project.patternCrop.top,
@@ -2267,12 +2266,10 @@ export function ResultPanel({
                       globalCompositeOperation="difference"
                     />
                   )}
-                </Group>
+                </ViewportGroup>
               </Layer>
               <Layer>
-                <Group
-                  x={viewport.pan.x} y={viewport.pan.y}
-                  scaleX={es} scaleY={es}
+                <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <ViewportGroup store={vp.store}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
                     clipY: project.patternCrop.top,
@@ -2873,11 +2870,12 @@ export function ResultPanel({
                       onCursorChange={setCursor}
                     />
                   )}
-                </Group>
+                </ViewportGroup>; }}</ViewportSubscriber>
               </Layer>
             </Stage>
+            <ViewportSubscriber store={vp.store}>{(viewport) => <>
             <ViewportControls
-              zoomPercent={vp.effectiveScale * 100}
+              zoomPercent={viewport.effectiveScale * 100}
               onZoomIn={vp.zoomIn}
               onZoomOut={vp.zoomOut}
               onFit={vp.fitToView}
@@ -2970,7 +2968,7 @@ export function ResultPanel({
                   </div>
                 </div>
               );
-            })()}
+            })()}</>}</ViewportSubscriber>
             <input
               type="file"
               ref={addSheetInputRef}
@@ -2978,7 +2976,7 @@ export function ResultPanel({
               accept="image/*"
               onChange={handleAddSheetFileChange}
             />
-          </>; }}</ViewportSubscriber>
+          </>
         )}
       </div>
     </div>

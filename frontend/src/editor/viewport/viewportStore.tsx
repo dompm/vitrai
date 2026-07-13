@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from 'react';
+import { Group } from 'react-konva';
+import type { GroupConfig } from 'konva/lib/Group';
 
 export interface ViewportSnapshot {
   pan: { x: number; y: number };
@@ -46,4 +48,9 @@ export function useViewportSnapshot(store: ViewportStore) {
 
 export function ViewportSubscriber({ store, children }: { store: ViewportStore; children: (snapshot: ViewportSnapshot) => React.ReactNode }) {
   return children(useViewportSnapshot(store));
+}
+
+export function ViewportGroup({ store, children, ...props }: { store: ViewportStore; children: React.ReactNode } & Omit<GroupConfig, 'x' | 'y' | 'scaleX' | 'scaleY'>) {
+  const snapshot = useViewportSnapshot(store);
+  return <Group {...props} x={snapshot.pan.x} y={snapshot.pan.y} scaleX={snapshot.effectiveScale} scaleY={snapshot.effectiveScale}>{children}</Group>;
 }
