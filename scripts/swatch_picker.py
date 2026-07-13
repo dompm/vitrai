@@ -601,6 +601,112 @@ def _bullseye_sheet_signals(a):
     }
 
 
+# -- post-crop border scrub (lead review of the first board: most crops kept a thin
+#    near-white sliver along the BOTTOM edge -- the sheet bbox's last rows are the
+#    sheet's glossy cut edge + studio ground under it -- and a few kept a small white
+#    corner wedge from slight sheet rotation) --
+_SCRUB_WHITE_FRAC_MAX = 0.04   # a row/col is "contaminated" when >4% of it is near-white
+_SCRUB_WINDOW_FRAC = 0.15      # how deep (as a fraction of the crop's own dimension) the scrub
+                               # scans in from each edge for contaminated rows/cols. The bottom of
+                               # these product photos is sheet color -> bright specular reflection
+                               # band -> a DARK cut-edge line -> background, and both the band's
+                               # depth and the dark line's thickness vary per photo (17px..38px at
+                               # 1200px observed across the review boards) -- a shallow fixed band
+                               # missed the deeper ones (second board review), so scan a generous
+                               # window and cut past the DEEPEST contaminated row instead.
+_SCRUB_SAFETY_INSET_FRAC = 0.003  # extra inset removed from ALL four sides after the scrub, as
+                                   # a fraction of the frame's short side (min 1px => ~4px at
+                                   # 1200px full res); sheets are hand-cut and slightly rotated,
+                                   # so err toward cutting a sliver of sheet over keeping any
+                                   # background
+_SCRUB_VERIFY_BAND_FRAC = 0.02  # final self-verification band: after cutting + inset, no row/col
+                                # within this band of any edge may still be contaminated -- if one
+                                # is (e.g. white glass streaks running past the scan window), the
+                                # scrub FAILS rather than ships a dirty crop
+_SCRUB_MAX_AREA_LOSS = 0.20    # if scrubbing eats >20% of the crop area, the crop is not
+                               # trustworthy -- fail it (caller keeps the shipped pick and
+                               # lists the product as uncertain instead)
+
+
+def _scrub_crop_box(a, crop_box_frac):
+    """Border scrub: within a scan window from each edge of the crop, find every
+    near-white-contaminated row/col and cut the edge past the deepest one; then
+    apply a safety inset; then SELF-VERIFY that the final crop's border bands are
+    clean.
+
+    Returns (scrubbed_crop_box_frac | None, detail_dict). None = untrustworthy --
+    either the scrub removed more than _SCRUB_MAX_AREA_LOSS of the area, or
+    contamination survives the cut (background/white streaks deeper than a
+    rectangle crop can excise); the caller treats the product as uncertain and
+    keeps the currently-shipped pick. Run this on the FULL-RESOLUTION pixels: at
+    320px thumb scale JPEG downsampling blends thin white slivers into the sheet
+    color below the white threshold (second-board finding)."""
+    h, w = a.shape[:2]
+    af = a.astype(np.float32) / 255.0
+    mx = af.max(-1); mn = af.min(-1)
+    sat = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0.0)
+    white = (mn >= _BE_WHITE_MIN) & (sat <= _BE_WHITE_SAT_MAX)
+
+    x0 = int(crop_box_frac[0] * w); y0 = int(crop_box_frac[1] * h)
+    x1 = int(crop_box_frac[2] * w); y1 = int(crop_box_frac[3] * h)
+    x0, y0 = max(0, x0), max(0, y0)
+    x1, y1 = min(w, x1), min(h, y1)
+    orig_area = max(1, (x1 - x0) * (y1 - y0))
+    inset = max(1, int(round(_SCRUB_SAFETY_INSET_FRAC * min(h, w))))
+    trimmed = {'top': 0, 'bottom': 0, 'left': 0, 'right': 0}
+
+    def _fail(reason, area):
+        return None, {'trimmed_px': trimmed, 'area_kept': round(max(0, area) / orig_area, 3),
+                      'failed': reason}
+
+    if x1 - x0 < 4 or y1 - y0 < 4:
+        return _fail('degenerate_box', 0)
+
+    # cut each edge past the deepest contaminated row/col within its scan window
+    row_bad = white[:, x0:x1].mean(axis=1) > _SCRUB_WHITE_FRAC_MAX   # indexed by absolute y
+    col_bad = white[y0:y1, :].mean(axis=0) > _SCRUB_WHITE_FRAC_MAX   # indexed by absolute x
+    win_y = max(4, int(round(_SCRUB_WINDOW_FRAC * (y1 - y0))))
+    win_x = max(4, int(round(_SCRUB_WINDOW_FRAC * (x1 - x0))))
+
+    top_bad = np.where(row_bad[y0:min(y0 + win_y, y1)])[0]
+    if top_bad.size:
+        trimmed['top'] = int(top_bad.max()) + 1
+        y0 += trimmed['top']
+    bot_bad = np.where(row_bad[max(y1 - win_y, y0):y1])[0]
+    if bot_bad.size:
+        trimmed['bottom'] = (y1 - max(y1 - win_y, y0)) - int(bot_bad.min())
+        y1 -= trimmed['bottom']
+    left_bad = np.where(col_bad[x0:min(x0 + win_x, x1)])[0]
+    if left_bad.size:
+        trimmed['left'] = int(left_bad.max()) + 1
+        x0 += trimmed['left']
+    right_bad = np.where(col_bad[max(x1 - win_x, x0):x1])[0]
+    if right_bad.size:
+        trimmed['right'] = (x1 - max(x1 - win_x, x0)) - int(right_bad.min())
+        x1 -= trimmed['right']
+
+    x0 += inset; y0 += inset
+    x1 -= inset; y1 -= inset
+    area = (x1 - x0) * (y1 - y0)
+    if x1 - x0 < 4 or y1 - y0 < 4 or area <= (1.0 - _SCRUB_MAX_AREA_LOSS) * orig_area:
+        return _fail('area_loss', area)
+
+    # self-verify: the final crop's border bands must be clean (recompute the
+    # row/col profiles on the FINAL box, since the cuts changed both extents)
+    vb_y = max(2, int(round(_SCRUB_VERIFY_BAND_FRAC * (y1 - y0))))
+    vb_x = max(2, int(round(_SCRUB_VERIFY_BAND_FRAC * (x1 - x0))))
+    rows = white[:, x0:x1].mean(axis=1)
+    cols = white[y0:y1, :].mean(axis=0)
+    if (rows[y0:y0 + vb_y].max() > _SCRUB_WHITE_FRAC_MAX
+            or rows[y1 - vb_y:y1].max() > _SCRUB_WHITE_FRAC_MAX
+            or cols[x0:x0 + vb_x].max() > _SCRUB_WHITE_FRAC_MAX
+            or cols[x1 - vb_x:x1].max() > _SCRUB_WHITE_FRAC_MAX):
+        return _fail('verify_contaminated', area)
+
+    scrubbed = (round(x0 / w, 4), round(y0 / h, 4), round(x1 / w, 4), round(y1 / h, 4))
+    return scrubbed, {'trimmed_px': trimmed, 'area_kept': round(area / orig_area, 3), 'failed': None}
+
+
 def bullseye_features(path):
     """Public per-candidate feature dict for a Bullseye photo. Named, independently-
     interpretable signals -- see component-(f) docstring above for why (VLM judge
@@ -608,7 +714,9 @@ def bullseye_features(path):
 
     Returns: {'is_full_bleed', 'is_whole_sheet_on_white', 'grip_flag',
               'grip_confidence', 'flat_chip_flag', 'crop_box_frac' (x0,y0,x1,y1 as
-              fractions of the source image, or None), plus the raw pixel signals}.
+              fractions of the source image, or None -- None for a whole-sheet photo
+              means the border scrub FAILED and the crop cannot be trusted, see
+              'crop_scrub'), plus the raw pixel signals}.
     """
     a = _load(path)
     sig = _bullseye_sheet_signals(a)
@@ -618,6 +726,7 @@ def bullseye_features(path):
     grip_confidence = round(min(1.0, sig['clamp_blobs'] / 2.0), 3) if grip_flag else 0.0
 
     crop_box_frac = None
+    crop_scrub = None
     if is_whole_sheet:
         x0, y0, x1, y1 = sig['sheet_bbox_frac']
         # right cut: whichever is tightest of (a) detected clamp hardware and (b) a
@@ -634,12 +743,19 @@ def bullseye_features(path):
         # bbox (either corner); conservative inset per the task brief ("a slightly
         # smaller clean crop beats a full sheet with hardware").
         crop_top = y0 + 0.12 * (y1 - y0)
-        crop_box_frac = (round(x0, 4), round(crop_top, 4), round(crop_right, 4), round(y1, 4))
+        # border scrub (first-board review finding): the sheet bbox's outer rows/
+        # cols still contain studio ground -- a bottom-edge sliver especially --
+        # so shrink any contaminated edge and apply a safety inset. A failed scrub
+        # (background intrusion too deep) yields crop_box_frac=None, which the
+        # churn gate treats as "uncertain -> keep the shipped pick".
+        candidate_box = (x0, crop_top, crop_right, y1)
+        crop_box_frac, crop_scrub = _scrub_crop_box(a, candidate_box)
 
     return {
         'is_full_bleed': is_full_bleed, 'is_whole_sheet_on_white': is_whole_sheet,
         'grip_flag': grip_flag, 'grip_confidence': grip_confidence,
         'flat_chip_flag': is_full_bleed, 'crop_box_frac': crop_box_frac,
+        'crop_scrub': crop_scrub,
         **sig,
     }
 

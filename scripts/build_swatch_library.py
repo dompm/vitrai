@@ -139,6 +139,13 @@ def cache_sge_collection(collection_handle):
 # and hand it local file paths, per its own integration guidance.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from swatch_picker import pick as picker_pick, FLOOR as PICKER_FLOOR  # noqa: E402
+# fix/bullseye-grip-picks: the AUTHORITATIVE border scrub runs here at full
+# resolution (Phase C, on the actual downloaded pixels). The picker's thumb-scale
+# scrub is only a cheap gate prefilter -- at 320px the JPEG downsampling blends a
+# thin white sliver into the sheet color below the white threshold, which let 47
+# crops through with a visible band at full res (second board review).
+from swatch_picker import _scrub_crop_box as scrub_crop_box  # noqa: E402
+import numpy as np  # noqa: E402
 
 THUMB_CACHE_DIR = 'data/picker_thumb_cache'
 os.makedirs(THUMB_CACHE_DIR, exist_ok=True)
@@ -411,10 +418,13 @@ def apply_bullseye_churn_gate(item, existing, candidate_features):
 
     Rule: a changed Bullseye pick is accepted ONLY when it is the diagnosed upgrade
     -- the previously-shipped image classifies as a flat solid-color chip
-    (is_full_bleed) and the new pick is a detected whole-sheet/grip photo (which
-    also guarantees a crop box exists for the hardware/label). Everything else
-    keeps the currently-shipped image, per the task guardrail: "if a product's grip
-    detection is uncertain, keep the current pick and list it in the report."
+    (is_full_bleed), the new pick is a detected whole-sheet/grip photo, AND the
+    post-crop border scrub produced a trustworthy crop box (crop_box_frac not None;
+    a failed scrub means background intrusion too deep for a rectangle crop -- see
+    swatch_picker._scrub_crop_box and the lead's first-board review finding).
+    Everything else keeps the currently-shipped image, per the task guardrail: "if
+    a product's grip detection is uncertain, keep the current pick and list it in
+    the report."
 
     Returns (item, reverted: bool). Sets item['_churn_reverted'] when reverting so
     Phase C force-refetches the old image (the new pick's download may already have
@@ -430,7 +440,8 @@ def apply_bullseye_churn_gate(item, existing, candidate_features):
     old_feats = (candidate_features or {}).get(old_key) or {}
     new_feats = (candidate_features or {}).get(new_key) or {}
     is_diagnosed_upgrade = (old_feats.get('is_full_bleed')
-                             and (new_feats.get('is_whole_sheet_on_white') or new_feats.get('grip_flag')))
+                             and (new_feats.get('is_whole_sheet_on_white') or new_feats.get('grip_flag'))
+                             and new_feats.get('crop_box_frac') is not None)
     if is_diagnosed_upgrade:
         return item, False
 
@@ -562,10 +573,18 @@ def download_and_calibrate_image(url, local_filename, item, category, force=Fals
 
         # --- 2b. Crop Bullseye grip-photo hardware/label/sharpie strip
         #         (fix/bullseye-grip-picks -- swatch_picker component (f)'s
-        #         crop_box_frac, computed on the thumbnail, is resolution-
-        #         independent so it applies cleanly to this full-res download) ---
+        #         crop_box_frac from the thumbnail is only the ESTIMATE; the
+        #         authoritative border scrub re-runs here on the full-res pixels,
+        #         where thin white slivers/reflection bands are actually visible.
+        #         A failed full-res scrub returns the grip_crop_failed sentinel --
+        #         the Phase C caller reverts to the previously-shipped pick and
+        #         lists the product as uncertain rather than shipping a bad crop) ---
         elif item['manufacturer'] == 'Bullseye' and bullseye_crop_frac:
-            x0f, y0f, x1f, y1f = bullseye_crop_frac
+            a_full = np.asarray(img, dtype=np.uint8)
+            scrubbed, scrub_detail = scrub_crop_box(a_full, bullseye_crop_frac)
+            if scrubbed is None:
+                return {'grip_crop_failed': True, 'scrub_detail': scrub_detail}
+            x0f, y0f, x1f, y1f = scrubbed
             crop_box = [int(x0f * width), int(y0f * height), int(x1f * width), int(y1f * height)]
             img = img.crop(crop_box)
             img.save(filepath, "JPEG")
@@ -1141,6 +1160,35 @@ def main(only_manufacturer=None):
         else:
             calib = download_and_calibrate_image(item['image_url'], target_filename, item, item['category'],
                                                    force=force, bullseye_crop_frac=bullseye_crop_frac)
+            # fix/bullseye-grip-picks: the authoritative FULL-RES border scrub failed
+            # -- background intrusion too deep to crop this grip/whole-sheet photo
+            # safely. Per the guardrail, keep the previously-shipped pick (or drop a
+            # brand-new row entirely) and list the product as uncertain.
+            if calib and calib.get('grip_crop_failed'):
+                churn_reverted_log.append({'id': item['id'], 'name': item['name'],
+                                            'kept_url': _strip_query(old_url or ''),
+                                            'reason': 'full_res_scrub_failed',
+                                            'scrub_detail': calib.get('scrub_detail')})
+                if old_url:
+                    print(f"  Bullseye grip crop: full-res scrub failed for {item['id']} -- "
+                          f"keeping previously-shipped pick (uncertain)")
+                    item['image_url'] = old_url
+                    calib = download_and_calibrate_image(old_url, target_filename, item, item['category'],
+                                                           force=True, bullseye_crop_frac=None)
+                else:
+                    print(f"  Bullseye grip crop: full-res scrub failed for {item['id']} and no "
+                          f"previously-shipped pick exists -- dropping row (uncertain)")
+                    continue
+            # Idempotent-rerun fix: the fast-cache-return path cannot know the crop
+            # box baked into the on-disk file -- restore it from the shipped registry
+            # row instead of nulling it out on every no-op rerun.
+            if (calib and not force and calib.get('crop_box') is None
+                    and old and old.get('crop_box') and same_as_before):
+                calib['crop_box'] = old['crop_box']
+                calib['cropped'] = bool(old.get('cropped'))
+                if old.get('real_world_width_in'):
+                    calib['calibrated_width_in'] = old['real_world_width_in']
+                    calib['calibrated_height_in'] = old['real_world_height_in']
         if not calib:
             if os.path.exists(filepath):
                 # A re-fetch attempt failed (network hiccup) but we still have a
