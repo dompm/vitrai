@@ -308,8 +308,23 @@ def plot_loss_curve(log, out_path, title):
 
 # ------------------------------------------------------------------ main loop
 def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backbone,
-            out_dir, device, weights=None, max_minutes=None, log_path="/tmp/night_train.log"):
+            out_dir, device, weights=None, max_minutes=None, log_path="/tmp/night_train.log",
+            resume=True):
+    """Guard trips are expected overnight on this shared machine (Blender's bursty
+    CPU/GPU use can briefly push real kernel pressure to warn). Rather than fight the
+    debounce further, state is persisted INCREMENTALLY so a trip just pauses progress:
+    per-step log rows append to `{tag}_log.jsonl`, contact-sheet rows save as individual
+    PNGs under `{tag}_snapshots/`, and the adapter checkpoints every snapshot. With
+    `resume=True` (default), a relaunch of the SAME tag picks up where it left off — the
+    fixed batch is deterministic (dataset seed=0) so the memorization target is identical
+    across restarts. Final artifacts (contact sheet / loss curve / result.json) are
+    always assembled from EVERYTHING on disk, not just this invocation's steps, so the
+    output is correct whether the gate ran in one shot or was interrupted N times."""
     os.makedirs(out_dir, exist_ok=True)
+    snap_dir = os.path.join(out_dir, f"{tag}_snapshots")
+    os.makedirs(snap_dir, exist_ok=True)
+    jsonl_path = os.path.join(out_dir, f"{tag}_log.jsonl")
+    adapter_path = os.path.join(out_dir, f"{tag}_adapter.pt")
     device = device or ("mps" if torch.backends.mps.is_available() else
                         "cuda" if torch.cuda.is_available() else "cpu")
     weights = weights or {"T": 6.0, "h": 2.0, "B": 2.0, "shadow": 1.0, "mark": 1.0, "conf": 1.0}
@@ -322,7 +337,7 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
 
     logline(f"[{tag}] === start {time.strftime('%Y-%m-%d %H:%M:%S')} "
            f"backbone={backbone} device={device} n_samples={len(sample_dirs)} "
-           f"steps={steps} crop={crop} ===")
+           f"steps={steps} crop={crop} weights={weights} ===")
 
     ds = FixedSampleDataset(sample_dirs, crop=crop, work_size=768, augment=False,
                             input_variant="without")
@@ -356,13 +371,30 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     opt = torch.optim.AdamW(tp, lr=lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, steps)
 
+    start_step = 0
+    if resume and os.path.exists(adapter_path) and os.path.exists(jsonl_path):
+        try:
+            model.load_adapter(adapter_path, map_location=device)
+            last = None
+            with open(jsonl_path) as f:
+                for line in f:
+                    if line.strip():
+                        last = line
+            if last:
+                start_step = json.loads(last)["step"] + 1
+            for _ in range(start_step):  # keep the cosine schedule roughly in phase
+                sched.step()
+            logline(f"[{tag}] RESUMED from {adapter_path} at step {start_step} "
+                   f"(a prior run was interrupted; optimizer moment estimates restart "
+                   f"fresh, model weights do not)")
+        except Exception as e:
+            logline(f"[{tag}] resume load failed ({e}); starting fresh from step 0")
+            start_step = 0
+
     header = build_header(size=256)
-    rows = []
-    log = []
-    ckpts = []
     model.train()
     stopped_reason = "completed"
-    for step in range(steps):
+    for step in range(start_step, steps):
         if step % 20 == 0 and not guard_or_exit(log_path, tag):
             stopped_reason = "ram_or_disk_guard"
             break
@@ -383,7 +415,8 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
             parts["step"] = step
             parts["sec"] = round(time.time() - t0, 1)
             parts["rss_gb"] = round(proc_rss_gb(), 2)
-            log.append(parts)
+            with open(jsonl_path, "a") as f:
+                f.write(json.dumps(parts) + "\n")
             logline(f"  [{tag}] step {step:4d}  total={parts['total']:.4f}  "
                    f"T={parts['T']:.4f} h={parts['h']:.4f} B={parts['B']:.4f}  "
                    f"{parts['sec']:.0f}s  rss={parts['rss_gb']}GB")
@@ -393,24 +426,30 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
 
         if step % snapshot_every == 0 or step == steps - 1:
             with torch.no_grad():
-                rows.append(build_contact_row(batch["photo"][0], out["T"][0], batch["T"][0],
-                                              out["h"][0], batch["h"][0], step,
-                                              parts["total"] if "total" in parts else float(loss)))
-            ck = os.path.join(out_dir, f"{tag}_adapter.pt")
-            model.save_adapter(ck)
-            ckpts.append(ck)
-            if len(ckpts) > 3:
-                # rolling window; save_adapter overwrites the same path anyway (tag-scoped)
-                pass
+                row = build_contact_row(batch["photo"][0], out["T"][0], batch["T"][0],
+                                        out["h"][0], batch["h"][0], step,
+                                        parts["total"] if "total" in parts else float(loss))
+            cv2.imwrite(os.path.join(snap_dir, f"step_{step:05d}.png"), row[..., ::-1])
+            model.save_adapter(adapter_path)  # single rolling checkpoint (tens of MB)
 
     total_sec = time.time() - t0
-    logline(f"[{tag}] === done ({stopped_reason}) {total_sec:.0f}s, "
-           f"{len(log)} logged steps ===")
+    steps_this_run = max(0, step + 1 - start_step) if steps > start_step else 0
+    logline(f"[{tag}] === done ({stopped_reason}) {total_sec:.0f}s this invocation, "
+           f"{steps_this_run} steps this run ===")
 
-    # write artifacts
-    sheet = np.concatenate([header] + rows, axis=0)
+    # assemble final artifacts from EVERYTHING on disk (survives any number of restarts)
+    log = []
+    if os.path.exists(jsonl_path):
+        with open(jsonl_path) as f:
+            log = [json.loads(l) for l in f if l.strip()]
+    snap_files = sorted(glob.glob(os.path.join(snap_dir, "step_*.png")))
+    rows = [cv2.imread(p)[..., ::-1] for p in snap_files]
+    rows = [r for r in rows if r is not None]
+
     sheet_path = os.path.join(out_dir, f"{tag}_contact_sheet.png")
-    cv2.imwrite(sheet_path, sheet[..., ::-1])
+    if rows:
+        sheet = np.concatenate([header] + rows, axis=0)
+        cv2.imwrite(sheet_path, sheet[..., ::-1])
     curve_path = os.path.join(out_dir, f"{tag}_loss_curve.png")
     if log:
         plot_loss_curve(log, curve_path,
@@ -422,14 +461,15 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
         "tag": tag, "backbone": backbone, "n_samples": len(sample_dirs),
         "samples": [{"dir": m["dir"], "recipe": m["recipe"], "seed": m["seed"]} for m in meta],
         "steps_run": len(log) and log[-1]["step"] + 1 or 0,
-        "stopped_reason": stopped_reason, "total_sec": round(total_sec, 1),
+        "stopped_reason": stopped_reason, "total_sec_this_invocation": round(total_sec, 1),
         "vae_floor": diag, "final_losses": final, "log": log,
         "trainable_params": int(n_tr), "lora_ok": model.lora_ok,
         "contact_sheet": sheet_path, "loss_curve": curve_path,
     }
     json_path = os.path.join(out_dir, f"{tag}_result.json")
     json.dump(result, open(json_path, "w"), indent=2)
-    logline(f"[{tag}] wrote {sheet_path}, {curve_path}, {json_path}")
+    logline(f"[{tag}] wrote {sheet_path}, {curve_path}, {json_path} "
+           f"(cumulative: {len(log)} logged steps, {len(rows)} snapshots)")
     return result
 
 
@@ -450,6 +490,8 @@ def main():
     ap.add_argument("--device", default=None)
     ap.add_argument("--max-minutes", type=float, default=None)
     ap.add_argument("--log", default="/tmp/night_train.log")
+    ap.add_argument("--no-resume", action="store_true",
+                    help="ignore any existing {tag}_adapter.pt/_log.jsonl and start over")
     args = ap.parse_args()
 
     sample_dirs = []
@@ -460,7 +502,7 @@ def main():
 
     run_gate(sample_dirs, args.tag, args.steps, args.snapshot_every, args.crop, args.lr,
              args.lora_rank, args.backbone, args.out, args.device,
-             max_minutes=args.max_minutes, log_path=args.log)
+             max_minutes=args.max_minutes, log_path=args.log, resume=not args.no_resume)
 
 
 if __name__ == "__main__":
