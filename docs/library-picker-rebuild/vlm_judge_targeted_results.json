@@ -1,0 +1,97 @@
+[
+  {
+    "id": "bullseye-0002430030f1010",
+    "name": "Translucent White Translucent, Double-rolled, 3 mm, Fusible",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_01.jpg?v=1765591037",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_02.jpg?v=1765591038",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_03.jpg?v=1765591037",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_04.jpg?v=1765591037"
+    ],
+    "shipped_index": 4,
+    "judge_pick": 1,
+    "judge_raw": "1",
+    "latency_ms": 8011,
+    "cost_usd": 0.082541,
+    "verdict": "CHANGED -- #4 -> #1",
+    "winner_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_01.jpg?v=1765591037",
+    "applied_crop": {
+      "crop_box": [
+        46,
+        38,
+        1192,
+        1162
+      ],
+      "kind": "dark_edge_trim",
+      "area_kept": 0.8945
+    },
+    "detector": {
+      "is_full_bleed": false,
+      "is_whole_sheet_on_white": false,
+      "grip_flag": false
+    }
+  },
+  {
+    "id": "bullseye-0011010000f1010",
+    "name": "Clear Transparent, Single-rolled, 3 mm, Fusible",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001101-0000-F_01.jpg?v=1765591863"
+    ],
+    "shipped_index": 1,
+    "judge_pick": "NONE",
+    "judge_raw": "NONE",
+    "latency_ms": 5953,
+    "cost_usd": 0.043781,
+    "verdict": "NONE -- no qualifying candidate; shipped pick left as-is (second-source case)"
+  },
+  {
+    "id": "bullseye-0012470031f1010",
+    "name": "Light Mineral Green Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001247-0031-F_01.jpg?v=1765591145",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001247-0031-F_02.jpg?v=1765591143",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001247-0031-F_03.jpg?v=1765591143"
+    ],
+    "shipped_index": 2,
+    "judge_pick": 2,
+    "judge_raw": "2",
+    "latency_ms": 5129,
+    "cost_usd": 0.045957,
+    "verdict": "CONFIRMED -- judge agrees with the shipped pick, no change"
+  },
+  {
+    "id": "bullseye-0001130050f1010",
+    "name": "White Opalescent, Thin-rolled, 2 mm, Fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000113-0050-F_01.jpg?v=1765591190",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000113-0050-F_02.jpg?v=1765591190"
+    ],
+    "shipped_index": 1,
+    "judge_pick": 1,
+    "judge_raw": "1",
+    "latency_ms": 5551,
+    "cost_usd": 0.04504,
+    "verdict": "CONFIRMED -- judge agrees with the shipped pick, no change"
+  },
+  {
+    "id": "bullseye-0002430050f1010",
+    "name": "Translucent White Translucent, Thin-rolled, 2 mm, Fusible",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0050-F_01.jpg?v=1765591208",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0050-F_02.jpg?v=1765591208",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0050-F_03.jpg?v=1765591208",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0050-F_04.jpg?v=1765591207"
+    ],
+    "shipped_index": 1,
+    "judge_pick": 1,
+    "judge_raw": "1",
+    "latency_ms": 10350,
+    "cost_usd": 0.046949,
+    "verdict": "CONFIRMED -- judge agrees with the shipped pick, no change"
+  }
+]

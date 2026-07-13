@@ -3246,19 +3246,25 @@
     "resolved_name": "Translucent White Translucent, Double-rolled, 3 mm, Fusible",
     "category": "Opalescent",
     "product_url": "https://shop.bullseyeglass.com/products/translucent-white-translucent-double-rolled-3-mm-fusible",
-    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_04.jpg?v=1765591037",
+    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/000243-0030-F_01.jpg?v=1765591037",
     "status": "Downloaded",
-    "pick_score": 0.9044,
+    "pick_score": null,
     "local_image": "/assets/catalog_images/bullseye-0002430030f1010.jpg",
-    "cropped": false,
-    "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "cropped": true,
+    "crop_box": [
+      46,
+      38,
+      1192,
+      1162
+    ],
+    "real_world_width_in": 9.55,
+    "real_world_height_in": 9.37,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
-    "lighting": "back-lit"
+    "lighting": "back-lit",
+    "vlm_judge": "vlm-judge sonnet targeted pass 2026-07-13"
   },
   {
     "id": "bullseye-0002430050f1010",
