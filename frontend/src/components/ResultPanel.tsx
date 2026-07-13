@@ -2086,7 +2086,7 @@ export function ResultPanel({
                         />
                       ))}
                     </>
-                  ) : (() => {
+                  ) : (!debugMask || activeTool !== 'box') && (() => {
                     const cL = project.patternCrop.left;
                     const cT = project.patternCrop.top;
                     const cR = project.patternCrop.right;
@@ -2104,7 +2104,7 @@ export function ResultPanel({
                       />
                     );
                   })()}
-                  {!isLamp && patternImg && (
+                  {!isLamp && (!debugMask || activeTool !== 'box') && patternImg && (
                     <KonvaImage
                       id="bg"
                       image={patternImg}
@@ -2125,6 +2125,31 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
+                  {debugMask && activeTool === 'box' && (() => {
+                    const cL = project.patternCrop.left;
+                    const cT = project.patternCrop.top;
+                    const cR = project.patternCrop.right;
+                    const cB = project.patternCrop.bottom;
+                    const ux = Math.min(0, cL);
+                    const uy = Math.min(0, cT);
+                    return (
+                      <Rect
+                        x={ux} y={uy}
+                        width={Math.max(pw, pw - cR) - ux}
+                        height={Math.max(ph, ph - cB) - uy}
+                        fill="#fffefa"
+                        listening={false}
+                      />
+                    );
+                  })()}
+                  {debugMask && activeTool === 'box' && patternImg && (
+                    <KonvaImage
+                      id="bg"
+                      image={patternImg}
+                      width={pw} height={ph}
+                      opacity={0.5}
+                    />
+                  )}
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIdSet.has(piece.id);
