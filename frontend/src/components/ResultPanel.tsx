@@ -30,6 +30,7 @@ import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/
 import { PencilController } from '../editor/interaction/pencilController';
 import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
+import { PenStatusStore } from '../editor/interaction/penStatusStore';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -184,10 +185,7 @@ interface ResultPanelProps {
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
-  onPenStatusChange?: (status: {
-    coords: { x: number; y: number } | null;
-    lastPoint: { x: number; y: number } | null;
-  }) => void;
+  penStatusStore: PenStatusStore;
   onUpdateSolderWidthMM: (width: number) => void;
   onUpdateSolderColor: (color: import('../types').SolderColor) => void;
   onOpenLampProfile?: () => void;
@@ -778,9 +776,9 @@ const EMPTY_PEN_PREVIEW: PenResolution = {
 const PenPreviewHost = forwardRef<PenPreviewHandle, {
   active: boolean;
   lastPoint: [number, number] | null;
-  onStatusChange?: ResultPanelProps['onPenStatusChange'];
+  statusStore: PenStatusStore;
   children: (preview: PenResolution & { visible: boolean }) => React.ReactNode;
-}>(function PenPreviewHost({ active, lastPoint, onStatusChange, children }, ref) {
+}>(function PenPreviewHost({ active, lastPoint, statusStore, children }, ref) {
   const [preview, setPreview] = useState(EMPTY_PEN_PREVIEW);
   const [visible, setVisible] = useState(false);
   const scheduler = useRef(createRafScheduler());
@@ -808,11 +806,11 @@ const PenPreviewHost = forwardRef<PenPreviewHandle, {
   }), []);
   useEffect(() => () => scheduler.current.cancel(), []);
   useEffect(() => {
-    onStatusChange?.({
+    statusStore.update({
       coords: active && visible ? { x: preview.point[0], y: preview.point[1] } : null,
       lastPoint: active && lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
     });
-  }, [active, visible, preview.point, lastPoint, onStatusChange]);
+  }, [active, visible, preview.point, lastPoint, statusStore]);
   return children({ ...preview, visible });
 });
 
@@ -876,7 +874,7 @@ export function ResultPanel({
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
   onUpdatePieceCurves, onUpdatePiecePolygonAndCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, onStartLampMode, debugMask, activeTool, onChangeActiveTool,
-  tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
+  tutorialStep, refineMode, onRefineModeChange, penStatusStore,
   onUpdateSolderWidthMM, onUpdateSolderColor, onOpenLampProfile,
   isSymmetryEnabled = false, onToggleSymmetry,
 }: ResultPanelProps) {
@@ -938,7 +936,6 @@ export function ResultPanel({
   const activePenAnchorsRef = useRef(activePenAnchors);
   activePenAnchorsRef.current = activePenAnchors;
 
-  const [, setIsShiftDown] = useState(false);
   const [snapEnabled, setSnapEnabled] = useState(true);
   const [snapMenuOpen, setSnapMenuOpen] = useState(false);
   const [snapSettings, setSnapSettings] = useState({
@@ -1316,7 +1313,6 @@ export function ResultPanel({
     }
     if (e.key === 'Shift') {
       if (!e.repeat && lastMousePosRef.current) {
-        setIsShiftDown(true);
         updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true, e.ctrlKey);
       }
       return;
@@ -1359,7 +1355,6 @@ export function ResultPanel({
       updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, e.shiftKey, false);
     }
     if (e.key === 'Shift') {
-      setIsShiftDown(false);
       if (lastMousePosRef.current) updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false, e.ctrlKey);
     }
   }
@@ -1557,7 +1552,6 @@ export function ResultPanel({
       }
       lastMousePosRef.current = { x, y };
       const isShift = e.evt ? e.evt.shiftKey : false;
-      setIsShiftDown(isShift);
       updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
       return;
     }
@@ -2289,7 +2283,7 @@ export function ResultPanel({
                     ref={penPreviewRef}
                     active={activeTool === 'polygon' || activeTool === 'pen'}
                     lastPoint={lastPoint}
-                    onStatusChange={onPenStatusChange}
+                    statusStore={penStatusStore}
                   >
                   {(preview) => {
                     const hoverPoint = preview.visible ? preview.point : null;
