@@ -139,6 +139,13 @@ def cache_sge_collection(collection_handle):
 # and hand it local file paths, per its own integration guidance.
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from swatch_picker import pick as picker_pick, FLOOR as PICKER_FLOOR  # noqa: E402
+# fix/bullseye-grip-picks: the AUTHORITATIVE border scrub runs here at full
+# resolution (Phase C, on the actual downloaded pixels). The picker's thumb-scale
+# scrub is only a cheap gate prefilter -- at 320px the JPEG downsampling blends a
+# thin white sliver into the sheet color below the white threshold, which let 47
+# crops through with a visible band at full res (second board review).
+from swatch_picker import _scrub_crop_box as scrub_crop_box  # noqa: E402
+import numpy as np  # noqa: E402
 
 THUMB_CACHE_DIR = 'data/picker_thumb_cache'
 os.makedirs(THUMB_CACHE_DIR, exist_ok=True)
@@ -216,12 +223,12 @@ def apply_manual_overrides(item_id, pick_info):
         url = WHITE_ON_WHITE_OVERRIDE[item_id]
         cs = dict(pick_info.get('candidate_scores') or {})
         return {'status': 'Downloaded', 'url': url, 'score': cs.get(_strip_query(url)),
-                'candidate_scores': cs, 'manual_override': True}
+                'candidate_scores': cs, 'manual_override': True, 'bullseye_grip': None}
     if item_id in REACTIVE_CLOUD_CROP_OVERRIDE:
         url = REACTIVE_CLOUD_CROP_OVERRIDE[item_id]['v2_url']
         cs = dict(pick_info.get('candidate_scores') or {})
         return {'status': 'Downloaded', 'url': url, 'score': cs.get(_strip_query(url)),
-                'candidate_scores': cs, 'manual_override': True}
+                'candidate_scores': cs, 'manual_override': True, 'bullseye_grip': None}
     return pick_info
 
 
@@ -317,10 +324,15 @@ def select_image_for_product(product, manufacturer, cache):
     to run once per PRODUCT, not once per registry row.
 
     Returns {'status': 'Downloaded'|'Quarantined'|'NoImage', 'url': str|None,
-             'score': float|None, 'candidate_scores': {stripped_url: final_score}}.
+             'score': float|None, 'candidate_scores': {stripped_url: final_score},
+             'bullseye_grip': {crop_box_frac, grip_flag, ...}|None}.
     `candidate_scores` covers every candidate (not just the winner) -- the stability
     rule needs to know the *previously shipped* image's score even when it isn't
-    this run's argmax.
+    this run's argmax. `bullseye_grip` (fix/bullseye-grip-picks) is the winning
+    candidate's swatch_picker component-(f) feature dict when it is a detected
+    whole-sheet-on-white/grip photo -- carries the crop box (as image-fraction
+    coordinates, resolution-independent) that Phase C uses to crop out the clamp
+    hardware/label/sharpie strip after the full-res download.
     """
     pid = product.get('id')
     if pid in cache:
@@ -353,7 +365,7 @@ def select_image_for_product(product, manufacturer, cache):
         # fall back to the old images[0] behavior for this one product.
         print(f"  Picker error on product {pid} ({product.get('title')}): {e} -- falling back to position 0")
         result = {'status': 'Downloaded', 'url': kept_urls[0], 'score': None,
-                   'candidate_scores': {}, 'override': False}
+                   'candidate_scores': {}, 'override': False, 'bullseye_grip': None}
         cache[pid] = result
         return result
 
@@ -361,16 +373,81 @@ def select_image_for_product(product, manufacturer, cache):
     for s in pr['scores']:
         candidate_scores[_strip_query(kept_urls[s['index']])] = s['final_score']
 
+    # fix/bullseye-grip-picks: per-candidate component-(f) feature dicts keyed by
+    # stripped URL -- the churn gate (apply_bullseye_churn_gate) needs to classify
+    # the PREVIOUSLY-shipped image too, not just this run's winner. Empty for
+    # non-Bullseye manufacturers.
+    candidate_features = {}
+    for pos, feats in (pr.get('bullseye_features') or {}).items():
+        idx = pos - 1
+        if 0 <= idx < len(kept_urls):
+            candidate_features[_strip_query(kept_urls[idx])] = feats
+
     if pr['pick'] is None:
         result = {'status': 'Quarantined', 'url': None, 'score': None,
-                   'candidate_scores': candidate_scores}
+                   'candidate_scores': candidate_scores, 'bullseye_grip': None,
+                   'candidate_features': candidate_features}
     else:
         picked_url = kept_urls[pr['pick']]
         picked_score = candidate_scores.get(_strip_query(picked_url))
+        # fix/bullseye-grip-picks: carry the winning candidate's grip/whole-sheet
+        # feature dict (crop box included) through to Phase C. Only meaningful when
+        # swatch_picker.pick() was called with manufacturer='Bullseye' -- empty dict
+        # otherwise (see swatch_picker.pick()'s component (f)).
+        be_feats = (pr.get('bullseye_features') or {}).get(pr['pick'] + 1)
+        bullseye_grip = be_feats if (be_feats and be_feats.get('is_whole_sheet_on_white')) else None
         result = {'status': 'Downloaded', 'url': picked_url, 'score': picked_score,
-                   'candidate_scores': candidate_scores, 'override': pr['override']}
+                   'candidate_scores': candidate_scores, 'override': pr['override'],
+                   'bullseye_grip': bullseye_grip, 'candidate_features': candidate_features}
     cache[pid] = result
     return result
+
+
+def apply_bullseye_churn_gate(item, existing, candidate_features):
+    """fix/bullseye-grip-picks churn gate, applied AFTER apply_stability_rule for
+    Bullseye rows only. The grip/whole-sheet prior (swatch_picker component (f))
+    deliberately swings candidate scores by up to 0.65, which blows straight through
+    the 0.15 stability margin -- so on its own it would re-pick large swaths of the
+    Bullseye catalog on ANY score disagreement, not just the diagnosed failure mode.
+    First full run measured exactly this: 279 changed picks, of which 273 were the
+    intended flat-chip -> whole-sheet/grip upgrade and 6 were side-effect churn
+    (white-sheet-on-black swaps where the detector misreads the white GLASS as
+    'background', photo->photo taste swaps, and two pale striker sheets whose new
+    grip photo was NOT detected as whole-sheet -- so it would have shipped with the
+    clamps/label un-cropped).
+
+    Rule: a changed Bullseye pick is accepted ONLY when it is the diagnosed upgrade
+    -- the previously-shipped image classifies as a flat solid-color chip
+    (is_full_bleed), the new pick is a detected whole-sheet/grip photo, AND the
+    post-crop border scrub produced a trustworthy crop box (crop_box_frac not None;
+    a failed scrub means background intrusion too deep for a rectangle crop -- see
+    swatch_picker._scrub_crop_box and the lead's first-board review finding).
+    Everything else keeps the currently-shipped image, per the task guardrail: "if
+    a product's grip detection is uncertain, keep the current pick and list it in
+    the report."
+
+    Returns (item, reverted: bool). Sets item['_churn_reverted'] when reverting so
+    Phase C force-refetches the old image (the new pick's download may already have
+    overwritten the id's on-disk file earlier in an interrupted/previous run)."""
+    old_url = existing.get('image_url') if existing else None
+    if not old_url or item['manufacturer'] != 'Bullseye':
+        return item, False
+    old_key = _strip_query(old_url)
+    new_key = _strip_query(item['image_url'])
+    if old_key == new_key:
+        return item, False
+
+    old_feats = (candidate_features or {}).get(old_key) or {}
+    new_feats = (candidate_features or {}).get(new_key) or {}
+    is_diagnosed_upgrade = (old_feats.get('is_full_bleed')
+                             and (new_feats.get('is_whole_sheet_on_white') or new_feats.get('grip_flag'))
+                             and new_feats.get('crop_box_frac') is not None)
+    if is_diagnosed_upgrade:
+        return item, False
+
+    item['image_url'] = existing['image_url']
+    item['_churn_reverted'] = True
+    return item, True
 
 
 def apply_stability_rule(item, existing):
@@ -420,7 +497,7 @@ def apply_stability_rule(item, existing):
 
 # --- AUTO-CROP & CALIBRATION ENGINE ---
 
-def download_and_calibrate_image(url, local_filename, item, category, force=False):
+def download_and_calibrate_image(url, local_filename, item, category, force=False, bullseye_crop_frac=None):
     filepath = os.path.join('frontend/public/assets/catalog_images', local_filename)
 
     # Base dimensions in inches
@@ -431,7 +508,9 @@ def download_and_calibrate_image(url, local_filename, item, category, force=Fals
         width_in = 6.0 if '6x12' in local_filename.lower() else 12.0
         height_in = 12.0 if '6x12' in local_filename.lower() else 12.0
 
-    cropped = item['manufacturer'] in ['Oceanside', 'Youghiogheny'] or (item['manufacturer'] == 'Bullseye' and category == "Wispy/Streaky")
+    cropped = (item['manufacturer'] in ['Oceanside', 'Youghiogheny']
+               or (item['manufacturer'] == 'Bullseye' and category == "Wispy/Streaky")
+               or bool(bullseye_crop_frac))  # fix/bullseye-grip-picks
 
     # 1. Fast Cache Return (skipped when `force` -- task 036-2: only re-fetch the full
     #    image when the picker's final pick actually differs from what's on disk)
@@ -443,6 +522,10 @@ def download_and_calibrate_image(url, local_filename, item, category, force=Fals
                 if item['manufacturer'] in ['Oceanside', 'Youghiogheny']:
                     width_in = round(width_in * 0.8, 2)
                     height_in = round(height_in * 0.8, 2)
+                elif bullseye_crop_frac:
+                    x0f, y0f, x1f, y1f = bullseye_crop_frac
+                    width_in = round(10.0 * (x1f - x0f), 2)
+                    height_in = round(10.0 * (y1f - y0f), 2)
                 elif item['manufacturer'] == 'Bullseye':
                     width_in = 10.0
                     height_in = 10.0
@@ -487,6 +570,26 @@ def download_and_calibrate_image(url, local_filename, item, category, force=Fals
             img.save(filepath, "JPEG")
             width_in = round(width_in * 0.8, 2)
             height_in = round(height_in * 0.8, 2)
+
+        # --- 2b. Crop Bullseye grip-photo hardware/label/sharpie strip
+        #         (fix/bullseye-grip-picks -- swatch_picker component (f)'s
+        #         crop_box_frac from the thumbnail is only the ESTIMATE; the
+        #         authoritative border scrub re-runs here on the full-res pixels,
+        #         where thin white slivers/reflection bands are actually visible.
+        #         A failed full-res scrub returns the grip_crop_failed sentinel --
+        #         the Phase C caller reverts to the previously-shipped pick and
+        #         lists the product as uncertain rather than shipping a bad crop) ---
+        elif item['manufacturer'] == 'Bullseye' and bullseye_crop_frac:
+            a_full = np.asarray(img, dtype=np.uint8)
+            scrubbed, scrub_detail = scrub_crop_box(a_full, bullseye_crop_frac)
+            if scrubbed is None:
+                return {'grip_crop_failed': True, 'scrub_detail': scrub_detail}
+            x0f, y0f, x1f, y1f = scrubbed
+            crop_box = [int(x0f * width), int(y0f * height), int(x1f * width), int(y1f * height)]
+            img = img.crop(crop_box)
+            img.save(filepath, "JPEG")
+            width_in = round(10.0 * (x1f - x0f), 2)
+            height_in = round(10.0 * (y1f - y0f), 2)
 
         # --- 3. Crop Bullseye Streaky/Wispy Side-Borders & bottom labels ---
         elif item['manufacturer'] == 'Bullseye' and category == "Wispy/Streaky":
@@ -563,14 +666,24 @@ def load_existing_registry():
 
 # --- MAIN AUTOMATION PIPELINE ---
 
-def main():
+def main(only_manufacturer=None):
+    """`only_manufacturer` (fix/bullseye-grip-picks): when set (e.g. 'bullseye'),
+    skip scraping/reprocessing every other manufacturer's Shopify collection entirely
+    -- their existing registry rows are carried through untouched (see the merge
+    right before the final sort/save below) instead of being rebuilt from a fresh
+    scrape. Used to re-run just the Bullseye subset without re-hitting Oceanside/
+    Wissmach/Youghiogheny's SGE collections, per this task's guardrail."""
+    only_manufacturer = (only_manufacturer or '').strip().lower() or None
     existing_registry_by_id = load_existing_registry()
     print(f"Loaded {len(existing_registry_by_id)} existing registry entries for before/after comparison.")
+    if only_manufacturer:
+        print(f"Scoped run: only re-scraping/re-scoring manufacturer={only_manufacturer!r}; "
+              f"every other manufacturer's existing registry rows pass through unchanged.")
 
-    bullseye_raw = cache_bullseye_products()
-    oceanside_raw = cache_sge_collection("oceanside")
-    wissmach_raw = cache_sge_collection("wissmach")
-    art_glass_raw = cache_sge_collection("art-glass")
+    bullseye_raw = cache_bullseye_products() if only_manufacturer in (None, 'bullseye') else []
+    oceanside_raw = cache_sge_collection("oceanside") if only_manufacturer is None else []
+    wissmach_raw = cache_sge_collection("wissmach") if only_manufacturer is None else []
+    art_glass_raw = cache_sge_collection("art-glass") if only_manufacturer is None else []
 
     registry = []
     seen_skus = set()
@@ -728,6 +841,15 @@ def main():
                     "product_url": f"https://shop.bullseyeglass.com/products/{p.get('handle')}",
                     "_candidate_scores": pick_info['candidate_scores'],
                     "_local_filename": f"bullseye-{clean_sku(sku)}.jpg",
+                    # fix/bullseye-grip-picks: crop-box-bearing grip/whole-sheet feature
+                    # dict for the WINNING candidate, or None -- consulted in Phase C
+                    # only when the final shipped image_url still matches this pick
+                    # (the stability rule may keep an older image instead).
+                    "_bullseye_grip": pick_info.get('bullseye_grip'),
+                    "_bullseye_grip_url": _strip_query(pick_info.get('url') or ''),
+                    # ... and per-candidate features for the churn gate (classifies
+                    # the previously-shipped image, see apply_bullseye_churn_gate).
+                    "_candidate_features": pick_info.get('candidate_features') or {},
                 }
                 if pick_info['status'] == 'Quarantined':
                     base.update({"image_url": None, "status": "Quarantined", "pick_score": None})
@@ -746,6 +868,8 @@ def main():
     deduped = []
     seen_formulas = set()
     stability_kept_log = []
+    churn_reverted_log = []  # fix/bullseye-grip-picks: picks the churn gate kept stable
+    carried_v2_rows = []     # legacy-quarantined rows carried through when the -v2 file is absent
 
     # Sort registry to ensure preference is given:
     # - For Bullseye: SKU ending with -1010 (standard 10x10 sheet) is preferred
@@ -900,6 +1024,17 @@ def main():
             if item.get('_stability_kept'):
                 stability_kept_log.append({'id': item['id'], 'manufacturer': mfg})
 
+            # fix/bullseye-grip-picks churn gate -- see apply_bullseye_churn_gate's
+            # docstring. Only the diagnosed flat-chip -> detected-whole-sheet/grip
+            # upgrade is allowed to change a shipped Bullseye pick; anything else
+            # keeps the current image and is logged for the report.
+            item, reverted = apply_bullseye_churn_gate(item, existing, item.get('_candidate_features'))
+            if reverted:
+                churn_reverted_log.append({'id': item['id'], 'name': item['name'],
+                                            'kept_url': _strip_query(item['image_url'])})
+                print(f"  Bullseye churn gate: kept currently-shipped pick for {item['id']} "
+                      f"(change was not a flat-chip -> whole-sheet/grip upgrade)")
+
             # Check quarantine status (legacy Finding 1 list)
             item_id = item['id'].lower()
             local_img_filename = item['_local_filename']
@@ -923,6 +1058,19 @@ def main():
                 if os.path.exists(v2_path):
                     local_img_filename = v2_filename
                     is_v2 = True
+                elif existing and existing.get('local_image'):
+                    # fix/bullseye-grip-picks: the -v2 recovery file lives only in
+                    # checkouts that have fetched it (gitignored runtime data) -- in a
+                    # fresh/isolated worktree it is absent, and dropping the row here
+                    # would silently remove a shipped product on infrastructure
+                    # grounds, not quality grounds. Carry the existing registry row
+                    # through verbatim instead (same posture as the scoped-run
+                    # carry-through for other manufacturers below).
+                    print(f"  Quarantined (legacy list): -v2 recovery file absent, carrying "
+                          f"existing registry row through for {item['id']}")
+                    seen_formulas.add(formula_key)
+                    carried_v2_rows.append(dict(existing))
+                    continue
                 else:
                     print(f"  Quarantined (legacy list): skipping {item['id']} ({item['name']})")
                     continue
@@ -955,6 +1103,19 @@ def main():
         candidate_scores = item.pop('_candidate_scores', {})
         pick_score = item.get('pick_score')
         item.pop('_local_filename', None)
+        item.pop('_candidate_features', None)
+        churn_reverted = item.pop('_churn_reverted', False)
+        bullseye_grip = item.pop('_bullseye_grip', None)
+        bullseye_grip_url = item.pop('_bullseye_grip_url', None)
+        # fix/bullseye-grip-picks: only trust the grip crop box if the item's final
+        # shipped image_url is still the exact candidate the picker scored it for --
+        # the stability rule (apply_stability_rule, above) can swap image_url back to
+        # an older shipped image after this dict was built, and that older image was
+        # never analyzed by the grip detector.
+        bullseye_crop_frac = None
+        if (bullseye_grip and bullseye_grip.get('crop_box_frac')
+                and bullseye_grip_url == _strip_query(item.get('image_url') or '')):
+            bullseye_crop_frac = bullseye_grip['crop_box_frac']
 
         old = existing_registry_by_id.get(item['id'])
         old_url = old.get('image_url') if old else None
@@ -965,6 +1126,17 @@ def main():
             force = False  # manual recovery/crop file -- always fast-cache-return it
         else:
             force = not (same_as_before and os.path.exists(filepath))
+            # fix/bullseye-grip-picks: always (re)apply the grip crop when this run's
+            # picker identified one, even if the picked URL itself is unchanged from
+            # what's shipped -- a previously-shipped grip photo may predate this crop
+            # feature and still have the clamps/label/sharpie strip baked in.
+            if bullseye_crop_frac and not (old and old.get('cropped') and old.get('crop_box')):
+                force = True
+            # ... and when the churn gate reverted to the old pick, the on-disk file
+            # may hold the NEW pick's pixels from an earlier/interrupted run under
+            # this same filename -- never trust it, refetch the kept URL.
+            if churn_reverted:
+                force = True
 
         if force:
             changed_count += 1
@@ -986,7 +1158,37 @@ def main():
             else:
                 calib = None
         else:
-            calib = download_and_calibrate_image(item['image_url'], target_filename, item, item['category'], force=force)
+            calib = download_and_calibrate_image(item['image_url'], target_filename, item, item['category'],
+                                                   force=force, bullseye_crop_frac=bullseye_crop_frac)
+            # fix/bullseye-grip-picks: the authoritative FULL-RES border scrub failed
+            # -- background intrusion too deep to crop this grip/whole-sheet photo
+            # safely. Per the guardrail, keep the previously-shipped pick (or drop a
+            # brand-new row entirely) and list the product as uncertain.
+            if calib and calib.get('grip_crop_failed'):
+                churn_reverted_log.append({'id': item['id'], 'name': item['name'],
+                                            'kept_url': _strip_query(old_url or ''),
+                                            'reason': 'full_res_scrub_failed',
+                                            'scrub_detail': calib.get('scrub_detail')})
+                if old_url:
+                    print(f"  Bullseye grip crop: full-res scrub failed for {item['id']} -- "
+                          f"keeping previously-shipped pick (uncertain)")
+                    item['image_url'] = old_url
+                    calib = download_and_calibrate_image(old_url, target_filename, item, item['category'],
+                                                           force=True, bullseye_crop_frac=None)
+                else:
+                    print(f"  Bullseye grip crop: full-res scrub failed for {item['id']} and no "
+                          f"previously-shipped pick exists -- dropping row (uncertain)")
+                    continue
+            # Idempotent-rerun fix: the fast-cache-return path cannot know the crop
+            # box baked into the on-disk file -- restore it from the shipped registry
+            # row instead of nulling it out on every no-op rerun.
+            if (calib and not force and calib.get('crop_box') is None
+                    and old and old.get('crop_box') and same_as_before):
+                calib['crop_box'] = old['crop_box']
+                calib['cropped'] = bool(old.get('cropped'))
+                if old.get('real_world_width_in'):
+                    calib['calibrated_width_in'] = old['real_world_width_in']
+                    calib['calibrated_height_in'] = old['real_world_height_in']
         if not calib:
             if os.path.exists(filepath):
                 # A re-fetch attempt failed (network hiccup) but we still have a
@@ -1042,6 +1244,34 @@ def main():
         item.pop('_stability_kept', None)
         final_registry.append(item)
 
+    # fix/bullseye-grip-picks: legacy-quarantined rows whose -v2 recovery file is
+    # absent in this checkout -- carried through verbatim (see the dedup loop).
+    if carried_v2_rows:
+        final_registry.extend(carried_v2_rows)
+        print(f"Carried through {len(carried_v2_rows)} legacy-quarantine -v2 rows verbatim "
+              "(recovery files absent in this checkout).")
+    if churn_reverted_log:
+        print(f"Bullseye churn gate kept {len(churn_reverted_log)} currently-shipped picks "
+              "(changes that were not flat-chip -> whole-sheet/grip upgrades):")
+        for c in churn_reverted_log:
+            print(f"  - {c['id']} ({c['name']})")
+
+    # fix/bullseye-grip-picks: scoped run -- splice in every OTHER manufacturer's
+    # existing registry rows verbatim (never scraped, never touched this run; their
+    # image files are not expected on disk in an isolated worktree either -- same
+    # "gitignored, lazily fetched" posture as any clean checkout, see OWNERSHIP.md).
+    if only_manufacturer:
+        carried = 0
+        for iid, row in existing_registry_by_id.items():
+            if (row.get('manufacturer') or '').strip().lower() != only_manufacturer:
+                final_registry.append(dict(row))
+                carried += 1
+        print(f"Carried through {carried} existing non-{only_manufacturer} registry rows untouched.")
+
+    if carried_v2_rows or only_manufacturer:
+        # splices above may have appended out of order -- restore the sorted invariant
+        final_registry.sort(key=lambda x: (x['manufacturer'], x['base_sku']))
+
     # Save outputs
     with open(REGISTRY_FILE, 'w') as f:
         json.dump(final_registry, f, indent=2)
@@ -1050,7 +1280,10 @@ def main():
 
     generate_verify_html(final_registry)
     generate_tracker_report(len(final_registry), len(final_registry), failed, final_registry)
-    generate_diff_report(existing_registry_by_id, final_registry, quarantine_log, stability_kept_log)
+    generate_diff_report(existing_registry_by_id, final_registry, quarantine_log, stability_kept_log,
+                          churn_reverted_log=churn_reverted_log)
+    if only_manufacturer == 'bullseye':
+        generate_bullseye_grip_review_board(existing_registry_by_id, final_registry)
     print("\nDynamic swatch harvester run complete!")
 
 def generate_verify_html(registry):
@@ -1180,18 +1413,22 @@ def _load_thumb(path, size=(150, 150)):
         return canvas
 
 
-def build_contact_sheet(entries, out_path):
-    """entries: list of dicts {id, name, old_path, new_path}. Renders up to 20 as a
-    5-col x N-row grid, old image on top / new image on bottom of each cell, with a
-    text label -- downscaled thumbnail cells (150x150), not full-resolution."""
+def build_contact_sheet(entries, out_path, cols=5, cell_size=150, max_entries=20):
+    """entries: list of dicts {id, name, old_path, new_path}. Renders up to
+    `max_entries` (None = all of them) as a `cols`-col x N-row grid, old image on
+    top / new image on bottom of each cell, with a text label -- downscaled
+    thumbnail cells, not full-resolution. Shared by the manufacturer-mixed 20-cap
+    contact sheet (report.md) and the fix/bullseye-grip-picks per-manufacturer
+    review board (every changed product, no cap) -- see
+    generate_bullseye_grip_review_board() below."""
     if not entries:
         return False
-    cols = 5
-    rows = (len(entries) + cols - 1) // cols
-    cell_w, cell_h = 150, 150
+    shown = entries if max_entries is None else entries[:max_entries]
+    cell_w = cell_h = cell_size
     label_h = 34
     pad = 8
     cell_total_h = cell_h * 2 + label_h + pad
+    rows = (len(shown) + cols - 1) // cols
     canvas_w = cols * (cell_w + pad) + pad
     canvas_h = rows * (cell_total_h + pad) + pad
     canvas = Image.new('RGB', (canvas_w, canvas_h), (18, 18, 18))
@@ -1201,12 +1438,12 @@ def build_contact_sheet(entries, out_path):
     except Exception:
         font = None
 
-    for i, e in enumerate(entries[:20]):
+    for i, e in enumerate(shown):
         col, row = i % cols, i // cols
         x0 = pad + col * (cell_w + pad)
         y0 = pad + row * (cell_total_h + pad)
-        old_thumb = _load_thumb(e['old_path'])
-        new_thumb = _load_thumb(e['new_path'])
+        old_thumb = _load_thumb(e['old_path'], size=(cell_w, cell_h))
+        new_thumb = _load_thumb(e['new_path'], size=(cell_w, cell_h))
         canvas.paste(old_thumb, (x0, y0))
         canvas.paste(new_thumb, (x0, y0 + cell_h))
         draw.rectangle([x0, y0, x0 + cell_w, y0 + cell_h * 2], outline=(90, 90, 90))
@@ -1220,10 +1457,62 @@ def build_contact_sheet(entries, out_path):
     return True
 
 
-def generate_diff_report(existing_by_id, final_registry, quarantine_log, stability_kept_log):
+BULLSEYE_REVIEW_BOARD = os.path.join(REPORT_DIR, 'bullseye_grip_review.jpg')
+OLD_THUMB_CACHE_DIR = 'data/review_old_thumb_cache'
+
+
+def generate_bullseye_grip_review_board(existing_by_id, final_registry):
+    """fix/bullseye-grip-picks task 4(c): a grid of old-pick | new-pick for EVERY
+    Bullseye product whose pick changed this run -- what the lead reviews before
+    merge. Unlike build_contact_sheet()'s report.md sheet (capped at 20, mixed
+    across manufacturers, prioritized by the maintainer's specific validation
+    cases), this is Bullseye-only and shows every change, no cap.
+
+    The previously-shipped ("OLD") image is very often NOT present on disk in an
+    isolated worktree -- Phase C only downloads this run's FINAL picks, and this
+    run may have flipped many Bullseye picks away from what was shipped before.
+    Fetch the old pick's CDN thumbnail (same throttled `fetch_thumb` the picker
+    itself uses) instead of assuming a local file."""
+    os.makedirs(OLD_THUMB_CACHE_DIR, exist_ok=True)
+    changed = []
+    for item in final_registry:
+        if item.get('manufacturer') != 'Bullseye':
+            continue
+        old = existing_by_id.get(item['id'])
+        if not old:
+            continue
+        old_url, new_url = old.get('image_url'), item.get('image_url')
+        if not old_url or not new_url:
+            continue
+        if _strip_query(old_url) == _strip_query(new_url):
+            continue
+        changed.append((item['id'], item, old))
+    changed.sort(key=lambda t: t[0])
+
+    if not changed:
+        print("Bullseye grip review board: no Bullseye picks changed this run -- nothing to render.")
+        return False
+
+    entries = []
+    for iid, item, old in changed:
+        new_path = os.path.join(IMAGE_DIR, os.path.basename(item.get('local_image', '')))
+        old_thumb_path = os.path.join(OLD_THUMB_CACHE_DIR, f"{iid}_old.jpg")
+        old_path = fetch_thumb(old['image_url'], old_thumb_path) or old_thumb_path
+        entries.append({'id': iid, 'name': item.get('name', ''), 'old_path': old_path, 'new_path': new_path})
+
+    made = build_contact_sheet(entries, BULLSEYE_REVIEW_BOARD, cols=6, cell_size=170, max_entries=None)
+    if made:
+        print(f"Generated Bullseye grip review board ({len(entries)} changed picks) at {BULLSEYE_REVIEW_BOARD}")
+    return made
+
+
+def generate_diff_report(existing_by_id, final_registry, quarantine_log, stability_kept_log,
+                          churn_reverted_log=None):
     """Task 036-3: BEFORE/AFTER numbers (per manufacturer) + a contact sheet of the
     most significant image changes. Task 036-4's churn-stability numbers are folded
-    in here too."""
+    in here too. `churn_reverted_log` (fix/bullseye-grip-picks): Bullseye picks the
+    churn gate kept stable this run -- listed so the lead can review the deliberate
+    non-changes alongside the changes."""
     os.makedirs(REPORT_DIR, exist_ok=True)
 
     final_by_id = {item['id']: item for item in final_registry}
@@ -1325,6 +1614,18 @@ def generate_diff_report(existing_by_id, final_registry, quarantine_log, stabili
                  "frame, excludes the reaction-demo tile corner insert entirely; see "
                  "REACTIVE_CLOUD_CROP_OVERRIDE).")
 
+    if churn_reverted_log:
+        lines.append("\n## Bullseye churn gate -- picks deliberately kept (fix/bullseye-grip-picks)\n")
+        lines.append(f"{len(churn_reverted_log)} Bullseye product(s) had a picker disagreement that was "
+                     "NOT the diagnosed flat-chip -> whole-sheet/grip upgrade; per the task guardrail "
+                     "(\"if detection is uncertain, keep the current pick\"), the currently-shipped image "
+                     "was kept. See `apply_bullseye_churn_gate()`.\n")
+        lines.append("| id | name |")
+        lines.append("|---|---|")
+        for c in churn_reverted_log:
+            lines.append(f"| {c['id']} | {c['name']} |")
+        lines.append("")
+
     lines.append("\n## Quarantined this run (picker)\n")
     lines.append(f"{len(quarantine_log)} product(s) had no gallery candidate clear the picker floor "
                  f"({PICKER_FLOOR}) and were excluded rather than shipping a bad photo.")
@@ -1350,4 +1651,13 @@ def generate_diff_report(existing_by_id, final_registry, quarantine_log, stabili
 
 
 if __name__ == '__main__':
-    main()
+    import argparse
+    _ap = argparse.ArgumentParser(description=__doc__)
+    _ap.add_argument('--only-manufacturer', default=None,
+                      help="Scope this run to one manufacturer's Shopify collection "
+                           "(e.g. 'bullseye') -- every other manufacturer's existing "
+                           "registry rows pass through untouched instead of being "
+                           "re-scraped. Default: process all manufacturers (original "
+                           "behavior).")
+    _args = _ap.parse_args()
+    main(only_manufacturer=_args.only_manufacturer)
