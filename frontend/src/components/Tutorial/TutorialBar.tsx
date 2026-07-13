@@ -7,13 +7,14 @@ interface TutorialBarProps {
   step: StepId;
   onStart: (trackId?: TrackId) => void;
   onSkip: () => void;
+  onAdvance: () => void;
   onComplete: () => void;
   customTitle?: string;
   customBody?: string;
   activeTrackId?: TrackId | null;
 }
 
-export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, customBody, activeTrackId }: TutorialBarProps) {
+export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, customTitle, customBody, activeTrackId }: TutorialBarProps) {
   const { t } = useTranslation();
   const [selectedTrack, setSelectedTrack] = useState<TrackId>('vector-drawing');
 
@@ -104,6 +105,7 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
 
   const currentStepIndex = trackAnchoredSteps.indexOf(step) + 1;
   const totalSteps = trackAnchoredSteps.length;
+  const isManualFinalStep = step === 'lamp-preview-3d' || step === 'fab-print-layout';
 
   return (
     <div className="tutorial-bar" role="complementary">
@@ -131,6 +133,11 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
       </div>
 
       <div className="tutorial-bar-right">
+        {isManualFinalStep && (
+          <button className="btn-primary btn-sm" onClick={onAdvance}>
+            {t('tutorialCompleteStepButton')}
+          </button>
+        )}
         <button className="btn-ghost btn-sm" onClick={onSkip}>
           {t('tutorialSkipButton')}
         </button>

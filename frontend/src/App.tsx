@@ -510,17 +510,24 @@ export function App() {
         pieces: [
           {
             id: 'p1',
-            label: 'Piece 1',
-            polygon: [[100, 100], [200, 100], [200, 200], [100, 200]],
+            label: 'Petal',
+            polygon: [[80, 80], [145, 55], [205, 95], [175, 190], [105, 205], [65, 145]],
             glassSheetId: 'sheet-1',
-            transform: { x: 150, y: 150, rotation: 0, scale: 1 }
+            transform: { x: 500, y: 180, rotation: 0.35, scale: 1 }
           },
           {
             id: 'p2',
-            label: 'Piece 2',
-            polygon: [[300, 300], [450, 300], [450, 450], [300, 450]],
+            label: 'Leaf',
+            polygon: [[260, 80], [350, 115], [390, 205], [315, 235], [245, 175]],
             glassSheetId: 'sheet-1',
-            transform: { x: 375, y: 375, rotation: 0, scale: 1 }
+            transform: { x: 180, y: 430, rotation: -0.5, scale: 1 }
+          },
+          {
+            id: 'p3',
+            label: 'Corner',
+            polygon: [[430, 80], [560, 80], [560, 135], [500, 135], [500, 230], [430, 230]],
+            glassSheetId: 'sheet-1',
+            transform: { x: 600, y: 430, rotation: 0.2, scale: 1 }
           }
         ],
         sheets: [
@@ -538,14 +545,14 @@ export function App() {
           }
         ]
       });
-      setTutorialStep('fab-solder-thickness');
+      setTutorialStep('fab-smart-pack');
     }
 
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
       step: trackId === 'ai-tracing' ? 'calibrate-pattern' :
             trackId === 'vector-drawing' ? 'vector-blank-canvas' :
-            trackId === 'lamp-creator' ? 'lamp-profile-intro' : 'fab-solder-thickness',
+            trackId === 'lamp-creator' ? 'lamp-profile-intro' : 'fab-smart-pack',
       activeTrackId: trackId,
       completed: false,
       pieceId: null,

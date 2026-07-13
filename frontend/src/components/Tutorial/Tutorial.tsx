@@ -547,6 +547,7 @@ export function Tutorial({
         step={step}
         onStart={onStartTour}
         onSkip={onSkip}
+        onAdvance={onAdvance}
         onComplete={onComplete}
         customTitle={customTitle}
         customBody={customBody}

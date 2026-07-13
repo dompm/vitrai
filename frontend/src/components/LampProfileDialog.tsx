@@ -188,10 +188,20 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
   const scale = project.patternScale || { pxPerUnit: 100, unit: 'in' as const };
 
   return (
-    <div className="move-confirm-backdrop" onClick={onCancel}>
+    <div
+      className="move-confirm-backdrop"
+      style={{ paddingBottom: hasTutorialBar ? 120 : 0, boxSizing: 'border-box' }}
+      onClick={onCancel}
+    >
       <div
         className="move-confirm-dialog"
-        style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto', paddingBottom: hasTutorialBar ? 90 : 20 }}
+        style={{
+          width: 640,
+          maxWidth: '94%',
+          maxHeight: hasTutorialBar ? 'calc(100vh - 150px)' : '92vh',
+          overflowY: 'auto',
+          paddingBottom: 20,
+        }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>

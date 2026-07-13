@@ -68,8 +68,8 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
   ],
   'fabrication': [
     'welcome',
-    'fab-solder-thickness',
     'fab-smart-pack',
+    'fab-solder-thickness',
     'fab-print-layout',
     'done',
   ],
@@ -336,4 +336,3 @@ export const TUTORIAL_GROUND_TRUTH_POLYGONS: [number, number][][] = [
 ];
 
 export const IS_PLACEHOLDER_GROUND_TRUTH = false;
-
