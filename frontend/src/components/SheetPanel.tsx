@@ -849,7 +849,7 @@ export function SheetPanel({
           onPointerCancel={handlePointerCancel}
           onClick={handleStageClick}
         >
-          <Layer>
+          <Layer listening={false}>
             <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
@@ -860,8 +860,21 @@ export function SheetPanel({
                 })}
               >
                 {sheetImg && (
-                  <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} />
+                  <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} listening={false} />
                 )}
+              </Group>
+            </Group>
+          </Layer>
+          <Layer listening={false}>
+            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+              <Group
+                {...(activeTool === 'crop' ? {} : {
+                  clipX: sheet.crop.left,
+                  clipY: sheet.crop.top,
+                  clipWidth: Math.max(1, sheetW - sheet.crop.left - sheet.crop.right),
+                  clipHeight: Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom),
+                })}
+              >
                 {pieces.map(piece => (
                   <PieceOutline
                     key={piece.id + '-fill'}
@@ -873,7 +886,10 @@ export function SheetPanel({
                   />
                 ))}
               </Group>
-
+            </Group>
+          </Layer>
+          <Layer>
+            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
               {pieces.map(piece => (
                 <PieceOutline
                   key={piece.id + '-stroke'}

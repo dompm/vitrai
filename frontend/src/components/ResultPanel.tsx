@@ -2033,7 +2033,7 @@ export function ResultPanel({
               }}
               onContextMenu={e => e.evt.preventDefault()}
             >
-              <Layer>
+              <Layer listening={false}>
                 <Group
                   x={vp.pan.x} y={vp.pan.y}
                   scaleX={es} scaleY={es}
@@ -2109,6 +2109,19 @@ export function ResultPanel({
                       opacity={activeTool === 'box' ? 0.5 : 1}
                     />
                   )}
+                </Group>
+              </Layer>
+              <Layer>
+                <Group
+                  x={vp.pan.x} y={vp.pan.y}
+                  scaleX={es} scaleY={es}
+                  {...(activeTool === 'crop' ? {} : {
+                    clipX: project.patternCrop.left,
+                    clipY: project.patternCrop.top,
+                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                  })}
+                >
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIdSet.has(piece.id);
@@ -2132,6 +2145,19 @@ export function ResultPanel({
                       />
                     );
                   })}
+                </Group>
+              </Layer>
+              <Layer>
+                <Group
+                  x={vp.pan.x} y={vp.pan.y}
+                  scaleX={es} scaleY={es}
+                  {...(activeTool === 'crop' ? {} : {
+                    clipX: project.patternCrop.left,
+                    clipY: project.patternCrop.top,
+                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                  })}
+                >
                   {debugMask && activeTool === 'box' && (
                     <KonvaImage
                       image={debugMask.bitmap as unknown as HTMLImageElement}
