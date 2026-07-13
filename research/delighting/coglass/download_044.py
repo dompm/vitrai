@@ -36,9 +36,16 @@ UA = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
       "contact: dompm@hotmail.com)")
 
 FLOOR_GB = 10.0
-HEADROOM_GB = 2.0
+HEADROOM_GB = 0.3  # was 2.0; tightened 2026-07-13 after other agents ate the
+                   # disk margin. Recompression (below) keeps the end-state
+                   # projection ~0.5 GB above the 10 GB machine floor.
 THROTTLE_S = 1.0
 CHECKPOINT = 50
+RECOMPRESS_Q = 80  # disk-pressure adaptation: stored images are re-encoded
+                   # (EXIF orientation baked in, JPEG q80), NOT bit-exact CDN
+                   # bytes -- ~2x smaller at this store's native 1500 px. No
+                   # effect on ORB registration or capture classification;
+                   # refetchable idempotently if exact bytes ever matter.
 
 
 def free_gb(path):
@@ -51,6 +58,22 @@ def disk_ok():
 
 def local_name(src_url):
     return os.path.basename(src_url.split("?")[0])
+
+
+def write_recompressed(data, dest):
+    """Re-encode fetched image bytes to JPEG q80 with EXIF orientation baked
+    in. Falls back to raw bytes if decoding fails. Returns bytes written."""
+    import io
+    from PIL import Image, ImageOps
+    try:
+        im = Image.open(io.BytesIO(data))
+        im = ImageOps.exif_transpose(im).convert("RGB")
+        im.save(dest, "JPEG", quality=RECOMPRESS_Q, optimize=True)
+        return os.path.getsize(dest)
+    except Exception:
+        with open(dest, "wb") as f:
+            f.write(data)
+        return len(data)
 
 
 def fetch(url, dest, retries=4):
@@ -67,9 +90,8 @@ def fetch(url, dest, retries=4):
                                         or data[:4] == b"RIFF"):
                 return "error_not_image", len(data), True
             os.makedirs(os.path.dirname(dest), exist_ok=True)
-            with open(dest, "wb") as f:
-                f.write(data)
-            return "ok", len(data), True
+            nbytes = write_recompressed(data, dest)
+            return "ok", nbytes, True
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503):
                 cooldown = 30.0 * (attempt + 1)
