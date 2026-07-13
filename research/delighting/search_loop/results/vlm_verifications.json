@@ -1,0 +1,1810 @@
+{
+  "bullseye-0013050051f1010": {
+    "pid": "bullseye-0013050051f1010",
+    "product": {
+      "id": "bullseye-0013050051f1010",
+      "manufacturer": "Bullseye",
+      "name": "Sunset Coral Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "category": "Cathedral",
+      "search_name": "Sunset Coral Transparent Iridescent"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to pink/lavender/yellow iridescent gradient matches"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "deep red/maroon color, too dark/saturated for coral"
+      },
+      {
+        "index": 4,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "orange to white/pink/lavender iridescent swatch, matches reference closely"
+      },
+      {
+        "index": 5,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "orange to cream/pink/blue iridescent gradient, matches"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.65,
+        "reason": "solid coral color with no rainbow iridescent sheen, likely non-iridescent variant"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "deep red/maroon sheet, same off-color item as index 3"
+      },
+      {
+        "index": 8,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "orange texture transitioning to cream, matches reference stipple texture"
+      },
+      {
+        "index": 9,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange-tan to cream/pink/lavender/gold iridescent, matches"
+      },
+      {
+        "index": 10,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange textured close-up transitioning to pink/blue iridescent"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.65,
+        "reason": "deep red-brown sheet held in hand, workshop setting, too saturated/dark"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.65,
+        "reason": "solid orange with speckled bubble texture, no rainbow iridescent gradient"
+      },
+      {
+        "index": 13,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to pink/lavender iridescent close-up, matches"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "orange to cream/pink/lavender/gold iridescent with color chip, matches"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "amber/brown streaky texture, different pattern family, no clear rainbow iridescence"
+      }
+    ],
+    "raw_stdout_len": 2153,
+    "attempt": 1,
+    "elapsed_s": 76.9
+  },
+  "bullseye-0010150051f1010": {
+    "pid": "bullseye-0010150051f1010",
+    "product": {
+      "id": "bullseye-0010150051f1010",
+      "manufacturer": "Bullseye",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "category": "Clear",
+      "search_name": "Alchemy Clear Silver to Gold"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "other",
+        "confidence": 0.8,
+        "reason": "official reaction-sample tile (coral+gold) for this exact product, 001015"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "other",
+        "confidence": 0.8,
+        "reason": "same coral+gold reaction tile, larger crop"
+      },
+      {
+        "index": 4,
+        "match": true,
+        "context": "other",
+        "confidence": 0.6,
+        "reason": "crop of same reference tile showing only the gold half"
+      },
+      {
+        "index": 5,
+        "match": true,
+        "context": "other",
+        "confidence": 0.7,
+        "reason": "close-up crop of the coral+gold reaction tile"
+      },
+      {
+        "index": 6,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "plain silver-white iridescent sheet with rainbow sheen, matches reference closely"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "golden dot/waffle iridescent texture backlit, plausible transmission look of same coating"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.4,
+        "reason": "drippy streaked amber pattern, unlike reference's smooth dot iridescent texture"
+      },
+      {
+        "index": 9,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "same golden dot texture family, backlit close-up"
+      },
+      {
+        "index": 10,
+        "match": true,
+        "context": "other",
+        "confidence": 0.9,
+        "reason": "official Bullseye product page showing the exact 001015 Silver to Gold sample tile"
+      },
+      {
+        "index": 11,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "plain iridescent sheet with subtle rainbow gradient, matches reference"
+      },
+      {
+        "index": 12,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "pale cream-to-gold gradient consistent with iridescent coating, less distinct rainbow"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "gray+rust tile matches the Silver-to-Bronze (001016) pairing, not Silver-to-Gold"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "golden dot texture backlit with hot glare spot, same texture family as other window shots"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "decorative fused glass dish with flower appliqu\u00e9s, different product entirely"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "close-up of flower-appliqu\u00e9 dish corners, different product entirely"
+      }
+    ],
+    "raw_stdout_len": 2384,
+    "attempt": 1,
+    "elapsed_s": 153.3
+  },
+  "bullseye-0019340030f1010": {
+    "pid": "bullseye-0019340030f1010",
+    "product": {
+      "id": "bullseye-0019340030f1010",
+      "manufacturer": "Bullseye",
+      "name": "Copper Tint, Double-rolled, 3 mm, Fusible",
+      "category": "Cathedral",
+      "search_name": "Copper Tint"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "streaky amber/gold/green mottled glass, not pale cream copper tint"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "pale green/blue dappled streaky glass, wrong color family"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.92,
+        "reason": "deep red-brown-black streaky glass, far too dark/saturated"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.92,
+        "reason": "labeled 'c olive' - olive green/gold streaky, different product"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.93,
+        "reason": "labeled 'BE Brown' - dark brown/red streaky glass"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.92,
+        "reason": "labeled 'Tawny' - amber/gold/blue streaky glass, different product"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "amber/gold/blue mottled streaky, same tawny family as prior, not smooth pale cream"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "reddish-brown streaky dappled glass, wrong color and heavily patterned"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.88,
+        "reason": "orange/gold mottled streaky glass, too saturated vs pale reference"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled '7.5x11' - deep orange/red dappled glass"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.93,
+        "reason": "labeled 'aqua' - teal/green glass, wrong color entirely"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.88,
+        "reason": "green/gold/teal streaky glass, wrong color family"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "gold/tan dappled streaky texture, not smooth pale cream sheet"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.87,
+        "reason": "labeled '9x14' green/blue/gold mottled glass, wrong color/pattern"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.88,
+        "reason": "deep orange-red spotted texture, far too saturated/colored"
+      }
+    ],
+    "raw_stdout_len": 2176,
+    "attempt": 1,
+    "elapsed_s": 51.2
+  },
+  "bullseye-0004210050f1010": {
+    "pid": "bullseye-0004210050f1010",
+    "product": {
+      "id": "bullseye-0004210050f1010",
+      "manufacturer": "Bullseye",
+      "name": "Petal Pink Opalescent, Thin-rolled, 2 mm, Fusible",
+      "category": "Opalescent",
+      "search_name": "Petal Pink Opalescent"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "streaky red/white pattern, different product (White Pink Opal Streaky)"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "same streaky red/white product shown at different times of day"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled plain 'Pink, Opalescent' (000301), more saturated/orange-pink than Petal Pink"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "streaky red/white outdoor shot, different product"
+      },
+      {
+        "index": 6,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.6,
+        "reason": "solid pale pink flat swatch, consistent with reference"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "Bradstreet Glass streaky salmon-pink opal, different product"
+      },
+      {
+        "index": 8,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "solid glossy pink sheet, same family though slightly more saturated"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "streaky pink/white close-up, different pattern family"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "fritted/stippled purplish texture, different surface pattern"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "streaky close-up, matches the different streaky product not solid opal"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "speckled/confetti bubble texture fading to white, different pattern"
+      },
+      {
+        "index": 13,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.98,
+        "reason": "label explicitly reads Bullseye Petal Pink, Opalescent, Double-rolled, matching product code"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "solid smooth pale pink gradient, consistent with reference color/texture"
+      },
+      {
+        "index": 15,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.5,
+        "reason": "solid uniform pink flat sheet similar to reference"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "Bradstreet Glass streaky salmon-pink opal, different product"
+      }
+    ],
+    "raw_stdout_len": 2257,
+    "attempt": 1,
+    "elapsed_s": 48.3
+  },
+  "oceanside-of43176s": {
+    "pid": "oceanside-of43176s",
+    "product": {
+      "id": "oceanside-of43176s",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Vienna Spirit",
+      "category": "Wispy/Streaky",
+      "search_name": "Vienna Spirit"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "same blue/white wispy streaky blend, held to daylight with scenery visible through"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching blue/white streaky blob pattern, clean lightbox shot"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "heavily rippled/hammered surface texture, doesn't match the smooth wispy blend of reference"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow/red spotted glass, entirely different color family"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow/orange spotted glass, different color family"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.9,
+        "reason": "same blue/white streaky pattern, product code '43176' handwritten matches reference SKU"
+      },
+      {
+        "index": 8,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching blue/white diagonal wispy streaky pattern"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled Oceanside 'Medium Blue Hammered' - solid blue hammered texture, not wispy/streaky"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "greenish-gray hammered/rippled texture, different color and pattern family"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled Oceanside 'Clear/White Wispy' - no blue present"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow/red spotted glass on grid, different color family"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled 'Spirit' line but gray/charcoal colorway, not blue"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching blue/white diagonal wispy streaky pattern, Oceanside watermark"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "fused glass fish figurines with striped/banded patterns, not the wispy streaky blend"
+      },
+      {
+        "index": 16,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching blue/white/gray wispy streaky blob pattern"
+      }
+    ],
+    "raw_stdout_len": 2314,
+    "attempt": 1,
+    "elapsed_s": 62.3
+  },
+  "oceanside-ofr85": {
+    "pid": "oceanside-ofr85",
+    "product": {
+      "id": "oceanside-ofr85",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Jungle Fog Fusers Reserve",
+      "category": "Wispy/Streaky",
+      "search_name": "Jungle Fog Fusers Reserve"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.95,
+        "reason": "same glossy green/teal streaky swirl with Fusers Reserve mark"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "matte pastel, thin subtle lines, lacks the bold sparkly striations of reference"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "similar swirl composition but reads blue-gray/steel, not green"
+      },
+      {
+        "index": 5,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.95,
+        "reason": "matching glossy green/teal streaky swirl pattern"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark blue sparkle rippled texture, no white swirl stripes at all"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "matching glossy green/teal streaky swirl pattern"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "multicolor teal/orange/yellow streaky, wrong colorway"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "dark navy/black sparkly drip texture, different pattern family"
+      },
+      {
+        "index": 10,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.75,
+        "reason": "bold green/white wavy swirl held up, matches stripe pattern"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "teal-blue ripple/sandy texture, different pattern family"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "saturated emerald swirl blobs, more vivid and differently structured than muted reference"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "grid shows red/orange/rainbow colorways, none matching green"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.7,
+        "reason": "Fusers Reserve teal/green swirl, same family though more saturated"
+      },
+      {
+        "index": 15,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.7,
+        "reason": "muted green wavy stripes held against window, matches pattern"
+      },
+      {
+        "index": 16,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.7,
+        "reason": "green/white bold wavy swirl against window, similar to reference"
+      }
+    ],
+    "raw_stdout_len": 2240,
+    "attempt": 1,
+    "elapsed_s": 117.1
+  },
+  "oceanside-of6338s": {
+    "pid": "oceanside-of6338s",
+    "product": {
+      "id": "oceanside-of6338s",
+      "manufacturer": "Oceanside",
+      "name": "96 COE White, Navy, Aqua \"South Beach\"",
+      "category": "Opalescent",
+      "search_name": "South Beach"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "streaky blue/navy but with purple-mauve tones not in reference; different product family"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "dark navy waterglass cathedral, transparent rippled texture, not opalescent streaky"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "green/tan streaky glass, wrong color family"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "grid of unrelated single-color swatches (yellow, cream, navy, teal, green), no matching white/navy/aqua streaky sheet"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "bronze/brown waterglass cathedral, wrong color entirely"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "green hammered texture cathedral glass, wrong color and texture"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "multicolor geometric stained glass panel, unrelated colors"
+      },
+      {
+        "index": 9,
+        "match": true,
+        "context": "other",
+        "confidence": 0.55,
+        "reason": "similar light blue/white streaky opalescent texture, though lacks distinct navy streaks of reference"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "bronze/brown waterglass cathedral, duplicate of unrelated bronze product"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "steel blue waterglass cathedral, transparent rippled texture, not opalescent streaky"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow/white wispy glass, wrong color"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "hammered textured glass with greenish reflections, wrong texture family"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "iridescent hammered glass warehouse shot, wrong texture"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "lineup of separate single-color streaky sheets (mint, teal, navy, cream, tan), none combine white/navy/aqua streaks together"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "green beveled geometric stained glass panel, wrong color and product type"
+      }
+    ],
+    "raw_stdout_len": 2369,
+    "attempt": 1,
+    "elapsed_s": 51.4
+  },
+  "oceanside-of134rr": {
+    "pid": "oceanside-of134rr",
+    "product": {
+      "id": "oceanside-of134rr",
+      "manufacturer": "Oceanside",
+      "name": "96 COE Medium Blue Rough Rolled",
+      "category": "Textured/Baroque",
+      "search_name": "Medium Blue Rough Rolled"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "same medium blue rough-rolled texture and light-to-dark gradient"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "matching blue rough-rolled texture, shop display shot"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "Grape/purple Rough Rolled Cathedral, different color family"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled Light Blue Rough Rolled, different Spectrum product variant"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "same color name but Hammered texture, not Rough Rolled"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "labeled Pale Blue Rough Rolled, lighter/different color and shown with hammered piece"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled Medium Blue Hammered, wrong texture family"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "turquoise/cyan color, wrong hue family"
+      },
+      {
+        "index": 10,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "teal/green tinted gradient, different color family from medium blue"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled Light Blue Rough Rolled Cathedral, different product variant"
+      },
+      {
+        "index": 13,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.55,
+        "reason": "similar rough-rolled crinkle texture though darker tone, possibly lighting/reflection"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "index": 15,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.9,
+        "reason": "matching medium blue rough-rolled texture and gradient"
+      },
+      {
+        "index": 16,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.75,
+        "reason": "matching medium-dark blue rough-rolled mottled texture"
+      }
+    ],
+    "raw_stdout_len": 2234,
+    "attempt": 1,
+    "elapsed_s": 72.4
+  },
+  "youghiogheny-yd5907x9": {
+    "pid": "youghiogheny-yd5907x9",
+    "product": {
+      "id": "youghiogheny-yd5907x9",
+      "manufacturer": "Youghiogheny",
+      "name": "Yellow with Red True Dichro",
+      "category": "Cathedral",
+      "search_name": "Yellow with Red True Dichro"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "same fiery orange/pink/maroon streaky swirl family"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching orange/yellow ground with dark maroon streak shapes"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "large blue field not present in yellow/red reference"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": "held-in-hand",
+        "confidence": 0.75,
+        "reason": "spotted/mottled green-red texture, different pattern family"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": "held-in-hand",
+        "confidence": 0.65,
+        "reason": "plain solid amber sheet, lacks red streak/dichro pattern"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "dominant blue/purple not in reference colorway"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "large solid blue corner, different colorway than yellow/red"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": "held-in-hand",
+        "confidence": 0.65,
+        "reason": "plain solid amber sheet, no red streak pattern"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "muted purple/olive painterly streaks, different color family"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.5,
+        "reason": "grainy reddish-brown mottle lacking characteristic yellow glow"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": "held-in-hand",
+        "confidence": 0.6,
+        "reason": "different catalog code visible (Y500), solid red-orange without matching streak pattern"
+      },
+      {
+        "index": 13,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "vivid red/yellow fire swirl matches reference texture and color"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "yellow/red/maroon fiery pattern consistent with reference"
+      },
+      {
+        "index": 15,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "same red-orange-yellow streaky swirl seen backlit through window"
+      },
+      {
+        "index": 16,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "yellow-orange-red fiery streak pattern closely matches reference"
+      }
+    ],
+    "raw_stdout_len": 2225,
+    "attempt": 1,
+    "elapsed_s": 130.3
+  },
+  "youghiogheny-yu6505g": {
+    "pid": "youghiogheny-yu6505g",
+    "product": {
+      "id": "youghiogheny-yu6505g",
+      "manufacturer": "Youghiogheny",
+      "name": "White Opal Granite",
+      "category": "Textured/Baroque",
+      "search_name": "White Opal Granite"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "turquoise/green Bradstreet swatch, not white opal granite"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "turquoise/green Bradstreet swatch, same as above"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark green/inky blue Y1046RG, wrong color family"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "turquoise/green Bradstreet swatch"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "red/orange/green streaky Y1049RG, wrong color/pattern"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark green/inky blue Y1046RG"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "red/orange/green streaky Y1049RG"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark green/inky blue Y1046RG"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "purple streaky glass, unrelated color"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "red/orange/green streaky Y1049RG"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark green/inky blue Y1046RG"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "turquoise/green Bradstreet swatch"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "smooth pale blue-gray URO glass, different product line and smooth (not granite-textured) surface"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "purple streaky glass '1137 SP', unrelated color/pattern"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "dark green/inky blue Y1046RG"
+      }
+    ],
+    "raw_stdout_len": 1857,
+    "attempt": 1,
+    "elapsed_s": 34.7
+  },
+  "youghiogheny-y1097sp": {
+    "pid": "youghiogheny-y1097sp",
+    "product": {
+      "id": "youghiogheny-y1097sp",
+      "manufacturer": "Youghiogheny",
+      "name": "White Ice, Ruby, Bubblegum Pink Stipple",
+      "category": "Opalescent",
+      "search_name": "White Ice Ruby Bubblegum Pink Stipple"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.7,
+        "reason": "ruby streaky veins on white, denser crop of same pattern"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "other",
+        "confidence": 0.75,
+        "reason": "same white base with ruby streaky veins, leaned up in shop"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.65,
+        "reason": "pale rippled/hammered pink texture, not bold ruby streaks"
+      },
+      {
+        "index": 5,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.6,
+        "reason": "streaky veins on light base, though more magenta-toned"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "orange/rust streaky glass with blue ground, wrong color family"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "other",
+        "confidence": 0.35,
+        "reason": "extreme close-up, maroon/glossy but pattern unverifiable"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.65,
+        "reason": "pale lavender-pink rippled texture, different pattern family"
+      },
+      {
+        "index": 9,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "ruby-red streaky veins on cream base, matches reference"
+      },
+      {
+        "index": 10,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.5,
+        "reason": "glowing saturated red streaky, likely same glass backlit"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "pale grey-pink mottled rippled texture, not the bold streak pattern"
+      },
+      {
+        "index": 12,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.5,
+        "reason": "red-pink marbled swirl, plausible same color family, softer streaks"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "very light scattered thin pink marks, lacks reference's saturated ruby veining"
+      },
+      {
+        "index": 14,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.8,
+        "reason": "labeled backlit shot showing matching ruby streaky veins on white"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "multicolor iridescent glass with blue-grey and gold, different product"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "labeled as Youghiogheny 1107 SP 'Extra Pink', a different catalog item"
+      }
+    ],
+    "raw_stdout_len": 2249,
+    "attempt": 1,
+    "elapsed_s": 82.6
+  },
+  "wissmach-wi18flem": {
+    "pid": "wissmach-wi18flem",
+    "product": {
+      "id": "wissmach-wi18flem",
+      "manufacturer": "Wissmach",
+      "name": "Red Flemish",
+      "category": "Cathedral",
+      "search_name": "Red Flemish"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.85,
+        "reason": "matching red cellular/wave texture and color, close corner shot on table"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.85,
+        "reason": "same flemish wavy/cell pattern, backlit against sky and trees"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "shows whitish swirl/streak marks inconsistent with the reference's solid transparent red flemish texture"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "vertical reeded/bark-like ripple texture, not the reference's rounded cell/wave pattern"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow-orange fused art panel with flame shapes, entirely different product"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "close-up shows matching red cellular wave texture"
+      },
+      {
+        "index": 8,
+        "match": true,
+        "context": "other",
+        "confidence": 0.6,
+        "reason": "same bumpy cell texture visible under shop lighting despite cluttered background"
+      },
+      {
+        "index": 9,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "matching wavy cell texture with sparkle highlights, close-up crop"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "smoother horizontal streaky texture in craft-store shot, lacks characteristic cell/wave bumps"
+      },
+      {
+        "index": 11,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.8,
+        "reason": "hand holding glass with matching bumpy cell texture and color"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.5,
+        "reason": "finer sparkly stippled texture at a different scale than the reference's cell/wave pattern"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "vertical reeded/bark ripple texture, same non-matching pattern family as index 5"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.8,
+        "reason": "fine dot/pebble stipple texture, distinct from the reference's cellular wave pattern"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.7,
+        "reason": "vertical ripple/bark texture again, not matching the flemish cell pattern"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow-green fused art panel with red flame shapes, different product"
+      }
+    ],
+    "raw_stdout_len": 2446,
+    "attempt": 1,
+    "elapsed_s": 119.7
+  },
+  "wissmach-w101ll": {
+    "pid": "wissmach-w101ll",
+    "product": {
+      "id": "wissmach-w101ll",
+      "manufacturer": "Wissmach",
+      "name": "Evergreen Streaky",
+      "category": "Wispy/Streaky",
+      "search_name": "Evergreen Streaky"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "iridized amber/purple/blue swirl with granite texture, unrelated glass"
+      },
+      {
+        "index": 3,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "much darker forest green, labeled 'Dk Mystic', different product line"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "label reads 'Amber Green Crystal Streaky Granite', amber-dominant with granite texture"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.55,
+        "reason": "darker, more uniformly mottled green with amber patch, not the light translucent streaky family"
+      },
+      {
+        "index": 6,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.65,
+        "reason": "vertical light-medium green/khaki streaky, closest pattern and tone match"
+      },
+      {
+        "index": 7,
+        "match": true,
+        "context": "held-in-hand",
+        "confidence": 0.55,
+        "reason": "bright streaky opal green with light/white blending, similar family though slightly more saturated"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "label reads 'Green Opal Granite Streaky', distinct textured granite product"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "same granite-textured 'Green Opal Granite' family as candidate 6, dimpled surface not smooth streaky"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "label reads 'Med Purple Med Green Streaky', different color family"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "very saturated uniform emerald with sharp black shadows, lacks the light white/lime opal blend"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "two swatches explicitly labeled 'Green Opal Granite Streaky', different textured product"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "close-up of same 'Green Opal Granite Streaky' labeled product, granite texture"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "bright yellow/gold streaky glass, wrong color family entirely"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "composite grid of four different glass samples (dark marbled, amber streaky, granite), not a single clean match"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "label reads 'Medium Purple Yellow Green Wispy Opal Granite', different product"
+      }
+    ],
+    "raw_stdout_len": 2518,
+    "attempt": 1,
+    "elapsed_s": 79.3
+  },
+  "wissmach-w29d": {
+    "pid": "wissmach-w29d",
+    "product": {
+      "id": "wissmach-w29d",
+      "manufacturer": "Wissmach",
+      "name": "Thunderbird Opal",
+      "category": "Opalescent",
+      "search_name": "Thunderbird Opal"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "pastel cream/pink/blue mottled, not red-orange streaky"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "other",
+        "confidence": 0.55,
+        "reason": "rightmost panel in sheet lineup shows matching orange-red streaky opal"
+      },
+      {
+        "index": 4,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.9,
+        "reason": "red/orange streaky opal, close match to reference"
+      },
+      {
+        "index": 5,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "pale blue/lavender misty iridescent, different color family"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.6,
+        "reason": "orange base but heavy rainbow iridescent coating not present in reference"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "white/cream pastel iridescent, no red-orange"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "cream/white with pale blue streaks, different color"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "blue/green streaky glass, clearly different color family"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow/gold collage, different color and shop"
+      },
+      {
+        "index": 11,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled Wissmach Light Amber Opal, pale cream not red-orange"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled Medium Amber Opal Dense Iridescent, gold/amber not red-orange"
+      },
+      {
+        "index": 13,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "plain white/cream, no red-orange streaks"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "labeled Wisspy Opal Swirled w Crystal, white product"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "pale pink/cream swatch, lacks red-orange saturation"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "labeled Selenium Orange Wisspy Opal, foreground swatch is pink/cream not matching red-orange"
+      }
+    ],
+    "raw_stdout_len": 2120,
+    "attempt": 1,
+    "elapsed_s": 71.8
+  },
+  "wissmach-wwo708": {
+    "pid": "wissmach-wwo708",
+    "product": {
+      "id": "wissmach-wwo708",
+      "manufacturer": "Wissmach",
+      "name": "Clover Wisspy",
+      "category": "Cathedral",
+      "search_name": "Clover Wisspy"
+    },
+    "n_candidates": 15,
+    "verifications": [
+      {
+        "index": 2,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.75,
+        "reason": "same bright green wispy/streaky translucent pattern"
+      },
+      {
+        "index": 3,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.55,
+        "reason": "same green family but more swirled/cloudy than linear wispy"
+      },
+      {
+        "index": 4,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "yellow glass, wrong color family"
+      },
+      {
+        "index": 5,
+        "match": true,
+        "context": "other",
+        "confidence": 0.45,
+        "reason": "multi-color swatch card; top-right diamond resembles the streaky green but rest are unrelated colors"
+      },
+      {
+        "index": 6,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "heavily textured/rippled surface, not the smooth wispy streak pattern"
+      },
+      {
+        "index": 7,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "blue glass, wrong color"
+      },
+      {
+        "index": 8,
+        "match": false,
+        "context": null,
+        "confidence": 0.85,
+        "reason": "blue-dominant marbled glass, wrong color family"
+      },
+      {
+        "index": 9,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "teal/turquoise opalescent glass, wrong color"
+      },
+      {
+        "index": 10,
+        "match": false,
+        "context": null,
+        "confidence": 0.75,
+        "reason": "heavily textured/rippled surface, not wispy streaky pattern"
+      },
+      {
+        "index": 11,
+        "match": true,
+        "context": "backlit-window",
+        "confidence": 0.7,
+        "reason": "green streaky wispy pattern backlit through window"
+      },
+      {
+        "index": 12,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "deep blue/purple glass, wrong color"
+      },
+      {
+        "index": 13,
+        "match": true,
+        "context": "flat-swatch",
+        "confidence": 0.8,
+        "reason": "bright green wispy streaky pattern matches reference closely"
+      },
+      {
+        "index": 14,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "labeled Wissmach Selenium Orange Wisspy Opal -- same brand/naming pattern but different color product"
+      },
+      {
+        "index": 15,
+        "match": false,
+        "context": null,
+        "confidence": 0.95,
+        "reason": "labeled Wissmach Light Cream/White Opal -- different color product"
+      },
+      {
+        "index": 16,
+        "match": false,
+        "context": null,
+        "confidence": 0.9,
+        "reason": "red/orange glass sheets, wrong color"
+      }
+    ],
+    "raw_stdout_len": 2117,
+    "attempt": 1,
+    "elapsed_s": 57.8
+  }
+}
