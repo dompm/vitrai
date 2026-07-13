@@ -1713,7 +1713,26 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     # INTERIOR so the front face has something plausible to reflect when the
     # glass specular lobe is enabled (--specular). Default 0.0 = byte-compat
     # with every existing dataset.
-    bpy.ops.mesh.primitive_plane_add(size=5.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
+    #
+    # Report 043 (MMv3-G2, docs/GT_SPEC.md sec 6 finding): the old size=5.0
+    # plane (half-extent 2.5m at ~2m from the glass) was NOT big enough to
+    # isolate the veil -- the glass's bump-mapped shading normal fans the
+    # glossy reflection cone well past the near-normal direction the
+    # camera-aligned geometry assumes, so plenty of reflected rays missed
+    # this wall's edges and saw the bright HDRI sky/sun directly. Measured on
+    # two verification samples (both --specular OFF, i.e. the default the
+    # extractor assumes carries NO veil): gt_veil was nonzero on 100% of
+    # pixels, median veil share of the (transmission+veil) signal 40%
+    # (cathedral-green) to 81% (dark-deep) -- not a rounding artifact, a real
+    # unaccounted reflection baked into every sample generated to date.
+    # Fix: make the occluding wall big enough that essentially no
+    # bump-fanned reflection ray escapes past its edges. size=60 (half-extent
+    # 30m at ~2m distance) subtends >168 degrees as seen from the glass --
+    # only near-90-degree grazing rays (negligible Fresnel/foreshortening
+    # weight) can still miss it. This is a scene-geometry fix only: it
+    # changes what the (already-existing, always-on) front specular lobe
+    # reflects, not the transmission/haze/T,h shader graph MMv3-G1 touches.
+    bpy.ops.mesh.primitive_plane_add(size=60.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
     wall = bpy.context.active_object
     wall.name = "DarkWall"
     mat_wall = bpy.data.materials.new(name="WallMat")

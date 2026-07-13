@@ -1,0 +1,31 @@
+Report 043 item 2 (gt_veil scene fix) -- veil isolation evidence.
+Sample: wispy-white seed 601, production flags, --specular OFF (the default
+every dataset to date used). gt_veil = Glossy Direct + Indirect AOV
+(load_aov_exr, raw render-linear). Three states, one variable at a time:
+
+  state                          veil mean   median    p99      >1e-4 pixels
+  BEFORE (origin, wall 5m)        0.22805    0.21570   0.43758   100.0%
+  ITEM 1 only (shader, wall 5m)   0.25316    0.22986   0.54427   100.0%
+  ITEM 1+2 (wall 60m)             0.00042    0.00000   0.00451    24.6%
+
+Histogram (fraction of pixels per veil-luminance bin, mean-RGB):
+  bin           BEFORE      ITEM1+2
+  = 0            0.0%       38.4%
+  1e-5..1e-4     0.0%        1.0%
+  1e-4..1e-3     0.0%        8.6%
+  1e-3..1e-2     0.0%       16.0%
+  1e-2..0.05     0.0%        0.01%
+  0.05..0.1      0.0%        0.0%
+  0.1..0.5      99.7%        0.0%
+  >0.5           0.3%        0.0%
+
+Root cause (docs/GT_SPEC.md sec 6, report 037 finding): the glass's
+bump-mapped normal fans the glossy cone past the 5m DarkWall's edges, so
+reflected rays saw the bright HDRI sky directly -- a real, large,
+undocumented veil in EVERY sample generated to date. Fix: wall 5m -> 60m
+(subtends >168deg from the glass); shader untouched (the item-1-vs-item-1+2
+comparison above holds the shader constant, so the collapse is entirely the
+scene geometry). Residual nonzero pixels are small (max 0.019) and localized;
+median veil is exactly 0. gt_veil now measures genuine front-surface
+reflection, and the --specular path still works (a lit wall is reflected as
+designed -- the fix removes only the geometry LEAK).
