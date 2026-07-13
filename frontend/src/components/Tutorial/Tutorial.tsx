@@ -412,7 +412,23 @@ export function Tutorial({
     }
   }, [step, isLampProfileOpen, onAdvance]);
 
-  // Lamp Creator Step 3: Symmetrical pieces
+  // Lamp Creator Step 3: Choose the Pen tool for one facet piece.
+  useEffect(() => {
+    if (step !== 'lamp-choose-pen') return;
+    if (patternTool === 'pen') {
+      onAdvance();
+    }
+  }, [step, patternTool, onAdvance]);
+
+  // Lamp Creator Step 4: Draw one piece on the active facet.
+  useEffect(() => {
+    if (step !== 'lamp-draw-facet') return;
+    if (project.pieces.length > 0) {
+      onAdvance();
+    }
+  }, [step, project.pieces, onAdvance]);
+
+  // Lamp Creator Step 5: Symmetrical pieces.
   useEffect(() => {
     if (step !== 'lamp-symmetry') return;
     if (isSymmetryEnabled) {
@@ -420,7 +436,7 @@ export function Tutorial({
     }
   }, [step, isSymmetryEnabled, onAdvance]);
 
-  // Lamp Creator Step 4: Preview 3D lamp
+  // Lamp Creator Step 6: Preview 3D lamp
   // User completes it manually via "Complete" button
 
   // Fabrication Step 1: Solder Settings

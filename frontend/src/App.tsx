@@ -472,15 +472,7 @@ export function App() {
           unit: 'in',
           line: { x1: 0, y1: 0, x2: 100, y2: 0 }
         },
-        pieces: [
-          {
-            id: 'lamp-p1',
-            label: 'Piece 1',
-            polygon: [[70, 50], [110, 50], [130, 120], [50, 120]],
-            glassSheetId: 'default-sheet-1',
-            transform: { x: 90, y: 85, rotation: 0, scale: 1 }
-          }
-        ],
+        pieces: [],
         sheets: [
           {
             id: 'default-sheet-1',

@@ -25,6 +25,8 @@ export type StepId =
   // lamp-creator steps
   | 'lamp-profile-intro'
   | 'lamp-edit-profile'
+  | 'lamp-choose-pen'
+  | 'lamp-draw-facet'
   | 'lamp-symmetry'
   | 'lamp-preview-3d'
   // fabrication steps
@@ -62,6 +64,8 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
     'welcome',
     'lamp-profile-intro',
     'lamp-edit-profile',
+    'lamp-choose-pen',
+    'lamp-draw-facet',
     'lamp-symmetry',
     'lamp-preview-3d',
     'done',
@@ -109,6 +113,8 @@ export const ANCHORED_STEPS: StepId[] = [
   'vector-position-texture',
   'lamp-profile-intro',
   'lamp-edit-profile',
+  'lamp-choose-pen',
+  'lamp-draw-facet',
   'lamp-symmetry',
   'lamp-preview-3d',
   'fab-solder-thickness',
@@ -206,6 +212,15 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   'lamp-edit-profile': {
     id: 'lamp-edit-profile',
     spotlightTarget: '.lamp-profile-canvas',
+    panel: 'pattern',
+  },
+  'lamp-choose-pen': {
+    id: 'lamp-choose-pen',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="pen"]',
+    panel: 'pattern',
+  },
+  'lamp-draw-facet': {
+    id: 'lamp-draw-facet',
     panel: 'pattern',
   },
   'lamp-symmetry': {
