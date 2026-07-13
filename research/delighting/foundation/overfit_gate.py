@@ -43,11 +43,14 @@ import numpy as np
 # so this job leaves headroom for the concurrent Blender render on the 16GB box (team
 # guidance: try 0.5 => ~8GB ceiling; bump to 0.6 if that raises allocation errors).
 # A pre-set value from the launching shell always wins (setdefault).
-os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.5")
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.6")
 # torch's MPS allocator defaults the low watermark to 1.4 (effectively "disabled") when
 # unset, which conflicts with a HIGH ratio below that (RuntimeError: invalid low
 # watermark ratio 1.4) -- must set both together.
-os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.4")
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.5")
+# 0.5 hit its ceiling (5.92GB) once the decode() gradient-flow fix (report 040) made
+# backward pass through the frozen VAE decoder too, needing ~5.81GB -- bumped to 0.6
+# per team guidance's fallback.
 os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -356,6 +359,10 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
         model.unet.enable_gradient_checkpointing()
         logline(f"[{tag}] gradient checkpointing enabled on the UNet "
                f"(trades ~30% speed for activation-memory headroom)")
+    if hasattr(model.vae, "enable_gradient_checkpointing"):
+        model.vae.enable_gradient_checkpointing()
+        logline(f"[{tag}] gradient checkpointing enabled on the VAE too -- decode()'s "
+               f"gradient-flow fix means backward now runs through it as well")
     tp = model.trainable_parameters()
     n_tr = sum(p.numel() for p in tp)
     n_total = sum(p.numel() for p in model.parameters())

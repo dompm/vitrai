@@ -30,8 +30,8 @@ import time
 
 # must be set before `import torch` — see overfit_gate.py's note on this same setting
 # (both ratios needed together or the MPS allocator errors: "invalid low watermark ratio")
-os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.5")
-os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.4")
+os.environ.setdefault("PYTORCH_MPS_HIGH_WATERMARK_RATIO", "0.6")
+os.environ.setdefault("PYTORCH_MPS_LOW_WATERMARK_RATIO", "0.5")
 
 import torch  # noqa: E402
 
@@ -76,6 +76,9 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
     if hasattr(model.unet, "enable_gradient_checkpointing"):
         model.unet.enable_gradient_checkpointing()
         logline("[pilot] gradient checkpointing enabled on the UNet")
+    if hasattr(model.vae, "enable_gradient_checkpointing"):
+        model.vae.enable_gradient_checkpointing()
+        logline("[pilot] gradient checkpointing enabled on the VAE too")
     tp = model.trainable_parameters()
     logline(f"[pilot] trainable params: {sum(p.numel() for p in tp)/1e3:.1f}k  "
            f"lora_ok={model.lora_ok}  "
