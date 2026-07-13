@@ -38,7 +38,7 @@ export function maskToPolygon(
     origW,
     origH,
     threshold = 0,
-    simplifyRatio = 0.004,
+    simplifyRatio = 0.005,
     minSimplifyPx = 1.5,
   } = options;
 
@@ -163,6 +163,56 @@ export function maskToPolygon(
   const perimeter = polygonPerimeter(toOriginal);
   const epsilon = Math.max(minSimplifyPx, perimeter * simplifyRatio);
   return simplifyClosedPolygon(toOriginal, epsilon);
+}
+
+/**
+ * Suppress single-cell oscillations in decoder logits before they are enlarged
+ * to the 1024px model-input space. A sigma near 1 smooths mask-grid noise while
+ * keeping the zero crossing centered on broad, intentional boundaries.
+ */
+export function smoothMaskLogits(
+  data: Float32Array,
+  width: number,
+  height: number,
+  sigma: number,
+): Float32Array {
+  if (width < 1 || height < 1 || data.length < width * height) return new Float32Array();
+  if (!(sigma > 0) || !Number.isFinite(sigma)) return data.slice();
+
+  const radius = Math.max(1, Math.ceil(sigma * 3));
+  const kernel = new Float64Array(radius * 2 + 1);
+  let kernelSum = 0;
+  for (let offset = -radius; offset <= radius; offset++) {
+    const weight = Math.exp(-(offset * offset) / (2 * sigma * sigma));
+    kernel[offset + radius] = weight;
+    kernelSum += weight;
+  }
+  for (let i = 0; i < kernel.length; i++) kernel[i] /= kernelSum;
+
+  const horizontal = new Float32Array(width * height);
+  const output = new Float32Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let value = 0;
+      for (let offset = -radius; offset <= radius; offset++) {
+        const sourceX = Math.max(0, Math.min(width - 1, x + offset));
+        value += data[y * width + sourceX] * kernel[offset + radius];
+      }
+      horizontal[y * width + x] = value;
+    }
+  }
+
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let value = 0;
+      for (let offset = -radius; offset <= radius; offset++) {
+        const sourceY = Math.max(0, Math.min(height - 1, y + offset));
+        value += horizontal[sourceY * width + x] * kernel[offset + radius];
+      }
+      output[y * width + x] = value;
+    }
+  }
+  return output;
 }
 
 function traceClosedLoops(nodes: Map<string, Point>, adjacency: Map<string, string[]>): Point[][] {

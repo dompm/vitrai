@@ -1,5 +1,5 @@
 import * as ort from "onnxruntime-web/webgpu";
-import { maskToPolygon as extractMaskPolygon } from './utils/maskContour';
+import { maskToPolygon as extractMaskPolygon, smoothMaskLogits } from './utils/maskContour';
 // Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
 // bundle). Vite emits the file as a same-origin asset, so segmentation no
 // longer depends on a third-party CDN being reachable, and the JS/wasm
@@ -31,6 +31,9 @@ const INPUT_SIZE = 1024;
 const MEAN = [0.485, 0.456, 0.406];
 const STD  = [0.229, 0.224, 0.225];
 const MASK_THRESHOLD = 0;
+// Keep smoothing stable in model-input coordinates even if a model variant
+// returns a decoder mask other than the usual 256×256.
+const MASK_SMOOTHING_SIGMA_INPUT_PX = 6;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -636,7 +639,9 @@ async function segment(
     const maskData = (masksTensor.data as Float32Array)
       .slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
 
-    const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+    const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+    const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+    const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
 
     const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
       inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
@@ -729,7 +734,9 @@ async function autoSegment(id: string, sessionId: string) {
           const planeSize = H * W;
           const maskData = (masksTensor.data as Float32Array).slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
           
-          const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+          const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+          const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+          const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
           const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
             inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
             threshold: MASK_THRESHOLD,

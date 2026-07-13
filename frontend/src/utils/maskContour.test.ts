@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maskToPolygon } from './maskContour';
+import { maskToPolygon, smoothMaskLogits } from './maskContour';
 
 type Point = [number, number];
 
@@ -73,6 +73,21 @@ describe('SAM mask contour extraction', () => {
 
     expect(polygon.length).toBeLessThanOrEqual(12);
     expect(area(polygon)).toBeGreaterThan(4700);
+  });
+
+  it('regularizes decoder-cell oscillations before vectorization', () => {
+    const size = 160;
+    const noisy = logits(size, size, (x, y) => {
+      const wobble = 7 * Math.sin(y * 0.35);
+      return Math.min(x - 24 - wobble, 132 - x + wobble, y - 20, 136 - y);
+    });
+    // Six pixels at this test resolution represents the production filter's
+    // 1.5 cells before the decoder mask is upsampled by roughly four times.
+    const regularized = smoothMaskLogits(noisy, size, size, 6);
+    const polygon = polygonFrom(regularized, size, size);
+
+    expect(polygon.length).toBeLessThanOrEqual(14);
+    expect(area(polygon)).toBeGreaterThan(10500);
   });
 
   it('closes and clamps masks that touch a source-image edge', () => {
