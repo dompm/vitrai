@@ -509,6 +509,12 @@ def main():
     ap.add_argument("--log", default="/tmp/night_train.log")
     ap.add_argument("--no-resume", action="store_true",
                     help="ignore any existing {tag}_adapter.pt/_log.jsonl and start over")
+    ap.add_argument("--w-t", type=float, default=6.0, help="loss weight: T")
+    ap.add_argument("--w-h", type=float, default=2.0, help="loss weight: h")
+    ap.add_argument("--w-b", type=float, default=2.0, help="loss weight: B")
+    ap.add_argument("--w-shadow", type=float, default=1.0, help="loss weight: shadow")
+    ap.add_argument("--w-mark", type=float, default=1.0, help="loss weight: mark")
+    ap.add_argument("--w-conf", type=float, default=1.0, help="loss weight: conf")
     args = ap.parse_args()
 
     sample_dirs = []
@@ -517,8 +523,10 @@ def main():
         sample_dirs.extend(matches if matches else [pat])
     sample_dirs = sorted(set(os.path.abspath(d) for d in sample_dirs))
 
+    weights = {"T": args.w_t, "h": args.w_h, "B": args.w_b, "shadow": args.w_shadow,
+              "mark": args.w_mark, "conf": args.w_conf}
     run_gate(sample_dirs, args.tag, args.steps, args.snapshot_every, args.crop, args.lr,
-             args.lora_rank, args.backbone, args.out, args.device,
+             args.lora_rank, args.backbone, args.out, args.device, weights=weights,
              max_minutes=args.max_minutes, log_path=args.log, resume=not args.no_resume)
 
 
