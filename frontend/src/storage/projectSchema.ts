@@ -118,10 +118,32 @@ function isValidPolygon(v: unknown): v is [number, number][] {
 
 function isValidCurvePoints(v: unknown): v is CurvePoint[] {
   return Array.isArray(v) && v.every(cp =>
-    isPlainObject(cp) && isFiniteNumber(cp.edgeIdx)
+    isPlainObject(cp) && Number.isInteger(cp.edgeIdx) && (cp.edgeIdx as number) >= 0
     && Array.isArray(cp.ctrl) && cp.ctrl.length === 2
     && isFiniteNumber(cp.ctrl[0]) && isFiniteNumber(cp.ctrl[1])
+    && (cp.kind === undefined || cp.kind === 'quadratic' || cp.kind === 'cubic')
+    && (cp.ctrl2 === undefined || (
+      Array.isArray(cp.ctrl2) && cp.ctrl2.length === 2
+      && isFiniteNumber(cp.ctrl2[0]) && isFiniteNumber(cp.ctrl2[1])
+    ))
+    && (cp.kind !== 'cubic' || (
+      Array.isArray(cp.ctrl2) && cp.ctrl2.length === 2
+      && isFiniteNumber(cp.ctrl2[0]) && isFiniteNumber(cp.ctrl2[1])
+    ))
   );
+}
+
+function validCurvePointsForPolygon(v: unknown, vertexCount: number): CurvePoint[] | undefined {
+  if (!Array.isArray(v)) return undefined;
+  const valid = v.filter((curve): curve is CurvePoint =>
+    isValidCurvePoints([curve]) && curve.edgeIdx < vertexCount
+  );
+  return valid.length > 0 ? valid : undefined;
+}
+
+function validAnchorTypes(v: unknown, vertexCount: number): ('corner' | 'smooth')[] | undefined {
+  if (!Array.isArray(v) || v.length !== vertexCount) return undefined;
+  return v.every(type => type === 'corner' || type === 'smooth') ? v : undefined;
 }
 
 function isValidPromptPoints(v: unknown): v is PromptPoint[] {
@@ -168,7 +190,7 @@ function validatePiece(raw: unknown, index: number, validSheetIds: Set<string>, 
     return null;
   }
   const {
-    id, label, polygon, curvePoints, glassSheetId, transform,
+    id, label, polygon, curvePoints, anchorTypes, glassSheetId, transform,
     promptBox, promptPoints, tierIndex, facetIndex, symmetryGroupId,
     ...rest
   } = raw;
@@ -196,7 +218,10 @@ function validatePiece(raw: unknown, index: number, validSheetIds: Set<string>, 
     glassSheetId,
     transform,
   };
-  if (isValidCurvePoints(curvePoints)) piece.curvePoints = curvePoints;
+  const validCurves = validCurvePointsForPolygon(curvePoints, polygon.length);
+  if (validCurves) piece.curvePoints = validCurves;
+  const validAnchors = validAnchorTypes(anchorTypes, polygon.length);
+  if (validAnchors) piece.anchorTypes = validAnchors;
   if (isValidBoundingBox(promptBox)) piece.promptBox = promptBox;
   if (isValidPromptPoints(promptPoints)) piece.promptPoints = promptPoints;
   if (isFiniteNumber(tierIndex)) piece.tierIndex = tierIndex;

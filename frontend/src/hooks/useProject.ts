@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor } from '../types';
+import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor, CurvePoint } from '../types';
 import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
@@ -71,6 +71,7 @@ function syncSymmetricPieces(
   targetPieceId: string,
   newPolygon: [number, number][] | undefined,
   newCurvePoints: import('../types').CurvePoint[] | undefined,
+  newAnchorTypes: ('corner' | 'smooth')[] | undefined,
   lampConfig: import('../types').LampConfig | undefined | null,
   isSymmetryEnabled: boolean
 ): Piece[] {
@@ -99,7 +100,10 @@ function syncSymmetricPieces(
     if (newCurvePoints) {
       updatedCurves = newCurvePoints.map(cp => {
         const newCtrl = replicatePointToFacet(cp.ctrl[0], cp.ctrl[1], k, j, unrolled, N);
-        return { ...cp, ctrl: newCtrl };
+        const newCtrl2 = cp.ctrl2
+          ? replicatePointToFacet(cp.ctrl2[0], cp.ctrl2[1], k, j, unrolled, N)
+          : undefined;
+        return { ...cp, ctrl: newCtrl, ...(newCtrl2 ? { ctrl2: newCtrl2 } : {}) };
       });
     }
 
@@ -107,6 +111,7 @@ function syncSymmetricPieces(
       ...p,
       polygon: updatedPoly,
       curvePoints: updatedCurves,
+      anchorTypes: newAnchorTypes ?? p.anchorTypes,
     };
   });
 }
@@ -231,13 +236,17 @@ export function useProject() {
   // inside an updater (pushing history, scheduling timers, other setState
   // calls) runs twice and corrupts the undo/redo stacks. All side effects
   // below happen at call time, outside the updaters.
-  const updateProject = useCallback((updater: (p: Project) => Project, skipHistory = false) => {
+  const updateProject = useCallback((
+    updater: (p: Project) => Project,
+    skipHistory = false,
+    historySnapshot?: Project,
+  ) => {
     const prev = latestProjectRef.current;
     const next = updater(prev);
     if (next === prev) return;
     latestProjectRef.current = next;
     if (!skipHistory) {
-      setUndoStack(u => [...u.slice(-49), prev]);
+      setUndoStack(u => [...u.slice(-49), historySnapshot ?? prev]);
       setRedoStack([]);
     }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -247,6 +256,8 @@ export function useProject() {
     }, 500);
     setProject(next);
   }, [refreshProjectList, persist]);
+
+  const transformGestureStartRef = useRef<Map<string, Project>>(new Map());
 
   const undo = useCallback(() => {
     if (undoStack.length === 0) return;
@@ -398,31 +409,55 @@ export function useProject() {
 
   const updatePieceTransform = useCallback(
     (pieceId: string, transform: Partial<TextureTransform>, skipHistory = false) => {
-      updateProject(prev => ({
-        ...prev,
-        pieces: prev.pieces.map(p =>
-          p.id === pieceId ? { ...p, transform: { ...p.transform, ...transform } } : p
-        ),
-      }), skipHistory);
+      const apply = (prev: Project): Project => ({
+          ...prev,
+          pieces: prev.pieces.map(p =>
+            p.id === pieceId ? { ...p, transform: { ...p.transform, ...transform } } : p
+          ),
+        });
+      if (skipHistory) {
+        updateProject(prev => {
+          if (!transformGestureStartRef.current.has(pieceId)) {
+            transformGestureStartRef.current.set(pieceId, prev);
+          }
+          return apply(prev);
+        }, true);
+        return;
+      }
+      const gestureStart = transformGestureStartRef.current.get(pieceId);
+      transformGestureStartRef.current.delete(pieceId);
+      updateProject(apply, false, gestureStart);
     },
     [updateProject]
   );
 
-  const batchUpdatePieceTransforms = useCallback(
-    (updates: { pieceId: string; transform: Partial<TextureTransform> }[]) => {
-      if (updates.length === 0) return;
-      const map = new Map(updates.map(u => [u.pieceId, u.transform]));
-      updateProject(prev => ({
-        ...prev,
-        pieces: prev.pieces.map(p => {
-          const t = map.get(p.id);
-          if (!t) return p;
-          return { ...p, transform: { ...p.transform, ...t } };
-        }),
-      }));
-    },
-    [updateProject]
-  );
+  const updatePieceTransforms = useCallback((
+    updates: { pieceId: string; transform: Partial<TextureTransform> }[],
+    skipHistory = false,
+  ) => {
+    if (updates.length === 0) return;
+    const gestureKey = updates.map(update => update.pieceId).sort().join('|');
+    const updateMap = new Map(updates.map(update => [update.pieceId, update.transform]));
+    const apply = (prev: Project): Project => ({
+      ...prev,
+      pieces: prev.pieces.map(piece => {
+        const transform = updateMap.get(piece.id);
+        return transform ? { ...piece, transform: { ...piece.transform, ...transform } } : piece;
+      }),
+    });
+    if (skipHistory) {
+      updateProject(prev => {
+        if (!transformGestureStartRef.current.has(gestureKey)) {
+          transformGestureStartRef.current.set(gestureKey, prev);
+        }
+        return apply(prev);
+      }, true);
+      return;
+    }
+    const gestureStart = transformGestureStartRef.current.get(gestureKey);
+    transformGestureStartRef.current.delete(gestureKey);
+    updateProject(apply, false, gestureStart);
+  }, [updateProject]);
 
   const updatePiecePrompt = useCallback(
     (pieceId: string, promptBox: BoundingBox | undefined, promptPoints: Piece['promptPoints']) => {
@@ -758,7 +793,13 @@ export function useProject() {
     return id;
   }, [updateProject, t, isSymmetryEnabled]);
 
-  const addManualPiece = useCallback((polygon: [number, number][], sheetId: string, tierIndex?: number): string => {
+  const addManualPiece = useCallback((
+    polygon: [number, number][],
+    sheetId: string,
+    tierIndex?: number,
+    curvePoints: CurvePoint[] = [],
+    anchorTypes: ('corner' | 'smooth')[] = [],
+  ): string => {
     const id = crypto.randomUUID();
     updateProject(prev => {
       const label = `${t('piece')} ${prev.pieces.length + 1}`;
@@ -795,6 +836,8 @@ export function useProject() {
           tierIndex,
           facetIndex: k,
           symmetryGroupId,
+          ...(curvePoints.length > 0 ? { curvePoints } : {}),
+          ...(anchorTypes.length === polygon.length ? { anchorTypes } : {}),
         };
         
         const copies: Piece[] = [];
@@ -804,6 +847,13 @@ export function useProject() {
           const newPoly = polygon.map(([px, py]) =>
             replicatePointToFacet(px, py, k, j, unrolled, N)
           );
+          const newCurvePoints = curvePoints.map(curve => ({
+            ...curve,
+            ctrl: replicatePointToFacet(curve.ctrl[0], curve.ctrl[1], k, j, unrolled, N),
+            ...(curve.ctrl2 ? {
+              ctrl2: replicatePointToFacet(curve.ctrl2[0], curve.ctrl2[1], k, j, unrolled, N),
+            } : {}),
+          }));
           
           let newPromptBox = box;
           if (box) {
@@ -830,6 +880,8 @@ export function useProject() {
             tierIndex,
             facetIndex: j,
             symmetryGroupId,
+            ...(newCurvePoints.length > 0 ? { curvePoints: newCurvePoints } : {}),
+            ...(anchorTypes.length === polygon.length ? { anchorTypes } : {}),
           });
         }
         
@@ -841,7 +893,9 @@ export function useProject() {
         id, label, polygon, glassSheetId: sheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
         promptBox: box, promptPoints: [],
-        tierIndex
+        tierIndex,
+        ...(curvePoints.length > 0 ? { curvePoints } : {}),
+        ...(anchorTypes.length === polygon.length ? { anchorTypes } : {}),
       };
       setSelectedPieceIds([newPiece.id]);
       return { ...prev, pieces: [...prev.pieces, newPiece] };
@@ -887,24 +941,49 @@ export function useProject() {
 
   const updatePiecePolygon = useCallback((pieceId: string, polygon: [number, number][], skipHistory = false) => {
     updateProject(prev => {
-      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, undefined, prev.lampConfig, isSymmetryEnabled);
+      const target = prev.pieces.find(p => p.id === pieceId);
+      const anchorTypes = target?.anchorTypes?.length === polygon.length ? target.anchorTypes : undefined;
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, anchorTypes } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, undefined, anchorTypes, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
   }, [updateProject, isSymmetryEnabled]);
 
-  const updatePieceCurves = useCallback((pieceId: string, curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
+  const updatePieceCurves = useCallback((
+    pieceId: string,
+    curvePoints: import('../types').CurvePoint[],
+    skipHistory = false,
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) => {
     updateProject(prev => {
-      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, curvePoints } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, undefined, curvePoints, prev.lampConfig, isSymmetryEnabled);
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? {
+        ...p,
+        curvePoints,
+        ...(anchorTypes ? { anchorTypes } : {}),
+      } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, undefined, curvePoints, anchorTypes, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
   }, [updateProject, isSymmetryEnabled]);
 
-  const updatePiecePolygonAndCurves = useCallback((pieceId: string, polygon: [number, number][], curvePoints: import('../types').CurvePoint[], skipHistory = false) => {
+  const updatePiecePolygonAndCurves = useCallback((
+    pieceId: string,
+    polygon: [number, number][],
+    curvePoints: import('../types').CurvePoint[],
+    skipHistory = false,
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) => {
     updateProject(prev => {
-      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? { ...p, polygon, curvePoints } : p);
-      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, curvePoints, prev.lampConfig, isSymmetryEnabled);
+      const target = prev.pieces.find(p => p.id === pieceId);
+      const validAnchorTypes = anchorTypes
+        ?? (target?.anchorTypes?.length === polygon.length ? target.anchorTypes : undefined);
+      const updatedPieces = prev.pieces.map(p => p.id === pieceId ? {
+        ...p,
+        polygon,
+        curvePoints,
+        anchorTypes: validAnchorTypes,
+      } : p);
+      const syncedPieces = syncSymmetricPieces(updatedPieces, pieceId, polygon, curvePoints, validAnchorTypes, prev.lampConfig, isSymmetryEnabled);
       return { ...prev, pieces: syncedPieces };
     }, skipHistory);
   }, [updateProject, isSymmetryEnabled]);
@@ -1142,7 +1221,7 @@ export function useProject() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    batchUpdatePieceTransforms,
+    updatePieceTransforms,
     updatePatternCrop,
     updateSheetCrop,
     deletePiece,

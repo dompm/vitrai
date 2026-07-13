@@ -19,6 +19,7 @@ import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
+import { ViewportControls } from './ViewportControls';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -28,6 +29,107 @@ const HANDLE_RADIUS = 10;
 const HANDLE_STEM = 1.5;
 const HANDLE_BORDER = 2;
 const HANDLE_GAP = 18; // extra gap beyond the bounding radius, in display px
+const MOVE_SNAP_TOLERANCE_PX = 8;
+const ROTATION_SNAP_RADIANS = Math.PI / 12; // 15°, matching common design tools
+
+interface AxisAlignedBounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  centerX: number;
+  centerY: number;
+}
+
+function getTransformedBounds(piece: Piece, x = piece.transform.x, y = piece.transform.y): AxisAlignedBounds {
+  const displayPolygon = flattenCurves(piece.polygon, piece.curvePoints);
+  const centroid = computeCentroid(displayPolygon);
+  const { rotation, scale } = piece.transform;
+  const cos = Math.cos(rotation);
+  const sin = Math.sin(rotation);
+  const transformed = displayPolygon.map(([px, py]) => {
+    const localX = (px - centroid.x) * scale;
+    const localY = (py - centroid.y) * scale;
+    return {
+      x: x + localX * cos - localY * sin,
+      y: y + localX * sin + localY * cos,
+    };
+  });
+  const xs = transformed.map(point => point.x);
+  const ys = transformed.map(point => point.y);
+  const left = Math.min(...xs);
+  const right = Math.max(...xs);
+  const top = Math.min(...ys);
+  const bottom = Math.max(...ys);
+  return { left, right, top, bottom, centerX: (left + right) / 2, centerY: (top + bottom) / 2 };
+}
+
+interface SnapCandidate {
+  delta: number;
+  guide: number;
+}
+
+function nearestSnap(candidates: SnapCandidate[], tolerance: number) {
+  let best: SnapCandidate | null = null;
+  let distance = tolerance;
+  for (const candidate of candidates) {
+    const candidateDistance = Math.abs(candidate.delta);
+    if (candidateDistance < distance) {
+      best = candidate;
+      distance = candidateDistance;
+    }
+  }
+  return best;
+}
+
+function snapPiecePosition(
+  piece: Piece,
+  x: number,
+  y: number,
+  otherPieces: Piece[],
+  sheetBounds: AxisAlignedBounds,
+  tolerance: number,
+) {
+  const moving = getTransformedBounds(piece, x, y);
+  const xCandidates = [
+    { delta: sheetBounds.left - moving.left, guide: sheetBounds.left },
+    { delta: sheetBounds.right - moving.right, guide: sheetBounds.right },
+    { delta: sheetBounds.centerX - moving.centerX, guide: sheetBounds.centerX },
+  ];
+  const yCandidates = [
+    { delta: sheetBounds.top - moving.top, guide: sheetBounds.top },
+    { delta: sheetBounds.bottom - moving.bottom, guide: sheetBounds.bottom },
+    { delta: sheetBounds.centerY - moving.centerY, guide: sheetBounds.centerY },
+  ];
+
+  for (const other of otherPieces) {
+    if (other.id === piece.id) continue;
+    const target = getTransformedBounds(other);
+    xCandidates.push(
+      { delta: target.left - moving.left, guide: target.left },
+      { delta: target.right - moving.left, guide: target.right },
+      { delta: target.left - moving.right, guide: target.left },
+      { delta: target.right - moving.right, guide: target.right },
+      { delta: target.centerX - moving.centerX, guide: target.centerX },
+    );
+    yCandidates.push(
+      { delta: target.top - moving.top, guide: target.top },
+      { delta: target.bottom - moving.top, guide: target.bottom },
+      { delta: target.top - moving.bottom, guide: target.top },
+      { delta: target.bottom - moving.bottom, guide: target.bottom },
+      { delta: target.centerY - moving.centerY, guide: target.centerY },
+    );
+  }
+
+  const xSnap = nearestSnap(xCandidates, tolerance);
+  const ySnap = nearestSnap(yCandidates, tolerance);
+  return {
+    x: x + (xSnap?.delta ?? 0),
+    y: y + (ySnap?.delta ?? 0),
+    guideX: xSnap?.guide ?? null,
+    guideY: ySnap?.guide ?? null,
+  };
+}
 
 interface PieceOutlineProps {
   piece: Piece;
@@ -35,28 +137,31 @@ interface PieceOutlineProps {
   effectiveScale: number;
   onSelect?: (multi?: boolean) => void;
   onTransformChange?: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onRotateStart?: () => void;
+  onRotateStart?: (e: KonvaEventObject<PointerEvent>) => void;
   fillOnly?: boolean;
   strokeOnly?: boolean;
   handleOnly?: boolean;
   listening?: boolean;
+  snapPieces?: Piece[];
+  snapBounds?: AxisAlignedBounds;
+  onSnapChange?: (guides: { x: number | null; y: number | null }) => void;
 }
 
 function PieceOutline({
   piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart,
-  fillOnly, strokeOnly, handleOnly, listening = true
+  fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
   const { x, y, rotation, scale } = piece.transform;
-  const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
-  const centroid = computeCentroid(displayPoly);
-  const relPts = displayPoly.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
+  const displayPolygon = flattenCurves(piece.polygon, piece.curvePoints);
+  const centroid = computeCentroid(displayPolygon);
+  const relPts = displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
 
   // Combined divisor so sizes stay fixed in display pixels
   const es = effectiveScale * scale;
 
   // Bounding radius in display px, converted to local coords for the handle stem
   const radiusPx = Math.max(
-    ...displayPoly.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
+    ...displayPolygon.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
   ) * es;
   const handleOffset = (radiusPx + HANDLE_GAP + HANDLE_RADIUS) / es;
 
@@ -93,10 +198,25 @@ function PieceOutline({
   }
 
   function handleDragMove(e: KonvaEventObject<DragEvent>) {
-    onTransformChange?.({ x: e.target.x(), y: e.target.y() }, true);
+    const bypassSnapping = e.evt.ctrlKey;
+    const snapped = !bypassSnapping && snapBounds
+      ? snapPiecePosition(
+        piece,
+        e.target.x(),
+        e.target.y(),
+        snapPieces,
+        snapBounds,
+        MOVE_SNAP_TOLERANCE_PX / effectiveScale,
+      )
+      : { x: e.target.x(), y: e.target.y(), guideX: null, guideY: null };
+    const position = { x: snapped.x, y: snapped.y };
+    e.target.position(position);
+    onSnapChange?.({ x: snapped.guideX, y: snapped.guideY });
+    onTransformChange?.(position, true);
   }
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
+    onSnapChange?.({ x: null, y: null });
     onTransformChange?.({ x: e.target.x(), y: e.target.y() }, false);
   }
 
@@ -106,7 +226,7 @@ function PieceOutline({
     // commits on pointerup) even if the pointer leaves the canvas.
     if (e.evt.pointerId !== undefined) e.target.getStage()?.content.setPointerCapture(e.evt.pointerId);
     dragStartedFromHandle.current = true;
-    onRotateStart?.();
+    onRotateStart?.(e);
   }
 
   return (
@@ -169,19 +289,20 @@ interface SheetPanelProps {
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
-  onUpdatePieceTransform: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  onTransformsChange: (updates: { pieceId: string; transform: Partial<TextureTransform> }[], skipHistory?: boolean) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
+  showEmptyHint?: boolean;
   isTutorial?: boolean;
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onUpdatePieceTransform,
-  onCropChange, onScaleChange, onImageLoad,
-  activeTool, onChangeActiveTool, isTutorial = false
+  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onTransformsChange, onCropChange, onScaleChange, onImageLoad,
+  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false,
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -192,44 +313,61 @@ export function SheetPanel({
   const packPopoverRef = useRef<HTMLDivElement>(null);
   const isPackPopoverOpenRef = useRef(isPackPopoverOpen);
   isPackPopoverOpenRef.current = isPackPopoverOpen;
+  const panelRef = useRef<HTMLDivElement>(null);
+  const panelHoveredRef = useRef(false);
+  const capturedPointerRef = useRef<{ pointerId: number; target: Element } | null>(null);
+  const rotationValueRef = useRef<number | null>(null);
+  const groupMoveStartRef = useRef<{
+    draggedId: string;
+    transforms: Map<string, TextureTransform>;
+  } | null>(null);
   const [sheetImg] = useImage(sheet.imageUrl);
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
-  // Tracks whether the pointer is over this panel, so single-key tool
-  // shortcuts only apply here instead of firing into both panels at once.
-  const isPointerInsideRef = useRef(false);
-
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+      const panelHasFocus = panelRef.current?.contains(document.activeElement) ?? false;
+      if (!panelHoveredRef.current && !panelHasFocus) return;
+      const hasToolModifier = e.metaKey || e.ctrlKey || e.altKey;
       if (e.code === 'Space' && !e.repeat) {
+        if (hasToolModifier) return;
         e.preventDefault();
         setIsSpaceDown(true);
         return;
       }
-      // Don't let browser/app shortcuts (Cmd+C, Cmd+S, Cmd+V, …) trigger tool changes.
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      // Scope tool shortcuts to the hovered panel: without this, one keystroke
-      // switches tools on BOTH panels, and 'm' silently fabricates a default
-      // scale for the sheet even when the user meant the pattern panel.
-      if (!isPointerInsideRef.current) return;
-      // Compare case-insensitively so the shortcuts still work with Caps Lock
-      // on (matching the undo/redo fix), which otherwise sends 'V'/'H'/… .
       const key = e.key.toLowerCase();
-      if (key === 'v') handleToolChange('select');
-      else if (key === 'h') handleToolChange('pan');
-      else if (key === 'c') handleToolChange('crop');
-      else if (key === 'm') handleToolChange('measure');
+      if (!hasToolModifier && (key === '+' || key === '=')) {
+        e.preventDefault();
+        vp.zoomIn();
+      } else if (!hasToolModifier && key === '-') {
+        e.preventDefault();
+        vp.zoomOut();
+      } else if (!hasToolModifier && e.shiftKey && e.code === 'Digit1') {
+        e.preventDefault();
+        vp.fitToView();
+      } else if (!hasToolModifier && e.shiftKey && e.code === 'Digit0') {
+        e.preventDefault();
+        vp.zoomToActualSize();
+      } else if (!hasToolModifier && key === 'v') handleToolChange('select');
+      else if (!hasToolModifier && key === 'h') handleToolChange('pan');
+      else if (!hasToolModifier && key === 'c') handleToolChange('crop');
+      else if (!hasToolModifier && key === 'm') handleToolChange('measure');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     function handleKeyUp(e: KeyboardEvent) {
       if (e.code === 'Space') setIsSpaceDown(false);
     }
+    function handleWindowBlur() {
+      setIsSpaceDown(false);
+    }
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleWindowBlur);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleWindowBlur);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTool]);
@@ -252,6 +390,39 @@ export function SheetPanel({
   const measure = useMeasure();
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const marqueeJustEndedRef = useRef(false);
+  const [moveSnapGuides, setMoveSnapGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
+
+  function handlePieceTransform(pieceId: string, transform: Partial<TextureTransform>, skipHistory = false) {
+    const targetX = transform.x;
+    const targetY = transform.y;
+    const isGroupMove = selectedPieceIds.length > 1 && targetX !== undefined && targetY !== undefined;
+    if (!isGroupMove) {
+      onTransformChange(pieceId, transform, skipHistory);
+      return;
+    }
+    if (!groupMoveStartRef.current) {
+      groupMoveStartRef.current = {
+        draggedId: pieceId,
+        transforms: new Map(
+          pieces
+            .filter(piece => selectedPieceIds.includes(piece.id))
+            .map(piece => [piece.id, { ...piece.transform }]),
+        ),
+      };
+    }
+    const gesture = groupMoveStartRef.current;
+    const draggedStart = gesture.transforms.get(gesture.draggedId);
+    if (!draggedStart) return;
+    if (targetX === undefined || targetY === undefined) return;
+    const dx = targetX - draggedStart.x;
+    const dy = targetY - draggedStart.y;
+    const updates = [...gesture.transforms.entries()].map(([id, start]) => ({
+      pieceId: id,
+      transform: { x: start.x + dx, y: start.y + dy },
+    }));
+    onTransformsChange(updates, skipHistory);
+    if (!skipHistory) groupMoveStartRef.current = null;
+  }
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
   useEffect(() => {
@@ -287,6 +458,35 @@ export function SheetPanel({
     return e.target.getType() === 'Stage' || (e.target as { attrs?: { id?: string } }).attrs?.id === 'bg';
   }
 
+  function captureInteractionPointer(e: KonvaEventObject<PointerEvent>) {
+    const target = e.evt.target;
+    if (!(target instanceof Element) || !('setPointerCapture' in target)) return;
+    try {
+      (target as Element & { setPointerCapture: (pointerId: number) => void }).setPointerCapture(e.evt.pointerId);
+      capturedPointerRef.current = { pointerId: e.evt.pointerId, target };
+    } catch {
+      // Pointer capture can fail if the browser has already ended the pointer.
+    }
+  }
+
+  function releaseInteractionPointer() {
+    const captured = capturedPointerRef.current;
+    capturedPointerRef.current = null;
+    if (!captured || !('releasePointerCapture' in captured.target)) return;
+    try {
+      (captured.target as Element & { releasePointerCapture: (pointerId: number) => void })
+        .releasePointerCapture(captured.pointerId);
+    } catch {
+      // The browser may have released capture automatically.
+    }
+  }
+
+  function beginRotation(piece: Piece, e: KonvaEventObject<PointerEvent>) {
+    captureInteractionPointer(e);
+    rotationValueRef.current = piece.transform.rotation;
+    setRotatingPieceId(piece.id);
+  }
+
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     const stage = e.target.getStage();
     const ptr = stage?.getPointerPosition();
@@ -299,20 +499,24 @@ export function SheetPanel({
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
     if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
+      captureInteractionPointer(e);
       vp.startPan(ptr);
       return;
     }
 
     if (activeTool === 'select' && isBackground(e)) {
       if (!IS_TOUCH) {
+        captureInteractionPointer(e);
         setMarqueeBox({ x1: x, y1: y, x2: x, y2: y });
       } else {
+        captureInteractionPointer(e);
         vp.startPan(ptr);
       }
       return;
     }
 
     if (!isBackground(e)) return;
+    captureInteractionPointer(e);
     vp.startPan(ptr);
   }
 
@@ -327,9 +531,13 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
-      const newRotation =
+      let newRotation =
         Math.atan2(y - rotatingPiece.transform.y, x - rotatingPiece.transform.x) + Math.PI / 2;
-      onUpdatePieceTransform(rotatingPieceId!, { rotation: newRotation }, true);
+      if (e.evt.shiftKey) {
+        newRotation = Math.round(newRotation / ROTATION_SNAP_RADIANS) * ROTATION_SNAP_RADIANS;
+      }
+      rotationValueRef.current = newRotation;
+      onTransformChange(rotatingPieceId!, { rotation: newRotation }, true);
       return;
     }
 
@@ -337,17 +545,21 @@ export function SheetPanel({
   }
 
   function handlePointerUp() {
+    releaseInteractionPointer();
+    setMoveSnapGuides({ x: null, y: null });
     if (marqueeBox) {
       const xmin = Math.min(marqueeBox.x1, marqueeBox.x2);
       const xmax = Math.max(marqueeBox.x1, marqueeBox.x2);
       const ymin = Math.min(marqueeBox.y1, marqueeBox.y2);
       const ymax = Math.max(marqueeBox.y1, marqueeBox.y2);
 
-      const hitIds: string[] = [];
-      pieces.forEach(p => {
-        const { x, y } = p.transform;
-        if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) hitIds.push(p.id);
-      });
+      const containsMode = marqueeBox.x2 >= marqueeBox.x1;
+      const hitIds = pieces.filter(piece => {
+        const bounds = getTransformedBounds(piece);
+        return containsMode
+          ? bounds.left >= xmin && bounds.right <= xmax && bounds.top >= ymin && bounds.bottom <= ymax
+          : bounds.right >= xmin && bounds.left <= xmax && bounds.bottom >= ymin && bounds.top <= ymax;
+      }).map(piece => piece.id);
 
       if (hitIds.length > 0) {
         hitIds.forEach((id, idx) => onSelectPiece(id, idx > 0));
@@ -363,23 +575,28 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
-      onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+      onTransformChange(
+        rotatingPieceId!,
+        { rotation: rotationValueRef.current ?? rotatingPiece.transform.rotation },
+        false,
+      );
     }
+    rotationValueRef.current = null;
     setRotatingPieceId(null);
     vp.endPan();
   }
 
   function handlePointerCancel() {
-    // A browser/system pointer-cancel (focus loss, touch-scroll takeover, OS
-    // popup) means no pointerup will arrive, so the captured gesture would
-    // otherwise stick "on". Abort the in-flight marquee without selecting,
-    // land any rotation-so-far in history like pointerup does, and end panning.
-    setMarqueeBox(null);
-    if (rotatingPiece) {
-      onUpdatePieceTransform(rotatingPieceId!, { rotation: rotatingPiece.transform.rotation }, false);
+    // A canceled rotation keeps the last visible angle and finalizes one history entry.
+    if (rotatingPieceId && rotationValueRef.current != null) {
+      onTransformChange(rotatingPieceId, { rotation: rotationValueRef.current }, false);
     }
+    setMarqueeBox(null);
+    setMoveSnapGuides({ x: null, y: null });
+    rotationValueRef.current = null;
     setRotatingPieceId(null);
     vp.endPan();
+    releaseInteractionPointer();
   }
 
   function handleStageClick(e: KonvaEventObject<MouseEvent>) {
@@ -453,6 +670,14 @@ export function SheetPanel({
     : 0;
   const isPanActive = activeTool === 'pan' || isSpaceDown;
   const containerCursor = rotatingPieceId ? 'grabbing' : isPanActive ? (vp.isPanning ? 'grabbing' : 'grab') : 'default';
+  const sheetSnapBounds: AxisAlignedBounds = {
+    left: sheet.crop.left,
+    right: sheetW - sheet.crop.right,
+    top: sheet.crop.top,
+    bottom: sheetH - sheet.crop.bottom,
+    centerX: (sheet.crop.left + sheetW - sheet.crop.right) / 2,
+    centerY: (sheet.crop.top + sheetH - sheet.crop.bottom) / 2,
+  };
 
   const TOOLS = useMemo(() => [
     {
@@ -515,7 +740,7 @@ export function SheetPanel({
       // streamed placements skip history.
       let historyRecorded = false;
       const skippedPieceIds = await packPiecesSmart(pieces, sheet, gapPx, allowRotations, (placement) => {
-        onUpdatePieceTransform(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, historyRecorded);
+        onTransformChange(placement.pieceId, { x: placement.x, y: placement.y, rotation: placement.rotation }, historyRecorded);
         historyRecorded = true;
       });
       // Pieces too big for the sheet stay where they were — the packer just
@@ -534,11 +759,14 @@ export function SheetPanel({
 
   return (
     <div
+      ref={panelRef}
       className="result-panel-inner"
       data-tutorial-panel="glass"
+      tabIndex={-1}
       style={{ display: 'flex', flex: 1, minHeight: 0 }}
-      onPointerEnter={() => { isPointerInsideRef.current = true; }}
-      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+      onPointerEnter={() => { panelHoveredRef.current = true; }}
+      onPointerLeave={() => { panelHoveredRef.current = false; }}
+      onPointerDownCapture={() => panelRef.current?.focus({ preventScroll: true })}
     >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
@@ -651,9 +879,31 @@ export function SheetPanel({
                   effectiveScale={es}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  onTransformChange={(t, skip) => onUpdatePieceTransform(piece.id, t, skip)}
+                  onTransformChange={(t, skip) => handlePieceTransform(piece.id, t, skip)}
+                  snapPieces={pieces}
+                  snapBounds={sheetSnapBounds}
+                  onSnapChange={setMoveSnapGuides}
                 />
               ))}
+
+              {moveSnapGuides.x != null && (
+                <Line
+                  points={[moveSnapGuides.x, sheetSnapBounds.top, moveSnapGuides.x, sheetSnapBounds.bottom]}
+                  stroke={CANVAS.amber}
+                  strokeWidth={1 / es}
+                  dash={[5 / es, 4 / es]}
+                  listening={false}
+                />
+              )}
+              {moveSnapGuides.y != null && (
+                <Line
+                  points={[sheetSnapBounds.left, moveSnapGuides.y, sheetSnapBounds.right, moveSnapGuides.y]}
+                  stroke={CANVAS.amber}
+                  strokeWidth={1 / es}
+                  dash={[5 / es, 4 / es]}
+                  listening={false}
+                />
+              )}
 
               {pieces.map(piece => {
                 if (!selectedPieceIds.includes(piece.id)) return null;
@@ -664,7 +914,7 @@ export function SheetPanel({
                     isSelected={true}
                     effectiveScale={es}
                     handleOnly
-                    onRotateStart={() => setRotatingPieceId(piece.id)}
+                    onRotateStart={(e) => beginRotation(piece, e)}
                   />
                 );
               })}
@@ -702,6 +952,18 @@ export function SheetPanel({
             )}
           </Layer>
         </Stage>
+        {showEmptyHint && (
+          <div className="empty-sheet-hint" role="status">
+            {t('emptySheetHint')}
+          </div>
+        )}
+        <ViewportControls
+          zoomPercent={vp.effectiveScale * 100}
+          onZoomIn={vp.zoomIn}
+          onZoomOut={vp.zoomOut}
+          onFit={vp.fitToView}
+          onActualSize={vp.zoomToActualSize}
+        />
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;

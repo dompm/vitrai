@@ -2,6 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 
 interface Dims { w: number; h: number; }
 
+const MIN_EFFECTIVE_SCALE = 0.01; // 1%
+const MAX_EFFECTIVE_SCALE = 32; // 3200%
+
+function clampZoom(value: number, displayScale: number) {
+  const safeDisplayScale = Math.max(displayScale, Number.EPSILON);
+  return Math.max(
+    MIN_EFFECTIVE_SCALE / safeDisplayScale,
+    Math.min(MAX_EFFECTIVE_SCALE / safeDisplayScale, value),
+  );
+}
+
 /**
  * Manages zoom, pan, and container measurement for a Konva panel.
  *
@@ -41,12 +52,83 @@ export function useViewport(imageW: number, imageH: number) {
   imageWRef.current = imageW;
   imageHRef.current = imageH;
 
+  function currentDisplayScale() {
+    const d = dimsRef.current;
+    const iw = imageWRef.current;
+    const ih = imageHRef.current;
+    return iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
+  }
+
+  /** Set zoom while keeping the image point under `anchor` stationary. */
+  function setZoomAround(nextZoom: number, anchor?: { x: number; y: number }) {
+    const d = dimsRef.current;
+    const point = anchor ?? { x: d.w / 2, y: d.h / 2 };
+    const ds = currentDisplayScale();
+    const previousZoom = zoomRef.current;
+    const previousPan = panRef.current;
+    const clampedZoom = clampZoom(nextZoom, ds);
+    const previousEffectiveScale = ds * previousZoom;
+    const nextEffectiveScale = ds * clampedZoom;
+
+    setZoom(clampedZoom);
+    if (previousEffectiveScale <= 0) return;
+    setPan({
+      x: point.x - (point.x - previousPan.x) * nextEffectiveScale / previousEffectiveScale,
+      y: point.y - (point.y - previousPan.y) * nextEffectiveScale / previousEffectiveScale,
+    });
+  }
+
+  function zoomIn() {
+    setZoomAround(zoomRef.current * 1.25);
+  }
+
+  function zoomOut() {
+    setZoomAround(zoomRef.current / 1.25);
+  }
+
+  /** Fit the full image in the viewport. */
+  function fitToView() {
+    const d = dimsRef.current;
+    const ds = currentDisplayScale();
+    setZoom(1);
+    setPan({
+      x: (d.w - imageWRef.current * ds) / 2,
+      y: (d.h - imageHRef.current * ds) / 2,
+    });
+  }
+
+  /** Show one image pixel as one screen pixel (the conventional 100% view). */
+  function zoomToActualSize() {
+    const ds = currentDisplayScale();
+    if (ds > 0) setZoomAround(1 / ds);
+  }
+
   // Container measurement
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(entries => {
       const { width, height } = entries[0].contentRect;
+      const previousDims = dimsRef.current;
+      const iw = imageWRef.current;
+      const ih = imageHRef.current;
+      const previousDisplayScale = iw > 0 && ih > 0
+        ? Math.min(previousDims.w / iw, previousDims.h / ih)
+        : 1;
+      const nextDisplayScale = iw > 0 && ih > 0 ? Math.min(width / iw, height / ih) : 1;
+      const previousEffectiveScale = previousDisplayScale * zoomRef.current;
+      const nextEffectiveScale = nextDisplayScale * zoomRef.current;
+      const previousPan = panRef.current;
+
+      // Preserve the image point at the viewport center when the panel resizes.
+      if (initializedRef.current && previousEffectiveScale > 0) {
+        const imageCenterX = (previousDims.w / 2 - previousPan.x) / previousEffectiveScale;
+        const imageCenterY = (previousDims.h / 2 - previousPan.y) / previousEffectiveScale;
+        setPan({
+          x: width / 2 - imageCenterX * nextEffectiveScale,
+          y: height / 2 - imageCenterY * nextEffectiveScale,
+        });
+      }
       setDims({ w: width, h: height });
     });
     ro.observe(el);
@@ -83,27 +165,13 @@ export function useViewport(imageW: number, imageH: number) {
     if (!el) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();
-      const iw = imageWRef.current;
-      const ih = imageHRef.current;
-      const d = dimsRef.current;
-      const ds = iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
-
       if (e.ctrlKey) {
         const rect = el.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
         const raw = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 400 : 1);
         const factor = Math.pow(0.996, raw);
-        const prev = zoomRef.current;
-        const prevPan = panRef.current;
-        const newZoom = Math.max(0.1, Math.min(20, prev * factor));
-        const oldEff = ds * prev;
-        const newEff = ds * newZoom;
-        setZoom(newZoom);
-        setPan({
-          x: mx - (mx - prevPan.x) * newEff / oldEff,
-          y: my - (my - prevPan.y) * newEff / oldEff,
-        });
+        setZoomAround(zoomRef.current * factor, { x: mx, y: my });
       } else {
         setPan(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
       }
@@ -163,7 +231,7 @@ export function useViewport(imageW: number, imageH: number) {
         const factor = newDist / lastDist;
         const prev = zoomRef.current;
         const prevPan = panRef.current;
-        const newZoom = Math.max(0.1, Math.min(20, prev * factor));
+        const newZoom = clampZoom(prev * factor, ds);
         const oldEff = ds * prev;
         const newEff = ds * newZoom;
         // Keep the image point that was under lastMid pinned to the new mid.
@@ -232,5 +300,10 @@ export function useViewport(imageW: number, imageH: number) {
     startPan,
     movePan,
     endPan,
+    setZoomAround,
+    zoomIn,
+    zoomOut,
+    fitToView,
+    zoomToActualSize,
   };
 }

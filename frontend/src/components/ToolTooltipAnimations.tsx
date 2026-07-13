@@ -512,7 +512,7 @@ export function PanAnimation() {
   );
 }
 
-export function PenAnimation() {
+export function PolygonAnimation() {
   const dur = '4s';
   const p1 = { x: 50, y: 75 };
   const p2 = { x: 110, y: 25 };
@@ -594,47 +594,250 @@ export function PenAnimation() {
   );
 }
 
+export function PenAnimation() {
+  const dur = '5s';
+  const path = 'M 42,76 C 55,30 82,20 110,31 C 140,42 158,52 178,76 C 145,96 76,96 42,76 Z';
+
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="transparent" />
+
+      {/* The intended contour stays visible while the Pen constructs it. */}
+      <path
+        d={path}
+        fill="rgba(192, 138, 31, 0.04)"
+        stroke="#8a8270"
+        strokeWidth="1.2"
+        strokeDasharray="3 3"
+      />
+
+      {/* The first segment starts straight, then visibly bows while the user
+          drags away from the top anchor to create direction handles. */}
+      <path
+        d="M 42,76 C 42,76 42,76 42,76"
+        fill="none"
+        stroke="#c08a1f"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      >
+        <animate
+          attributeName="d"
+          values="
+            M 42,76 C 42,76 42,76 42,76;
+            M 42,76 C 42,76 42,76 42,76;
+            M 42,76 C 65,61 87,46 110,31;
+            M 42,76 C 55,30 82,20 110,31;
+            M 42,76 C 55,30 82,20 110,31;
+            M 42,76 C 55,30 82,20 110,31;
+            M 42,76 C 55,30 82,20 110,31
+          "
+          keyTimes="0;0.14;0.28;0.42;0.56;0.66;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="opacity"
+          values="0;0;1;1;1;0;0"
+          keyTimes="0;0.14;0.28;0.42;0.56;0.66;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+      </path>
+
+      {/* The rest of the Bézier path draws on after the curve gesture. */}
+      <path
+        d={path}
+        pathLength="1"
+        fill="rgba(192, 138, 31, 0.12)"
+        stroke="#c08a1f"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        strokeDasharray="1"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          values="1;1;1;0.76;0.42;0;0"
+          keyTimes="0;0.16;0.42;0.48;0.66;0.84;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="fill-opacity"
+          values="0;0;0;0;0;1;1"
+          keyTimes="0;0.16;0.34;0.48;0.66;0.84;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+      </path>
+
+      {/* Direction handles at the smooth top anchor. */}
+      <g opacity="0">
+        <line x1="110" y1="31" x2="110" y2="31" stroke="#64748b" strokeWidth="1.2">
+          <animate attributeName="x1" values="110;110;110;80;80;80;110" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="y1" values="31;31;31;20;20;20;31" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="x2" values="110;110;110;140;140;140;110" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="y2" values="31;31;31;42;42;42;31" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+        </line>
+        <circle cx="110" cy="31" r="2.5" fill="white" stroke="#64748b" strokeWidth="1.2">
+          <animate attributeName="cx" values="110;110;110;80;80;80;110" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="cy" values="31;31;31;20;20;20;31" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+        </circle>
+        <circle cx="110" cy="31" r="2.5" fill="white" stroke="#64748b" strokeWidth="1.2">
+          <animate attributeName="cx" values="110;110;110;140;140;140;110" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+          <animate attributeName="cy" values="31;31;31;42;42;42;31" keyTimes="0;0.25;0.29;0.42;0.60;0.76;1" dur={dur} repeatCount="indefinite" />
+        </circle>
+        <animate
+          attributeName="opacity"
+          values="0;0;1;1;1;0;0"
+          keyTimes="0;0.25;0.29;0.60;0.72;0.84;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+      </g>
+
+      {/* Anchors appear as they are placed; the smooth anchor is highlighted. */}
+      <circle cx="42" cy="76" r="3" fill="white" stroke="#c08a1f" strokeWidth="1.2">
+        <animate attributeName="opacity" values="0;1;1;1;1;1;1" keyTimes="0;0.14;0.25;0.48;0.66;0.84;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+      <circle cx="110" cy="31" r="3.5" fill="#f59e0b" stroke="#c08a1f" strokeWidth="1.2">
+        <animate attributeName="opacity" values="0;0;1;1;1;1;1" keyTimes="0;0.18;0.29;0.48;0.66;0.84;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+      <circle cx="178" cy="76" r="3" fill="white" stroke="#c08a1f" strokeWidth="1.2">
+        <animate attributeName="opacity" values="0;0;0;0;1;1;1" keyTimes="0;0.18;0.29;0.48;0.62;0.84;1" dur={dur} repeatCount="indefinite" />
+      </circle>
+
+      {/* Pen nib: click first, drag a smooth anchor, place the last point, close. */}
+      <g transform="translate(194,88)">
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="194,88;42,76;110,31;140,42;178,76;42,76;194,88;194,88"
+          keyTimes="0;0.14;0.28;0.42;0.62;0.82;0.94;1"
+          dur={dur}
+          repeatCount="indefinite"
+          calcMode="spline"
+          keySplines="0.4,0,0.2,1;0.4,0,0.2,1;0.2,0,0.2,1;0.4,0,0.2,1;0.4,0,0.2,1;0.4,0,0.2,1;0,0,1,1"
+        />
+        <path d="M0,0 C0.8,2.4 1.6,4 3.6,6 L4.8,4.8 C2.8,2.8 1.2,2 0,0" fill="#1e293b" stroke="#1e293b" strokeWidth="0.5" />
+        <path d="M3.6,6 L8.8,11.2 L11.2,8.8 L6,3.6 Z" fill="white" stroke="#1e293b" strokeWidth="0.8" />
+        <line x1="0" y1="0" x2="2.8" y2="2.8" stroke="#1e293b" strokeWidth="0.8" />
+        <circle cx="2.8" cy="2.8" r="0.5" fill="#1e293b" />
+      </g>
+    </svg>
+  );
+}
+
+export function SnappingAnimation() {
+  const dur = '3.8s';
+  const keyTimes = '0;0.14;0.54;0.62;0.84;1';
+  const xValues = '52;52;138;150;150;52';
+  const yValues = '82;82;39;30;30;82';
+
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
+      <rect width="220" height="110" fill="transparent" />
+
+      {/* A familiar closed shape provides an unambiguous corner target. */}
+      <rect
+        x="150"
+        y="30"
+        width="42"
+        height="52"
+        rx="3"
+        fill="rgba(138, 130, 112, 0.05)"
+        stroke="#8a8270"
+        strokeWidth="1.5"
+      />
+      <circle cx="150" cy="30" r="3" fill="white" stroke="#8a8270" strokeWidth="1.2" />
+
+      {/* Alignment guides appear only when the moving point locks on. */}
+      <g opacity="0">
+        <line x1="150" y1="10" x2="150" y2="99" stroke="#c08a1f" strokeWidth="1" strokeDasharray="3 3" />
+        <line x1="24" y1="30" x2="202" y2="30" stroke="#c08a1f" strokeWidth="1" strokeDasharray="3 3" />
+        <animate attributeName="opacity" values="0;0;0;1;1;0" keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+      </g>
+
+      {/* The segment follows freely, then jumps the last few pixels to target. */}
+      <line x1="31" y1="88" x2="52" y2="82" stroke="#c08a1f" strokeWidth="2.2" strokeLinecap="round">
+        <animate attributeName="x2" values={xValues} keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+        <animate attributeName="y2" values={yValues} keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+      </line>
+      <circle cx="52" cy="82" r="3.5" fill="#f59e0b" stroke="#c08a1f" strokeWidth="1.2">
+        <animate attributeName="cx" values={xValues} keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+        <animate attributeName="cy" values={yValues} keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+      </circle>
+
+      {/* A quick pulse makes the moment of acquisition unmistakable. */}
+      <circle cx="150" cy="30" r="5" fill="none" stroke="#c08a1f" strokeWidth="1.5" opacity="0">
+        <animate attributeName="r" values="5;5;5;5;13;13" keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;0;0;1;0;0" keyTimes={keyTimes} dur={dur} repeatCount="indefinite" />
+      </circle>
+
+      {/* Cursor travels with the unsnapped point and settles on the target. */}
+      <g transform="translate(52,82)">
+        <animateTransform
+          attributeName="transform"
+          type="translate"
+          values="52,82;52,82;138,39;150,30;150,30;52,82"
+          keyTimes={keyTimes}
+          dur={dur}
+          repeatCount="indefinite"
+        />
+        <path d="M1 1v14l4-4 3.2 6.2 2.5-1.3-3.2-6H13z" fill="#1e293b" stroke="white" strokeWidth="0.8" strokeLinejoin="round" />
+      </g>
+    </svg>
+  );
+}
+
 export function PencilAnimation() {
   const dur = '3s';
+  const freehandPath = 'M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75';
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 110" overflow="hidden">
       <rect width="220" height="110" fill="transparent" />
       
       {/* Target closed curved path */}
-      <path d="M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75" fill="rgba(192, 138, 31, 0.04)" stroke="#8a8270" strokeWidth="1.2" strokeDasharray="3 3" />
+      <path d={freehandPath} fill="rgba(192, 138, 31, 0.04)" stroke="#8a8270" strokeWidth="1.2" strokeDasharray="3 3" />
       
-      {/* Growing path representing freehand draw */}
-      <path d="" fill="none" stroke="#c08a1f" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round">
-        <animate attributeName="d"
-          values="
-            M 60,75;
-            M 60,75 C 60,75 60,75 60,75;
-            M 60,75 C 60,30 110,30 110,35;
-            M 60,75 C 60,30 160,30 160,75;
-            M 60,75 C 60,30 160,30 160,75 C 160,90 110,95 110,95;
-            M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75;
-            M 60,75 C 60,30 160,30 160,75 C 160,100 60,100 60,75
-          "
-          keyTimes="0; 0.15; 0.35; 0.55; 0.70; 0.85; 1"
-          dur={dur} repeatCount="indefinite" />
+      {/* Reveal one immutable path. Already-drawn ink never morphs behind the pencil. */}
+      <path
+        d={freehandPath}
+        pathLength="1"
+        fill="rgba(192, 138, 31, 0.12)"
+        stroke="#c08a1f"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        strokeDasharray="1"
+        strokeDashoffset="1"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          values="1;1;0;0"
+          keyTimes="0;0.15;0.85;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
+        <animate
+          attributeName="fill-opacity"
+          values="0;0;0;1"
+          keyTimes="0;0.15;0.85;1"
+          dur={dur}
+          repeatCount="indefinite"
+        />
       </path>
       
-      {/* Pencil cursor moving along the path */}
+      {/* The pencil follows the exact same path used by the revealed stroke. */}
       <g>
-        <animateTransform
-          attributeName="transform"
-          type="translate"
-          values="
-            60,75;
-            60,75;
-            110,35;
-            160,75;
-            110,95;
-            60,75;
-            60,75
-          "
-          keyTimes="0; 0.15; 0.35; 0.55; 0.70; 0.85; 1"
-          dur={dur} repeatCount="indefinite" />
+        <animateMotion
+          path={freehandPath}
+          keyPoints="0;0;1;1"
+          keyTimes="0;0.15;0.85;1"
+          calcMode="linear"
+          dur={dur}
+          repeatCount="indefinite"
+        />
 
         {/* Pencil body */}
         <g transform="translate(-2, -18) rotate(45 0 16)">

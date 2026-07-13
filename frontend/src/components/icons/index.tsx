@@ -79,6 +79,14 @@ export const IconEye = (p: IconProps) => (
   </Svg>
 );
 
+// A simple geometric outline stays legible at toolbar size and distinguishes
+// the straight-edged polygon tool from the nib-shaped Pen tool.
+export const IconPolygon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3 21 10l-3.5 11h-11L3 10z" />
+  </Svg>
+);
+
 export const IconUndo = (p: IconProps) => (
   <Svg {...p}>
     <path d="M4 8v6h6" />

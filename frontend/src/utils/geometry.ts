@@ -1,32 +1,174 @@
 import polygonClipping from 'polygon-clipping';
 import type { CurvePoint } from '../types';
 
-const CURVE_SEGMENTS = 8; // samples per curved edge — enough for smooth visuals
+export type Point = [number, number];
+
+const DEFAULT_CURVE_FLATNESS = 0.5;
+const MAX_CURVE_SUBDIVISIONS = 10;
+
+export interface CubicBezier {
+  start: Point;
+  ctrl1: Point;
+  ctrl2: Point;
+  end: Point;
+}
+
+/** Cubic entries always carry both an explicit kind and a second control point. */
+export function isCubicCurvePoint(curve: CurvePoint): curve is CurvePoint & {
+  kind: 'cubic';
+  ctrl2: Point;
+} {
+  return curve.kind === 'cubic' && Array.isArray(curve.ctrl2);
+}
+
+export function makeCubicCurvePoint(
+  edgeIdx: number,
+  ctrl1: Point,
+  ctrl2: Point,
+): CurvePoint {
+  return { edgeIdx, kind: 'cubic', ctrl: ctrl1, ctrl2 };
+}
+
+export function evaluateQuadraticBezier(
+  start: Point,
+  ctrl: Point,
+  end: Point,
+  t: number,
+): Point {
+  const mt = 1 - t;
+  return [
+    mt * mt * start[0] + 2 * mt * t * ctrl[0] + t * t * end[0],
+    mt * mt * start[1] + 2 * mt * t * ctrl[1] + t * t * end[1],
+  ];
+}
+
+export function evaluateCubicBezier(
+  start: Point,
+  ctrl1: Point,
+  ctrl2: Point,
+  end: Point,
+  t: number,
+): Point {
+  const mt = 1 - t;
+  const mt2 = mt * mt;
+  const t2 = t * t;
+  return [
+    mt2 * mt * start[0] + 3 * mt2 * t * ctrl1[0] + 3 * mt * t2 * ctrl2[0] + t2 * t * end[0],
+    mt2 * mt * start[1] + 3 * mt2 * t * ctrl1[1] + 3 * mt * t2 * ctrl2[1] + t2 * t * end[1],
+  ];
+}
+
+/** Convert a quadratic edge to the exactly equivalent cubic controls. */
+export function quadraticToCubicControls(start: Point, ctrl: Point, end: Point): [Point, Point] {
+  return [
+    [start[0] + (2 / 3) * (ctrl[0] - start[0]), start[1] + (2 / 3) * (ctrl[1] - start[1])],
+    [end[0] + (2 / 3) * (ctrl[0] - end[0]), end[1] + (2 / 3) * (ctrl[1] - end[1])],
+  ];
+}
+
+/** Return cubic controls for either a legacy quadratic or a cubic curve entry. */
+export function curveToCubicControls(
+  start: Point,
+  end: Point,
+  curve: CurvePoint,
+): [Point, Point] {
+  return isCubicCurvePoint(curve)
+    ? [curve.ctrl, curve.ctrl2]
+    : quadraticToCubicControls(start, curve.ctrl, end);
+}
+
+/** Evaluate either a legacy quadratic or a cubic edge at parameter t. */
+export function evaluateCurve(
+  start: Point,
+  end: Point,
+  curve: CurvePoint,
+  t: number,
+): Point {
+  const clampedT = Math.max(0, Math.min(1, t));
+  return isCubicCurvePoint(curve)
+    ? evaluateCubicBezier(start, curve.ctrl, curve.ctrl2, end, clampedT)
+    : evaluateQuadraticBezier(start, curve.ctrl, end, clampedT);
+}
+
+function lerpPoint(a: Point, b: Point, t: number): Point {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+}
+
+/** Split a cubic at t with de Casteljau's algorithm (useful for inserting nodes). */
+export function splitCubicBezier(curve: CubicBezier, t: number): [CubicBezier, CubicBezier] {
+  const clampedT = Math.max(0, Math.min(1, t));
+  const a = lerpPoint(curve.start, curve.ctrl1, clampedT);
+  const b = lerpPoint(curve.ctrl1, curve.ctrl2, clampedT);
+  const c = lerpPoint(curve.ctrl2, curve.end, clampedT);
+  const d = lerpPoint(a, b, clampedT);
+  const e = lerpPoint(b, c, clampedT);
+  const split = lerpPoint(d, e, clampedT);
+  return [
+    { start: curve.start, ctrl1: a, ctrl2: d, end: split },
+    { start: split, ctrl1: e, ctrl2: c, end: curve.end },
+  ];
+}
+
+/** Reflect a handle around its anchor, the conventional smooth-node operation. */
+export function reflectHandle(anchor: Point, handle: Point): Point {
+  return [2 * anchor[0] - handle[0], 2 * anchor[1] - handle[1]];
+}
+
+/** Keep a handle collinear with a partner while preserving its own length. */
+export function alignHandle(anchor: Point, movedHandle: Point, handleLength: number): Point {
+  const dx = anchor[0] - movedHandle[0];
+  const dy = anchor[1] - movedHandle[1];
+  const length = Math.hypot(dx, dy);
+  if (length === 0 || handleLength === 0) return [anchor[0], anchor[1]];
+  const scale = handleLength / length;
+  return [anchor[0] + dx * scale, anchor[1] + dy * scale];
+}
+
+function pointLineDistance(point: Point, start: Point, end: Point): number {
+  const dx = end[0] - start[0];
+  const dy = end[1] - start[1];
+  const length = Math.hypot(dx, dy);
+  if (length === 0) return Math.hypot(point[0] - start[0], point[1] - start[1]);
+  return Math.abs(dy * point[0] - dx * point[1] + end[0] * start[1] - end[1] * start[0]) / length;
+}
+
+function appendFlattenedCubic(curve: CubicBezier, result: Point[], flatness: number, depth = 0): void {
+  const flatEnough = Math.max(
+    pointLineDistance(curve.ctrl1, curve.start, curve.end),
+    pointLineDistance(curve.ctrl2, curve.start, curve.end),
+  ) <= flatness;
+  if (flatEnough || depth >= MAX_CURVE_SUBDIVISIONS) {
+    result.push(curve.end);
+    return;
+  }
+  const [left, right] = splitCubicBezier(curve, 0.5);
+  appendFlattenedCubic(left, result, flatness, depth + 1);
+  appendFlattenedCubic(right, result, flatness, depth + 1);
+}
 
 /** Convert clean polygon + parametric curve metadata into a dense display polygon. */
 export function flattenCurves(
-  polygon: [number, number][],
+  polygon: Point[],
   curvePoints?: CurvePoint[],
-): [number, number][] {
-  if (!curvePoints || curvePoints.length === 0) return polygon;
+  flatness = DEFAULT_CURVE_FLATNESS,
+): Point[] {
+  if (!curvePoints || curvePoints.length === 0 || polygon.length === 0) return polygon;
   const n = polygon.length;
-  const curveMap = new Map(curvePoints.map(cp => [cp.edgeIdx, cp.ctrl]));
-  const result: [number, number][] = [];
+  const curveMap = new Map(curvePoints.map(cp => [cp.edgeIdx, cp]));
+  const result: Point[] = [];
+  const safeFlatness = Number.isFinite(flatness) && flatness > 0 ? flatness : DEFAULT_CURVE_FLATNESS;
   for (let i = 0; i < n; i++) {
     const A = polygon[i];
     const B = polygon[(i + 1) % n];
     result.push(A);
-    const ctrl = curveMap.get(i);
-    if (ctrl) {
-      for (let s = 1; s < CURVE_SEGMENTS; s++) {
-        const t = s / CURVE_SEGMENTS;
-        const mt = 1 - t;
-        result.push([
-          mt * mt * A[0] + 2 * t * mt * ctrl[0] + t * t * B[0],
-          mt * mt * A[1] + 2 * t * mt * ctrl[1] + t * t * B[1],
-        ]);
-      }
-    }
+    const curve = curveMap.get(i);
+    if (!curve) continue;
+
+    const [ctrl1, ctrl2] = curveToCubicControls(A, B, curve);
+    const flattened: Point[] = [];
+    appendFlattenedCubic({ start: A, ctrl1, ctrl2, end: B }, flattened, safeFlatness);
+    // The next polygon iteration adds B, so omit it here to avoid duplicates.
+    result.push(...flattened.slice(0, -1));
   }
   return result;
 }
@@ -293,5 +435,3 @@ export function findMatchedGroundTruth(
   }
   return null;
 }
-
-
