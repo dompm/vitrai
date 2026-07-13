@@ -16,8 +16,8 @@ import type { BoundingBox, GlassSheet, CurvePoint } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
-import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
-import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
+import { STORAGE_KEY, TRACK_STEPS } from './components/Tutorial/types';
+import type { StepId, PersistedTutorialState, TrackId } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
 import { parseProject } from './storage/projectSchema';
@@ -355,7 +355,9 @@ export function App() {
   }, []);
 
   const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
+  const [tutorialActiveTrackId, setTutorialActiveTrackId] = useState<TrackId | null>(null);
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
+  const [isPacking, setIsPacking] = useState(false);
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
@@ -378,6 +380,7 @@ export function App() {
         const parsed = JSON.parse(saved) as PersistedTutorialState;
         if (!parsed.completed && parsed.step) {
           setTutorialStep(parsed.step);
+          setTutorialActiveTrackId(parsed.activeTrackId ?? null);
           setTutorialPieceId(parsed.pieceId);
         }
       } else {
@@ -394,15 +397,156 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
-  const startTutorialTour = () => {
+  const startTutorialTour = async (trackId?: TrackId) => {
     preTutorialProjectRef.current = project.name;
-    loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial' });
     setPatternTool('select');
     setSheetTool('select');
-    setTutorialStep('calibrate-pattern');
+    setIsSymmetryEnabled(false);
+    if (!trackId) {
+      setTutorialStep('welcome');
+      setTutorialActiveTrackId(null);
+      setTutorialPieceId(null);
+      return;
+    }
+    setTutorialActiveTrackId(trackId);
+
+    // Setup initial project state based on trackId
+    if (trackId === 'ai-tracing') {
+      await loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial' });
+      setTutorialStep('calibrate-pattern');
+    } else if (trackId === 'vector-drawing') {
+      // Blank canvas project
+      await loadProjectData({
+        version: DEFAULT_PROJECT.version,
+        name: 'Tutorial',
+        patternImageUrl: '',
+        patternWidth: 1000,
+        patternHeight: 1000,
+        patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+        patternScale: {
+          pxPerUnit: 100,
+          unit: 'in',
+          line: { x1: 0, y1: 500, x2: 1000, y2: 500 },
+        },
+        pieces: [],
+        sheets: [
+          {
+            id: 'default-sheet-1',
+            label: 'Default Glass (Green)',
+            imageUrl: '/assets/glass/green.jpg',
+            crop: { top: 0, left: 0, bottom: 0, right: 0 },
+            scale: null,
+            swatch: '#a5d6a7'
+          },
+          {
+            id: 'default-sheet-2',
+            label: 'Cobalt Blue',
+            imageUrl: '/assets/glass/blue.jpg',
+            crop: { top: 0, left: 0, bottom: 0, right: 0 },
+            scale: null,
+            swatch: '#1e88e5'
+          }
+        ]
+      });
+      setTutorialStep('vector-blank-canvas');
+    } else if (trackId === 'lamp-creator') {
+      // 3D Lamp Creator template
+      await loadProjectData({
+        version: DEFAULT_PROJECT.version,
+        name: 'Tutorial',
+        projectType: 'lamp',
+        lampConfig: {
+          facetCount: 6,
+          profilePoints: [
+            { r: 50, y: 0 },
+            { r: 100, y: 80 },
+            { r: 100, y: 140 },
+          ],
+          activeTierIndex: 0,
+        },
+        patternImageUrl: '',
+        patternWidth: 1000,
+        patternHeight: 1000,
+        patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+        patternScale: {
+          pxPerUnit: 10,
+          unit: 'in',
+          line: { x1: 0, y1: 0, x2: 100, y2: 0 }
+        },
+        pieces: [],
+        sheets: [
+          {
+            id: 'default-sheet-1',
+            label: 'Cobalt Blue Glass Sheet',
+            imageUrl: '/assets/glass/blue.jpg',
+            crop: { top: 0, left: 0, bottom: 0, right: 0 },
+            scale: null,
+            swatch: '#1e88e5'
+          }
+        ]
+      });
+      setTutorialStep('lamp-profile-intro');
+    } else if (trackId === 'fabrication') {
+      // Fabrication layout and nesting template
+      await loadProjectData({
+        version: DEFAULT_PROJECT.version,
+        name: 'Tutorial',
+        patternImageUrl: '',
+        patternWidth: 1000,
+        patternHeight: 1000,
+        patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+        patternScale: {
+          pxPerUnit: 10,
+          unit: 'in',
+          line: { x1: 0, y1: 0, x2: 100, y2: 0 }
+        },
+        pieces: [
+          {
+            id: 'p1',
+            label: 'Petal',
+            polygon: [[80, 80], [145, 55], [205, 95], [175, 190], [105, 205], [65, 145]],
+            glassSheetId: 'sheet-1',
+            transform: { x: 500, y: 180, rotation: 0.35, scale: 1 }
+          },
+          {
+            id: 'p2',
+            label: 'Leaf',
+            polygon: [[260, 80], [350, 115], [390, 205], [315, 235], [245, 175]],
+            glassSheetId: 'sheet-1',
+            transform: { x: 180, y: 430, rotation: -0.5, scale: 1 }
+          },
+          {
+            id: 'p3',
+            label: 'Corner',
+            polygon: [[430, 80], [560, 80], [560, 135], [500, 135], [500, 230], [430, 230]],
+            glassSheetId: 'sheet-1',
+            transform: { x: 600, y: 430, rotation: 0.2, scale: 1 }
+          }
+        ],
+        sheets: [
+          {
+            id: 'sheet-1',
+            label: 'Cobalt Blue Glass Sheet',
+            imageUrl: '/assets/glass/blue.jpg',
+            crop: { top: 0, left: 0, bottom: 0, right: 0 },
+            scale: {
+              pxPerUnit: 10,
+              unit: 'in',
+              line: { x1: 0, y1: 0, x2: 100, y2: 0 }
+            },
+            swatch: '#1e88e5'
+          }
+        ]
+      });
+      setTutorialStep('fab-smart-pack');
+    }
+
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
-      step: 'calibrate-pattern',
+      step: trackId === 'ai-tracing' ? 'calibrate-pattern' :
+            trackId === 'vector-drawing' ? 'vector-blank-canvas' :
+            trackId === 'lamp-creator' ? 'lamp-profile-intro' : 'fab-smart-pack',
+      activeTrackId: trackId,
       completed: false,
       pieceId: null,
     };
@@ -411,9 +555,11 @@ export function App() {
 
   const skipTutorial = async () => {
     setTutorialStep(null);
+    setTutorialActiveTrackId(null);
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
       step: null,
+      activeTrackId: null,
       completed: true,
       pieceId: null,
     };
@@ -428,9 +574,11 @@ export function App() {
 
   const completeTutorial = () => {
     setTutorialStep(null);
+    setTutorialActiveTrackId(null);
     setTutorialPieceId(null);
     const state: PersistedTutorialState = {
       step: null,
+      activeTrackId: null,
       completed: true,
       pieceId: null,
     };
@@ -438,15 +586,19 @@ export function App() {
   };
 
   const advanceTutorial = () => {
-    if (!tutorialStep) return;
-    const currentIndex = STEP_ORDER.indexOf(tutorialStep);
-    const nextStep = currentIndex >= 0 && currentIndex < STEP_ORDER.length - 1
-      ? STEP_ORDER[currentIndex + 1]
+    if (!tutorialStep || !tutorialActiveTrackId) return;
+    const trackSteps = TRACK_STEPS[tutorialActiveTrackId];
+    if (!trackSteps) return;
+
+    const currentIndex = trackSteps.indexOf(tutorialStep);
+    const nextStep = currentIndex >= 0 && currentIndex < trackSteps.length - 1
+      ? trackSteps[currentIndex + 1]
       : null;
 
     setTutorialStep(nextStep);
     const state: PersistedTutorialState = {
       step: nextStep,
+      activeTrackId: nextStep === null ? null : tutorialActiveTrackId,
       completed: nextStep === null,
       pieceId: nextStep === null ? null : tutorialPieceId,
     };
@@ -457,6 +609,7 @@ export function App() {
     setTutorialPieceId(id);
     const state: PersistedTutorialState = {
       step: tutorialStep,
+      activeTrackId: tutorialActiveTrackId,
       completed: false,
       pieceId: id,
     };
@@ -1241,6 +1394,7 @@ export function App() {
             onClick={() => isPrintReady ? handlePrint() : undefined}
             title={isPrintReady ? t('printPrimaryTooltip') : printNotReadyReason}
             aria-disabled={!isPrintReady}
+            data-tutorial-target="print-button"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M6 9V3h12v6" />
@@ -1328,7 +1482,7 @@ export function App() {
       <div className="panel panel-right">
         {isLamp && (
           <>
-            <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
+            <div data-tutorial-target="lamp-3d-preview" style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
               <Lamp3DPreview
                 project={project}
                 selectedPieceIds={selectedPieceIds}
@@ -1421,6 +1575,7 @@ export function App() {
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
+            onPackingChange={setIsPacking}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1597,6 +1752,7 @@ export function App() {
           isFirstTime={lampProfileDialog.isFirstTime}
           onCancel={() => setLampProfileDialog(null)}
           onUpdatePatternScale={updatePatternScale}
+          hasTutorialBar={!!tutorialStep}
           onConfirm={config => {
             updateLampConfig(config);
             setLampProfileDialog(null);
@@ -1606,6 +1762,7 @@ export function App() {
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />
       <Tutorial
         step={tutorialStep}
+        activeTrackId={tutorialActiveTrackId}
         pieceId={tutorialPieceId}
         project={project}
         selectedPieceIds={selectedPieceIds}
@@ -1622,6 +1779,9 @@ export function App() {
         onComplete={completeTutorial}
         isEncoding={!!project.patternImageUrl && patternImageId === null}
         downloadProgress={downloadProgress}
+        isLampProfileOpen={lampProfileDialog !== null}
+        isSymmetryEnabled={isSymmetryEnabled}
+        isPacking={isPacking}
       />
   </div>
   );

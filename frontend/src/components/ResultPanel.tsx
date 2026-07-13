@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText, Arrow } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
@@ -1313,8 +1313,7 @@ export function ResultPanel({
 
   useEffect(() => {
     const isFirstPending = tutorialStep === 'cut-first-piece' && project.pieces.length === 0;
-    const isSecondPending = tutorialStep === 'cut-second-piece' && project.pieces.length <= 1;
-    if (!isFirstPending && !isSecondPending) return;
+    if (!isFirstPending) return;
     let animId: number;
     const tick = () => {
       setDashOffset(prev => (prev + 1.5) % 40);
@@ -1324,7 +1323,7 @@ export function ResultPanel({
     return () => cancelAnimationFrame(animId);
   }, [tutorialStep, project.pieces.length]);
   
-  const [patternImg] = useImage(project.patternImageUrl);
+  const [patternImg, patternImgStatus] = useImage(project.patternImageUrl);
   const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
   const measure = useMeasure();
 
@@ -1865,6 +1864,7 @@ export function ResultPanel({
             className={`tool-btn solder-tool-btn ${isSolderPopoverOpen ? 'active' : ''}`}
             onClick={() => setIsSolderPopoverOpen(o => !o)}
             aria-label={t('solderThicknessTooltip')}
+            data-tutorial-target="solder-settings"
           >
             {/* Custom line thickness stack icon */}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1941,6 +1941,7 @@ export function ResultPanel({
                 className={`tool-btn ${isSymmetryEnabled ? 'active' : ''}`}
                 onClick={() => onToggleSymmetry(!isSymmetryEnabled)}
                 aria-label={t('lampSymmetryTooltip')}
+                data-tutorial-target="lamp-symmetry-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="3 2" />
@@ -1965,6 +1966,7 @@ export function ResultPanel({
                 className="tool-btn"
                 onClick={onOpenLampProfile}
                 aria-label={t('lampProfileButtonTooltip')}
+                data-tutorial-target="lamp-profile-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <ellipse cx="12" cy="5" rx="6" ry="2" />
@@ -1988,6 +1990,12 @@ export function ResultPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
+        {project.patternImageUrl && patternImgStatus === 'loading' && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(20, 18, 14, 0.45)', zIndex: 10, gap: '12px' }}>
+            <div className="spinner-tiny" style={{ width: 32, height: 32 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-bright)' }}>{t('loadingImage')}</span>
+          </div>
+        )}
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div style={{ maxWidth: 800 }}>
@@ -2406,6 +2414,46 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
+                  {tutorialStep === 'vector-draw-shape' && (
+                    <>
+                      <Line
+                        points={[300, 300, 700, 300, 500, 700, 300, 300]}
+                        stroke="#fbbf24"
+                        strokeWidth={2 / es}
+                        dash={[6 / es, 4 / es]}
+                        listening={false}
+                      />
+                      <Circle x={300} y={300} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={296} y={294} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={700} y={300} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={696} y={294} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={500} y={700} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={496} y={694} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                    </>
+                  )}
+                  {tutorialStep === 'vector-curve-edge' && (
+                    <>
+                      <Line
+                        points={[300, 300, 300, 500, 500, 700]}
+                        stroke="#fbbf24"
+                        strokeWidth={2 / es}
+                        dash={[6 / es, 4 / es]}
+                        tension={0.5}
+                        listening={false}
+                      />
+                      <Arrow
+                        points={[400, 500, 320, 500]}
+                        stroke="#10b981"
+                        strokeWidth={3 / es}
+                        fill="#10b981"
+                        pointerLength={10 / es}
+                        pointerWidth={10 / es}
+                        listening={false}
+                      />
+                    </>
+                  )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
                     <Rect
                       x={924.124254866509}
@@ -2420,20 +2468,7 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
-                  {tutorialStep === 'cut-second-piece' && project.pieces.length <= 1 && (
-                    <Rect
-                      x={364.7371555449281}
-                      y={1249.5130966562972}
-                      width={1264.3137687154938 - 364.7371555449281}
-                      height={2725.2637575643917 - 1249.5130966562972}
-                      stroke="#fbbf24"
-                      strokeWidth={3 / es}
-                      dash={[10 / es, 6 / es]}
-                      dashOffset={dashOffset}
-                      fill="rgba(251, 191, 36, 0.05)"
-                      listening={false}
-                    />
-                  )}
+
                   {(() => {
                     const lastId = selectedPieceIds[selectedPieceIds.length - 1];
                     const piece = project.pieces.find(p => p.id === lastId);
