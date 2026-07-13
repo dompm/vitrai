@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
@@ -54,6 +54,10 @@ export function Tutorial({
   // Initial glass sheet at the start of step 4, to detect "changed".
   const initialSheetRef = useRef<string | null>(null);
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tutorial ground truth is deliberately approximate. Remember when the user
+  // confirms that a visually good contour is acceptable so the bleed heuristic
+  // cannot send that piece back through refinement.
+  const acceptedPieceIdsRef = useRef(new Set<string>());
   const [hasSeenLoadingDialog, setHasSeenLoadingDialog] = useState(false);
   const [etaSeconds, setEtaSeconds] = useState<number | null>(null);
   const progressHistoryRef = useRef<{ time: number; fraction: number }[]>([]);
@@ -248,6 +252,7 @@ export function Tutorial({
     if (project.pieces.length > 0) {
       // Find if any leaf piece is bad (bleed > 5% or matches nothing)
       const badPiece = project.pieces.find(p => {
+        if (acceptedPieceIdsRef.current.has(p.id)) return false;
         const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
         if (!matchedGt) return true; // matches nothing = bad
         const bleed = computeBleedRatio(p.polygon, matchedGt);
@@ -272,6 +277,8 @@ export function Tutorial({
     let isTrackedPieceClean = false;
     if (!piece) {
       isTrackedPieceClean = true;
+    } else if (acceptedPieceIdsRef.current.has(piece.id)) {
+      isTrackedPieceClean = true;
     } else {
       const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
       if (matchedGt) {
@@ -284,6 +291,7 @@ export function Tutorial({
 
     if (isTrackedPieceClean) {
       const otherBad = project.pieces.find(p => {
+        if (acceptedPieceIdsRef.current.has(p.id)) return false;
         const matchedGt = findMatchedGroundTruth(p.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
         if (!matchedGt) return true;
         const bleed = computeBleedRatio(p.polygon, matchedGt);
@@ -307,10 +315,21 @@ export function Tutorial({
 
   const activeConfig = ANCHORED_STEPS.includes(step) ? STEPS[step as AnchoredStepId] : null;
 
+  const refinementBody = (i18nKey: 'tutorialStep4Body' | 'tutorialStep8Body' | 'tutorialStep10Body') => (
+    <Trans
+      i18nKey={i18nKey}
+      components={{
+        remove: <span className="tutorial-inline-tool tutorial-inline-tool--remove" />,
+        add: <span className="tutorial-inline-tool tutorial-inline-tool--add" />,
+      }}
+    />
+  );
+
   // Build dynamic text overrides for refinement steps depending on the tracked piece's state.
   let customTitle: string | undefined = undefined;
-  let customBody: string | undefined = undefined;
+  let customBody: ReactNode = undefined;
   let currentSpotlightTarget = activeConfig?.spotlightTarget;
+  let canAcceptCurrentShape = false;
 
   if (step === 'refine-first-piece' && pieceId) {
     const piece = project.pieces.find(p => p.id === pieceId);
@@ -330,7 +349,8 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep4Title');
-        customBody = t('tutorialStep4Body');
+        customBody = refinementBody('tutorialStep4Body');
+        canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'
           : undefined;
@@ -354,7 +374,8 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep8Title');
-        customBody = t('tutorialStep8Body');
+        customBody = refinementBody('tutorialStep8Body');
+        canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'
           : undefined;
@@ -370,7 +391,8 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep10Title');
-        customBody = t('tutorialStep10Body');
+        customBody = refinementBody('tutorialStep10Body');
+        canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'
           : undefined;
@@ -390,6 +412,36 @@ export function Tutorial({
     currentSpotlightTarget = undefined;
   }
 
+  const acceptCurrentShape = () => {
+    if (!pieceId) return;
+    acceptedPieceIdsRef.current.add(pieceId);
+
+    if (step === 'refine-first-piece') {
+      onSetStep('assign-first-glass');
+      return;
+    }
+    if (step === 'refine-second-piece') {
+      onSetStep('cut-remaining-pieces');
+      return;
+    }
+    if (step !== 'refine-remaining-pieces') return;
+
+    const otherBad = project.pieces.find(piece => {
+      if (acceptedPieceIdsRef.current.has(piece.id)) return false;
+      const matchedGt = findMatchedGroundTruth(piece.polygon, TUTORIAL_GROUND_TRUTH_POLYGONS);
+      return !matchedGt || computeBleedRatio(piece.polygon, matchedGt) > 0.05;
+    });
+
+    if (otherBad) {
+      onSetTrackedPiece(otherBad.id);
+      onSelectPiece(otherBad.id);
+    } else if (project.pieces.length >= 4) {
+      onAdvance();
+    } else {
+      onSetStep('cut-remaining-pieces');
+    }
+  };
+
   // Show loading dialog if they are asked to cut the first piece but the model is still loading
   const showLoadingDialog = step === 'cut-first-piece' && isEncoding && !hasSeenLoadingDialog;
 
@@ -405,6 +457,8 @@ export function Tutorial({
         onComplete={onComplete}
         customTitle={customTitle}
         customBody={customBody}
+        onContinue={canAcceptCurrentShape ? acceptCurrentShape : undefined}
+        continueLabel={t('tutorialLooksGoodButton')}
       />
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
