@@ -1,4 +1,5 @@
 import * as ort from "onnxruntime-web/webgpu";
+import { maskToPolygon as extractMaskPolygon, smoothMaskLogits } from './utils/maskContour';
 // Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
 // bundle). Vite emits the file as a same-origin asset, so segmentation no
 // longer depends on a third-party CDN being reachable, and the JS/wasm
@@ -30,6 +31,9 @@ const INPUT_SIZE = 1024;
 const MEAN = [0.485, 0.456, 0.406];
 const STD  = [0.229, 0.224, 0.225];
 const MASK_THRESHOLD = 0;
+// Keep smoothing stable in model-input coordinates even if a model variant
+// returns a decoder mask other than the usual 256×256.
+const MASK_SMOOTHING_SIGMA_INPUT_PX = 6;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -572,7 +576,7 @@ async function segment(
     return;
   }
 
-  const { scale, padX, padY, encoderOut } = cached;
+  const { scale, padX, padY, origW, origH, encoderOut } = cached;
 
   const coords: number[] = [];
   const labels: number[] = [];
@@ -635,9 +639,14 @@ async function segment(
     const maskData = (masksTensor.data as Float32Array)
       .slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
 
-    const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+    const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+    const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+    const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
 
-    const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+    const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
+      inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
+      threshold: MASK_THRESHOLD,
+    });
 
     // Debug overlay: paint upsampled mask as a semi-transparent bitmap.
     const debugCanvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
@@ -725,8 +734,13 @@ async function autoSegment(id: string, sessionId: string) {
           const planeSize = H * W;
           const maskData = (masksTensor.data as Float32Array).slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
           
-          const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
-          const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+          const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+          const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+          const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
+          const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
+            inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
+            threshold: MASK_THRESHOLD,
+          });
 
           if (polygon.length >= 3) {
             const centroid = computeCentroid(polygon);
@@ -784,102 +798,6 @@ function bilinearUpsample(
 
 // ─── Mask → polygon ───────────────────────────────────────────────────────────
 
-function maskToPolygon(
-  data: Float32Array, W: number, H: number,
-  scale: number, padX: number, padY: number,
-): [number, number][] {
-  const get = (x: number, y: number): boolean =>
-    x >= 0 && x < W && y >= 0 && y < H && data[y * W + x] > MASK_THRESHOLD;
-
-  // Mask is 256x256, representing the 1024x1024 preprocessed space.
-  // To map back to original: ((maskCoord * (1024/256)) - pad) / scale
-  const toOrigX = (mx: number) => (mx * (INPUT_SIZE / W) - padX) / scale;
-  const toOrigY = (my: number) => (my * (INPUT_SIZE / H) - padY) / scale;
-
-  const visited = new Uint8Array(W * H);
-  let bestPts: [number, number][] = [];
-
-  // Directions in clockwise order
-  const dx = [0, 1, 1, 1, 0, -1, -1, -1];
-  const dy = [-1, -1, 0, 1, 1, 1, 0, -1];
-
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const idx = y * W + x;
-      if (data[idx] > MASK_THRESHOLD && !visited[idx]) {
-        // Found a potential new island! Trace it.
-        const currentPts: [number, number][] = [];
-        let cx = x, cy = y;
-        let prevX = x, prevY = y - 1;
-        let firstX = x, firstY = y;
-
-        for (let i = 0; i < W * H; i++) {
-          currentPts.push([toOrigX(cx), toOrigY(cy)]);
-          visited[cy * W + cx] = 1; // Mark as visited
-          
-          let startDir = 0;
-          for (let d = 0; d < 8; d++) {
-            if (cx + dx[d] === prevX && cy + dy[d] === prevY) {
-              startDir = (d + 1) % 8;
-              break;
-            }
-          }
-
-          let foundNext = false;
-          for (let d = 0; d < 8; d++) {
-            const dir = (startDir + d) % 8;
-            const nx = cx + dx[dir], ny = cy + dy[dir];
-            if (get(nx, ny)) {
-              prevX = cx; prevY = cy;
-              cx = nx; cy = ny;
-              foundNext = true;
-              break;
-            }
-          }
-
-          if (!foundNext || (cx === firstX && cy === firstY)) break;
-        }
-
-        // Is this the biggest island we've seen?
-        if (currentPts.length > bestPts.length) {
-          bestPts = currentPts;
-        }
-      }
-    }
-  }
-
-  if (bestPts.length < 3) return bestPts;
-
-  // Calculate perimeter for dynamic simplification (matching Modal's 0.005 * arcLength)
-  let perimeter = 0;
-  for (let i = 0; i < bestPts.length; i++) {
-    const p1 = bestPts[i];
-    const p2 = bestPts[(i + 1) % bestPts.length];
-    perimeter += Math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2);
-  }
-
-  const dynamicEps = Math.max(2.0, perimeter * 0.005);
-  return douglasPeucker(bestPts, dynamicEps);
-}
-
-function douglasPeucker(pts: [number, number][], eps: number): [number, number][] {
-  if (pts.length <= 2) return pts;
-  const [x1, y1] = pts[0], [x2, y2] = pts[pts.length - 1];
-  const len = Math.hypot(x2 - x1, y2 - y1);
-  let maxD = 0, idx = 0;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const [px, py] = pts[i];
-    const d = len < 1e-10
-      ? Math.hypot(px - x1, py - y1)
-      : Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / len;
-    if (d > maxD) { maxD = d; idx = i; }
-  }
-  if (maxD > eps) {
-    return [...douglasPeucker(pts.slice(0, idx + 1), eps).slice(0, -1),
-            ...douglasPeucker(pts.slice(idx), eps)];
-  }
-  return [pts[0], pts[pts.length - 1]];
-}
 
 // ─── Messaging ────────────────────────────────────────────────────────────────
 
