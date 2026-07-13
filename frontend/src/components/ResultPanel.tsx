@@ -244,7 +244,7 @@ function getSquareSegmentDistance(p: [number, number], p1: [number, number], p2:
   return dx * dx + dy * dy;
 }
 
-function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
+export function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
   if (points.length <= 2) return points;
   
   let maxSqDist = 0;
@@ -417,7 +417,7 @@ function isStructuralCorner(
   return edgeLen >= thresholdPx || prevEdgeLen >= thresholdPx;
 }
 
-function findPenSnapTarget(
+export function findPenSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
@@ -482,7 +482,7 @@ function findEdgeSnapTarget(
   return best;
 }
 
-function getCanvasSnapping(
+export function getCanvasSnapping(
   x: number,
   y: number,
   crop: Crop,
@@ -590,7 +590,7 @@ interface LengthGuide {
   matchingSegment: { p1: [number, number]; p2: [number, number] };
 }
 
-function findAlignmentGuides(
+export function findAlignmentGuides(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
@@ -637,7 +637,7 @@ function findAlignmentGuides(
   return { snapped, guides };
 }
 
-function findShiftAlignmentGuides(
+export function findShiftAlignmentGuides(
   cursor: [number, number],
   lastPt: [number, number],
   snappedTheta: number,
@@ -688,7 +688,7 @@ function findShiftAlignmentGuides(
   return { snapped, guides: guide ? [guide] : [] };
 }
 
-function findLengthSnap(
+export function findLengthSnap(
   cursor: [number, number],
   lastPt: [number, number],
   pieces: Piece[],
