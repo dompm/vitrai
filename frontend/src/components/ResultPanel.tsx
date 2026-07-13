@@ -11,7 +11,7 @@ import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl, evaluateCub
 import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PolygonAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
 import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
@@ -24,7 +24,7 @@ import { ViewportControls } from './ViewportControls';
 import { CANVAS } from '../theme';
 import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint, patternToSurfaceRobust } from '../utils/lampGeometry';
 import { getSnapFractions } from '../utils/snapping';
-import { constrainToAngle, nearestCandidate } from '../utils/vectorMath';
+import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../utils/vectorMath';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -273,6 +273,7 @@ function simplifyPath(points: [number, number][], epsilon: number): [number, num
 // targets (and which corner handles are visible). Both share the threshold
 // so the snap set always matches the visible handle set at any zoom.
 const PEN_SNAP_PX = 14;
+const TRACE_ONLY_TOOL_IDS = new Set<ToolId>(['box', 'detect-all', 'inspect']);
 
 interface BezierAnchor {
   point: [number, number];
@@ -794,7 +795,32 @@ export function ResultPanel({
   refineModeRef.current = refineMode;
 
   const { patternWidth: pw, patternHeight: ph } = project;
+  const isTraceMode = project.projectType !== 'lamp' && Boolean(project.patternImageUrl);
   const vp = useViewport(pw, ph);
+
+  function isInsideDrawableBounds(point: [number, number], padding = 0) {
+    return isPointWithinBounds(point, {
+      left: project.patternCrop.left,
+      right: pw - project.patternCrop.right,
+      top: project.patternCrop.top,
+      bottom: ph - project.patternCrop.bottom,
+    }, padding);
+  }
+
+  function clearDraftHoverFeedback() {
+    lastMousePosRef.current = null;
+    setHoverPoint(null);
+    setHoverSnapped(false);
+    setActiveAlignmentGuides([]);
+    setActiveLengthGuide(null);
+    setActiveSnapLabels([]);
+  }
+
+  useEffect(() => {
+    if (!isTraceMode && TRACE_ONLY_TOOL_IDS.has(activeTool)) {
+      onChangeActiveTool('select');
+    }
+  }, [activeTool, isTraceMode, onChangeActiveTool]);
 
   const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
   const [activePenAnchors, setActivePenAnchors] = useState<BezierAnchor[]>([]);
@@ -1222,12 +1248,12 @@ export function ResultPanel({
 
     if (key === 'v') handleToolChange('select');
     else if (key === 'h') handleToolChange('pan');
-    else if (key === 'b' && !isEncoding) handleToolChange('box');
+    else if (key === 'b' && isTraceMode && !isEncoding) handleToolChange('box');
     else if (key === 'p') handleToolChange(e.shiftKey ? 'polygon' : 'pen');
     else if (key === 'n') handleToolChange('pencil');
     else if (key === 'c') handleToolChange('crop');
     else if (key === 'm') handleToolChange('measure');
-    else if (key === 'i') handleToolChange('inspect');
+    else if (key === 'i' && isTraceMode) handleToolChange('inspect');
     else if (key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
     else if (key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
     else if (e.key === 'Enter') {
@@ -1346,6 +1372,10 @@ export function ResultPanel({
         }
       }
       const resolved = updateHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      if (!isInsideDrawableBounds(resolved)) {
+        clearDraftHoverFeedback();
+        return;
+      }
       setActivePolygonPoints(prev => [...prev, resolved]);
       return;
     }
@@ -1361,6 +1391,10 @@ export function ResultPanel({
         }
       }
       const resolved = updateHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey) ?? [x, y];
+      if (!isInsideDrawableBounds(resolved)) {
+        clearDraftHoverFeedback();
+        return;
+      }
       capturePointer(e);
       const index = anchors.length;
       penDragIndexRef.current = index;
@@ -1427,10 +1461,16 @@ export function ResultPanel({
     }
     if (activeTool === 'polygon' || activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const edgeSnapPadding = PEN_SNAP_PX / Math.max(vp.effectiveScale, Number.EPSILON);
+      if (!isInsideDrawableBounds([x, y], edgeSnapPadding)) {
+        clearDraftHoverFeedback();
+        return;
+      }
       lastMousePosRef.current = { x, y };
       const isShift = e.evt ? e.evt.shiftKey : false;
       setIsShiftDown(isShift);
-      updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
+      const resolved = updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
+      if (resolved && !isInsideDrawableBounds(resolved)) clearDraftHoverFeedback();
       return;
     }
     if (activeTool === 'pencil') {
@@ -1524,6 +1564,7 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    if (!isTraceMode && TRACE_ONLY_TOOL_IDS.has(id)) return;
     if (id === activeTool && id !== 'select') {
       if (id === 'polygon') setActivePolygonPoints([]);
       if (id === 'pen') clearActivePen();
@@ -1670,7 +1711,7 @@ export function ResultPanel({
         name: t('tooltipPolygonName'),
         shortcut: 'Shift+P',
         description: t('tooltipPolygonDesc'),
-        animation: <PenAnimation />,
+        animation: <PolygonAnimation />,
       },
     },
     {
@@ -1741,12 +1782,14 @@ export function ResultPanel({
     },
   ], [t]);
 
-  const TOOLS = BASE_TOOLS
-    .filter(tool => !IS_TOUCH || tool.id !== 'pan')
+  const TOOLS = [...BASE_TOOLS]
+    .filter(tool => (!IS_TOUCH || tool.id !== 'pan') && (isTraceMode || !TRACE_ONLY_TOOL_IDS.has(tool.id)))
+    .sort((a, b) => Number(TRACE_ONLY_TOOL_IDS.has(a.id)) - Number(TRACE_ONLY_TOOL_IDS.has(b.id)))
     .map(tool => {
-    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
-    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
-    return tool;
+    const sectionedTool = tool.id === 'box' ? { ...tool, sectionStart: true } : tool;
+    if (tool.id === 'box') return { ...sectionedTool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
+    if (tool.id === 'detect-all') return { ...sectionedTool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
+    return sectionedTool;
   });
 
   return (
@@ -1759,33 +1802,42 @@ export function ResultPanel({
     >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
         <div className="toolbar-divider" />
-        <div className="tooltip-wrapper" ref={snapMenuRef}>
+        <div className="tooltip-wrapper snap-tooltip-wrapper" ref={snapMenuRef}>
           <button
             type="button"
-            className={`tool-btn ${snapEnabled ? 'active' : ''}`}
-            aria-pressed={snapEnabled}
-            aria-label={t('snapToggle')}
-            onClick={() => setSnapEnabled(enabled => !enabled)}
+            className={`tool-btn ${snapMenuOpen ? 'active' : ''}`}
+            aria-haspopup="dialog"
+            aria-expanded={snapMenuOpen}
+            aria-label={t('snapSettings')}
+            onClick={() => setSnapMenuOpen(open => !open)}
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 3v8a6 6 0 0 0 12 0V3" />
-              <path d="M6 7h4M14 7h4" />
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 7v5a6 6 0 0 0 12 0V7" />
+              <rect x="3.5" y="3.5" width="5" height="4" rx="0.75" fill="currentColor" stroke="none" />
+              <rect x="15.5" y="3.5" width="5" height="4" rx="0.75" fill="currentColor" stroke="none" />
+              {!snapEnabled && <path d="M4 4l16 16" />}
             </svg>
             <span className="tool-label">{t('snap')}</span>
           </button>
-          <button
-            type="button"
-            className="snap-settings-trigger"
-            aria-label={t('snapSettings')}
-            aria-expanded={snapMenuOpen}
-            onClick={() => setSnapMenuOpen(open => !open)}
-          >
-            ⋯
-          </button>
-          {!snapMenuOpen && <span className="tooltip-tip">{t('snapToggleHint')}</span>}
+          {!snapMenuOpen && (
+            <ToolTooltip
+              name={t('snap')}
+              shortcut="Ctrl"
+              description={t('snapToggleHint')}
+              animation={<SnappingAnimation />}
+            />
+          )}
           {snapMenuOpen && (
-            <div className="snap-settings-popover" onPointerDown={event => event.stopPropagation()}>
+            <div className="snap-settings-popover" role="dialog" aria-label={t('snapSettings')} onPointerDown={event => event.stopPropagation()}>
               <strong>{t('snapSettings')}</strong>
+              <label className="snap-master-toggle">
+                <input
+                  type="checkbox"
+                  checked={snapEnabled}
+                  onChange={event => setSnapEnabled(event.target.checked)}
+                />
+                <span>{t('snapToggle')}</span>
+              </label>
               {([
                 ['anchors', 'snapAnchors'],
                 ['edges', 'snapEdges'],
@@ -1793,10 +1845,11 @@ export function ResultPanel({
                 ['canvas', 'snapCanvas'],
                 ['equalLength', 'snapEqualLength'],
               ] as const).map(([setting, label]) => (
-                <label key={setting}>
+                <label key={setting} className={!snapEnabled ? 'snap-setting-disabled' : undefined}>
                   <input
                     type="checkbox"
                     checked={snapSettings[setting]}
+                    disabled={!snapEnabled}
                     onChange={event => setSnapSettings(current => ({ ...current, [setting]: event.target.checked }))}
                   />
                   <span>{t(label)}</span>

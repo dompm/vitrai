@@ -737,6 +737,18 @@ html, body, #root {
   transform: translateY(0) scale(1);
 }
 
+/* Snap sits at the bottom of the tall Pattern toolbar. Anchor its rich card
+   upward so the panel's rounded, clipped edge never cuts off the description. */
+.snap-tooltip-wrapper .tool-tooltip-card {
+  top: auto;
+  bottom: -4px;
+  transform: scale(0.94);
+  transform-origin: left bottom;
+}
+.snap-tooltip-wrapper:hover .tool-tooltip-card {
+  transform: scale(1);
+}
+
 /* Project switcher */
 .project-name-input {
   background: transparent;
@@ -1808,27 +1820,6 @@ html, body, #root {
   margin: 0;
   opacity: 0.8;
 }
-.snap-settings-trigger {
-  position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 18px;
-  height: 16px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 12px;
-}
-
-.snap-settings-trigger:hover {
-  background: var(--chrome-700);
-  color: var(--text-bright);
-}
-
 .snap-settings-popover {
   position: absolute;
   left: calc(100% + 10px);
@@ -1862,4 +1853,16 @@ html, body, #root {
   padding: 5px 0;
   font-size: 12px;
   cursor: pointer;
+}
+
+.snap-settings-popover .snap-master-toggle {
+  margin-bottom: 4px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid var(--hairline-2);
+  font-weight: 600;
+}
+
+.snap-settings-popover .snap-setting-disabled {
+  opacity: 0.45;
+  cursor: default;
 }

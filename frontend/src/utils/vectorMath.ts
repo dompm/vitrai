@@ -1,5 +1,23 @@
 export type VectorPoint = [number, number];
 
+export interface VectorBounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+export function isPointWithinBounds(
+  point: VectorPoint,
+  bounds: VectorBounds,
+  padding = 0,
+): boolean {
+  return point[0] >= bounds.left - padding
+    && point[0] <= bounds.right + padding
+    && point[1] >= bounds.top - padding
+    && point[1] <= bounds.bottom + padding;
+}
+
 /** Constrain a point to the nearest angular increment around an origin. */
 export function constrainToAngle(
   cursor: VectorPoint,

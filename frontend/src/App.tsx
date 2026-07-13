@@ -677,12 +677,40 @@ export function App() {
     });
   }
 
+  function constrainEditedPieceGeometry(
+    pieceId: string,
+    polygon: [number, number][],
+    curvePoints: CurvePoint[],
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) {
+    const latest = projectRef.current;
+    const neighborPolygons = latest.pieces
+      .filter(piece => piece.id !== pieceId)
+      .map(piece => flattenCurves(piece.polygon, piece.curvePoints));
+    const displayPolygon = flattenCurves(polygon, curvePoints);
+    const clipped = subtractPolygons(displayPolygon, neighborPolygons);
+    if (clipped.length < 3) return null;
+
+    // Preserve editable Bézier metadata when the proposed edit is valid. If
+    // it crosses another piece, fall back to the clipped outline: topology may
+    // change at the intersection, so the old control-point indices no longer
+    // describe the resulting boundary.
+    if (arePolygonsEqual(displayPolygon, clipped, 0.1)) {
+      return { polygon, curvePoints, anchorTypes, clipped: false };
+    }
+    return { polygon: clipped, curvePoints: [] as CurvePoint[], anchorTypes: undefined, clipped: true };
+  }
+
   function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) {
-    const piece = project.pieces.find(p => p.id === pieceId);
+    const piece = projectRef.current.pieces.find(candidate => candidate.id === pieceId);
     if (!piece) return;
-    // Curve handles are an explicit edit. Never silently flatten or replace
-    // them with boolean-clipped samples after the user releases a handle.
-    updatePieceCurves(pieceId, curvePoints, false, anchorTypes);
+    const constrained = constrainEditedPieceGeometry(pieceId, piece.polygon, curvePoints, anchorTypes);
+    if (!constrained) return;
+    if (!constrained.clipped) {
+      updatePieceCurves(pieceId, curvePoints, false, anchorTypes);
+      return;
+    }
+    updatePiecePolygonAndCurves(pieceId, constrained.polygon, constrained.curvePoints, false);
   }
 
   function handleUpdatePieceGeometry(
@@ -691,7 +719,15 @@ export function App() {
     curvePoints: CurvePoint[],
     anchorTypes?: ('corner' | 'smooth')[],
   ) {
-    updatePiecePolygonAndCurves(pieceId, polygon, curvePoints, false, anchorTypes);
+    const constrained = constrainEditedPieceGeometry(pieceId, polygon, curvePoints, anchorTypes);
+    if (!constrained) return;
+    updatePiecePolygonAndCurves(
+      pieceId,
+      constrained.polygon,
+      constrained.curvePoints,
+      false,
+      constrained.anchorTypes,
+    );
   }
 
 

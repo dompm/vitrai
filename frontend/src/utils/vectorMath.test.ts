@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { constrainToAngle, nearestCandidate } from './vectorMath';
+import { constrainToAngle, isPointWithinBounds, nearestCandidate } from './vectorMath';
 
 describe('vector constraints', () => {
   it('makes a 45 degree constraint final', () => {
@@ -20,5 +20,12 @@ describe('vector constraints', () => {
     const candidate = [{ value: 0.5, position: 50 }];
     expect(nearestCandidate(55, candidate, 2, 14)).not.toBeNull();
     expect(nearestCandidate(58, candidate, 2, 14)).toBeNull();
+  });
+
+  it('rejects anchors outside the drawable bounds while allowing edge snap tolerance', () => {
+    const bounds = { left: 10, right: 90, top: 20, bottom: 80 };
+    expect(isPointWithinBounds([10, 20], bounds)).toBe(true);
+    expect(isPointWithinBounds([9, 50], bounds)).toBe(false);
+    expect(isPointWithinBounds([9, 50], bounds, 2)).toBe(true);
   });
 });

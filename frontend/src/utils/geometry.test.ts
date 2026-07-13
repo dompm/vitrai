@@ -8,6 +8,7 @@ import {
   makeCubicCurvePoint,
   quadraticToCubicControls,
   splitCubicBezier,
+  subtractPolygons,
 } from './geometry';
 
 describe('curve compatibility', () => {
@@ -48,5 +49,18 @@ describe('curve compatibility', () => {
     expect(flattened[0]).toEqual(polygon[0]);
     expect(flattened).toContainEqual(polygon[1]);
     expect(flattened.length).toBeGreaterThan(polygon.length);
+  });
+
+  it('clips an edited polygon against the visible boundary of a curved neighbor', () => {
+    const neighbor = flattenCurves(
+      [[0, 0], [100, 0], [100, 100], [0, 100]],
+      [makeCubicCurvePoint(1, [130, 20], [130, 80])],
+      0.25,
+    );
+    const crossingEdit: [number, number][] = [[90, 20], [160, 50], [90, 80]];
+    const clipped = subtractPolygons(crossingEdit, [neighbor]);
+
+    expect(clipped.length).toBeGreaterThanOrEqual(3);
+    expect(clipped.every(([x]) => x >= 99.9)).toBe(true);
   });
 });
