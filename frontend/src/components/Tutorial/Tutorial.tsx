@@ -572,7 +572,16 @@ export function Tutorial({
       {currentSpotlightTarget && !showLoadingDialog && (
         <SpotlightPulse
           selector={currentSpotlightTarget}
-          withBackdrop={currentSpotlightTarget !== '.canvas-well' && !['cut-remaining-pieces', 'refine-remaining-pieces'].includes(step)}
+          withBackdrop={
+            currentSpotlightTarget !== '.canvas-well' &&
+            ![
+              'cut-remaining-pieces',
+              'refine-remaining-pieces',
+              'fab-smart-pack',
+              'fab-solder-thickness',
+              'fab-print-layout',
+            ].includes(step)
+          }
         />
       )}
       {showLoadingDialog && (

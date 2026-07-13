@@ -401,6 +401,7 @@ export function App() {
     preTutorialProjectRef.current = project.name;
     setPatternTool('select');
     setSheetTool('select');
+    setIsSymmetryEnabled(false);
     if (!trackId) {
       setTutorialStep('welcome');
       setTutorialActiveTrackId(null);
@@ -476,11 +477,11 @@ export function App() {
         sheets: [
           {
             id: 'default-sheet-1',
-            label: 'Amber Glass Sheet',
-            imageUrl: '/assets/glass/amber.jpg',
+            label: 'Cobalt Blue Glass Sheet',
+            imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: null,
-            swatch: '#ffb74d'
+            swatch: '#1e88e5'
           }
         ]
       });
@@ -525,15 +526,15 @@ export function App() {
         sheets: [
           {
             id: 'sheet-1',
-            label: 'Amber Glass Sheet',
-            imageUrl: '/assets/glass/amber.jpg',
+            label: 'Cobalt Blue Glass Sheet',
+            imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: {
               pxPerUnit: 10,
               unit: 'in',
               line: { x1: 0, y1: 0, x2: 100, y2: 0 }
             },
-            swatch: '#ffe082'
+            swatch: '#1e88e5'
           }
         ]
       });
