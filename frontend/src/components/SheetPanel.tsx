@@ -22,6 +22,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
 import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
 import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
+import { ViewportSubscriber } from '../editor/viewport/viewportStore';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -715,7 +716,6 @@ export function SheetPanel({
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
   }
 
-  const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
@@ -889,7 +889,7 @@ export function SheetPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', touchAction: 'none' }}
       >
-        <Stage
+        <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <><Stage
           width={vp.dims.w} height={vp.dims.h}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -898,7 +898,7 @@ export function SheetPanel({
           onClick={handleStageClick}
         >
           <Layer listening={false}>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <Group x={viewport.pan.x} y={viewport.pan.y} scaleX={es} scaleY={es}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -914,7 +914,7 @@ export function SheetPanel({
             </Group>
           </Layer>
           <Layer listening={false}>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <Group x={viewport.pan.x} y={viewport.pan.y} scaleX={es} scaleY={es}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -938,7 +938,7 @@ export function SheetPanel({
             </Group>
           </Layer>
           <Layer>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <Group x={viewport.pan.x} y={viewport.pan.y} scaleX={es} scaleY={es}>
               {pieces.map(piece => (
                 <PieceOutline
                   key={piece.id + '-stroke'}
@@ -1010,8 +1010,8 @@ export function SheetPanel({
             </Group>
             {marqueeBox && (
               <Rect
-                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + vp.pan.x}
-                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + vp.pan.y}
+                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + viewport.pan.x}
+                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + viewport.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
                 fill={CANVAS.amberSelectionFill}
@@ -1037,7 +1037,7 @@ export function SheetPanel({
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;
-          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+          const sc = toScreenCoords(midX, midY, viewport.pan, viewport.effectiveScale);
           const saved = sheet.scale;
           return (
             <MeasureInput
@@ -1049,7 +1049,7 @@ export function SheetPanel({
               onCancel={() => handleToolChange('select')}
             />
           );
-        })()}
+        })()}</>; }}</ViewportSubscriber>
       </div>
     </div>
   );

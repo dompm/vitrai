@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ViewportStore } from '../editor/viewport/viewportStore';
 
 interface Dims { w: number; h: number; }
 
@@ -27,25 +28,20 @@ function clampZoom(value: number, displayScale: number) {
 export function useViewport(imageW: number, imageH: number) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState<Dims>({ w: 800, h: 600 });
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [store] = useState(() => new ViewportStore());
   const initializedRef = useRef(false);
 
   // Mutable refs so native handlers (added once) always see current values
-  const zoomRef = useRef(zoom);
-  const panRef = useRef(pan);
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
   const dimsRef = useRef(dims);
   const imageWRef = useRef(imageW);
   const imageHRef = useRef(imageH);
 
   const isPanning = useRef(false);
-  // State mirror of isPanning: reading a mutated ref at render time left the
-  // UI stale (cursor stuck on "grabbing", piece popover stuck pointer-events:
-  // none) because endPan() never triggered a re-render.
-  const [isPanningState, setIsPanningState] = useState(false);
   const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
   const isPinchingRef = useRef(false);
-  const viewportFrameRef = useRef<number | null>(null);
+  const cursorBeforePanRef = useRef('default');
 
   dimsRef.current = dims;
   imageWRef.current = imageW;
@@ -54,17 +50,11 @@ export function useViewport(imageW: number, imageH: number) {
   function scheduleViewport(nextZoom: number, nextPan: { x: number; y: number }) {
     zoomRef.current = nextZoom;
     panRef.current = nextPan;
-    if (viewportFrameRef.current !== null) return;
-    viewportFrameRef.current = requestAnimationFrame(() => {
-      viewportFrameRef.current = null;
-      setZoom(zoomRef.current);
-      setPan(panRef.current);
-    });
+    const displayScale = displayScaleRef.current;
+    store.update({ zoom: nextZoom, pan: nextPan, displayScale, effectiveScale: displayScale * nextZoom });
   }
 
-  useEffect(() => () => {
-    if (viewportFrameRef.current !== null) cancelAnimationFrame(viewportFrameRef.current);
-  }, []);
+  useEffect(() => () => store.destroy(), [store]);
 
   function currentDisplayScale() {
     const d = dimsRef.current;
@@ -144,7 +134,11 @@ export function useViewport(imageW: number, imageH: number) {
           y: height / 2 - imageCenterY * nextEffectiveScale,
         };
         panRef.current = nextPan;
-        setPan(nextPan);
+        store.update({
+          pan: nextPan,
+          displayScale: nextDisplayScale,
+          effectiveScale: nextEffectiveScale,
+        }, true);
       }
       setDims({ w: width, h: height });
     });
@@ -158,7 +152,9 @@ export function useViewport(imageW: number, imageH: number) {
   const displayScaleRef = useRef(displayScale);
   displayScaleRef.current = displayScale;
 
-  const effectiveScale = displayScale * zoom;
+  useEffect(() => {
+    store.update({ displayScale, effectiveScale: displayScale * zoomRef.current }, true);
+  }, [displayScale, store]);
 
   // Center pan once per image change (or on first valid dims)
   useEffect(() => {
@@ -175,8 +171,7 @@ export function useViewport(imageW: number, imageH: number) {
     };
     zoomRef.current = 1;
     panRef.current = centeredPan;
-    setZoom(1);
-    setPan(centeredPan);
+    store.update({ zoom: 1, pan: centeredPan, displayScale: scale, effectiveScale: scale }, true);
   }, [imageW, imageH, dims.w, dims.h]);
 
   // Native (non-passive) wheel handler — added once, uses refs
@@ -225,9 +220,11 @@ export function useViewport(imageW: number, imageH: number) {
       if (e.touches.length !== 2) return;
       e.preventDefault();
       isPinchingRef.current = true;
+      store.update({ isPinching: true });
       // Cancel any active single-finger pan
       isPanning.current = false;
-      setIsPanningState(false);
+      store.update({ isPanning: false });
+      if (containerRef.current) containerRef.current.style.cursor = cursorBeforePanRef.current;
       lastPanPtr.current = null;
       const rect = el!.getBoundingClientRect();
       lastDist = pinchDist(e.touches);
@@ -271,6 +268,7 @@ export function useViewport(imageW: number, imageH: number) {
     function onTouchEnd(e: TouchEvent) {
       if (e.touches.length < 2) {
         isPinchingRef.current = false;
+        store.update({ isPinching: false });
         lastDist = 0;
       }
     }
@@ -288,7 +286,11 @@ export function useViewport(imageW: number, imageH: number) {
   function startPan(pos: { x: number; y: number }) {
     if (isPinchingRef.current) return;
     isPanning.current = true;
-    setIsPanningState(true);
+    store.update({ isPanning: true });
+    if (containerRef.current) {
+      cursorBeforePanRef.current = containerRef.current.style.cursor;
+      containerRef.current.style.cursor = 'grabbing';
+    }
     lastPanPtr.current = pos;
   }
 
@@ -303,21 +305,24 @@ export function useViewport(imageW: number, imageH: number) {
 
   function endPan() {
     isPanning.current = false;
-    setIsPanningState(false);
+    store.update({ isPanning: false });
+    if (containerRef.current) containerRef.current.style.cursor = cursorBeforePanRef.current;
     lastPanPtr.current = null;
   }
 
   return {
     containerRef,
     dims,
-    displayScale,
-    effectiveScale,
-    zoom,
-    pan,
+    get displayScale() { return store.getSnapshot().displayScale; },
+    get effectiveScale() { return store.getSnapshot().effectiveScale; },
+    get zoom() { return store.getSnapshot().zoom; },
+    get pan() { return store.getSnapshot().pan; },
+    store,
+    getSnapshot: store.getSnapshot,
     zoomRef,
     panRef,
     displayScaleRef,
-    isPanning: isPanningState,
+    get isPanning() { return store.getSnapshot().isPanning; },
     startPan,
     movePan,
     endPan,

@@ -31,6 +31,7 @@ import { PencilController } from '../editor/interaction/pencilController';
 import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
+import { ViewportSubscriber } from '../editor/viewport/viewportStore';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -966,8 +967,9 @@ export function ResultPanel({
 
   const piecesRef = useRef(project.pieces);
   piecesRef.current = project.pieces;
-  const effectiveScaleRef = useRef(vp.effectiveScale);
-  effectiveScaleRef.current = vp.effectiveScale;
+  const effectiveScaleRef = {
+    get current() { return vp.getSnapshot().effectiveScale; },
+  };
 
   function resolveHoverPoint(
     imageX: number,
@@ -1741,7 +1743,6 @@ export function ResultPanel({
           : activeTool === 'polygon' || activeTool === 'pen'
             ? 'crosshair'
             : 'default';
-  const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
@@ -2105,7 +2106,7 @@ export function ResultPanel({
             </div>
           </div>
         ) : (
-          <>
+          <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <>
             <Stage
               width={vp.dims.w} height={vp.dims.h}
               onPointerDown={handlePointerDown}
@@ -2121,7 +2122,7 @@ export function ResultPanel({
             >
               <Layer listening={false}>
                 <Group
-                  x={vp.pan.x} y={vp.pan.y}
+                  x={viewport.pan.x} y={viewport.pan.y}
                   scaleX={es} scaleY={es}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
@@ -2199,7 +2200,7 @@ export function ResultPanel({
               </Layer>
               <Layer>
                 <Group
-                  x={vp.pan.x} y={vp.pan.y}
+                  x={viewport.pan.x} y={viewport.pan.y}
                   scaleX={es} scaleY={es}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
@@ -2270,7 +2271,7 @@ export function ResultPanel({
               </Layer>
               <Layer>
                 <Group
-                  x={vp.pan.x} y={vp.pan.y}
+                  x={viewport.pan.x} y={viewport.pan.y}
                   scaleX={es} scaleY={es}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
@@ -2885,7 +2886,7 @@ export function ResultPanel({
             {activeTool === 'measure' && measure.line && (() => {
               const midX = (measure.line.x1 + measure.line.x2) / 2;
               const midY = (measure.line.y1 + measure.line.y2) / 2;
-              const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+              const sc = toScreenCoords(midX, midY, viewport.pan, viewport.effectiveScale);
               const saved = project.patternScale;
               return (
                 <MeasureInput
@@ -2924,7 +2925,7 @@ export function ResultPanel({
                 || (activeTool === 'pen' && activePenAnchors.length > 0)
                 || draggedCorner !== null
                 || draggedMidpoint !== null;
-              const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
+              const isInteracting = isDrawing || marqueeBox !== null || viewport.isPanning || isSpaceDown;
 
               return (
                 <div style={{
@@ -2977,7 +2978,7 @@ export function ResultPanel({
               accept="image/*"
               onChange={handleAddSheetFileChange}
             />
-          </>
+          </>; }}</ViewportSubscriber>
         )}
       </div>
     </div>
