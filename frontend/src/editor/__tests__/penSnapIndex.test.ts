@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('react-konva', () => ({ Stage: () => null, Layer: () => null, Image: () => null, Line: () => null, Group: () => null, Rect: () => null, Circle: () => null, Text: () => null }));
 vi.mock('use-image', () => ({ default: () => [null] }));
-import { findAlignmentGuides, findPenSnapTarget, findShiftAlignmentGuides } from '../../components/ResultPanel';
-import { createPenSnapIndex, queryAlignment, queryShiftAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
+import { findAlignmentGuides, findLengthSnap, findPenSnapTarget, findShiftAlignmentGuides } from '../../components/ResultPanel';
+import { createPenSnapIndex, queryAlignment, queryLengthSnap, queryShiftAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
 import { makeInteractionPieces } from '../performance/fixtures';
 
 describe('Pen snap index parity', () => {
@@ -32,5 +32,16 @@ describe('Pen snap index parity', () => {
     const index = createPenSnapIndex(pieces);
     const cursor: [number, number] = [52.5, 30];
     expect(queryVertexSnap(index, cursor, 1, 14)).toEqual(findPenSnapTarget(cursor, pieces, 1));
+  });
+
+  it('preserves project order for equal-length ties regardless of active-point order', () => {
+    const pieces = makeInteractionPieces(8, 6);
+    const index = createPenSnapIndex(pieces);
+    const active: [number, number][] = [pieces[7].polygon[0], pieces[0].polygon[0]];
+    const last: [number, number] = [100, 100];
+    const cursor: [number, number] = [117, 100];
+    expect(queryLengthSnap(index, cursor, last, active, 1, 14)).toEqual(
+      findLengthSnap(cursor, last, pieces, active, 1, 14),
+    );
   });
 });

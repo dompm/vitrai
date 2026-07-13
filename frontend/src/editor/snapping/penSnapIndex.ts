@@ -99,7 +99,9 @@ export function queryLengthSnap(
   }
   const pieceIds = new Set<number>();
   activePoints.forEach(point => index.piecesByVertex.get(`${point[0]},${point[1]}`)?.forEach(id => pieceIds.add(id)));
-  pieceIds.forEach(id => segments.push(...index.segmentsByPiece[id]));
+  index.segmentsByPiece.forEach((pieceSegments, pieceIndex) => {
+    if (pieceIds.has(pieceIndex)) segments.push(...pieceSegments);
+  });
   const currentLength = Math.hypot(cursor[0] - lastPoint[0], cursor[1] - lastPoint[1]);
   let best: (typeof segments)[number] | null = null;
   let bestDifference = tolerancePx / effectiveScale;
