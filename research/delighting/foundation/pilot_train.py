@@ -81,9 +81,8 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
     if hasattr(model.unet, "enable_gradient_checkpointing"):
         model.unet.enable_gradient_checkpointing()
         logline("[pilot] gradient checkpointing enabled on the UNet")
-    if hasattr(model.vae, "enable_gradient_checkpointing"):
-        model.vae.enable_gradient_checkpointing()
-        logline("[pilot] gradient checkpointing enabled on the VAE too")
+    # NOTE: no VAE gradient checkpointing -- T is supervised in latent space, so
+    # decode() is no_grad (visualization/eval only) and backward never touches the VAE.
     tp = model.trainable_parameters()
     logline(f"[pilot] trainable params: {sum(p.numel() for p in tp)/1e3:.1f}k  "
            f"lora_ok={model.lora_ok}  "
@@ -119,6 +118,8 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
                 break
 
             batch = collate(ds, bs, device)
+            with torch.no_grad():
+                batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
             out = model(batch["photo"].clamp(0, None))
             loss, parts = compute_losses(out, batch, weights)
             opt.zero_grad()

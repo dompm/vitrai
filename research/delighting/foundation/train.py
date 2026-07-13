@@ -56,15 +56,30 @@ def collate(dataset, bs, device):
 
 def compute_losses(out, batch, w):
     """OUTPUT_CONTRACT-tier-1 supervised losses. `valid` = sheet minus marks; T is
-    up-weighted inside cast shadow (the region reports 008/010 flag as the hard case)."""
-    valid = batch["valid"]                              # (B,1,H,W)
-    shadow = batch["shadow"]
-    vv = valid.expand_as(out["T"])
-    wmap = valid * (1.0 + 8.0 * shadow)                 # emphasise shadow recovery
-    wmap3 = wmap.expand_as(out["T"])
+    up-weighted inside cast shadow (the region reports 008/010 flag as the hard case).
 
-    # T: L1 in gamma space (perceptual), shadow-weighted
-    l_T = (torch.abs(_gamma(out["T"]) - _gamma(batch["T"])) * wmap3).sum() / wmap3.sum().clamp_min(1)
+    T is supervised in LATENT space (report 040): pixel-space L1 against decode(T)
+    required backprop through the full frozen-VAE decoder activation graph -- a real
+    memory cost (tripped the swap-growth guard at 256^2) for no accuracy benefit, and
+    is not how latent-diffusion models are normally trained anyway. MSE against
+    `out["z_T_hat"]` (the UNet's own output, before any VAE decode) is directly on the
+    trainable path with none of that cost. `batch["z_T_gt"]` must be precomputed by the
+    caller via `model.encode(batch["T"]) under torch.no_grad()` -- see train_loop /
+    overfit_gate.py's run_gate for the call site. The old shadow-upweighting is kept by
+    downsampling the pixel-space (valid, shadow) mask to z_T_hat's spatial resolution
+    (adaptive so it's correct regardless of a backbone's VAE downsample factor)."""
+    assert "z_T_hat" in out, "backbone.py forward() must expose z_T_hat (latent T)"
+    assert "z_T_gt" in batch, ("caller must set batch['z_T_gt'] = model.encode(batch['T']) "
+                              "under no_grad before calling compute_losses")
+    valid = batch["valid"]                              # (B,1,H,W), pixel space
+    shadow = batch["shadow"]
+    wmap = valid * (1.0 + 8.0 * shadow)                 # emphasise shadow recovery
+    with torch.no_grad():
+        wmap_lat = F.adaptive_avg_pool2d(wmap, out["z_T_hat"].shape[-2:])
+    wmap_lat = wmap_lat.expand_as(out["z_T_hat"])
+
+    # T: MSE in latent space, shadow-weighted (see docstring)
+    l_T = (((out["z_T_hat"] - batch["z_T_gt"]) ** 2) * wmap_lat).sum() / wmap_lat.sum().clamp_min(1)
     # h
     l_h = (torch.abs(out["h"] - batch["h"]) * valid).sum() / valid.sum().clamp_min(1)
     # B (only where GT-v3 gt_B exists), in log1p space
@@ -124,6 +139,8 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     model.train()
     for step in range(steps):
         batch = collate(ds, bs, device)
+        with torch.no_grad():
+            batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
         out = model(batch["photo"].clamp(0, None))
         loss, parts = compute_losses(out, batch, weights)
         opt.zero_grad()

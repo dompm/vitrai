@@ -176,18 +176,19 @@ class FoundationDelighter(nn.Module):
         return z * self.vae_scale
 
     def decode(self, z):
-        # NO `torch.no_grad()` here (bug found in report 040's gate1b): the VAE's own
-        # weights are already frozen via `requires_grad_(False)` in __init__, which is
-        # sufficient to keep them from updating. Wrapping this forward call in
-        # `torch.no_grad()` additionally severs the gradient path from T's loss back to
-        # `z`  (z_T_hat, the LoRA-adapted UNet's output) -- T's own reconstruction
-        # signal could never reach the trainable LoRA parameters at all. Confirmed via
-        # gate1b: with every other loss weight zeroed, T's loss was bit-for-bit frozen
-        # for 100+ steps (zero gradient reaching ANY trainable parameter); in the full
-        # multi-head loss, T only drifted as a side effect of h/B/shadow/mark/conf
-        # gradients flowing through `z_T_hat` via the AuxHead (a path that never went
-        # through this no-grad decode), never from its own supervision.
-        img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
+        # History (report 040): this WAS wrapped in `torch.no_grad()`, which severed
+        # the gradient path from T's pixel-space loss back to `z` (z_T_hat, the
+        # LoRA-adapted UNet's output) -- gate1b proved it by isolating T's loss alone
+        # and finding it bit-for-bit frozen for 100+ steps. Removing the no_grad fixed
+        # the gradient path but made backward run through the full frozen-VAE decoder
+        # activation graph at training resolution, which cost ~1GB+ extra and tripped
+        # the swap-growth guard. The DURABLE fix (this version): T is now supervised in
+        # LATENT space (MSE against z_T_hat directly, see train.py's compute_losses),
+        # so the gradient path never needs to go through decode() at all -- this is
+        # back to no_grad, decode() is visualization/eval-only again, and the VAE's own
+        # weights are (as always) kept frozen via `requires_grad_(False)` in __init__.
+        with torch.no_grad():
+            img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
         return (img.float() * 0.5 + 0.5)  # -> [0,1]
 
     def forward(self, photo01):
@@ -210,7 +211,9 @@ class FoundationDelighter(nn.Module):
         feat = torch.cat([z_rgb, z_T_hat], dim=1)
         aux = self.aux(feat, (H, W))
         i = 0
-        out = {"T": T}
+        # z_T_hat exposed so the caller can supervise T directly in latent space
+        # (train.py's compute_losses) without needing a second UNet forward pass.
+        out = {"T": T, "z_T_hat": z_T_hat}
         for name in AUX_CHANNELS:
             d = AUX_DIMS[name]
             ch = aux[:, i:i + d]

@@ -78,6 +78,10 @@ def check_gradient_flow(backbone="tiny", device=None, lora_rank=4, verbose=True)
                                 lora_rank=lora_rank, cache_only=(backbone != "tiny")).to(device)
     tp = model.trainable_parameters()
     batch = _synthetic_batch(device)
+    # T is supervised in latent space (report 040 follow-up) -- compute_losses requires
+    # batch["z_T_gt"], same call pattern as train.py/overfit_gate.py.
+    with torch.no_grad():
+        batch["z_T_gt"] = model.encode(batch["T"])
 
     results = {}
     for head in HEADS:

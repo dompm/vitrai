@@ -270,15 +270,21 @@ def _panel(img_chw, size=256):
     return a
 
 
-def build_contact_row(photo, pred_T, gt_T, pred_h, gt_h, step, loss, size=256, label_w=140):
+def build_contact_row(photo, pred_T, gt_T, pred_h, gt_h, step, loss, size=256, label_w=140,
+                      t_pixel_mae=None):
     panels = [_panel(photo, size), _panel(pred_T, size), _panel(gt_T, size),
               _panel(pred_h, size), _panel(gt_h, size)]
     row = np.concatenate(panels, axis=1)
     label = np.full((size, label_w, 3), 30, np.uint8)
-    cv2.putText(label, f"step {step}", (8, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
+    cv2.putText(label, f"step {step}", (8, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.5,
                (255, 255, 255), 1, cv2.LINE_AA)
-    cv2.putText(label, f"L={loss:.4f}", (8, 130), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
+    cv2.putText(label, f"L={loss:.4f}", (8, 118), cv2.FONT_HERSHEY_SIMPLEX, 0.45,
                (200, 255, 200), 1, cv2.LINE_AA)
+    if t_pixel_mae is not None:
+        # the pixel-space verdict metric (report 040: training loss is latent, but the
+        # gate's pass/fail criterion stays in pixel units via this decoded, no_grad MAE)
+        cv2.putText(label, f"Tpx={t_pixel_mae:.4f}", (8, 144), cv2.FONT_HERSHEY_SIMPLEX,
+                   0.45, (255, 220, 150), 1, cv2.LINE_AA)
     return np.concatenate([label, row], axis=1)
 
 
@@ -333,6 +339,7 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     snap_dir = os.path.join(out_dir, f"{tag}_snapshots")
     os.makedirs(snap_dir, exist_ok=True)
     jsonl_path = os.path.join(out_dir, f"{tag}_log.jsonl")
+    pixel_mae_path = os.path.join(out_dir, f"{tag}_pixel_mae.jsonl")
     adapter_path = os.path.join(out_dir, f"{tag}_adapter.pt")
     device = device or ("mps" if torch.backends.mps.is_available() else
                         "cuda" if torch.cuda.is_available() else "cpu")
@@ -363,10 +370,9 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
         model.unet.enable_gradient_checkpointing()
         logline(f"[{tag}] gradient checkpointing enabled on the UNet "
                f"(trades ~30% speed for activation-memory headroom)")
-    if hasattr(model.vae, "enable_gradient_checkpointing"):
-        model.vae.enable_gradient_checkpointing()
-        logline(f"[{tag}] gradient checkpointing enabled on the VAE too -- decode()'s "
-               f"gradient-flow fix means backward now runs through it as well")
+    # NOTE: no VAE gradient checkpointing -- with T supervised in latent space,
+    # decode() is no_grad again (visualization/eval only), so backward never touches
+    # the VAE decoder and there is nothing there to checkpoint.
     tp = model.trainable_parameters()
     n_tr = sum(p.numel() for p in tp)
     n_total = sum(p.numel() for p in model.parameters())
@@ -384,6 +390,14 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     logline(f"[{tag}] fixed batch: photo[{batch['photo'].min():.3f},{batch['photo'].max():.3f}] "
            f"T[{batch['T'].min():.3f},{batch['T'].max():.3f}] "
            f"h[{batch['h'].min():.3f},{batch['h'].max():.3f}]")
+
+    # T is supervised in latent space (report 040 follow-up: pixel-space supervision
+    # needed backward through the frozen VAE decoder, which cost real activation memory
+    # for no accuracy benefit). The batch is FIXED and reused every step, so z_T_gt is
+    # encoded ONCE here rather than every step.
+    with torch.no_grad():
+        batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
+    logline(f"[{tag}] cached z_T_gt (latent T target) once: shape={list(batch['z_T_gt'].shape)}")
 
     diag = vae_floor(model, batch, device)
     logline(f"[{tag}] VAE-floor (frozen VAE encode->decode of gt_T, no UNet): "
@@ -453,10 +467,21 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
                    f"load_avg={load_avg()} {mps_mem_stats()}")
 
         if step % snapshot_every == 0 or step == steps - 1:
+            # decoded-pixel T MAE: a LOGGED METRIC only (no_grad), never the training
+            # loss (that's the latent MSE above) -- this is what lets the contact sheet
+            # and the gate pass/fail verdict keep speaking in pixel units even though
+            # training itself is latent-space. Compared directly against the VAE-floor
+            # (0.0023 here) that bounds how low it can possibly go.
             with torch.no_grad():
-                row = build_contact_row(batch["photo"][0], out["T"][0], batch["T"][0],
-                                        out["h"][0], batch["h"][0], step,
-                                        parts["total"] if "total" in parts else float(loss))
+                t_pixel_mae = float((out["T"] - batch["T"]).abs().mean())
+            with open(pixel_mae_path, "a") as f:
+                f.write(json.dumps({"step": step, "T_pixel_mae": t_pixel_mae}) + "\n")
+            logline(f"  [{tag}] step {step:4d}  T_pixel_mae={t_pixel_mae:.5f}  "
+                   f"(decoded, no_grad; VAE-floor={diag['vae_roundtrip_T_mae']:.4f})")
+            row = build_contact_row(batch["photo"][0], out["T"][0], batch["T"][0],
+                                    out["h"][0], batch["h"][0], step,
+                                    parts["total"] if "total" in parts else float(loss),
+                                    t_pixel_mae=t_pixel_mae)
             cv2.imwrite(os.path.join(snap_dir, f"step_{step:05d}.png"), row[..., ::-1])
             model.save_adapter(adapter_path)  # single rolling checkpoint (tens of MB)
 
@@ -470,6 +495,10 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     if os.path.exists(jsonl_path):
         with open(jsonl_path) as f:
             log = [json.loads(l) for l in f if l.strip()]
+    pixel_mae_log = []
+    if os.path.exists(pixel_mae_path):
+        with open(pixel_mae_path) as f:
+            pixel_mae_log = [json.loads(l) for l in f if l.strip()]
     snap_files = sorted(glob.glob(os.path.join(snap_dir, "step_*.png")))
     rows = [cv2.imread(p)[..., ::-1] for p in snap_files]
     rows = [r for r in rows if r is not None]
@@ -491,6 +520,8 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
         "steps_run": len(log) and log[-1]["step"] + 1 or 0,
         "stopped_reason": stopped_reason, "total_sec_this_invocation": round(total_sec, 1),
         "vae_floor": diag, "final_losses": final, "log": log,
+        "pixel_mae_log": pixel_mae_log,
+        "final_T_pixel_mae": pixel_mae_log[-1]["T_pixel_mae"] if pixel_mae_log else None,
         "trainable_params": int(n_tr), "lora_ok": model.lora_ok,
         "contact_sheet": sheet_path, "loss_curve": curve_path,
     }
