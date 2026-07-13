@@ -342,6 +342,10 @@ export function App() {
     pieceTransformPreviewStore.reconcile(project.pieces);
   }, [pieceTransformPreviewStore, project.pieces]);
 
+  useEffect(() => {
+    pieceTransformPreviewStore.cancelAll();
+  }, [pieceTransformPreviewStore, project.name]);
+
   useEffect(() => () => pieceTransformPreviewStore.cancelAll(), [pieceTransformPreviewStore]);
 
   const [backendStatus, setBackendStatus] = useState('');

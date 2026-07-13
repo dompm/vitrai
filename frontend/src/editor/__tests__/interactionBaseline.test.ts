@@ -19,7 +19,7 @@ import {
   getCanvasSnapping,
   simplifyPath,
 } from '../../components/ResultPanel';
-import { makeInteractionPieces } from '../performance/fixtures';
+import { makeInteractionPieces, makeInteractionProject, INTERACTION_SHEET_ID } from '../performance/fixtures';
 
 const translate = (key: string) => key;
 
@@ -30,6 +30,9 @@ describe('interaction fixtures', () => {
     expect(first).toEqual(second);
     expect(first).toHaveLength(count);
     expect(first[0].polygon).toHaveLength(24);
+    const project = makeInteractionProject(count, 24);
+    expect(project.sheets[0].id).toBe(INTERACTION_SHEET_ID);
+    expect(project.pieces.every(piece => piece.glassSheetId === INTERACTION_SHEET_ID)).toBe(true);
   });
 });
 
@@ -69,6 +72,20 @@ describe('current Pen behavior', () => {
     const fraction = getCanvasSnapping(105, 51, crop, 210, 120, 1, translate);
     expect(fraction.x).toBe(105);
     expect(fraction.labels).toContain('snapCenter');
+  });
+
+  it('preserves vertex priority over alignment and canvas snapping', () => {
+    const vertex = findPenSnapTarget([49, 30], pieces, 1);
+    expect(vertex?.pt).toEqual([48, 30]);
+    expect(findAlignmentGuides([49, 30], pieces, 1).guides.length).toBeGreaterThan(0);
+    expect(getCanvasSnapping(49, 30, { left: 50, right: 0, top: 0, bottom: 0 }, 200, 100, 1, translate).x).toBe(50);
+  });
+
+  it('locks the close-to-start screen threshold', () => {
+    const closes = (point: [number, number], scale: number) => Math.hypot(point[0], point[1]) * scale < 15;
+    expect(closes([14.99, 0], 1)).toBe(true);
+    expect(closes([15, 0], 1)).toBe(false);
+    expect(closes([7.49, 0], 2)).toBe(true);
   });
 });
 

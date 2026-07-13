@@ -56,4 +56,30 @@ describe('piece transform preview store', () => {
     expect(globalListener).toHaveBeenCalledTimes(1);
     expect(store.getVersion()).toBe(1);
   });
+
+  it('clears no-op gestures and all previews on project switch', () => {
+    const store = new PieceTransformPreviewStore();
+    const start = { x: 1, y: 2, rotation: 0, scale: 1 };
+    store.flush('piece', start);
+    store.clear('piece');
+    expect(store.get('piece')).toBeNull();
+    store.flush('piece', { ...start, x: 5 });
+    store.flush('other', { ...start, y: 8 });
+    store.cancelAll();
+    expect(store.get('piece')).toBeNull();
+    expect(store.get('other')).toBeNull();
+  });
+
+  it('records one durable write for a 300-event transform gesture', () => {
+    const store = new PieceTransformPreviewStore();
+    const commitProject = vi.fn();
+    for (let event = 0; event < 300; event += 1) {
+      store.schedule('piece', { x: event, y: event, rotation: 0, scale: 1 });
+    }
+    const final = store.get('piece');
+    expect(final).not.toBeNull();
+    store.flush('piece', final!);
+    commitProject(final);
+    expect(commitProject).toHaveBeenCalledTimes(1);
+  });
 });

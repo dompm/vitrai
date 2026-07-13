@@ -133,6 +133,9 @@ function snapPiecePosition(
   };
 }
 
+const transformsEqual = (a: TextureTransform, b: TextureTransform) =>
+  a.x === b.x && a.y === b.y && a.rotation === b.rotation && a.scale === b.scale;
+
 interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
@@ -408,6 +411,11 @@ export function SheetPanel({
     if (!isGroupMove) {
       const update = { pieceId, transform };
       if (flush) {
+        const committed = pieces.find(piece => piece.id === pieceId)?.transform;
+        if (committed && transformsEqual(transform, committed)) {
+          pieceTransformPreviewStore.clear(pieceId);
+          return;
+        }
         pieceTransformPreviewStore.flushMany([update]);
         onCommitTransforms([update]);
       } else {
@@ -435,6 +443,15 @@ export function SheetPanel({
       transform: { ...start, x: start.x + dx, y: start.y + dy },
     }));
     if (flush) {
+      const committedTransforms = new Map(pieces.map(piece => [piece.id, piece.transform]));
+      if (updates.every(update => {
+        const committed = committedTransforms.get(update.pieceId);
+        return committed != null && transformsEqual(update.transform, committed);
+      })) {
+        updates.forEach(update => pieceTransformPreviewStore.clear(update.pieceId));
+        groupMoveStartRef.current = null;
+        return;
+      }
       pieceTransformPreviewStore.flushMany(updates);
       onCommitTransforms(updates);
       groupMoveStartRef.current = null;
@@ -596,8 +613,12 @@ export function SheetPanel({
 
     if (rotatingPiece) {
       const finalTransform = pieceTransformPreviewStore.get(rotatingPieceId!) ?? rotatingPiece.transform;
-      pieceTransformPreviewStore.flush(rotatingPieceId!, finalTransform);
-      onCommitTransforms([{ pieceId: rotatingPieceId!, transform: finalTransform }]);
+      if (transformsEqual(finalTransform, rotatingPiece.transform)) {
+        pieceTransformPreviewStore.clear(rotatingPieceId!);
+      } else {
+        pieceTransformPreviewStore.flush(rotatingPieceId!, finalTransform);
+        onCommitTransforms([{ pieceId: rotatingPieceId!, transform: finalTransform }]);
+      }
     }
     rotationValueRef.current = null;
     setRotatingPieceId(null);
@@ -613,8 +634,12 @@ export function SheetPanel({
           ...piece.transform,
           rotation: rotationValueRef.current,
         };
-        pieceTransformPreviewStore.flush(rotatingPieceId, finalTransform);
-        onCommitTransforms([{ pieceId: rotatingPieceId, transform: finalTransform }]);
+        if (transformsEqual(finalTransform, piece.transform)) {
+          pieceTransformPreviewStore.clear(rotatingPieceId);
+        } else {
+          pieceTransformPreviewStore.flush(rotatingPieceId, finalTransform);
+          onCommitTransforms([{ pieceId: rotatingPieceId, transform: finalTransform }]);
+        }
       }
     }
     setMarqueeBox(null);

@@ -2149,6 +2149,15 @@ export function ResultPanel({
                       />
                     );
                   })}
+                  {debugMask && activeTool === 'box' && (
+                    <KonvaImage
+                      image={debugMask.bitmap as unknown as HTMLImageElement}
+                      x={0} y={0}
+                      width={debugMask.width} height={debugMask.height}
+                      listening={false}
+                      globalCompositeOperation="difference"
+                    />
+                  )}
                 </Group>
               </Layer>
               <Layer>
@@ -2162,15 +2171,6 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {debugMask && activeTool === 'box' && (
-                    <KonvaImage
-                      image={debugMask.bitmap as unknown as HTMLImageElement}
-                      x={0} y={0}
-                      width={debugMask.width} height={debugMask.height}
-                      listening={false}
-                      globalCompositeOperation="difference"
-                    />
-                  )}
                   {activeTool === 'polygon' && (activePolygonPoints.length > 0 || hoverPoint) && (
                     <Group>
                       {/* Alignment Guides */}

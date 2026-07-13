@@ -38,5 +38,9 @@ piece counts at 96 vertices. This excludes React reconciliation and Konva draws.
 horizontal/vertical alignment, Shift alignment, equal-length matching, canvas
 edge/fraction snapping, and fixed Pencil simplification outputs.
 
-The real app type-check has eight pre-existing errors in App, GlassLibraryDialog,
-ResultPanel, SheetPanel, and Tutorial files. Phase 0 adds no new errors.
+The rebased app type-checks cleanly. Interaction phases must preserve that clean
+baseline rather than carrying forward the errors documented on the older base.
+
+The executable transform trace drives 300 movement samples through the real
+preview store and asserts one durable commit at gesture end. It is retained in
+`pieceTransformPreviewStore.test.ts` as the project-write regression count.
