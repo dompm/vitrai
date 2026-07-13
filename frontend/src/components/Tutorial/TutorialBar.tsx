@@ -8,9 +8,20 @@ interface TutorialBarProps {
   onComplete: () => void;
   customTitle?: string;
   customBody?: string;
+  onContinue?: () => void;
+  continueLabel?: string;
 }
 
-export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, customBody }: TutorialBarProps) {
+export function TutorialBar({
+  step,
+  onStart,
+  onSkip,
+  onComplete,
+  customTitle,
+  customBody,
+  onContinue,
+  continueLabel,
+}: TutorialBarProps) {
   const { t } = useTranslation();
 
   if (step === 'welcome') {
@@ -81,6 +92,11 @@ export function TutorialBar({ step, onStart, onSkip, onComplete, customTitle, cu
       </div>
 
       <div className="tutorial-bar-right">
+        {onContinue && continueLabel && (
+          <button className="btn-primary btn-sm" onClick={onContinue}>
+            {continueLabel}
+          </button>
+        )}
         <button className="btn-ghost btn-sm" onClick={onSkip}>
           {t('tutorialSkipButton')}
         </button>

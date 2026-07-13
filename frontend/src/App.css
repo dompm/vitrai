@@ -1481,6 +1481,9 @@ html, body, #root {
 
 .tutorial-bar-right {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* Tutorial Modals */
@@ -1605,7 +1608,7 @@ html, body, #root {
     font-size: 12.5px;
   }
   .tutorial-bar-right {
-    text-align: right;
+    justify-content: flex-end;
   }
 }
 
