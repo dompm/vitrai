@@ -91,12 +91,22 @@ def compute_losses(out, batch, w):
 
 def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
                lr=1e-3, lora_rank=8, device=None, fp32=True, cache_only=False,
-               log_every=10, save_every=None, weights=None):
+               log_every=10, save_every=None, weights=None, check_grads=True):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available()
                         else "cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float32 if fp32 else torch.float16
     weights = weights or {"T": 6.0, "h": 2.0, "B": 2.0, "shadow": 1.0, "mark": 1.0, "conf": 1.0}
+
+    if check_grads:
+        # report 040: a frozen submodule's forward pass can silently sever gradient to
+        # an upstream TRAINABLE path (not just its own weights) without any error and
+        # without a plain fwd/bwd smoke test noticing -- cheap enough (~seconds, tiny
+        # backbone, backbone-agnostic since the bug lives in shared code) to run before
+        # every real launch. Set check_grads=False only for a deliberate re-check of a
+        # run already known-good.
+        from test_grad_flow import preflight_or_raise
+        preflight_or_raise(backbone="tiny", device=device)
 
     ds = GlassDelightDataset(data_roots, split="train", crop=crop, augment=True)
     print(f"[train] {len(ds)} TRAIN identities-crops source | backbone={backbone} device={device}")
@@ -155,12 +165,15 @@ def main():
     ap.add_argument("--cache-only", action="store_true", help="HF local_files_only (no download)")
     ap.add_argument("--smoke", action="store_true",
                     help="preset: backbone=tiny, 150 steps, 256 crop, bs2 (M4 loop test)")
+    ap.add_argument("--no-check-grads", action="store_true",
+                    help="skip the report-040 gradient-flow preflight (default: runs it)")
     args = ap.parse_args()
     if args.smoke:
         args.backbone, args.steps, args.crop, args.bs = "tiny", args.steps or 150, 256, 2
     train_loop(args.data, args.out, backbone=args.backbone, steps=args.steps, bs=args.bs,
                crop=args.crop, lr=args.lr, lora_rank=args.lora_rank, device=args.device,
-               fp32=not args.fp16, cache_only=args.cache_only)
+               fp32=not args.fp16, cache_only=args.cache_only,
+               check_grads=not args.no_check_grads)
 
 
 if __name__ == "__main__":

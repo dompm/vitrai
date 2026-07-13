@@ -318,7 +318,7 @@ def plot_loss_curve(log, out_path, title):
 # ------------------------------------------------------------------ main loop
 def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backbone,
             out_dir, device, weights=None, max_minutes=None, log_path="/tmp/night_train.log",
-            resume=True):
+            resume=True, check_grads=True):
     """Guard trips are expected overnight on this shared machine (Blender's bursty
     CPU/GPU use can briefly push real kernel pressure to warn). Rather than fight the
     debounce further, state is persisted INCREMENTALLY so a trip just pauses progress:
@@ -347,6 +347,10 @@ def run_gate(sample_dirs, tag, steps, snapshot_every, crop, lr, lora_rank, backb
     logline(f"[{tag}] === start {time.strftime('%Y-%m-%d %H:%M:%S')} "
            f"backbone={backbone} device={device} n_samples={len(sample_dirs)} "
            f"steps={steps} crop={crop} weights={weights} ===")
+
+    if check_grads:
+        from test_grad_flow import preflight_or_raise
+        preflight_or_raise(backbone="tiny", device=device)
 
     ds = FixedSampleDataset(sample_dirs, crop=crop, work_size=768, augment=False,
                             input_variant="without")
@@ -522,6 +526,8 @@ def main():
     ap.add_argument("--w-shadow", type=float, default=1.0, help="loss weight: shadow")
     ap.add_argument("--w-mark", type=float, default=1.0, help="loss weight: mark")
     ap.add_argument("--w-conf", type=float, default=1.0, help="loss weight: conf")
+    ap.add_argument("--no-check-grads", action="store_true",
+                    help="skip the report-040 gradient-flow preflight (default: runs it)")
     args = ap.parse_args()
 
     sample_dirs = []
@@ -534,7 +540,8 @@ def main():
               "mark": args.w_mark, "conf": args.w_conf}
     run_gate(sample_dirs, args.tag, args.steps, args.snapshot_every, args.crop, args.lr,
              args.lora_rank, args.backbone, args.out, args.device, weights=weights,
-             max_minutes=args.max_minutes, log_path=args.log, resume=not args.no_resume)
+             max_minutes=args.max_minutes, log_path=args.log, resume=not args.no_resume,
+             check_grads=not args.no_check_grads)
 
 
 if __name__ == "__main__":

@@ -100,11 +100,20 @@ def _run_training(data_glob, out_dir, backbone, steps, bs, crop, lr, lora_rank,
     sys.path.insert(0, os.path.join(HERE))
     from train import train_loop  # the shared loop
 
+    # report 040: run the gradient-flow preflight BEFORE any paid A100 time. It found a
+    # real bug (decode() silently severing T's own gradient path) that a plain fwd/bwd
+    # smoke test (report 038) missed entirely -- never skip this on a cloud launch.
+    from test_grad_flow import preflight_or_raise
+    preflight_or_raise(backbone="tiny")
+
     roots = sorted(glob.glob(data_glob))
     print(f"[modal] data roots: {roots}")
+    # train_loop's own check_grads defaults True too; explicit here so the ordering (and
+    # the fact that it ran) is unambiguous in the Modal logs even if train_loop's
+    # default ever changes.
     model, log = train_loop(roots, out_dir, backbone=backbone, steps=steps, bs=bs,
                             crop=crop, lr=lr, lora_rank=lora_rank, fp32=False,
-                            save_every=max(1, steps // 10))
+                            save_every=max(1, steps // 10), check_grads=False)
     ckpt = os.path.join(out_dir, "adapter.pt")
     if hf_repo:
         _push_to_hub(ckpt, hf_repo)

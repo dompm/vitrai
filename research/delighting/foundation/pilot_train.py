@@ -58,7 +58,8 @@ def prune_checkpoints(out_dir, keep=3):
 
 
 def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, lr,
-                lora_rank, ckpt_every_min, device, log_path, final_eval, cache_only=True):
+                lora_rank, ckpt_every_min, device, log_path, final_eval, cache_only=True,
+                check_grads=True):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available() else
                         "cuda" if torch.cuda.is_available() else "cpu")
@@ -70,6 +71,10 @@ def train_pilot(data_root, out_dir, backbone, epoch_steps, max_hours, bs, crop, 
 
     logline(f"[pilot] === start {time.strftime('%Y-%m-%d %H:%M:%S')} data={data_root} "
            f"backbone={backbone} max_hours={max_hours} epoch_steps={epoch_steps} ===")
+
+    if check_grads:
+        from test_grad_flow import preflight_or_raise
+        preflight_or_raise(backbone="tiny", device=device)
 
     model = FoundationDelighter(backbone=backbone, dtype=torch.float32, freeze_backbone=True,
                                 lora_rank=lora_rank, cache_only=cache_only).to(device)
@@ -192,10 +197,13 @@ def main():
     ap.add_argument("--device", default=None)
     ap.add_argument("--log", default="/tmp/night_train.log")
     ap.add_argument("--final-eval", action="store_true")
+    ap.add_argument("--no-check-grads", action="store_true",
+                    help="skip the report-040 gradient-flow preflight (default: runs it)")
     args = ap.parse_args()
     train_pilot(args.data, args.out, args.backbone, args.epoch_steps, args.max_hours,
                args.bs, args.crop, args.lr, args.lora_rank, args.ckpt_every_min,
-               args.device, args.log, args.final_eval)
+               args.device, args.log, args.final_eval,
+               check_grads=not args.no_check_grads)
 
 
 if __name__ == "__main__":
