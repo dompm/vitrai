@@ -176,8 +176,18 @@ class FoundationDelighter(nn.Module):
         return z * self.vae_scale
 
     def decode(self, z):
-        with torch.no_grad():
-            img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
+        # NO `torch.no_grad()` here (bug found in report 040's gate1b): the VAE's own
+        # weights are already frozen via `requires_grad_(False)` in __init__, which is
+        # sufficient to keep them from updating. Wrapping this forward call in
+        # `torch.no_grad()` additionally severs the gradient path from T's loss back to
+        # `z`  (z_T_hat, the LoRA-adapted UNet's output) -- T's own reconstruction
+        # signal could never reach the trainable LoRA parameters at all. Confirmed via
+        # gate1b: with every other loss weight zeroed, T's loss was bit-for-bit frozen
+        # for 100+ steps (zero gradient reaching ANY trainable parameter); in the full
+        # multi-head loss, T only drifted as a side effect of h/B/shadow/mark/conf
+        # gradients flowing through `z_T_hat` via the AuxHead (a path that never went
+        # through this no-grad decode), never from its own supervision.
+        img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
         return (img.float() * 0.5 + 0.5)  # -> [0,1]
 
     def forward(self, photo01):
