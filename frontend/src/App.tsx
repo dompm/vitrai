@@ -731,14 +731,16 @@ export function App() {
   }
 
 
-  const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const piecesOnActiveSheet = project.pieces
-    .filter(p => p.glassSheetId === activeSheetId)
-    .sort((a, b) => {
-      const aSelected = selectedPieceIds.includes(a.id) ? 1 : 0;
-      const bSelected = selectedPieceIds.includes(b.id) ? 1 : 0;
-      return aSelected - bSelected;
-    });
+  const activeSheet = useMemo(
+    () => project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0],
+    [project.sheets, activeSheetId],
+  );
+  const piecesOnActiveSheet = useMemo(() => {
+    const selected = new Set(selectedPieceIds);
+    return project.pieces
+      .filter(p => p.glassSheetId === activeSheetId)
+      .sort((a, b) => Number(selected.has(a.id)) - Number(selected.has(b.id)));
+  }, [project.pieces, activeSheetId, selectedPieceIds]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { memo, useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -25,6 +25,7 @@ import { CANVAS } from '../theme';
 import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint, patternToSurfaceRobust } from '../utils/lampGeometry';
 import { getSnapFractions } from '../utils/snapping';
 import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../utils/vectorMath';
+import { getPieceGeometry, type PieceGeometry } from '../editor/geometry/pieceGeometry';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -62,17 +63,18 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 interface PieceOverlayProps {
   piece: Piece;
-  displayPolygon: [number, number][];
+  geometry: PieceGeometry;
   glassImageUrl: string;
   isSelected: boolean;
   isPending: boolean;
   opacity?: number;
   solderWidth: number;
   solderColor: string;
-  onSelect: (multi?: boolean) => void;
+  onSelectPiece: (id: string | null, multi?: boolean) => void;
+  selectionDisabled: boolean;
 }
 
-function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelect }: PieceOverlayProps) {
+const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -81,23 +83,14 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
     return () => clearInterval(id);
   }, [isPending]);
   const { x: tx, y: ty, rotation, scale } = piece.transform;
-  const centroid = computeCentroid(displayPolygon);
-  const flatPts = displayPolygon.flat();
+  const { flatPoints: flatPts, centroid, bounds, clipFunc: clipPolygon } = geometry;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
-
-  function clipPolygon(ctx: any) {
-    ctx.beginPath();
-    displayPolygon.forEach(([x, y], i) => {
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-  }
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
     if (longPressFired.current) { longPressFired.current = false; return; }
-    onSelect(e.evt.shiftKey);
+    if (!selectionDisabled) onSelectPiece(piece.id, e.evt.shiftKey);
   }
 
   function handlePointerDown() {
@@ -106,16 +99,13 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
       longPressTimer.current = null;
-      onSelect(true);
+      if (!selectionDisabled) onSelectPiece(piece.id, true);
     }, 500);
   }
 
   function cancelLongPress() {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
-
-  const xs = displayPolygon.map(p => p[0]);
-  const ys = displayPolygon.map(p => p[1]);
 
   return (
     <Group
@@ -133,9 +123,9 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
         </Group>
         {isPending && (
           <Rect
-            x={Math.min(...xs)} y={Math.min(...ys)}
-            width={Math.max(...xs) - Math.min(...xs)}
-            height={Math.max(...ys) - Math.min(...ys)}
+            x={bounds.minX} y={bounds.minY}
+            width={bounds.maxX - bounds.minX}
+            height={bounds.maxY - bounds.minY}
             fill={`rgba(245,158,11,${pulseHi ? 0.28 : 0.10})`}
             listening={false}
           />
@@ -151,7 +141,7 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
       />
     </Group>
   );
-}
+});
 
 interface ResultPanelProps {
   project: Project;
@@ -772,6 +762,7 @@ export function ResultPanel({
   isSymmetryEnabled = false, onToggleSymmetry,
 }: ResultPanelProps) {
   const { t } = useTranslation();
+  const selectedPieceIdSet = useMemo(() => new Set(selectedPieceIds), [selectedPieceIds]);
   const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
   const solderPopoverRef = useRef<HTMLDivElement>(null);
   const snapMenuRef = useRef<HTMLDivElement>(null);
@@ -1325,7 +1316,10 @@ export function ResultPanel({
   }, [tutorialStep, project.pieces.length]);
   
   const [patternImg] = useImage(project.patternImageUrl);
-  const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
+  const sheetMap = useMemo(
+    () => Object.fromEntries(project.sheets.map(s => [s.id, s])),
+    [project.sheets],
+  );
   const measure = useMeasure();
 
   function isBackground(e: KonvaEventObject<PointerEvent | MouseEvent>) {
@@ -2117,23 +2111,24 @@ export function ResultPanel({
                   )}
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
-                    const isSelected = selectedPieceIds.includes(piece.id);
+                    const isSelected = selectedPieceIdSet.has(piece.id);
                     // Corner drag: override polygon directly (activeDragPolygon)
                     const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
                     // Midpoint drag: override curvePoints (activeDragCurvePoints); polygon stays clean
                     const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
-                    const displayPolygon = flattenCurves(basePolygon, baseCurves);
+                    const geometry = getPieceGeometry(basePolygon, baseCurves);
                     return (
                       <PieceOverlay
                         key={piece.id}
                         piece={piece}
-                        displayPolygon={displayPolygon}
+                        geometry={geometry}
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
                         solderWidth={solderWidth}
                         solderColor={SOLDER_COLORS[project.solderColor ?? 'black'] ?? SOLDER_COLORS.black}
-                        onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
+                        onSelectPiece={onSelectPiece}
+                        selectionDisabled={Boolean(refineMode)}
                       />
                     );
                   })}
@@ -2454,7 +2449,7 @@ export function ResultPanel({
                     return null;
                   })()}
                   {project.pieces.map(piece => {
-                    if (!selectedPieceIds.includes(piece.id) || !piece.promptPoints) return null;
+                    if (!selectedPieceIdSet.has(piece.id) || !piece.promptPoints) return null;
                     return piece.promptPoints.map((pt, i) => (
                       <Circle
                         key={i}
@@ -2773,7 +2768,7 @@ export function ResultPanel({
                 id: '__multiple__',
                 label: t('pieces', { count: selectedPieceIds.length }),
                 // If all selected pieces share the same sheet, show it; otherwise, use a special value
-                glassSheetId: project.pieces.filter(p => selectedPieceIds.includes(p.id))
+                glassSheetId: project.pieces.filter(p => selectedPieceIdSet.has(p.id))
                   .every((p, _, arr) => p.glassSheetId === arr[0].glassSheetId) 
                     ? piece.glassSheetId 
                     : '__multiple__'

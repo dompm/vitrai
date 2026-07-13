@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { memo, useState, useRef, useMemo, useEffect } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,7 @@ import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
+import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -147,22 +148,23 @@ interface PieceOutlineProps {
   onSnapChange?: (guides: { x: number | null; y: number | null }) => void;
 }
 
-function PieceOutline({
+const PieceOutline = memo(function PieceOutline({
   piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart,
   fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
   const { x, y, rotation, scale } = piece.transform;
-  const displayPolygon = flattenCurves(piece.polygon, piece.curvePoints);
-  const centroid = computeCentroid(displayPolygon);
-  const relPts = displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
+  const geometry = getPieceGeometry(piece.polygon, piece.curvePoints);
+  const { centroid } = geometry;
+  const relPts = useMemo(
+    () => geometry.displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]),
+    [geometry, centroid],
+  );
 
   // Combined divisor so sizes stay fixed in display pixels
   const es = effectiveScale * scale;
 
   // Bounding radius in display px, converted to local coords for the handle stem
-  const radiusPx = Math.max(
-    ...displayPolygon.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
-  ) * es;
+  const radiusPx = geometry.localBoundingRadius * es;
   const handleOffset = (radiusPx + HANDLE_GAP + HANDLE_RADIUS) / es;
 
   // Prevent drag from starting when the pointer went down on the rotation handle
@@ -272,7 +274,7 @@ function PieceOutline({
       )}
     </Group>
   );
-}
+});
 
 const PackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -305,6 +307,7 @@ export function SheetPanel({
   showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false,
 }: SheetPanelProps) {
   const { t } = useTranslation();
+  const selectedPieceIdSet = useMemo(() => new Set(selectedPieceIds), [selectedPieceIds]);
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [isPacking, setIsPacking] = useState(false);
@@ -863,7 +866,7 @@ export function SheetPanel({
                   <PieceOutline
                     key={piece.id + '-fill'}
                     piece={piece}
-                    isSelected={selectedPieceIds.includes(piece.id)}
+                    isSelected={selectedPieceIdSet.has(piece.id)}
                     effectiveScale={es}
                     fillOnly
                     listening={false}
@@ -875,7 +878,7 @@ export function SheetPanel({
                 <PieceOutline
                   key={piece.id + '-stroke'}
                   piece={piece}
-                  isSelected={selectedPieceIds.includes(piece.id)}
+                  isSelected={selectedPieceIdSet.has(piece.id)}
                   effectiveScale={es}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
@@ -906,7 +909,7 @@ export function SheetPanel({
               )}
 
               {pieces.map(piece => {
-                if (!selectedPieceIds.includes(piece.id)) return null;
+                if (!selectedPieceIdSet.has(piece.id)) return null;
                 return (
                   <PieceOutline
                     key={piece.id + '-handle'}
