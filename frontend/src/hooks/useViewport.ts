@@ -45,12 +45,26 @@ export function useViewport(imageW: number, imageH: number) {
   const [isPanningState, setIsPanningState] = useState(false);
   const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
   const isPinchingRef = useRef(false);
+  const viewportFrameRef = useRef<number | null>(null);
 
-  zoomRef.current = zoom;
-  panRef.current = pan;
   dimsRef.current = dims;
   imageWRef.current = imageW;
   imageHRef.current = imageH;
+
+  function scheduleViewport(nextZoom: number, nextPan: { x: number; y: number }) {
+    zoomRef.current = nextZoom;
+    panRef.current = nextPan;
+    if (viewportFrameRef.current !== null) return;
+    viewportFrameRef.current = requestAnimationFrame(() => {
+      viewportFrameRef.current = null;
+      setZoom(zoomRef.current);
+      setPan(panRef.current);
+    });
+  }
+
+  useEffect(() => () => {
+    if (viewportFrameRef.current !== null) cancelAnimationFrame(viewportFrameRef.current);
+  }, []);
 
   function currentDisplayScale() {
     const d = dimsRef.current;
@@ -70,9 +84,11 @@ export function useViewport(imageW: number, imageH: number) {
     const previousEffectiveScale = ds * previousZoom;
     const nextEffectiveScale = ds * clampedZoom;
 
-    setZoom(clampedZoom);
-    if (previousEffectiveScale <= 0) return;
-    setPan({
+    if (previousEffectiveScale <= 0) {
+      scheduleViewport(clampedZoom, previousPan);
+      return;
+    }
+    scheduleViewport(clampedZoom, {
       x: point.x - (point.x - previousPan.x) * nextEffectiveScale / previousEffectiveScale,
       y: point.y - (point.y - previousPan.y) * nextEffectiveScale / previousEffectiveScale,
     });
@@ -90,8 +106,7 @@ export function useViewport(imageW: number, imageH: number) {
   function fitToView() {
     const d = dimsRef.current;
     const ds = currentDisplayScale();
-    setZoom(1);
-    setPan({
+    scheduleViewport(1, {
       x: (d.w - imageWRef.current * ds) / 2,
       y: (d.h - imageHRef.current * ds) / 2,
     });
@@ -124,10 +139,12 @@ export function useViewport(imageW: number, imageH: number) {
       if (initializedRef.current && previousEffectiveScale > 0) {
         const imageCenterX = (previousDims.w / 2 - previousPan.x) / previousEffectiveScale;
         const imageCenterY = (previousDims.h / 2 - previousPan.y) / previousEffectiveScale;
-        setPan({
+        const nextPan = {
           x: width / 2 - imageCenterX * nextEffectiveScale,
           y: height / 2 - imageCenterY * nextEffectiveScale,
-        });
+        };
+        panRef.current = nextPan;
+        setPan(nextPan);
       }
       setDims({ w: width, h: height });
     });
@@ -152,11 +169,14 @@ export function useViewport(imageW: number, imageH: number) {
     if (initializedRef.current || imageW <= 0 || dims.w <= 0) return;
     initializedRef.current = true;
     const scale = Math.min(dims.w / imageW, dims.h / imageH);
-    setZoom(1);
-    setPan({
+    const centeredPan = {
       x: (dims.w - imageW * scale) / 2,
       y: (dims.h - imageH * scale) / 2,
-    });
+    };
+    zoomRef.current = 1;
+    panRef.current = centeredPan;
+    setZoom(1);
+    setPan(centeredPan);
   }, [imageW, imageH, dims.w, dims.h]);
 
   // Native (non-passive) wheel handler — added once, uses refs
@@ -173,7 +193,8 @@ export function useViewport(imageW: number, imageH: number) {
         const factor = Math.pow(0.996, raw);
         setZoomAround(zoomRef.current * factor, { x: mx, y: my });
       } else {
-        setPan(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
+        const current = panRef.current;
+        scheduleViewport(zoomRef.current, { x: current.x - e.deltaX, y: current.y - e.deltaY });
       }
     };
     el.addEventListener('wheel', handler, { passive: false });
@@ -236,8 +257,7 @@ export function useViewport(imageW: number, imageH: number) {
         const newEff = ds * newZoom;
         // Keep the image point that was under lastMid pinned to the new mid.
         // Simultaneously handles zoom and the translation of the midpoint.
-        setZoom(newZoom);
-        setPan({
+        scheduleViewport(newZoom, {
           x: m.x - (lastMidX - prevPan.x) * newEff / oldEff,
           y: m.y - (lastMidY - prevPan.y) * newEff / oldEff,
         });
@@ -277,7 +297,8 @@ export function useViewport(imageW: number, imageH: number) {
     const dx = pos.x - lastPanPtr.current.x;
     const dy = pos.y - lastPanPtr.current.y;
     lastPanPtr.current = pos;
-    setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+    const current = panRef.current;
+    scheduleViewport(zoomRef.current, { x: current.x + dx, y: current.y + dy });
   }
 
   function endPan() {
