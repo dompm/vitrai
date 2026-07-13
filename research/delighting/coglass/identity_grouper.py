@@ -21,23 +21,33 @@ Two filename conventions coexist on this store (report 041 SS1/SS2.2):
   - camera-roll: "IMG_<n>.jpg" or "IMG_<n>_<uuid>.jpg" -- raw phone photos,
                 the SKU is NOT recoverable from the filename at all.
 
-Anything that isn't confidently SKU-named -- including camera-roll images,
-and anything that superficially LOOKS SKU-shaped but doesn't match one of the
-listing's own variant SKUs -- goes to the "unverified" bucket and must never
-be used to assemble an automatic pair (report 041 SS6 step 2: skip, or add a
-sticker-OCR / VLM same-piece check later; this module only does the cheap,
-safe, filename-only half).
+Camera-roll images (and anything else without a SKU-shaped stem) go to the
+"unverified" bucket and are never auto-paired (report 041 SS6 step 2: skip, or
+add a sticker-OCR / VLM same-piece check later; this module only does the
+cheap, safe, filename-only half).
 
-Grounded against three live listings fetched read-only via the documented
-JSON API (coglassworks.com/products/<handle>.json, one GET each, matching the
-scout's SS1 posture) on 2026-07-13:
-  - white-mottled-oceana-ra395 : RA395.jpg, RA395_2.jpg, RA396.jpg, RA396_2.jpg
-    variants RA395, RA396               -> the report's own multi-piece example
-  - amber-white-wispy-rk950    : RK950.jpg, RK950_2.jpg
-    variant RK950                       -> single-piece SKU-named example
-  - light-amber-white-wispy-vintage-spectrum : 11x IMG_####[_uuid].jpg
-    variants SP-24676141 etc. (no overlap with filenames at all)
-                                         -> pure camera-roll / unverified example
+Verification tiers (measured on the full 1,361-product census, 2026-07-13):
+the naive idea "cross-check the filename token against variants[].sku" turned
+out to be too strict on real data -- for most 2024+ listings the variant sku
+field holds a size+barcode string like "10x8in (YG-56938541)" while the piece
+token (RA784) lives only in the filename and the product handle. So instead of
+dropping unmatched tokens, every SKU-shaped token is kept and tagged with how
+strongly it is corroborated:
+
+  variant        token matches one of the listing's variants[].sku values
+                 (word-boundary match inside the sku string)
+  handle         token appears verbatim in the product handle
+                 (e.g. white-mottled-oceana-ra395 -> RA395)
+  handle_prefix  the handle's trailing SKU-shaped segment is a strict prefix
+                 of the token (e.g. ...-lamberts-flash-glass-rk1 -> RK127)
+  prefix_sibling same alphabetic prefix as a variant/handle-corroborated
+                 token in the SAME listing (multi-piece listings usually name
+                 only the first piece in the handle; siblings are sequential
+                 intake codes, e.g. RA777 in handle, RA778 only in filenames)
+  shape_only     SKU-shaped stem with no corroboration beyond its shape
+
+Downstream consumers choose their own floor; the 044 hand-check measures
+precision per tier so that choice is data-driven, not vibes.
 """
 from __future__ import annotations
 
@@ -57,18 +67,28 @@ SKU_TOKEN_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Trailing SKU-shaped segment of a product handle, e.g. "-ra395" or "-rk1".
+HANDLE_TAIL_RE = re.compile(r"-([A-Za-z]{1,4}\d{1,})$")
+
 
 def _stem(filename: str) -> str:
-    base = os.path.basename(filename)
+    # Accept full CDN URLs: strip query string (Shopify appends ?v=<cache
+    # buster> to every images[].src) and fragment before taking the basename.
+    base = os.path.basename(filename.split("?")[0].split("#")[0])
     return re.sub(r"\.(jpe?g|png|webp|gif)$", "", base, flags=re.IGNORECASE)
+
+
+def _alpha_prefix(token: str) -> str:
+    m = re.match(r"^[A-Za-z]+", token)
+    return m.group(0) if m else ""
 
 
 @dataclass
 class GroupResult:
     handle: str
-    groups: dict = field(default_factory=dict)       # token -> [filenames]
-    unverified: list = field(default_factory=list)    # filenames
-    unmatched_variant_tokens: list = field(default_factory=list)  # SKU-shaped but no variant match
+    groups: dict = field(default_factory=dict)        # token -> [filenames]
+    tiers: dict = field(default_factory=dict)         # token -> verification tier
+    unverified: list = field(default_factory=list)    # filenames (camera-roll etc)
 
     @property
     def piece_count(self) -> int:
@@ -92,47 +112,43 @@ class GroupResult:
         return "none"
 
     def pairs(self):
-        """Yield (token, file_a, file_b) for every within-piece image pair.
+        """Yield (token, tier, file_a, file_b) for every within-piece pair.
 
-        Only ever drawn from `groups` (filename-SKU-verified, and further
-        variant-cross-checked when variant_skus was supplied) -- never from
+        Only ever drawn from `groups` (same filename SKU token) -- never from
         `unverified`. This is the load-bearing guarantee: a pair emitted here
-        is physical-piece-verified, not merely listing-verified.
+        is physical-piece-verified at its stated tier, not merely
+        listing-verified.
         """
         for token, files in self.groups.items():
             if len(files) < 2:
                 continue
             for a, b in combinations(sorted(files), 2):
-                yield token, a, b
+                yield token, self.tiers[token], a, b
 
 
 def group_listing_images(handle: str, image_filenames, variant_skus=None) -> GroupResult:
     """Group one product listing's image filenames by physical-piece SKU token.
 
     Args:
-        handle: product handle/slug, for bookkeeping only.
-        image_filenames: iterable of filenames (or full src URLs -- basename
-            is taken) as they appear in the listing's images[] array.
-        variant_skus: optional iterable of this listing's own variants[].sku
-            values. When provided, a filename-derived token is only trusted
-            if it case-insensitively matches one of the listing's real
-            variant SKUs -- protects against the regex matching something
-            SKU-shaped that isn't actually this listing's identity token
-            (e.g. a barcode fragment, or a coincidental camera filename).
-            When omitted, the token is trusted on filename shape alone (used
-            for isolated unit tests / early scoping where variant data isn't
-            fetched).
+        handle: product handle/slug; also used for handle-based tier
+            corroboration.
+        image_filenames: iterable of filenames or full src URLs (basename is
+            taken, query strings stripped) as they appear in images[].
+        variant_skus: optional iterable of this listing's variants[].sku
+            values, used for tier corroboration (see module docstring).
 
     Returns:
-        GroupResult with `.groups` (token -> verified same-piece image list),
-        `.unverified` (everything that must NOT be auto-paired), and
-        `.unmatched_variant_tokens` (diagnostic: SKU-shaped tokens that had
-        no variant match, folded into unverified).
+        GroupResult with `.groups` (token -> same-piece image list), `.tiers`
+        (token -> verification tier), and `.unverified` (everything that must
+        NOT be auto-paired: camera-roll filenames and non-SKU-shaped stems).
     """
-    variant_set = {s.strip().upper() for s in (variant_skus or []) if s}
+    sku_blob = " ".join(s.strip().upper() for s in (variant_skus or []) if s)
+    handle_squash = re.sub(r"[^A-Za-z0-9]", "", handle or "").upper()
+    m_tail = HANDLE_TAIL_RE.search(handle or "")
+    handle_tail = m_tail.group(1).upper() if m_tail else None
+
     groups = defaultdict(list)
     unverified = []
-    unmatched = []
 
     for fname in image_filenames:
         stem = _stem(fname)
@@ -143,27 +159,40 @@ def group_listing_images(handle: str, image_filenames, variant_skus=None) -> Gro
         if not m:
             unverified.append(fname)
             continue
-        token = m.group("token").upper()
-        if variant_set and token not in variant_set:
-            unmatched.append(token)
-            unverified.append(fname)
+        groups[m.group("token").upper()].append(fname)
+
+    # Tier assignment (two passes: direct corroboration, then siblings).
+    tiers = {}
+    for token in groups:
+        if sku_blob and re.search(r"(?<![A-Z0-9])" + re.escape(token) + r"(?![A-Z0-9])", sku_blob):
+            tiers[token] = "variant"
+        elif token.replace("-", "") in handle_squash:
+            tiers[token] = "handle"
+        elif handle_tail and token.startswith(handle_tail) and token != handle_tail:
+            tiers[token] = "handle_prefix"
+    anchored_prefixes = {_alpha_prefix(t) for t in tiers}
+    for token in groups:
+        if token in tiers:
             continue
-        groups[token].append(fname)
+        if _alpha_prefix(token) in anchored_prefixes:
+            tiers[token] = "prefix_sibling"
+        else:
+            tiers[token] = "shape_only"
 
     return GroupResult(
         handle=handle,
         groups=dict(groups),
+        tiers=tiers,
         unverified=unverified,
-        unmatched_variant_tokens=unmatched,
     )
 
 
 def classify_listing(result: GroupResult) -> str:
     """One-line bucket for census reporting, per report 041 SS2.2's table."""
     if result.convention == "sku_named" and result.is_multi_piece:
-        return "multi_piece_verified"
+        return "multi_piece_sku_named"
     if result.convention == "sku_named" and result.piece_count == 1:
-        return "single_piece_verified"
+        return "single_piece_sku_named"
     if result.convention == "mixed":
         return "mixed_convention"
     if result.convention == "camera_roll":
