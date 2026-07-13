@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import type { ReactNode } from 'react';
 import { StepId, ANCHORED_STEPS } from './types';
 
 interface TutorialBarProps {
@@ -7,7 +8,7 @@ interface TutorialBarProps {
   onSkip: () => void;
   onComplete: () => void;
   customTitle?: string;
-  customBody?: string;
+  customBody?: ReactNode;
   onContinue?: () => void;
   continueLabel?: string;
 }

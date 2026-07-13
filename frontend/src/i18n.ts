@@ -263,7 +263,7 @@ const resources = {
       tutorialStep3Body: "Let's start with the central orange body. Select the box tool, then drag a box enclosing the central orange slice.",
       tutorialStep4Eyebrow: "Step 4 — Refine the shape",
       tutorialStep4Title: "Check the outline",
-      tutorialStep4Body: "Check the outline. Too much? Use `-` (Remove) and place a red point outside. Missing an area? Use `+` (Add) and place a green point inside. Otherwise, choose Looks good.",
+      tutorialStep4Body: "Extra area? Choose <remove>− Remove</remove>, then click that area on the pattern. Missing area? Choose <add>+ Add</add>, then click the missing area. Otherwise, choose Looks good.",
       tutorialStep4TitleOutOfPlace: "Delete and try again",
       tutorialStep4BodyOutOfPlace: "Make sure you trace the central orange part. Click the Delete button below to remove this piece and try again.",
       tutorialStep5Eyebrow: "Step 5 — Assign a glass",
@@ -277,7 +277,7 @@ const resources = {
       tutorialStep7Body: "Select the Box tool and draw a box around the left green leaf. An animated box has appeared to guide you.",
       tutorialStep8Eyebrow: "Step 8 — Refine the second piece",
       tutorialStep8Title: "Check the leaf outline",
-      tutorialStep8Body: "Check the outline. Too much? Use `-` (Remove). Missing an area? Use `+` (Add). Otherwise, choose Looks good.",
+      tutorialStep8Body: "Extra area? Choose <remove>− Remove</remove>, then click that area on the pattern. Missing area? Choose <add>+ Add</add>, then click the missing area. Otherwise, choose Looks good.",
       tutorialStep8TitleOutOfPlace: "Delete and try again",
       tutorialStep8BodyOutOfPlace: "Make sure you trace the left green leaf. Click the Delete button below to remove this piece and try again.",
       tutorialStep9Eyebrow: "Step 9 — Cut the remaining pieces",
@@ -285,7 +285,7 @@ const resources = {
       tutorialStep9Body: "Great! Now let's cut the rest. Select the Box tool and draw a box around each of the remaining two green leaves.",
       tutorialStep10Eyebrow: "Step 10 — Refine the remaining pieces",
       tutorialStep10Title: "Check the remaining outlines",
-      tutorialStep10Body: "Check the selected outline. Too much? Use `-` (Remove). Missing an area? Use `+` (Add). Otherwise, choose Looks good.",
+      tutorialStep10Body: "Extra area? Choose <remove>− Remove</remove>, then click that area on the pattern. Missing area? Choose <add>+ Add</add>, then click the missing area. Otherwise, choose Looks good.",
       tutorialStep10TitleOutOfPlace: "Delete out-of-place cutout",
       tutorialStep10BodyOutOfPlace: "This piece does not match any of the leaves. Click the Delete button below to remove it, then try drawing your box around a leaf again."
     }
@@ -550,7 +550,7 @@ const resources = {
       tutorialStep3Body: "Commençons par l'orange au centre. Utilisez l'outil boîte pour entourer le quartier d'orange.",
       tutorialStep4Eyebrow: "Étape 4 — Affinez les contours",
       tutorialStep4Title: "Vérifiez le contour",
-      tutorialStep4Body: "Vérifiez le contour. Trop de matière ? Utilisez `-` (Retirer) et placez un point rouge à l'extérieur. Une zone manque ? Utilisez `+` (Ajouter) et placez un point vert à l'intérieur. Sinon, choisissez Le contour est bon.",
+      tutorialStep4Body: "Zone en trop ? Choisissez <remove>− Retirer</remove>, puis cliquez sur cette zone du patron. Zone manquante ? Choisissez <add>+ Ajouter</add>, puis cliquez sur la zone manquante. Sinon, choisissez Le contour est bon.",
       tutorialStep4TitleOutOfPlace: "Supprimez et recommencez",
       tutorialStep4BodyOutOfPlace: "Assurez-vous de tracer le quartier d'orange central. Cliquez sur le bouton Supprimer ci-dessous pour retirer cette pièce et recommencez.",
       tutorialStep5Eyebrow: "Étape 5 — Attribuer un verre",
@@ -564,7 +564,7 @@ const resources = {
       tutorialStep7Body: "Sélectionnez l'outil Boîte et tracez une boîte autour de la feuille verte à gauche. Une boîte animée s'affiche pour vous guider.",
       tutorialStep8Eyebrow: "Étape 8 — Affinez la deuxième pièce",
       tutorialStep8Title: "Vérifiez le contour de la feuille",
-      tutorialStep8Body: "Vérifiez le contour. Trop de matière ? Utilisez `-` (Retirer). Une zone manque ? Utilisez `+` (Ajouter). Sinon, choisissez Le contour est bon.",
+      tutorialStep8Body: "Zone en trop ? Choisissez <remove>− Retirer</remove>, puis cliquez sur cette zone du patron. Zone manquante ? Choisissez <add>+ Ajouter</add>, puis cliquez sur la zone manquante. Sinon, choisissez Le contour est bon.",
       tutorialStep8TitleOutOfPlace: "Supprimez et recommencez",
       tutorialStep8BodyOutOfPlace: "Assurez-vous de détourer la feuille verte de gauche. Cliquez sur Supprimer ci-dessous pour la retirer et recommencez.",
       tutorialStep9Eyebrow: "Étape 9 — Découpez les pièces restantes",
@@ -572,7 +572,7 @@ const resources = {
       tutorialStep9Body: "Parfait ! Maintenant, découpons le reste. Sélectionnez l'outil Boîte et tracez une boîte autour de chacune des deux feuilles vertes restantes.",
       tutorialStep10Eyebrow: "Étape 10 — Affinez les autres feuilles",
       tutorialStep10Title: "Vérifiez les contours restants",
-      tutorialStep10Body: "Vérifiez le contour sélectionné. Trop de matière ? Utilisez `-` (Retirer). Une zone manque ? Utilisez `+` (Ajouter). Sinon, choisissez Le contour est bon.",
+      tutorialStep10Body: "Zone en trop ? Choisissez <remove>− Retirer</remove>, puis cliquez sur cette zone du patron. Zone manquante ? Choisissez <add>+ Ajouter</add>, puis cliquez sur la zone manquante. Sinon, choisissez Le contour est bon.",
       tutorialStep10TitleOutOfPlace: "Supprimez la pièce mal placée",
       tutorialStep10BodyOutOfPlace: "Cette pièce ne correspond à aucune feuille. Cliquez sur Supprimer ci-dessous pour la retirer, puis tracez à nouveau votre boîte autour d'une feuille verte."
     }

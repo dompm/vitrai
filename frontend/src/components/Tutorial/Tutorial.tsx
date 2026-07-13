@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import type { Project } from '../../types';
 import { TutorialBar } from './TutorialBar';
 import { SpotlightPulse } from './SpotlightPulse';
@@ -315,9 +315,19 @@ export function Tutorial({
 
   const activeConfig = ANCHORED_STEPS.includes(step) ? STEPS[step as AnchoredStepId] : null;
 
+  const refinementBody = (i18nKey: 'tutorialStep4Body' | 'tutorialStep8Body' | 'tutorialStep10Body') => (
+    <Trans
+      i18nKey={i18nKey}
+      components={{
+        remove: <span className="tutorial-inline-tool tutorial-inline-tool--remove" />,
+        add: <span className="tutorial-inline-tool tutorial-inline-tool--add" />,
+      }}
+    />
+  );
+
   // Build dynamic text overrides for refinement steps depending on the tracked piece's state.
   let customTitle: string | undefined = undefined;
-  let customBody: string | undefined = undefined;
+  let customBody: ReactNode = undefined;
   let currentSpotlightTarget = activeConfig?.spotlightTarget;
   let canAcceptCurrentShape = false;
 
@@ -339,7 +349,7 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep4Title');
-        customBody = t('tutorialStep4Body');
+        customBody = refinementBody('tutorialStep4Body');
         canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'
@@ -364,7 +374,7 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep8Title');
-        customBody = t('tutorialStep8Body');
+        customBody = refinementBody('tutorialStep8Body');
         canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'
@@ -381,7 +391,7 @@ export function Tutorial({
         currentSpotlightTarget = '[data-tutorial-target="piece-delete"]';
       } else {
         customTitle = t('tutorialStep10Title');
-        customBody = t('tutorialStep10Body');
+        customBody = refinementBody('tutorialStep10Body');
         canAcceptCurrentShape = patternRefineMode === null;
         currentSpotlightTarget = patternRefineMode === null
           ? '[data-tutorial-target="piece-refine-remove"]'

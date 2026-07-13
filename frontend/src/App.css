@@ -1479,6 +1479,29 @@ html, body, #root {
   color: var(--text-soft);
 }
 
+.tutorial-inline-tool {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  margin: 0 2px;
+  border: 1px solid var(--hairline-2);
+  border-radius: 4px;
+  font-size: 0.92em;
+  font-weight: 700;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.tutorial-inline-tool--remove {
+  color: var(--ruby);
+  background: rgba(161, 63, 48, 0.1);
+}
+
+.tutorial-inline-tool--add {
+  color: var(--amber-ink);
+  background: var(--amber-soft);
+}
+
 .tutorial-bar-right {
   flex-shrink: 0;
   display: flex;
