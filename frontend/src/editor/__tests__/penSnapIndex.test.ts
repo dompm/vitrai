@@ -44,4 +44,40 @@ describe('Pen snap index parity', () => {
       findLengthSnap(cursor, last, pieces, active, 1, 14),
     );
   });
+
+  it.each([6, 24, 96])('matches linear equal-length ties across randomized active drafts at %i vertices', vertexCount => {
+    const pieces = makeInteractionPieces(100, vertexCount);
+    const index = createPenSnapIndex(pieces);
+    let seed = 987654321 + vertexCount;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 0x100000000;
+    };
+
+    for (let sample = 0; sample < 200; sample += 1) {
+      const selected = Array.from({ length: 2 + Math.floor(random() * 3) }, () =>
+        Math.floor(random() * pieces.length),
+      );
+      const active = selected.map(pieceIndex => {
+        const polygon = pieces[pieceIndex].polygon;
+        return polygon[Math.floor(random() * polygon.length)];
+      });
+      if (random() < 0.5) active.reverse();
+
+      const reference = pieces[selected[0]].polygon;
+      const edge = Math.floor(random() * reference.length);
+      const p1 = reference[edge];
+      const p2 = reference[(edge + 1) % reference.length];
+      const targetLength = Math.hypot(p2[0] - p1[0], p2[1] - p1[1]);
+      const scale = 0.5 + random() * 3;
+      const last: [number, number] = [random() * 1100, random() * 300];
+      const angle = random() * Math.PI * 2;
+      const length = targetLength + (random() - 0.5) * (12 / scale);
+      const cursor: [number, number] = [last[0] + Math.cos(angle) * length, last[1] + Math.sin(angle) * length];
+
+      expect(queryLengthSnap(index, cursor, last, active, scale, 14)).toEqual(
+        findLengthSnap(cursor, last, pieces, active, scale, 14),
+      );
+    }
+  });
 });
