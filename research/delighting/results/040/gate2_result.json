@@ -1,0 +1,106 @@
+{
+  "tag": "gate2",
+  "backbone": "marigold-iid",
+  "n_samples": 8,
+  "samples": [
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/cathedral-blue__seed42__light0409",
+      "recipe": "cathedral-blue",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/cathedral-green__seed42__light0409",
+      "recipe": "cathedral-green",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/dark-opaque__seed42__light0409",
+      "recipe": "dark-opaque",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/dark-ruby__seed42__light0409",
+      "recipe": "dark-ruby",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/fracture-streamer__seed42__light0409",
+      "recipe": "fracture-streamer",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/ring-mottle__seed42__light0409",
+      "recipe": "ring-mottle",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/streaky-mix__seed42__light0409",
+      "recipe": "streaky-mix",
+      "seed": 42
+    },
+    {
+      "dir": "/Users/dominiquepiche-meunier/Documents/vitraux/.claude/worktrees/agent-af3208c1b80c6942c/research/delighting/render_037_review/wispy-white__seed42__light0409",
+      "recipe": "wispy-white",
+      "seed": 42
+    }
+  ],
+  "steps_run": 11,
+  "stopped_reason": "ram_or_disk_guard",
+  "total_sec_this_invocation": 73.3,
+  "vae_floor": {
+    "vae_roundtrip_T_mae": 0.003621000563725829,
+    "recon_min": 0.0,
+    "recon_max": 1.0,
+    "gt_min": -1.17570161819458e-05,
+    "gt_max": 1.00244140625
+  },
+  "final_losses": {
+    "T": 0.8309516906738281,
+    "h": 0.2718754708766937,
+    "B": 0.3537115752696991,
+    "shadow": 0.7286738753318787,
+    "mark": 0.6542629599571228,
+    "conf": 0.0,
+    "total": 7.619821071624756,
+    "step": 10,
+    "sec": 72.5,
+    "rss_gb": 0.29
+  },
+  "log": [
+    {
+      "T": 1.2602237462997437,
+      "h": 0.35532164573669434,
+      "B": 0.4190027713775635,
+      "shadow": 0.9297139048576355,
+      "mark": 0.9180092811584473,
+      "conf": 0.378805547952652,
+      "total": 11.336519241333008,
+      "step": 0,
+      "sec": 28.9,
+      "rss_gb": 0.32
+    },
+    {
+      "T": 0.8309516906738281,
+      "h": 0.2718754708766937,
+      "B": 0.3537115752696991,
+      "shadow": 0.7286738753318787,
+      "mark": 0.6542629599571228,
+      "conf": 0.0,
+      "total": 7.619821071624756,
+      "step": 10,
+      "sec": 72.5,
+      "rss_gb": 0.29
+    }
+  ],
+  "pixel_mae_log": [
+    {
+      "step": 0,
+      "T_pixel_mae": 0.2929854393005371
+    }
+  ],
+  "final_T_pixel_mae": 0.2929854393005371,
+  "trainable_params": 1727415,
+  "lora_ok": true,
+  "contact_sheet": "results/040/gate2_contact_sheet.png",
+  "loss_curve": "results/040/gate2_loss_curve.png"
+}
