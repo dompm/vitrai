@@ -151,9 +151,12 @@ The CTO's follow-on: the grazing angle is where a baked-T preview *should* break
 analytically without a new render. **Why no new Cycles render:** the generator models the glass as a
 **zero-thickness Principled "thin glass" surface BSDF** (`gen045_module.py:1675-1708`: Transmission=1,
 IOR 1.5, Base Color = gt_T², Roughness = h; a flat `primitive_plane_add`, no Volume node, no
-solidify). Surface transmission is **angle-independent**, and Blender is not available on this
-machine, so there is no volumetric grazing truth to render. But the physics is unambiguous from the
-maps, so we demonstrate it directly (`sideview_046.py`, `sideview_thickness_board.jpg`).
+solidify). Surface transmission is **angle-independent**, so there is no volumetric grazing truth in
+this material model to render against in the first place — rendering the *existing* scene at a tilted
+camera would only add Fresnel + foreshortening, not the thickness effect under study. A genuine test
+requires *changing the material model* to a volumetric slab, which is a scoped material-model
+extension we are deferring (see below), not something this study renders. The physics is unambiguous
+from the maps, so we demonstrate it directly (`sideview_046.py`, `sideview_thickness_board.jpg`).
 
 The head-on transmittance already **bakes thickness into its exponent**: `couple_T_to_height`
 (`gen045_module.py:376-387`) authors `gt_T(x) = T_base(x)^thickness(x)`, `thickness(x) =
@@ -191,8 +194,10 @@ Reading the columns:
 thing). Thickness becomes a real, separately-useful quantity only if we adopt a **volumetric glass
 model** (a solid slab: solidify + displacement from `gt_height` + Volume Absorption / slab refraction)
 for **angled, camera-orbit 3D views**, where slab parallax and self-occlusion appear. That is a
-material-model *extension* (in the spirit of 045's σ_s addition), needs Blender for a proper truth,
-and is scoped as a future **report 047** — it does not change the flat-view ceiling above. The WebGL
+material-model *extension* (in the spirit of 045's σ_s addition) whose proper truth would be a fresh
+volumetric Cycles render; it is scoped as a future **report 047** and deferred by *priority* — pending
+whether 3D angled relighting is a near-term goal — not by tooling (Blender is available). It does not
+change the flat-view ceiling above. The WebGL
 prototype exposes this interactively: a view-angle slider with `T^(1/cos)` and slab-parallax toggles,
 where at grazing the diff panel shows the (parallax) thickness contribution since no grazing truth
 exists.
@@ -231,5 +236,7 @@ Reproduction: `research/delighting/render046/`; `.venv/bin/python browser_render
 python export_assets_046.py && python build_html_046.py` (prototype), `python validate_browser_path.py`
 (faithfulness). Twelve families as in report 045. **Side-view caveat:** the grazing panels are a
 physics/model demonstration on the existing maps, not an empirical Cycles-truth ceiling — the current
-generator's zero-thickness surface BSDF has no volumetric grazing truth to render, and Blender was
-unavailable; a true volumetric grazing study is deferred to 047.
+generator's zero-thickness surface BSDF has no volumetric grazing truth to render against, so a
+genuine test requires a new volumetric material model. That render is deferred to a potential 047 by
+*priority* (pending whether 3D angled relighting is a near-term goal), not by tooling — Blender is
+available at `~/Applications/Blender-5.0.1.app`.
