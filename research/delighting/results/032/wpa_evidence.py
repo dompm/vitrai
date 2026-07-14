@@ -94,7 +94,9 @@ for r in ["cathedral-green", "streaky-mix"]:
     # report-032 evidence script was authored; unpacking widened so this
     # frozen comparison (vs the already-committed wpa_offline_evidence.txt)
     # doesn't hard-crash for a future reader -- not re-verified against 037.
-    T, h, mark, mark_white, mark_index, height, normal, bd = NEW.author_glass_arrays(r, size=SIZE, seed=42)
+    # Report 043 note: two more trailing values (sigma_s, a_glow) added --
+    # widened again, same non-hard-crash convention, still not re-verified.
+    T, h, mark, mark_white, mark_index, height, normal, bd, sigma_s, a_glow = NEW.author_glass_arrays(r, size=SIZE, seed=42)
     base = NEW.couple_T_to_height(T, height, 0.0)   # identity -> current T
     # measure sign of coupling directly on the helper
     flat = np.full_like(height, 0.5)

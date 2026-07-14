@@ -57,11 +57,83 @@ GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": Fal
            # review board / forced-choice test isn't dominated by the mark tell.
            "fixed_ev": None, "no_marks": False}
 
-# Report 037 item D: the milky-diffuser family gets the opal-scatter stopgap
-# in create_glass_material (029's sharp-horizon-through-milky-opal
-# impossibility). Same two recipes generate_relief_height already groups as
-# the "milky/diffusing glass families" (shared relief mechanism).
+# Report 037 item D (superseded 043/MMv3-G1, kept only for
+# generate_relief_height's shared-relief grouping and comments below): the
+# milky-diffuser family. Same two recipes generate_relief_height already
+# groups as the "milky/diffusing glass families" (shared relief mechanism).
 OPAL_SCATTER_RECIPES = {'wispy-white', 'saturated-opalescent'}
+
+
+# ---------------------------------------------------------------------------
+# Report 043 (MMv3-G1): split the single haze scalar h into a physical pair --
+# sigma_s (forward-scatter PSF width, drives a genuine graded LOCAL blur via
+# Roughness on the one transmission lobe) and a_glow (diffuse self-glow /
+# opal opacity, mixed in via a dedicated Translucent BSDF, independent of
+# blur width). docs/MATERIAL_MODEL_V3.md G1 / docs/OUTPUT_CONTRACT.md sec 0.
+#
+# Why this replaces the report-037 "opal-scatter stopgap": that stopgap mixed
+# a second, near-fully-diffuse Principled lobe in at a hard-capped Fac
+# (0.6*h) ONLY for the two opal recipes. Two BSDFs mixed at a single shading
+# point is not a spatial blur -- Cycles either samples the (still fairly
+# directional) primary lobe or jumps straight to the near-diffuse lobe, which
+# for an HDRI environment (effectively at infinite distance) samples the
+# WHOLE hemisphere uniformly, i.e. the GLOBAL mean of the environment, not a
+# local neighborhood blur. There is no dial in between "sharp" and "full
+# hemisphere average" -- exactly the "razor-edge damping" the report names:
+# a sharp occluder edge gets locally dimmed toward the global mean, never
+# actually blurred wider. Real GGX transmission roughness, by contrast, IS a
+# continuous local blur (it samples a spread of directions around the ideal
+# refraction direction, which maps to a spread of *nearby* background
+# positions) that smoothly approaches full diffusion as roughness -> 1 --
+# precisely MATERIAL_MODEL_V3.md's own math ("the binary h-mix becomes the
+# sigma_s->infinity / a_glow limit"). So: let sigma_s alone drive Roughness on
+# the (single) transmission lobe, generously -- for opal recipes this now
+# gets real headroom it never had before (previously capped low to leave
+# room under the second lobe) -- and keep a_glow as a SEPARATE, smaller,
+# genuinely-independent Translucent-BSDF mix for the "hides B via self-glow"
+# behavior that pure roughness blur alone doesn't fully capture (multiple
+# internal scattering in real milky opal glass).
+def decompose_haze(h, recipe):
+    """Split authored h (the pre-043 roughness-only scalar) into (sigma_s,
+    a_glow) per docs/MATERIAL_MODEL_V3.md G1. First-pass decomposition,
+    grounded in the existing per-recipe h authoring (003-023 calibrated) and
+    the physical roles each term now plays in the shader -- NOT yet
+    independently re-grounded against corpus haze/scatter statistics (that
+    full regrounding, MATERIAL_MODEL_V3.md's "re-ground sigma_s/a_glow
+    against the corpus haze stats the same way 021/022 grounded color" is
+    flagged as follow-up work, same honesty standard as report 037's new-taxa
+    colors). Returns float32 arrays, same shape as h.
+    """
+    h = h.astype(np.float32)
+    if recipe in OPAL_SCATTER_RECIPES:
+        # Milky/opal family: genuinely wide LOCAL scatter (no longer capped
+        # to leave headroom for a second lobe) plus a modest, independent
+        # self-glow term.
+        sigma_s = np.clip(h * 1.15, 0.0, 0.92).astype(np.float32)
+        a_glow = np.clip(h * 0.35, 0.0, 0.35).astype(np.float32)
+    else:
+        # Every other family: h was already pure roughness (no stopgap) --
+        # carries over as sigma_s unchanged (no visual regression vs the
+        # existing, CTO-approved output), a_glow=0 (these stay genuinely
+        # see-through, not self-glowing).
+        sigma_s = h.copy()
+        a_glow = np.zeros_like(h, dtype=np.float32)
+    return sigma_s, a_glow
+
+
+def project_h(sigma_s, a_glow):
+    """OUTPUT_CONTRACT.md sec 0/1 compatibility projection: h_app =
+    a_glow (+) g(sigma_s). g = identity -- sigma_s already lives on the same
+    [0,1] roughness-like scale h always used. For every non-opal recipe
+    (a_glow==0 everywhere) this is an exact identity on sigma_s, i.e. h_proj
+    == the old authored h byte-for-byte -- the compatibility projection is
+    only non-trivial where a_glow is genuinely nonzero (the opal family),
+    which is precisely where the old h under-stated total haze (it only ever
+    carried the primary lobe's roughness, never the second lobe's
+    contribution)."""
+    a_glow = np.asarray(a_glow, dtype=np.float32)
+    sigma_s = np.asarray(sigma_s, dtype=np.float32)
+    return np.clip(a_glow + (1.0 - a_glow) * sigma_s, 0.0, 1.0).astype(np.float32)
 
 
 def apply_exr_codec(scene):
@@ -474,6 +546,112 @@ def sample_streak_colors(seed, kind="mix"):
     dark = _lab_to_linear_rgb(dL, dC * math.cos(math.radians(hue)), dC * math.sin(math.radians(hue)))
     light = _lab_to_linear_rgb(lL, lC * math.cos(math.radians(lh)), lC * math.sin(math.radians(lh)))
     return light, dark
+
+
+# ===========================================================================
+# Report 043 item 3: exemplar-grounded colors for the four report-037 taxa.
+# Report 037 flagged these recipes' colors as "plausible choices chosen for
+# corpus-hue diversity, not independently re-grounded" -- this is the owed
+# grounding pass, same method as 039's sample_streak_colors: measure the REAL
+# corpus exemplars once (corpus/taxa_exemplars_043.py -> results/043/
+# taxa_exemplar_colors.json, 2-means light/dark Lab modes per sheet), embed
+# the measured distribution as constants, sample a real-grounded palette per
+# seed. Populations measured:
+#   ring-mottle          -> the literal 'Ring Mottle' category: 8 Youghiogheny
+#     'Mottle' sheets, ALL opalescent-class and LIGHT (body L* p25-75 66-74,
+#     C* up to 71) -- the report-037 recipe authored this taxon as a dark
+#     amber/rose (body L*~20), which the real product line simply is not.
+#   fracture-streamer    -> 6 Bullseye Collage fracture/streamer sheets: base
+#     is near-clear/white (L* 86-95, C* 0.5-4), streamer lines are the dark
+#     mode (black/green/pink/white tuples below).
+#   confetti-shard       -> 13 Bullseye Collage shards-on-clear/white sheets:
+#     same near-clear base, shard colors L* 26-59 / C* 5-43 on real seasonal
+#     hue sets -- NOT the uniform-random RGB the 037 recipe drew.
+#   baroque-rolling-wave -> 87 colored Textured/Baroque cathedral-clear
+#     sheets (Artique/Waterglass/Granite/...): body-tint hue mass amber 30-60
+#     (27%), green 120-150 (17%), blue/purple 270-300 (14%), yellow-green
+#     60-90 (13%); body L* p25-75 43-62 (mid of dark/light modes), C* 26-55.
+# ===========================================================================
+
+# (hue_deg, weight) -- chroma-weighted 30-deg-bin mass over the 87 colored
+# Textured/Baroque cathedral sheets (bins <3% folded into neighbors).
+_BAROQUE_HUES = [
+    (45, 26.9), (75, 12.7), (105, 5.4), (135, 17.4), (165, 5.6),
+    (225, 4.8), (285, 15.7), (315, 6.8), (15, 4.7),
+]
+
+# Measured streamer-line dark modes (L*, C*, hue) of the 6 real
+# fracture/streamer sheets -- black-on-clear, white-on-clear, green, pink.
+_STREAMER_LINE_MODES = [
+    (26.3, 3.5, 79), (39.1, 5.0, 36), (91.3, 0.2, 238),
+    (45.9, 16.0, 325), (43.8, 34.1, 138), (43.9, 32.1, 125),
+]
+
+# Measured shard dark modes (hue anchors) of the 13 collage sheets' seasonal
+# palettes (blues/pinks/greens/ambers -- SPRING/AUTUMN/SUMMER/WINTER lines).
+_SHARD_HUES = [271, 10, 61, 124, 131, 79, 288, 325, 36, 138, 125]
+
+# Per-sheet (light/base, dark/blob) Lab modes of the 8 real Ring Mottle
+# sheets -- (base_L, base_C, base_hue, blob_L, blob_C, blob_hue). The blob
+# mode is darker and same-hue +-15 deg; chroma moves BOTH ways vs the base.
+_RING_MOTTLE_MODES = [
+    (79.7, 5.5, 52, 74.0, 2.2, 52), (66.4, 12.8, 96, 63.9, 27.3, 100),
+    (70.9, 67.5, 74, 66.4, 54.8, 76), (63.8, 17.9, 268, 42.9, 31.5, 281),
+    (76.7, 70.9, 121, 62.2, 83.6, 135), (69.7, 53.4, 155, 55.1, 35.8, 166),
+    (73.2, 48.8, 109, 64.4, 60.9, 110), (66.0, 41.7, 103, 56.3, 19.8, 121),
+]
+
+
+def sample_taxa_colors(seed, taxon):
+    """Draw a real-grounded LINEAR-RGB palette for one of the four report-037
+    taxa from the report-043 measured distributions above. Deterministic in
+    seed. Returns a dict whose keys depend on the taxon (see call sites)."""
+    # NB: a stable per-taxon offset (NOT python hash() -- string-hash
+    # randomization would break the (recipe, seed) -> bytes determinism the
+    # regeneration contract relies on).
+    _taxon_off = int.from_bytes(taxon.encode()[:4], "little")
+    rng = np.random.RandomState((seed * 2654435761 + _taxon_off) % (2 ** 31))
+    if taxon == 'baroque-rolling-wave':
+        hues, ws = zip(*_BAROQUE_HUES)
+        hue = float(rng.choice(hues, p=np.array(ws) / sum(ws))) + rng.uniform(-14, 14)
+        L = rng.uniform(45, 66)   # between the measured dark/light mode bands
+        C = rng.uniform(22, 52)
+        return {"base": _lab_to_linear_rgb(L, C * math.cos(math.radians(hue)),
+                                           C * math.sin(math.radians(hue)))}
+    if taxon == 'fracture-streamer':
+        bL, bC = rng.uniform(85, 95), rng.uniform(0.5, 4.0)
+        bh = rng.uniform(0, 360)
+        lL, lC, lh = _STREAMER_LINE_MODES[rng.randint(len(_STREAMER_LINE_MODES))]
+        lL += rng.uniform(-5, 5); lC *= rng.uniform(0.8, 1.25); lh += rng.uniform(-10, 10)
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "line": _lab_to_linear_rgb(lL, lC * math.cos(math.radians(lh)),
+                                           lC * math.sin(math.radians(lh)))}
+    if taxon == 'confetti-shard':
+        bL, bC = rng.uniform(84, 95), rng.uniform(0.5, 3.0)
+        bh = rng.uniform(0, 360)
+        # real collage sheets carry a COORDINATED 2-4 hue seasonal set, not
+        # one random color per cell
+        k = rng.randint(2, 5)
+        anchors = rng.choice(_SHARD_HUES, size=k, replace=False)
+        shards = []
+        for h in anchors:
+            h = float(h) + rng.uniform(-12, 12)
+            L = rng.uniform(33, 59); C = rng.uniform(15, 43)
+            shards.append(_lab_to_linear_rgb(L, C * math.cos(math.radians(h)),
+                                             C * math.sin(math.radians(h))))
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "shards": shards}
+    if taxon == 'ring-mottle':
+        bL, bC, bh, dL, dC, dh = _RING_MOTTLE_MODES[rng.randint(len(_RING_MOTTLE_MODES))]
+        bL += rng.uniform(-4, 4); bC *= rng.uniform(0.85, 1.2); bh += rng.uniform(-10, 10)
+        dL += rng.uniform(-4, 4); dC *= rng.uniform(0.85, 1.2); dh += rng.uniform(-10, 10)
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "blob": _lab_to_linear_rgb(dL, dC * math.cos(math.radians(dh)),
+                                           dC * math.sin(math.radians(dh)))}
+    raise ValueError(f"not a report-043 grounded taxon: {taxon}")
 
 
 def streak_haze_field(sel, size, seed, milky_h=0.86, clear_h=0.07, tex_amp=0.10):
@@ -1103,23 +1281,24 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.29, dtype=np.float32)
 
-    # ---- Report 037 item C: four new taxa recipes (report 031 sec2/4/5's
-    # ranked missing-variety list; targets are STRUCTURAL, per 031 -- none of
-    # these taxa has an explicit real-exemplar Lab centroid the way 021 sec5's
-    # five gap recipes did, so authored colors below are plausible choices
-    # chosen for corpus-hue diversity, not independently re-grounded via
-    # nearest-neighbor search. Flagged honestly in report 037; a follow-up
-    # gap_exemplars.py-style grounding pass is future work, not blocking.
+    # ---- Report 037 item C four new-taxa recipes; STRUCTURE unchanged from
+    # 037 (Voronoi lines/cells, ring_mottle_blobs, rolling-wave relief). The
+    # COLORS are report 043 item 3's exemplar grounding pass -- 037 flagged
+    # its authored colors as "plausible choices chosen for corpus-hue
+    # diversity, not independently re-grounded"; every palette below now
+    # comes from measured real corpus swatches via sample_taxa_colors()
+    # (corpus/taxa_exemplars_043.py, results/043/taxa_exemplar_colors.json,
+    # the report-039 method).
     elif recipe == 'baroque-rolling-wave':
         # T3 (031 sec2/4/5, rank #3): large-scale rolling-wave SURFACE
         # relief, cm-scale, coarser than the T2 "granite" hammered relief
-        # already in every other recipe. 031 sec5: "a coarser-scale
-        # extension of report 022's fBm octave system... the generator
-        # mechanism already exists" -- so T/h authoring here mirrors the
-        # cathedral family (clear glass; T3 is a RELIEF-scale taxon, not a
-        # color one) and the actual differentiator is generate_relief_height's
-        # dedicated 'baroque-rolling-wave' branch below.
-        base_color = np.array([0.30, 0.42, 0.36])  # pale seafoam/aqua-green -- distinct hue from the existing cathedral pair
+        # already in every other recipe. T/h authoring mirrors the cathedral
+        # family (clear glass; T3 is a RELIEF-scale taxon) and the actual
+        # differentiator is generate_relief_height's dedicated branch below.
+        # 043: body tint drawn per-seed from the measured 87-sheet colored
+        # Textured/Baroque cathedral population (hue mass amber/green/
+        # blue-purple, L* 45-66, C* 22-52) instead of one fixed seafoam.
+        base_color = sample_taxa_colors(seed, 'baroque-rolling-wave')["base"]
         noise = generate_noise(size, scale=220, seed=seed, **CATHEDRAL_OCT)
         noise_scaled = (noise * 0.16) - 0.08
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
@@ -1127,32 +1306,40 @@ def author_glass_arrays(recipe, size=1536, seed=42):
 
     elif recipe == 'fracture-streamer':
         # T9 (031 sec2/4/5, rank #4): thin dark/colored branching crack-like
-        # lines, BODY, over a lightly-tinted near-clear base. 031 sec5:
-        # "(a) texture authoring only... a thin branching line-network mask
-        # (Voronoi-cell-boundary or similar)".
-        base_color = np.array([0.42, 0.40, 0.44])  # near-clear cool-grey base -- lets the streamer lines read
+        # lines, BODY, over a near-clear base. 043: real Bullseye Collage
+        # fracture/streamer sheets measure base L* 85-95 / C* 0.5-4 (the 037
+        # cool-grey base at L*~69 was too dark) and line colors from the
+        # measured black/green/pink/white streamer modes.
+        pal = sample_taxa_colors(seed, 'fracture-streamer')
+        base_color = pal["base"]
         noise = generate_noise(size, scale=200, seed=seed, **WISPY_OCT)
         noise_scaled = (noise * 0.10) - 0.05
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
         n_pts = int(30 * (size / 1536.0) ** 2) + 18
         _cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
         line = np.clip(1.0 - edge_dist / 6.0, 0, 1) ** 2  # thin AA boundary network
-        line_color = np.array([0.05, 0.03, 0.03])  # dark branching streamer tint
+        line_color = pal["line"]
         T = np.clip(T * (1 - line[..., None]) + line_color * line[..., None], 0, 1)
         h = np.full((size, size), 0.12, dtype=np.float32)
 
     elif recipe == 'confetti-shard':
         # T10 (031 sec2/4/5, rank #5): flat angular non-overlapping color
-        # pieces embedded in a clear/white BODY. 031 sec5: "a filled-region
-        # variant of the same Voronoi-cell idea behind T9... often the
-        # literal same product line as T9 (see exemplars)" -- shares
-        # voronoi_cells with fracture-streamer, filled instead of outlined.
-        base_color = np.array([0.72, 0.71, 0.68])  # near-white/clear cast base
+        # pieces embedded in a clear/white BODY; shares voronoi_cells with
+        # fracture-streamer (literally the same product family), filled
+        # instead of outlined. 043: shards drawn from a COORDINATED 2-4 hue
+        # real seasonal set (SPRING/AUTUMN/... collage lines, L* 33-59,
+        # C* 15-43) with per-cell jitter -- not one uniform-random RGB per
+        # cell; base from the measured near-clear L* 84-95 band.
+        pal = sample_taxa_colors(seed, 'confetti-shard')
+        base_color = pal["base"]
         n_pts = int(22 * (size / 1536.0) ** 2) + 12
         cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
         rng_c = np.random.RandomState(seed + 901)
         n_cells = int(cell_id.max()) + 1
-        palette = rng_c.uniform(0.05, 0.85, size=(n_cells, 3))
+        anchors = np.array(pal["shards"])  # (k,3) linear RGB
+        pick = rng_c.randint(len(anchors), size=n_cells)
+        jitter = rng_c.uniform(0.85, 1.15, size=(n_cells, 1))
+        palette = np.clip(anchors[pick] * jitter, 0, 1)
         fill_prob = 0.55  # not every cell is a colored "shard" -- some stay clear body
         is_shard = rng_c.random(n_cells) < fill_prob
         cell_color = np.where(is_shard[:, None], palette, base_color[None, :])
@@ -1163,14 +1350,16 @@ def author_glass_arrays(recipe, size=1536, seed=42):
 
     elif recipe == 'ring-mottle':
         # T7 formalized (031 sec2/3/4/5): dense overlapping round/oval
-        # opaque blobs, BODY -- an explicit generative model (ring_mottle_
-        # blobs), replacing dark-ruby's accidental fBm resemblance (031
-        # sec3: "dark-ruby unintentionally reads as this... unintended but
-        # convincing"). Grounded on the same dark-tinted family as dark-ruby
-        # (the one proven-convincing precedent for this taxon) but a
-        # distinct warm amber/rose hue for corpus coverage diversity.
-        base_color = np.array([0.10, 0.045, 0.03])
-        blob_color = np.array([0.34, 0.12, 0.07])
+        # opaque blobs, BODY (ring_mottle_blobs). 043 REGROUNDING: the 037
+        # version authored this as a dark amber/rose (body L*~20) "grounded"
+        # on dark-ruby's accidental resemblance -- but the literal Ring
+        # Mottle corpus category (8 Youghiogheny Mottle sheets) is a LIGHT
+        # opalescent family: body L* 64-80, blobs a few L* darker with
+        # chroma moving both ways. Palette now sampled per-seed from those
+        # 8 measured (base, blob) Lab mode pairs with jitter.
+        pal = sample_taxa_colors(seed, 'ring-mottle')
+        base_color = pal["base"]
+        blob_color = pal["blob"]
         n_blobs = int(70 * (size / 1536.0) ** 2) + 30
         blobs = ring_mottle_blobs(size, seed + 950, n_blobs)
         T = (base_color[None, None, :] * (1 - blobs[..., None])
@@ -1242,12 +1431,18 @@ def author_glass_arrays(recipe, size=1536, seed=42):
     # strokes, white+dark marks, shape/thickness variety, per-mark index.
     mark_dark, mark_white, mark_index = generate_marks(recipe, size, seed + 5)
     normal = height_to_normal(height, strength=18.0)
+
+    # Report 043 (MMv3-G1): split h into (sigma_s, a_glow); h itself becomes
+    # the OUTPUT_CONTRACT compatibility projection of the pair, not an
+    # independently-authored field anymore.
+    sigma_s, a_glow = decompose_haze(h, recipe)
+    h = project_h(sigma_s, a_glow)
     _record('texture_authoring', time.perf_counter() - _t0_tex)
 
-    return T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance
+    return T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow
 
 
-def encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance):
+def encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow):
     """The bpy half: upload each numpy array into a fresh bpy.data.images
     datablock and write it to disk. MUST run every light variation --
     bpy.ops.wm.read_factory_settings(use_empty=True) in setup_scene() wipes
@@ -1265,6 +1460,10 @@ def encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, heig
     mark_index_path = os.path.join(out_dir, "tex_mark_index.png")
     height_path = os.path.join(out_dir, "tex_height.png")
     normal_path = os.path.join(out_dir, "tex_normal.png")
+    # Report 043 (MMv3-G1): the two new authored channels, same
+    # save_numpy_to_image path as tex_h (sRGB-shaped-on-disk, GT_SPEC sec 5).
+    sigma_s_path = os.path.join(out_dir, "tex_sigma_s.png")
+    a_glow_path = os.path.join(out_dir, "tex_a_glow.png")
 
     # Report 037 WP-A --no-tex-dump: the tex_* files are the 141.7MB/58%
     # prune (docs/GT_SPEC.md sec 1a/3) -- byte-regenerable from (recipe,
@@ -1279,8 +1478,11 @@ def encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, heig
         img_mark_index = save_numpy_to_image(mark_index, mark_index_path, is_color=False)
         img_height = save_numpy_to_image(height, height_path, is_color=False)
         img_normal = save_numpy_to_image(normal, normal_path, is_color=True)
+        img_sigma_s = save_numpy_to_image(sigma_s, sigma_s_path, is_color=False)
+        img_a_glow = save_numpy_to_image(a_glow, a_glow_path, is_color=False)
 
-    return img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance
+    return (img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance,
+            img_sigma_s, img_a_glow)
 
 
 def create_glass_textures(recipe, out_dir, size=1536, seed=42, cache=None):
@@ -1289,12 +1491,12 @@ def create_glass_textures(recipe, out_dir, size=1536, seed=42, cache=None):
     light variations, keyed by (recipe, seed) -- see main()."""
     key = (recipe, seed, size)
     if cache is not None and key in cache:
-        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance = cache[key]
+        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow = cache[key]
     else:
-        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance = author_glass_arrays(recipe, size=size, seed=seed)
+        T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow = author_glass_arrays(recipe, size=size, seed=seed)
         if cache is not None:
-            cache[key] = (T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance)
-    return encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance)
+            cache[key] = (T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow)
+    return encode_glass_textures(out_dir, T, h, mark_dark, mark_white, mark_index, height, normal, bump_distance, sigma_s, a_glow)
 
 def download_polyhaven_hdri(out_dir):
     """Downloads a small outdoor HDRI from polyhaven if not present."""
@@ -1628,7 +1830,26 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     # INTERIOR so the front face has something plausible to reflect when the
     # glass specular lobe is enabled (--specular). Default 0.0 = byte-compat
     # with every existing dataset.
-    bpy.ops.mesh.primitive_plane_add(size=5.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
+    #
+    # Report 043 (MMv3-G2, docs/GT_SPEC.md sec 6 finding): the old size=5.0
+    # plane (half-extent 2.5m at ~2m from the glass) was NOT big enough to
+    # isolate the veil -- the glass's bump-mapped shading normal fans the
+    # glossy reflection cone well past the near-normal direction the
+    # camera-aligned geometry assumes, so plenty of reflected rays missed
+    # this wall's edges and saw the bright HDRI sky/sun directly. Measured on
+    # two verification samples (both --specular OFF, i.e. the default the
+    # extractor assumes carries NO veil): gt_veil was nonzero on 100% of
+    # pixels, median veil share of the (transmission+veil) signal 40%
+    # (cathedral-green) to 81% (dark-deep) -- not a rounding artifact, a real
+    # unaccounted reflection baked into every sample generated to date.
+    # Fix: make the occluding wall big enough that essentially no
+    # bump-fanned reflection ray escapes past its edges. size=60 (half-extent
+    # 30m at ~2m distance) subtends >168 degrees as seen from the glass --
+    # only near-90-degree grazing rays (negligible Fresnel/foreshortening
+    # weight) can still miss it. This is a scene-geometry fix only: it
+    # changes what the (already-existing, always-on) front specular lobe
+    # reflects, not the transmission/haze/T,h shader graph MMv3-G1 touches.
+    bpy.ops.mesh.primitive_plane_add(size=60.0, location=(0, -2.0, 0), rotation=(math.radians(90), 0, 0))
     wall = bpy.context.active_object
     wall.name = "DarkWall"
     mat_wall = bpy.data.materials.new(name="WallMat")
@@ -1645,7 +1866,7 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     return glass_obj, cam, ev, z_rot, frame_params, camera_jitter
 
 def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance, use_bump=True,
-                          specular_ior_level=None):
+                          specular_ior_level=None, img_sigma_s=None, img_a_glow=None):
     mat = bpy.data.materials.new(name="GlassMat")
     
     # We must use nodes to set up the material
@@ -1661,7 +1882,16 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img
     
     tex_h = nodes.new('ShaderNodeTexImage')
     tex_h.image = img_h
-    
+
+    # Report 043 (MMv3-G1): sigma_s/a_glow are the new shader-driving
+    # channels; tex_h stays in the graph as a datablock (some callers may
+    # still pass it) but no longer feeds the shader -- see below.
+    tex_sigma_s = nodes.new('ShaderNodeTexImage')
+    tex_sigma_s.image = img_sigma_s if img_sigma_s is not None else img_h
+
+    tex_a_glow = nodes.new('ShaderNodeTexImage')
+    tex_a_glow.image = img_a_glow if img_a_glow is not None else img_h
+
     tex_mark = nodes.new('ShaderNodeTexImage')
     tex_mark.image = img_mark
 
@@ -1704,44 +1934,42 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img
     # The transmittance color drives the Base Color
     links.new(math_node.outputs['Vector'], principled.inputs['Base Color'])
     
-    # Haze drives the roughness of the transmission
-    links.new(tex_h.outputs['Color'], principled.inputs['Roughness'])
+    # Report 043 (MMv3-G1): sigma_s (forward-scatter PSF width) drives the
+    # ONE transmission lobe's Roughness directly -- a genuine, continuous,
+    # LOCAL blur (Cycles' GGX roughness on a refractive BSDF samples a spread
+    # of directions around the ideal refraction direction, which for a
+    # background at some distance maps to a spread of nearby background
+    # positions -- real optical blur, not the old stopgap's per-point jump
+    # to a global hemisphere average). No cap: opal recipes get real
+    # headroom they never had before, since the old code reserved roughness
+    # headroom for a second lobe that no longer exists.
+    links.new(tex_sigma_s.outputs['Color'], principled.inputs['Roughness'])
 
-    # Report 037 item D: opal-scatter stopgap (029's sharp-horizon-through-
-    # milky-opal impossibility -- a real milky opal sheet backlit by a scene
-    # with a sharp horizon/edge shows that edge SOFTENED by internal
-    # scattering; a single Principled transmission lobe can't reproduce that
-    # without pushing roughness so high it flattens EVERYTHING transmitted,
-    # not just distant hard edges, which would also wreck the near-field
-    # gt_T agreement the --validate gate checks). A second, much-rougher
-    # transmission lobe -- mixed in by LOCAL haze, capped well below full
-    # weight -- approximates extra scatter on the already-hazy milky family
-    # without touching the primary lobe everything else (including the
-    # validate gate, whose target IS the primary lobe's tex_T) depends on.
-    # This is a STOPGAP, not a real BSSRDF/scatter-PSF term -- 031 sec5 and
-    # report 032 sec6 both already named MMv3-G1's point-spread-function
-    # pass as the actual fix; not oversold here.
-    principled_shader = principled.outputs['BSDF']
-    if recipe in OPAL_SCATTER_RECIPES:
-        scatter_bsdf = nodes.new('ShaderNodeBsdfPrincipled')
-        scatter_bsdf.inputs['IOR'].default_value = 1.5
-        scatter_bsdf.inputs['Roughness'].default_value = 1.0  # near-fully-diffuse transmission
-        if 'Transmission Weight' in scatter_bsdf.inputs:
-            scatter_bsdf.inputs['Transmission Weight'].default_value = 1.0
-        else:
-            scatter_bsdf.inputs['Transmission'].default_value = 1.0
-        links.new(math_node.outputs['Vector'], scatter_bsdf.inputs['Base Color'])
+    # a_glow (diffuse self-glow / opal opacity) is a SEPARATE, independent
+    # term -- multiple internal scattering in real milky opal glass that
+    # pure roughness-blur alone doesn't reach even at Roughness=1. Mixed in
+    # via a dedicated Translucent BSDF (true Lambertian transmission --
+    # samples the whole hemisphere uniformly, i.e. genuinely diffuse "glow"),
+    # weighted by a_glow(x). For every non-opal recipe a_glow==0 everywhere
+    # (decompose_haze), so this mix is an exact no-op (Fac=0 -> output ==
+    # principled_shader unchanged) -- no regression on the CTO-approved
+    # clear/cathedral/streaky/dark families.
+    #
+    # Color = tex_T DIRECTLY, NOT the squared math_node vector: the squaring
+    # trick above exists only to cancel the *Principled* thin-glass lobe's
+    # internal sqrt; Translucent has no such sqrt (it transmits Color
+    # linearly), so feeding it T^2 renders the glow at T^2 -- measured as a
+    # 10x validate-gate regression on the opal recipes (wispy-white MAE
+    # 0.0109 -> 0.1065) before this link was corrected. With plain T both
+    # lobes agree with gt_T under the uniform backlight.
+    translucent = nodes.new('ShaderNodeBsdfTranslucent')
+    links.new(tex_T.outputs['Color'], translucent.inputs['Color'])
 
-        scatter_fac = nodes.new('ShaderNodeMath')
-        scatter_fac.operation = 'MULTIPLY'
-        scatter_fac.inputs[1].default_value = 0.6  # cap: scatter lobe never fully replaces the primary lobe
-        links.new(tex_h.outputs['Color'], scatter_fac.inputs[0])
-
-        mix_scatter = nodes.new('ShaderNodeMixShader')
-        links.new(scatter_fac.outputs['Value'], mix_scatter.inputs['Fac'])
-        links.new(principled.outputs['BSDF'], mix_scatter.inputs[1])
-        links.new(scatter_bsdf.outputs['BSDF'], mix_scatter.inputs[2])
-        principled_shader = mix_scatter.outputs['Shader']
+    mix_glow = nodes.new('ShaderNodeMixShader')
+    links.new(tex_a_glow.outputs['Color'], mix_glow.inputs['Fac'])
+    links.new(principled.outputs['BSDF'], mix_glow.inputs[1])
+    links.new(translucent.outputs['BSDF'], mix_glow.inputs[2])
+    principled_shader = mix_glow.outputs['Shader']
 
     # Report 037 item B: dark grease-pencil/marker AND white grease-pencil/
     # paint-pen marks, each its own BSDF mixed in via its own coverage
@@ -1894,7 +2122,8 @@ def add_shadow_caster(out_dir):
     _record('scene_build', time.perf_counter() - _t0_scene)
     return caster
 
-def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal):
+def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal,
+                          img_sigma_s=None, img_a_glow=None):
     _t0_scene = time.perf_counter()
     scene = bpy.context.scene
 
@@ -1975,6 +2204,12 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark
         ("gt_height", img_height, 'BW'),
         ("gt_normal", img_normal, 'RGB'),
     ]
+    # Report 043 (MMv3-G1): the two new authored channels, rendered the same
+    # camera-aligned emission-passthrough way as gt_h.
+    if img_sigma_s is not None:
+        gt_channels.append(("gt_sigma_s", img_sigma_s, 'BW'))
+    if img_a_glow is not None:
+        gt_channels.append(("gt_a_glow", img_a_glow, 'BW'))
     for gt_name, gt_img, color_mode in gt_channels:
         tex_node.image = gt_img
         with stage('gt_render'):
@@ -2353,7 +2588,8 @@ def main():
             # 2. Create textures (numpy compute cached across this glass
             # piece's light variations; bpy encode always redone -- see
             # create_glass_textures/_texture_cache comments above)
-            img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance = create_glass_textures(
+            (img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal, bump_distance,
+             img_sigma_s, img_a_glow) = create_glass_textures(
                 recipe, sample_dir, size=1536, seed=seed, cache=_texture_cache
             )
 
@@ -2361,7 +2597,7 @@ def main():
             with stage('scene_build'):
                 mat = create_glass_material(
                     glass_obj, img_T, img_h, img_mark, img_mark_white, img_height, recipe, bump_distance,
-                    specular_ior_level=spec_level
+                    specular_ior_level=spec_level, img_sigma_s=img_sigma_s, img_a_glow=img_a_glow
                 )
         
             metadata = {
@@ -2393,6 +2629,13 @@ def main():
                     "channels": ["T", "h", "height", "normal", "mark_mask", "mark_white", "mark_index"],
                     "bump_distance_m": bump_distance,
                     "ior": 1.5
+                },
+                # Report 043: MMv3-G1 channels. h remains the OUTPUT_CONTRACT
+                # compatibility projection of (sigma_s, a_glow) -- see
+                # project_h/decompose_haze.
+                "material_v3": {
+                    "channels": ["sigma_s", "a_glow"],
+                    "note": "h = a_glow + (1-a_glow)*sigma_s (OUTPUT_CONTRACT.md sec 0)"
                 }
             }
         
@@ -2433,7 +2676,8 @@ def main():
                 render_hidden_background(glass_obj, sample_dir)
 
             # Render aligned ground truths
-            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal)
+            render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark_white, img_mark_index, img_height, img_normal,
+                                  img_sigma_s=img_sigma_s, img_a_glow=img_a_glow)
 
             # Report 037 WP-A --no-tex-dump: delete the authored-texture dump
             # AFTER all renders (they had to exist on disk during rendering --
@@ -2441,7 +2685,8 @@ def main():
             # save_numpy_to_image). Byte-regenerable from (recipe, seed) in
             # meta.json, so nothing is lost; this is the GT_SPEC sec 3 prune.
             if GT_OPTS["no_tex_dump"]:
-                for _tex in ("tex_T", "tex_h", "tex_mark_mask", "tex_mark_white", "tex_mark_index", "tex_height", "tex_normal"):
+                for _tex in ("tex_T", "tex_h", "tex_mark_mask", "tex_mark_white", "tex_mark_index", "tex_height", "tex_normal",
+                             "tex_sigma_s", "tex_a_glow"):
                     _p = os.path.join(sample_dir, _tex + ".exr")
                     if os.path.exists(_p):
                         os.remove(_p)

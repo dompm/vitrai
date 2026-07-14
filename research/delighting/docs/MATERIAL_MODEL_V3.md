@@ -1,6 +1,15 @@
 # Material Model v3 — a richer forward model for the generator + renderer
 
-Companion to `../reports/027-fresh-tracks.md`. Status: **proposal**, not implemented.
+Companion to `../reports/027-fresh-tracks.md`. Status: **G1 shipped, G2's veil-isolation
+scene fix shipped (report 043)**; G3/G4 remain proposals. Per-gap status:
+
+| gap | status |
+|---|---|
+| G1 (σ_s / a_glow split) | **shipped, report 043 item 1** — `decompose_haze`/`project_h` in `generate_synthetic.py`; σ_s drives the one transmission lobe's Roughness (real graded local blur, replaces the 037 opal-stopgap second lobe), a_glow is an independent Translucent-BSDF mix; both authored + exported as `tex_/gt_sigma_s`, `tex_/gt_a_glow`; `h` is now the OUTPUT_CONTRACT compatibility projection `a_glow+(1−a_glow)·σ_s`. First-pass decomposition grounded on the existing per-recipe h calibration — the full corpus-statistics regrounding of (σ_s, a_glow) is still owed (021/022 discipline). |
+| G2 (front reflection veil) | **partially shipped** — the specular lobe + `--specular` dim-interior path landed in 032; report 043 item 2 fixed the veil-isolation scene (DarkWall 5 m → 60 m) so `gt_veil` measures genuine front-surface reflection instead of the bump-fanned HDRI leak GT_SPEC §6 documented. The authored low-frequency `r_f(x)` field + front IBL are still open. |
+| G3 (refractive lensing) | proposal, not implemented |
+| G4 (flash / thin-film) | proposal, not implemented |
+
 Prioritized by what our own reports show actually caps the metrics, and by what the learned
 bets in report 027 need the generator to emit as ground truth.
 
