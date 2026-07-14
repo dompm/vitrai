@@ -548,6 +548,112 @@ def sample_streak_colors(seed, kind="mix"):
     return light, dark
 
 
+# ===========================================================================
+# Report 043 item 3: exemplar-grounded colors for the four report-037 taxa.
+# Report 037 flagged these recipes' colors as "plausible choices chosen for
+# corpus-hue diversity, not independently re-grounded" -- this is the owed
+# grounding pass, same method as 039's sample_streak_colors: measure the REAL
+# corpus exemplars once (corpus/taxa_exemplars_043.py -> results/043/
+# taxa_exemplar_colors.json, 2-means light/dark Lab modes per sheet), embed
+# the measured distribution as constants, sample a real-grounded palette per
+# seed. Populations measured:
+#   ring-mottle          -> the literal 'Ring Mottle' category: 8 Youghiogheny
+#     'Mottle' sheets, ALL opalescent-class and LIGHT (body L* p25-75 66-74,
+#     C* up to 71) -- the report-037 recipe authored this taxon as a dark
+#     amber/rose (body L*~20), which the real product line simply is not.
+#   fracture-streamer    -> 6 Bullseye Collage fracture/streamer sheets: base
+#     is near-clear/white (L* 86-95, C* 0.5-4), streamer lines are the dark
+#     mode (black/green/pink/white tuples below).
+#   confetti-shard       -> 13 Bullseye Collage shards-on-clear/white sheets:
+#     same near-clear base, shard colors L* 26-59 / C* 5-43 on real seasonal
+#     hue sets -- NOT the uniform-random RGB the 037 recipe drew.
+#   baroque-rolling-wave -> 87 colored Textured/Baroque cathedral-clear
+#     sheets (Artique/Waterglass/Granite/...): body-tint hue mass amber 30-60
+#     (27%), green 120-150 (17%), blue/purple 270-300 (14%), yellow-green
+#     60-90 (13%); body L* p25-75 43-62 (mid of dark/light modes), C* 26-55.
+# ===========================================================================
+
+# (hue_deg, weight) -- chroma-weighted 30-deg-bin mass over the 87 colored
+# Textured/Baroque cathedral sheets (bins <3% folded into neighbors).
+_BAROQUE_HUES = [
+    (45, 26.9), (75, 12.7), (105, 5.4), (135, 17.4), (165, 5.6),
+    (225, 4.8), (285, 15.7), (315, 6.8), (15, 4.7),
+]
+
+# Measured streamer-line dark modes (L*, C*, hue) of the 6 real
+# fracture/streamer sheets -- black-on-clear, white-on-clear, green, pink.
+_STREAMER_LINE_MODES = [
+    (26.3, 3.5, 79), (39.1, 5.0, 36), (91.3, 0.2, 238),
+    (45.9, 16.0, 325), (43.8, 34.1, 138), (43.9, 32.1, 125),
+]
+
+# Measured shard dark modes (hue anchors) of the 13 collage sheets' seasonal
+# palettes (blues/pinks/greens/ambers -- SPRING/AUTUMN/SUMMER/WINTER lines).
+_SHARD_HUES = [271, 10, 61, 124, 131, 79, 288, 325, 36, 138, 125]
+
+# Per-sheet (light/base, dark/blob) Lab modes of the 8 real Ring Mottle
+# sheets -- (base_L, base_C, base_hue, blob_L, blob_C, blob_hue). The blob
+# mode is darker and same-hue +-15 deg; chroma moves BOTH ways vs the base.
+_RING_MOTTLE_MODES = [
+    (79.7, 5.5, 52, 74.0, 2.2, 52), (66.4, 12.8, 96, 63.9, 27.3, 100),
+    (70.9, 67.5, 74, 66.4, 54.8, 76), (63.8, 17.9, 268, 42.9, 31.5, 281),
+    (76.7, 70.9, 121, 62.2, 83.6, 135), (69.7, 53.4, 155, 55.1, 35.8, 166),
+    (73.2, 48.8, 109, 64.4, 60.9, 110), (66.0, 41.7, 103, 56.3, 19.8, 121),
+]
+
+
+def sample_taxa_colors(seed, taxon):
+    """Draw a real-grounded LINEAR-RGB palette for one of the four report-037
+    taxa from the report-043 measured distributions above. Deterministic in
+    seed. Returns a dict whose keys depend on the taxon (see call sites)."""
+    # NB: a stable per-taxon offset (NOT python hash() -- string-hash
+    # randomization would break the (recipe, seed) -> bytes determinism the
+    # regeneration contract relies on).
+    _taxon_off = int.from_bytes(taxon.encode()[:4], "little")
+    rng = np.random.RandomState((seed * 2654435761 + _taxon_off) % (2 ** 31))
+    if taxon == 'baroque-rolling-wave':
+        hues, ws = zip(*_BAROQUE_HUES)
+        hue = float(rng.choice(hues, p=np.array(ws) / sum(ws))) + rng.uniform(-14, 14)
+        L = rng.uniform(45, 66)   # between the measured dark/light mode bands
+        C = rng.uniform(22, 52)
+        return {"base": _lab_to_linear_rgb(L, C * math.cos(math.radians(hue)),
+                                           C * math.sin(math.radians(hue)))}
+    if taxon == 'fracture-streamer':
+        bL, bC = rng.uniform(85, 95), rng.uniform(0.5, 4.0)
+        bh = rng.uniform(0, 360)
+        lL, lC, lh = _STREAMER_LINE_MODES[rng.randint(len(_STREAMER_LINE_MODES))]
+        lL += rng.uniform(-5, 5); lC *= rng.uniform(0.8, 1.25); lh += rng.uniform(-10, 10)
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "line": _lab_to_linear_rgb(lL, lC * math.cos(math.radians(lh)),
+                                           lC * math.sin(math.radians(lh)))}
+    if taxon == 'confetti-shard':
+        bL, bC = rng.uniform(84, 95), rng.uniform(0.5, 3.0)
+        bh = rng.uniform(0, 360)
+        # real collage sheets carry a COORDINATED 2-4 hue seasonal set, not
+        # one random color per cell
+        k = rng.randint(2, 5)
+        anchors = rng.choice(_SHARD_HUES, size=k, replace=False)
+        shards = []
+        for h in anchors:
+            h = float(h) + rng.uniform(-12, 12)
+            L = rng.uniform(33, 59); C = rng.uniform(15, 43)
+            shards.append(_lab_to_linear_rgb(L, C * math.cos(math.radians(h)),
+                                             C * math.sin(math.radians(h))))
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "shards": shards}
+    if taxon == 'ring-mottle':
+        bL, bC, bh, dL, dC, dh = _RING_MOTTLE_MODES[rng.randint(len(_RING_MOTTLE_MODES))]
+        bL += rng.uniform(-4, 4); bC *= rng.uniform(0.85, 1.2); bh += rng.uniform(-10, 10)
+        dL += rng.uniform(-4, 4); dC *= rng.uniform(0.85, 1.2); dh += rng.uniform(-10, 10)
+        return {"base": _lab_to_linear_rgb(bL, bC * math.cos(math.radians(bh)),
+                                           bC * math.sin(math.radians(bh))),
+                "blob": _lab_to_linear_rgb(dL, dC * math.cos(math.radians(dh)),
+                                           dC * math.sin(math.radians(dh)))}
+    raise ValueError(f"not a report-043 grounded taxon: {taxon}")
+
+
 def streak_haze_field(sel, size, seed, milky_h=0.86, clear_h=0.07, tex_amp=0.10):
     """Report 039: exemplar-grounded haze field for the streak family. The OLD
     authoring made gt_h read near-uniform: streaky-fine-texture used a FLAT h
@@ -1175,23 +1281,24 @@ def author_glass_arrays(recipe, size=1536, seed=42):
         T = np.clip(base_color + noise_scaled[..., None], 0, 1)
         h = np.full((size, size), 0.29, dtype=np.float32)
 
-    # ---- Report 037 item C: four new taxa recipes (report 031 sec2/4/5's
-    # ranked missing-variety list; targets are STRUCTURAL, per 031 -- none of
-    # these taxa has an explicit real-exemplar Lab centroid the way 021 sec5's
-    # five gap recipes did, so authored colors below are plausible choices
-    # chosen for corpus-hue diversity, not independently re-grounded via
-    # nearest-neighbor search. Flagged honestly in report 037; a follow-up
-    # gap_exemplars.py-style grounding pass is future work, not blocking.
+    # ---- Report 037 item C four new-taxa recipes; STRUCTURE unchanged from
+    # 037 (Voronoi lines/cells, ring_mottle_blobs, rolling-wave relief). The
+    # COLORS are report 043 item 3's exemplar grounding pass -- 037 flagged
+    # its authored colors as "plausible choices chosen for corpus-hue
+    # diversity, not independently re-grounded"; every palette below now
+    # comes from measured real corpus swatches via sample_taxa_colors()
+    # (corpus/taxa_exemplars_043.py, results/043/taxa_exemplar_colors.json,
+    # the report-039 method).
     elif recipe == 'baroque-rolling-wave':
         # T3 (031 sec2/4/5, rank #3): large-scale rolling-wave SURFACE
         # relief, cm-scale, coarser than the T2 "granite" hammered relief
-        # already in every other recipe. 031 sec5: "a coarser-scale
-        # extension of report 022's fBm octave system... the generator
-        # mechanism already exists" -- so T/h authoring here mirrors the
-        # cathedral family (clear glass; T3 is a RELIEF-scale taxon, not a
-        # color one) and the actual differentiator is generate_relief_height's
-        # dedicated 'baroque-rolling-wave' branch below.
-        base_color = np.array([0.30, 0.42, 0.36])  # pale seafoam/aqua-green -- distinct hue from the existing cathedral pair
+        # already in every other recipe. T/h authoring mirrors the cathedral
+        # family (clear glass; T3 is a RELIEF-scale taxon) and the actual
+        # differentiator is generate_relief_height's dedicated branch below.
+        # 043: body tint drawn per-seed from the measured 87-sheet colored
+        # Textured/Baroque cathedral population (hue mass amber/green/
+        # blue-purple, L* 45-66, C* 22-52) instead of one fixed seafoam.
+        base_color = sample_taxa_colors(seed, 'baroque-rolling-wave')["base"]
         noise = generate_noise(size, scale=220, seed=seed, **CATHEDRAL_OCT)
         noise_scaled = (noise * 0.16) - 0.08
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
@@ -1199,32 +1306,40 @@ def author_glass_arrays(recipe, size=1536, seed=42):
 
     elif recipe == 'fracture-streamer':
         # T9 (031 sec2/4/5, rank #4): thin dark/colored branching crack-like
-        # lines, BODY, over a lightly-tinted near-clear base. 031 sec5:
-        # "(a) texture authoring only... a thin branching line-network mask
-        # (Voronoi-cell-boundary or similar)".
-        base_color = np.array([0.42, 0.40, 0.44])  # near-clear cool-grey base -- lets the streamer lines read
+        # lines, BODY, over a near-clear base. 043: real Bullseye Collage
+        # fracture/streamer sheets measure base L* 85-95 / C* 0.5-4 (the 037
+        # cool-grey base at L*~69 was too dark) and line colors from the
+        # measured black/green/pink/white streamer modes.
+        pal = sample_taxa_colors(seed, 'fracture-streamer')
+        base_color = pal["base"]
         noise = generate_noise(size, scale=200, seed=seed, **WISPY_OCT)
         noise_scaled = (noise * 0.10) - 0.05
         T = np.clip(base_color * (1.0 + noise_scaled[..., None]), 0, 1)
         n_pts = int(30 * (size / 1536.0) ** 2) + 18
         _cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
         line = np.clip(1.0 - edge_dist / 6.0, 0, 1) ** 2  # thin AA boundary network
-        line_color = np.array([0.05, 0.03, 0.03])  # dark branching streamer tint
+        line_color = pal["line"]
         T = np.clip(T * (1 - line[..., None]) + line_color * line[..., None], 0, 1)
         h = np.full((size, size), 0.12, dtype=np.float32)
 
     elif recipe == 'confetti-shard':
         # T10 (031 sec2/4/5, rank #5): flat angular non-overlapping color
-        # pieces embedded in a clear/white BODY. 031 sec5: "a filled-region
-        # variant of the same Voronoi-cell idea behind T9... often the
-        # literal same product line as T9 (see exemplars)" -- shares
-        # voronoi_cells with fracture-streamer, filled instead of outlined.
-        base_color = np.array([0.72, 0.71, 0.68])  # near-white/clear cast base
+        # pieces embedded in a clear/white BODY; shares voronoi_cells with
+        # fracture-streamer (literally the same product family), filled
+        # instead of outlined. 043: shards drawn from a COORDINATED 2-4 hue
+        # real seasonal set (SPRING/AUTUMN/... collage lines, L* 33-59,
+        # C* 15-43) with per-cell jitter -- not one uniform-random RGB per
+        # cell; base from the measured near-clear L* 84-95 band.
+        pal = sample_taxa_colors(seed, 'confetti-shard')
+        base_color = pal["base"]
         n_pts = int(22 * (size / 1536.0) ** 2) + 12
         cell_id, edge_dist = voronoi_cells(size, seed + 900, n_pts)
         rng_c = np.random.RandomState(seed + 901)
         n_cells = int(cell_id.max()) + 1
-        palette = rng_c.uniform(0.05, 0.85, size=(n_cells, 3))
+        anchors = np.array(pal["shards"])  # (k,3) linear RGB
+        pick = rng_c.randint(len(anchors), size=n_cells)
+        jitter = rng_c.uniform(0.85, 1.15, size=(n_cells, 1))
+        palette = np.clip(anchors[pick] * jitter, 0, 1)
         fill_prob = 0.55  # not every cell is a colored "shard" -- some stay clear body
         is_shard = rng_c.random(n_cells) < fill_prob
         cell_color = np.where(is_shard[:, None], palette, base_color[None, :])
@@ -1235,14 +1350,16 @@ def author_glass_arrays(recipe, size=1536, seed=42):
 
     elif recipe == 'ring-mottle':
         # T7 formalized (031 sec2/3/4/5): dense overlapping round/oval
-        # opaque blobs, BODY -- an explicit generative model (ring_mottle_
-        # blobs), replacing dark-ruby's accidental fBm resemblance (031
-        # sec3: "dark-ruby unintentionally reads as this... unintended but
-        # convincing"). Grounded on the same dark-tinted family as dark-ruby
-        # (the one proven-convincing precedent for this taxon) but a
-        # distinct warm amber/rose hue for corpus coverage diversity.
-        base_color = np.array([0.10, 0.045, 0.03])
-        blob_color = np.array([0.34, 0.12, 0.07])
+        # opaque blobs, BODY (ring_mottle_blobs). 043 REGROUNDING: the 037
+        # version authored this as a dark amber/rose (body L*~20) "grounded"
+        # on dark-ruby's accidental resemblance -- but the literal Ring
+        # Mottle corpus category (8 Youghiogheny Mottle sheets) is a LIGHT
+        # opalescent family: body L* 64-80, blobs a few L* darker with
+        # chroma moving both ways. Palette now sampled per-seed from those
+        # 8 measured (base, blob) Lab mode pairs with jitter.
+        pal = sample_taxa_colors(seed, 'ring-mottle')
+        base_color = pal["base"]
+        blob_color = pal["blob"]
         n_blobs = int(70 * (size / 1536.0) ** 2) + 30
         blobs = ring_mottle_blobs(size, seed + 950, n_blobs)
         T = (base_color[None, None, :] * (1 - blobs[..., None])

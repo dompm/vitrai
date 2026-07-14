@@ -1,0 +1,106 @@
+{
+ "model": "sonnet",
+ "renders": "/tmp/043_taxa_after",
+ "n_valid": 12,
+ "n_detected": 6,
+ "detection_rate": 0.5,
+ "chance": 0.25,
+ "results": [
+  {
+   "taxon": "baroque-rolling-wave",
+   "lineup": "lineup_baroque-rolling-wave_00.png",
+   "synth_pos": 3,
+   "guess": 1,
+   "detected": false,
+   "raw": "1"
+  },
+  {
+   "taxon": "baroque-rolling-wave",
+   "lineup": "lineup_baroque-rolling-wave_01.png",
+   "synth_pos": 1,
+   "guess": 4,
+   "detected": false,
+   "raw": "4"
+  },
+  {
+   "taxon": "baroque-rolling-wave",
+   "lineup": "lineup_baroque-rolling-wave_02.png",
+   "synth_pos": 4,
+   "guess": 4,
+   "detected": true,
+   "raw": "4"
+  },
+  {
+   "taxon": "fracture-streamer",
+   "lineup": "lineup_fracture-streamer_00.png",
+   "synth_pos": 4,
+   "guess": 3,
+   "detected": false,
+   "raw": "3"
+  },
+  {
+   "taxon": "fracture-streamer",
+   "lineup": "lineup_fracture-streamer_01.png",
+   "synth_pos": 1,
+   "guess": 4,
+   "detected": false,
+   "raw": "4"
+  },
+  {
+   "taxon": "fracture-streamer",
+   "lineup": "lineup_fracture-streamer_02.png",
+   "synth_pos": 4,
+   "guess": 1,
+   "detected": false,
+   "raw": "1"
+  },
+  {
+   "taxon": "confetti-shard",
+   "lineup": "lineup_confetti-shard_00.png",
+   "synth_pos": 3,
+   "guess": 3,
+   "detected": true,
+   "raw": "3"
+  },
+  {
+   "taxon": "confetti-shard",
+   "lineup": "lineup_confetti-shard_01.png",
+   "synth_pos": 1,
+   "guess": 1,
+   "detected": true,
+   "raw": "1"
+  },
+  {
+   "taxon": "confetti-shard",
+   "lineup": "lineup_confetti-shard_02.png",
+   "synth_pos": 3,
+   "guess": 3,
+   "detected": true,
+   "raw": "3"
+  },
+  {
+   "taxon": "ring-mottle",
+   "lineup": "lineup_ring-mottle_00.png",
+   "synth_pos": 4,
+   "guess": 3,
+   "detected": false,
+   "raw": "3"
+  },
+  {
+   "taxon": "ring-mottle",
+   "lineup": "lineup_ring-mottle_01.png",
+   "synth_pos": 1,
+   "guess": 1,
+   "detected": true,
+   "raw": "1"
+  },
+  {
+   "taxon": "ring-mottle",
+   "lineup": "lineup_ring-mottle_02.png",
+   "synth_pos": 2,
+   "guess": 2,
+   "detected": true,
+   "raw": "2"
+  }
+ ]
+}
