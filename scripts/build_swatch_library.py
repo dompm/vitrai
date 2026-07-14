@@ -127,6 +127,133 @@ def cache_sge_collection(collection_handle):
     return products
 
 
+def cache_bullseye_strikers():
+    """fix/vlm-judge-targeted striker audit: Bullseye's own `strikers` Shopify
+    collection (https://shop.bullseyeglass.com/collections/strikers) -- the
+    authoritative, vendor-curated source for which Bullseye colors are "strikers"
+    (glass that ships pale/unfired and only reaches its named color once the
+    customer fires it in a kiln; showing the fired/struck color misrepresents what
+    ships). This is the SAME signal that drives the "striker" page badge/tooltip
+    on a Bullseye product page ("This style may not reveal (or strike to) its
+    target color until fired.") -- that badge is rendered from a per-product
+    Shopify metafield (`custom.striker`, boolean) that is NOT exposed on the
+    regular /products.json collection feed used by cache_bullseye_products()
+    (confirmed empirically: Translucent White's and Salmon Pink's body_html/tags
+    say nothing about striking, but their live product PAGE embeds
+    `"key":"striker"`/`"value":"true"` in an inline JSON blob). Fetching every
+    product's live page to read that metafield directly would mean ~3000 full-page
+    fetches; the dedicated `strikers` collection gets the same membership list in
+    ~3 paginated requests instead.
+    """
+    print("Pre-caching Bullseye strikers collection (page-badge signal)...")
+    products = []
+    page = 1
+    while page <= 8:
+        url = f"https://shop.bullseyeglass.com/collections/strikers/products.json?page={page}&limit=250"
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=10)
+            if r.status_code != 200:
+                break
+            batch = r.json().get('products', [])
+            if not batch:
+                break
+            products.extend(batch)
+            page += 1
+            time.sleep(0.2)
+        except Exception as e:
+            print(f"  Error caching Bullseye strikers collection: {e}")
+            break
+    print(f"Cached {len(products)} products from Bullseye strikers collection.")
+    return products
+
+
+def bullseye_striker_color_codes(striker_products):
+    """The strikers collection lists every SKU/format variant (frit, rod, 2x2
+    sample, every thickness) of each striker color -- striking is a property of
+    the base color/formula, not the specific SKU, so this reduces the collection
+    down to the set of 6-digit base color codes (SKU's first '-'-delimited
+    segment, e.g. '000243' for Translucent White) that is then checked against
+    each registry row's own base_sku prefix, independent of thickness/format."""
+    codes = set()
+    for p in striker_products:
+        for v in p.get('variants', []):
+            sku = (v.get('sku') or '').upper()
+            code = sku.split('-')[0]
+            if code:
+                codes.add(code)
+    return codes
+
+
+# fix/vlm-judge-targeted striker audit: Wissmach has no dedicated collection or
+# metafield badge (checked), but DOES put the striking-color disclaimer directly
+# in body_html -- both for its 3 explicitly "Striker"-named products AND 3 more
+# that carry the exact same disclaimer without "Striker" in the title (Gold Tone
+# Opal, String of Pearls Opal Reactive, Oyster Pearl Opal Reactive -- e.g. "Glass
+# color and opacity matures upon firing. Unfired pieces may be translucent."),
+# the hidden-striker analogue of Bullseye's Translucent White/Salmon Pink.
+# Oceanside and Youghiogheny were investigated the same way (tags, body_html
+# keyword scan, and -- for Bullseye's page-badge trick -- a live product-page
+# fetch probing for an equivalent metafield/label) and no striker signal was
+# found for either: Oceanside's SGE listings carry no striking-color language at
+# all in ~330 products checked, and Youghiogheny's "High Strike" line is a
+# DIFFERENT thing entirely -- their own glossary (youghioghenyglass.com/high-
+# strike.html) describes it as "a traditional ring mottled Art Glass" line, and
+# every Youghiogheny product in the catalog is tagged 'Non-fusible Glass' (hand-
+# rolled art glass for leaded/foiled work, not something an end customer re-fires
+# in a kiln) -- so "High Strike" here is a product-line name, not a ships-pale-
+# fires-later color. Deliberately NOT flagged as a striker.
+_WISSMACH_STRIKER_BODY_RE = re.compile(
+    r'\b(?:color|colour)\s+(?:and\s+opacity\s+)?matures\b.{0,40}\bfiring\b', re.IGNORECASE)
+
+
+def is_wissmach_striker(product):
+    tags = [(t or '').lower() for t in (product.get('tags') or [])]
+    if 'striker' in tags:
+        return True
+    title = (product.get('title') or '')
+    if re.search(r'\bstriker\b', title, re.IGNORECASE):
+        return True
+    body = (product.get('body_html') or '')
+    return bool(_WISSMACH_STRIKER_BODY_RE.search(body))
+
+
+_STRIKES_TO_LEADING_COE_RE = re.compile(r'^\s*\d+\s*COE\s+', re.IGNORECASE)
+_STRIKES_TO_STRIKER_RE = re.compile(r'\bstriker\b', re.IGNORECASE)
+_STRIKES_TO_TRAILING_TYPE_RE = re.compile(
+    r'\s+(Opalescent|Transparent|Translucent|Cathedral|Tint|Opal|Iridescent)$', re.IGNORECASE)
+
+
+def strikes_to_name(display_name):
+    """Best-effort cleanup of a product's display name down to just the color
+    name, for the UI-facing `strikes_to` field (e.g. "this glass fires to
+    Marzipan"). Bullseye/Wissmach names follow "COLOR_NAME [Striker] TYPE_WORD,
+    technical, details, ..." (TYPE_WORD in {Opalescent, Transparent, ...}) --
+    take the color-bearing segment(s) up through any "N-Color Mix"/"N+ Color Mix"
+    marker (multi-color names put a comma INSIDE the color name, e.g. "Yellow,
+    Red Striker 2-Color Mix"), strip a leading "96 COE " prefix, the standalone
+    word "Striker", and exactly one TRAILING type word at a time (never a
+    leading one -- "Translucent White Translucent" must keep the leading
+    "Translucent", it's part of the actual color name, and only lose the
+    trailing, duplicate, glass-TYPE "Translucent")."""
+    segments = display_name.split(',')
+    end = 1
+    for i, seg in enumerate(segments):
+        if 'mix' in seg.lower():
+            end = i + 1
+            break
+    color_part = ','.join(segments[:end])
+
+    color_part = _STRIKES_TO_LEADING_COE_RE.sub('', color_part)
+    color_part = _STRIKES_TO_STRIKER_RE.sub('', color_part).strip()
+    while True:
+        new = _STRIKES_TO_TRAILING_TYPE_RE.sub('', color_part).strip()
+        if new == color_part:
+            break
+        color_part = new
+    color_part = re.sub(r'\s+', ' ', color_part).strip(' ,-')
+    return color_part or segments[0].strip()
+
+
 # ==================================================================================
 # PICKER INTEGRATION (iteration 036) -- glass-library-integration-review.md Addendum 2
 # ==================================================================================
@@ -685,6 +812,12 @@ def main(only_manufacturer=None):
     wissmach_raw = cache_sge_collection("wissmach") if only_manufacturer is None else []
     art_glass_raw = cache_sge_collection("art-glass") if only_manufacturer is None else []
 
+    # fix/vlm-judge-targeted striker audit: Bullseye base-color codes that are
+    # "strikers" (see cache_bullseye_strikers()'s docstring for the page-badge
+    # provenance). Only fetched when Bullseye is in scope this run.
+    bullseye_striker_codes = (bullseye_striker_color_codes(cache_bullseye_strikers())
+                               if only_manufacturer in (None, 'bullseye') else set())
+
     registry = []
     seen_skus = set()
     downloaded = 0
@@ -715,6 +848,12 @@ def main(only_manufacturer=None):
                     "resolved_sku": sku, "name": title, "resolved_name": title,
                     "category": category,
                     "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
+                    # fix/vlm-judge-targeted striker audit: no verified striker signal
+                    # found for Oceanside (checked tags, body_html, and a live-page
+                    # probe for a Bullseye-style metafield badge -- see
+                    # cache_bullseye_strikers()'s docstring). Field always present so
+                    # UI code can rely on it rather than treating absence as unknown.
+                    "striker": False, "strikes_to": None,
                     "_candidate_scores": pick_info['candidate_scores'],
                     "_local_filename": f"oceanside-{clean_sku(sku)}.jpg",
                 }
@@ -749,11 +888,17 @@ def main(only_manufacturer=None):
                 category = classify_glass(title, sku, 'Wissmach')
                 item_id = f"wissmach-{clean_sku(sku)}"
                 pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
+                # fix/vlm-judge-targeted striker audit: Wissmach carries its own
+                # striking-color disclaimer in body_html/tags -- see
+                # is_wissmach_striker()'s docstring.
+                _wm_striker = is_wissmach_striker(p)
                 base = {
                     "id": item_id, "manufacturer": "Wissmach", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
                     "category": category,
                     "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
+                    "striker": _wm_striker,
+                    "strikes_to": strikes_to_name(title) if _wm_striker else None,
                     "_candidate_scores": pick_info['candidate_scores'],
                     "_local_filename": f"wissmach-{clean_sku(sku)}.jpg",
                 }
@@ -795,6 +940,13 @@ def main(only_manufacturer=None):
                     "resolved_sku": sku, "name": title, "resolved_name": title,
                     "category": category,
                     "product_url": f"https://www.stainedglassexpress.com/products/{p.get('handle')}",
+                    # fix/vlm-judge-targeted striker audit: Youghiogheny's "High
+                    # Strike" line was investigated and confirmed NOT to be the same
+                    # ships-pale-fires-later phenomenon -- it's a hand-rolled,
+                    # non-fusible mottled art-glass product line (per Youghiogheny's
+                    # own glossary), already fully colored as shipped. Deliberately
+                    # not flagged. See cache_bullseye_strikers()'s docstring.
+                    "striker": False, "strikes_to": None,
                     "_candidate_scores": pick_info['candidate_scores'],
                     "_local_filename": f"youghiogheny-{clean_sku(sku)}.jpg",
                 }
@@ -834,11 +986,17 @@ def main(only_manufacturer=None):
                 category = classify_glass(title, sku, 'Bullseye')
                 item_id = f"bullseye-{clean_sku(sku)}"
                 pick_info = apply_manual_overrides(item_id, pick_info)  # Decision 4 (white-on-white)
+                # fix/vlm-judge-targeted striker audit: base color code membership in
+                # Bullseye's own `strikers` collection -- see
+                # cache_bullseye_strikers()'s docstring for the page-badge provenance.
+                _be_striker = sku_upper.split('-')[0] in bullseye_striker_codes
                 base = {
                     "id": item_id, "manufacturer": "Bullseye", "base_sku": sku,
                     "resolved_sku": sku, "name": title, "resolved_name": title,
                     "category": category,
                     "product_url": f"https://shop.bullseyeglass.com/products/{p.get('handle')}",
+                    "striker": _be_striker,
+                    "strikes_to": strikes_to_name(title) if _be_striker else None,
                     "_candidate_scores": pick_info['candidate_scores'],
                     "_local_filename": f"bullseye-{clean_sku(sku)}.jpg",
                     # fix/bullseye-grip-picks: crop-box-bearing grip/whole-sheet feature
@@ -1023,7 +1181,15 @@ def main(only_manufacturer=None):
         if existing and existing.get('vlm_judge'):
             if formula_key not in seen_formulas:
                 seen_formulas.add(formula_key)
-                vlm_judge_carried_rows.append(dict(existing))
+                carried = dict(existing)
+                # Refresh striker/strikes_to from THIS run's classification rather
+                # than trusting a possibly-stale (or, for a pre-striker-audit
+                # registry, entirely absent) value on the old row -- the image pick
+                # itself stays judge-authoritative, but the schema field should
+                # never silently drift from the live classifier.
+                carried['striker'] = item.get('striker', False)
+                carried['strikes_to'] = item.get('strikes_to')
+                vlm_judge_carried_rows.append(carried)
                 print(f"  vlm_judge churn guard: carrying judge-authoritative pick through "
                       f"unchanged for {item['id']} ({existing.get('vlm_judge')})")
             continue
@@ -1096,7 +1262,10 @@ def main(only_manufacturer=None):
                     print(f"  Quarantined (legacy list): -v2 recovery file absent, carrying "
                           f"existing registry row through for {item['id']}")
                     seen_formulas.add(formula_key)
-                    carried_v2_rows.append(dict(existing))
+                    carried_v2 = dict(existing)
+                    carried_v2['striker'] = item.get('striker', False)
+                    carried_v2['strikes_to'] = item.get('strikes_to')
+                    carried_v2_rows.append(carried_v2)
                     continue
                 else:
                     print(f"  Quarantined (legacy list): skipping {item['id']} ({item['name']})")
