@@ -870,6 +870,7 @@ def main(only_manufacturer=None):
     stability_kept_log = []
     churn_reverted_log = []  # fix/bullseye-grip-picks: picks the churn gate kept stable
     carried_v2_rows = []     # legacy-quarantined rows carried through when the -v2 file is absent
+    vlm_judge_carried_rows = []  # fix/vlm-judge-targeted: judge-authoritative rows carried through untouched
 
     # Sort registry to ensure preference is given:
     # - For Bullseye: SKU ending with -1010 (standard 10x10 sheet) is preferred
@@ -992,6 +993,41 @@ def main(only_manufacturer=None):
         mfg = item['manufacturer']
         base_sku = item['base_sku']
 
+        # Normalize formula ID
+        formula_id = base_sku.split('-')[0]
+        if mfg == 'Bullseye':
+            parts = base_sku.split('-')
+            if len(parts) >= 2:
+                formula_id = parts[0] + '-' + parts[1]
+        formula_key = (mfg, formula_id)
+
+        # fix/vlm-judge-targeted churn guard: a vlm_judge provenance marker means a
+        # human-directed VLM judge (not this run's heuristic) chose the shipped
+        # image, specifically because the heuristic was CONFIRMED CONFIDENTLY WRONG
+        # on that product (e.g. Translucent White's label-macro pick, which scored
+        # 1.0-1.5 under the picker despite being the wrong photo -- see
+        # scripts/vlm_judge_targeted.py). apply_stability_rule below only protects a
+        # previously-shipped image when its OLD score clears PICKER_FLOOR, but a
+        # judge-chosen row always has pick_score=None and typically no entry in this
+        # run's freshly-scraped _candidate_scores at all (the judge's winner need not
+        # even be this run's argmax candidate) -- so the stability rule can't see it
+        # as protected and a plain rebuild silently reverts the row straight back to
+        # the heuristic's wrong pick. Checked BEFORE the picker-quarantine skip below
+        # too: a gallery reshuffle that makes this run's heuristic quarantine the
+        # product outright must not drop a judge-authoritative row either. Bypasses
+        # the argmax/stability/churn-gate/quarantine machinery entirely and carries
+        # the existing, judge-authoritative registry row through byte-for-byte -- the
+        # same posture as carried_v2_rows below. A later, deliberate re-run of the
+        # judge script is still the only way to change one of these rows.
+        existing = existing_registry_by_id.get(item['id'])
+        if existing and existing.get('vlm_judge'):
+            if formula_key not in seen_formulas:
+                seen_formulas.add(formula_key)
+                vlm_judge_carried_rows.append(dict(existing))
+                print(f"  vlm_judge churn guard: carrying judge-authoritative pick through "
+                      f"unchanged for {item['id']} ({existing.get('vlm_judge')})")
+            continue
+
         # Picker quarantine (036-1): no gallery candidate cleared the picker's floor.
         # Skip WITHOUT claiming the formula slot -- an alternate size variant of the
         # same formula (e.g. a -HALF sheet when the -1010 got quarantined) still gets
@@ -1007,19 +1043,10 @@ def main(only_manufacturer=None):
                 continue
             seen_image_urls.add(stripped)
 
-        # Normalize formula ID
-        formula_id = base_sku.split('-')[0]
-        if mfg == 'Bullseye':
-            parts = base_sku.split('-')
-            if len(parts) >= 2:
-                formula_id = parts[0] + '-' + parts[1]
-
-        formula_key = (mfg, formula_id)
         if formula_key not in seen_formulas:
             # Anti-churn stability rule (036-4), applied before the legacy quarantine
             # / -v2 checks below so those still operate on whatever image the
             # stability rule ultimately settles on.
-            existing = existing_registry_by_id.get(item['id'])
             item, churned = apply_stability_rule(item, existing)
             if item.get('_stability_kept'):
                 stability_kept_log.append({'id': item['id'], 'manufacturer': mfg})
@@ -1250,6 +1277,13 @@ def main(only_manufacturer=None):
         final_registry.extend(carried_v2_rows)
         print(f"Carried through {len(carried_v2_rows)} legacy-quarantine -v2 rows verbatim "
               "(recovery files absent in this checkout).")
+
+    # fix/vlm-judge-targeted: judge-authoritative rows -- carried through verbatim,
+    # see the churn guard in the dedup loop above.
+    if vlm_judge_carried_rows:
+        final_registry.extend(vlm_judge_carried_rows)
+        print(f"Carried through {len(vlm_judge_carried_rows)} vlm_judge-authoritative rows "
+              "verbatim (churn guard).")
     if churn_reverted_log:
         print(f"Bullseye churn gate kept {len(churn_reverted_log)} currently-shipped picks "
               "(changes that were not flat-chip -> whole-sheet/grip upgrades):")
@@ -1268,7 +1302,7 @@ def main(only_manufacturer=None):
                 carried += 1
         print(f"Carried through {carried} existing non-{only_manufacturer} registry rows untouched.")
 
-    if carried_v2_rows or only_manufacturer:
+    if carried_v2_rows or vlm_judge_carried_rows or only_manufacturer:
         # splices above may have appended out of order -- restore the sorted invariant
         final_registry.sort(key=lambda x: (x['manufacturer'], x['base_sku']))
 
