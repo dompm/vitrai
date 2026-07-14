@@ -1,0 +1,451 @@
+{
+  "samples": [
+    {
+      "sample": "baroque-rolling-wave__seed6001",
+      "recipe": "baroque-rolling-wave",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 61.51605224609375,
+          "ssim": 0.7610694766044617
+        },
+        "t1_scatter": {
+          "mae": 11.058314934980292,
+          "ssim": 0.9862256051900131
+        },
+        "t2_refraction": {
+          "mae": 11.058307468192426,
+          "ssim": 0.9862256035792915
+        },
+        "t3_veil": {
+          "mae": 11.058307468192426,
+          "ssim": 0.9862256035792915
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "cathedral-amber__seed6002",
+      "recipe": "cathedral-amber",
+      "family": "cathedral",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 63.08951950073242,
+          "ssim": 0.6951838731765747
+        },
+        "t1_scatter": {
+          "mae": 13.084262269376017,
+          "ssim": 0.8993648546404974
+        },
+        "t2_refraction": {
+          "mae": 13.084260653408396,
+          "ssim": 0.8993648075333751
+        },
+        "t3_veil": {
+          "mae": 13.084260653408396,
+          "ssim": 0.8993648075333751
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": 8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "cathedral-green__seed6001",
+      "recipe": "cathedral-green",
+      "family": "cathedral",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 60.330867767333984,
+          "ssim": 0.6456395387649536
+        },
+        "t1_scatter": {
+          "mae": 12.718208786805267,
+          "ssim": 0.8321377401448199
+        },
+        "t2_refraction": {
+          "mae": 12.718207899222381,
+          "ssim": 0.8321377735071636
+        },
+        "t3_veil": {
+          "mae": 12.718207899222381,
+          "ssim": 0.8321377735071636
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": 8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "confetti-shard__seed6002",
+      "recipe": "confetti-shard",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 63.30281066894531,
+          "ssim": 0.760208785533905
+        },
+        "t1_scatter": {
+          "mae": 11.519388235887607,
+          "ssim": 0.9841486547454986
+        },
+        "t2_refraction": {
+          "mae": 11.519382043230303,
+          "ssim": 0.9841486444252521
+        },
+        "t3_veil": {
+          "mae": 11.519382043230303,
+          "ssim": 0.9841486444252521
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": 8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "dark-ruby__seed6001",
+      "recipe": "dark-ruby",
+      "family": "dark",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 22.53506088256836,
+          "ssim": 0.7375915050506592
+        },
+        "t1_scatter": {
+          "mae": 1.156097525719011,
+          "ssim": 0.993246421478557
+        },
+        "t2_refraction": {
+          "mae": 1.1560946105200307,
+          "ssim": 0.9932464296332842
+        },
+        "t3_veil": {
+          "mae": 1.1560966811797861,
+          "ssim": 0.9932463205787089
+        }
+      },
+      "sigma_scale": 512.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 1.8639525478647556e-09
+    },
+    {
+      "sample": "dark-textured__seed6002",
+      "recipe": "dark-textured",
+      "family": "dark",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 32.23726272583008,
+          "ssim": 0.7671783566474915
+        },
+        "t1_scatter": {
+          "mae": 0.9852686886763549,
+          "ssim": 0.996715550577911
+        },
+        "t2_refraction": {
+          "mae": 0.9852685399242574,
+          "ssim": 0.9967155504392724
+        },
+        "t3_veil": {
+          "mae": 0.9852685399242574,
+          "ssim": 0.9967155504392724
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "fracture-streamer__seed6003",
+      "recipe": "fracture-streamer",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 62.28589630126953,
+          "ssim": 0.7654550671577454
+        },
+        "t1_scatter": {
+          "mae": 8.321027081530977,
+          "ssim": 0.9935656517800654
+        },
+        "t2_refraction": {
+          "mae": 8.32102420497187,
+          "ssim": 0.9935656578817965
+        },
+        "t3_veil": {
+          "mae": 8.32102420497187,
+          "ssim": 0.9935656578817965
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "ring-mottle__seed6001",
+      "recipe": "ring-mottle",
+      "family": "ring-mottle",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 43.28874969482422,
+          "ssim": 0.769530177116394
+        },
+        "t1_scatter": {
+          "mae": 1.6110691497268663,
+          "ssim": 0.9991256159091191
+        },
+        "t2_refraction": {
+          "mae": 1.6110688650303393,
+          "ssim": 0.9991256128841692
+        },
+        "t3_veil": {
+          "mae": 1.6110688650303393,
+          "ssim": 0.9991256128841692
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "saturated-opalescent__seed6001",
+      "recipe": "saturated-opalescent",
+      "family": "saturated-opalescent",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 61.08876419067383,
+          "ssim": 0.7673508524894714
+        },
+        "t1_scatter": {
+          "mae": 1.7074327469688821,
+          "ssim": 0.9996927999408737
+        },
+        "t2_refraction": {
+          "mae": 1.7074325166017994,
+          "ssim": 0.9996928001512283
+        },
+        "t3_veil": {
+          "mae": 1.7074325166017994,
+          "ssim": 0.9996928001512283
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "streaky-fine-texture__seed6002",
+      "recipe": "streaky-fine-texture",
+      "family": "streaky",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 50.663856506347656,
+          "ssim": 0.7650508880615234
+        },
+        "t1_scatter": {
+          "mae": 1.4685919473014712,
+          "ssim": 0.9973192194972208
+        },
+        "t2_refraction": {
+          "mae": 1.4685907905896285,
+          "ssim": 0.9973192199585306
+        },
+        "t3_veil": {
+          "mae": 1.4685907905896285,
+          "ssim": 0.9973192199585306
+        }
+      },
+      "sigma_scale": 1024.0,
+      "refr_gain": -8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "streaky-mix__seed6001",
+      "recipe": "streaky-mix",
+      "family": "streaky",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 55.818748474121094,
+          "ssim": 0.7631106376647949
+        },
+        "t1_scatter": {
+          "mae": 2.924508363725476,
+          "ssim": 0.9938565768639943
+        },
+        "t2_refraction": {
+          "mae": 2.9243943204956024,
+          "ssim": 0.9938568988954811
+        },
+        "t3_veil": {
+          "mae": 2.9243943204956024,
+          "ssim": 0.9938568988954811
+        }
+      },
+      "sigma_scale": 512.0,
+      "refr_gain": 8.0,
+      "veil_mean_linear": 0.0
+    },
+    {
+      "sample": "wispy-white__seed6001",
+      "recipe": "wispy-white",
+      "family": "wispy",
+      "tiers": {
+        "t0_sharp": {
+          "mae": 58.685272216796875,
+          "ssim": 0.7674069404602051
+        },
+        "t1_scatter": {
+          "mae": 1.2287395562506078,
+          "ssim": 0.9996940378499882
+        },
+        "t2_refraction": {
+          "mae": 1.2287377798406534,
+          "ssim": 0.9996940405405561
+        },
+        "t3_veil": {
+          "mae": 1.2287377798406534,
+          "ssim": 0.9996940405405561
+        }
+      },
+      "sigma_scale": 512.0,
+      "refr_gain": 8.0,
+      "veil_mean_linear": 0.0
+    }
+  ],
+  "family_agg": {
+    "baroque/fracture/confetti": {
+      "n": 3,
+      "t0_sharp": {
+        "mae": 62.36825307210287,
+        "ssim": 0.762244443098704
+      },
+      "t1_scatter": {
+        "mae": 10.299576750799625,
+        "ssim": 0.987979970571859
+      },
+      "t2_refraction": {
+        "mae": 10.2995712387982,
+        "ssim": 0.98797996862878
+      },
+      "t3_veil": {
+        "mae": 10.2995712387982,
+        "ssim": 0.98797996862878
+      }
+    },
+    "cathedral": {
+      "n": 2,
+      "t0_sharp": {
+        "mae": 61.7101936340332,
+        "ssim": 0.6704117059707642
+      },
+      "t1_scatter": {
+        "mae": 12.901235528090641,
+        "ssim": 0.8657512973926587
+      },
+      "t2_refraction": {
+        "mae": 12.901234276315389,
+        "ssim": 0.8657512905202693
+      },
+      "t3_veil": {
+        "mae": 12.901234276315389,
+        "ssim": 0.8657512905202693
+      }
+    },
+    "dark": {
+      "n": 2,
+      "t0_sharp": {
+        "mae": 27.38616180419922,
+        "ssim": 0.7523849308490753
+      },
+      "t1_scatter": {
+        "mae": 1.070683107197683,
+        "ssim": 0.9949809860282339
+      },
+      "t2_refraction": {
+        "mae": 1.0706815752221441,
+        "ssim": 0.9949809900362783
+      },
+      "t3_veil": {
+        "mae": 1.0706826105520217,
+        "ssim": 0.9949809355089907
+      }
+    },
+    "ring-mottle": {
+      "n": 1,
+      "t0_sharp": {
+        "mae": 43.28874969482422,
+        "ssim": 0.769530177116394
+      },
+      "t1_scatter": {
+        "mae": 1.6110691497268663,
+        "ssim": 0.9991256159091191
+      },
+      "t2_refraction": {
+        "mae": 1.6110688650303393,
+        "ssim": 0.9991256128841692
+      },
+      "t3_veil": {
+        "mae": 1.6110688650303393,
+        "ssim": 0.9991256128841692
+      }
+    },
+    "saturated-opalescent": {
+      "n": 1,
+      "t0_sharp": {
+        "mae": 61.08876419067383,
+        "ssim": 0.7673508524894714
+      },
+      "t1_scatter": {
+        "mae": 1.7074327469688821,
+        "ssim": 0.9996927999408737
+      },
+      "t2_refraction": {
+        "mae": 1.7074325166017994,
+        "ssim": 0.9996928001512283
+      },
+      "t3_veil": {
+        "mae": 1.7074325166017994,
+        "ssim": 0.9996928001512283
+      }
+    },
+    "streaky": {
+      "n": 2,
+      "t0_sharp": {
+        "mae": 53.241302490234375,
+        "ssim": 0.7640807628631592
+      },
+      "t1_scatter": {
+        "mae": 2.1965501555134734,
+        "ssim": 0.9955878981806076
+      },
+      "t2_refraction": {
+        "mae": 2.1964925555426156,
+        "ssim": 0.9955880594270059
+      },
+      "t3_veil": {
+        "mae": 2.1964925555426156,
+        "ssim": 0.9955880594270059
+      }
+    },
+    "wispy": {
+      "n": 1,
+      "t0_sharp": {
+        "mae": 58.685272216796875,
+        "ssim": 0.7674069404602051
+      },
+      "t1_scatter": {
+        "mae": 1.2287395562506078,
+        "ssim": 0.9996940378499882
+      },
+      "t2_refraction": {
+        "mae": 1.2287377798406534,
+        "ssim": 0.9996940405405561
+      },
+      "t3_veil": {
+        "mae": 1.2287377798406534,
+        "ssim": 0.9996940405405561
+      }
+    }
+  }
+}
