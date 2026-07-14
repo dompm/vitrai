@@ -56,6 +56,10 @@ def main():
             h = h[..., 0]
         h = np.clip(h, 0, 1)
         normal = np.clip(read_exr(os.path.join(d, "gt_normal.exr")), 0, 1)
+        height = read_exr(os.path.join(d, "gt_height.exr"))
+        if height.ndim == 3:
+            height = height[..., 0]
+        height = np.clip(height, 0, 1)
         B = read_exr(os.path.join(d, "struct_B.exr"))
         truth = read_exr(os.path.join(d, "struct_photo_linear.exr"))
 
@@ -63,6 +67,7 @@ def main():
         T_u8 = (lin_to_srgb(ds(T)) * 255 + 0.5).astype(np.uint8)
         h_u8 = (ds(h) * 255 + 0.5).astype(np.uint8)
         n_u8 = (ds(normal) * 255 + 0.5).astype(np.uint8)
+        ht_u8 = (ds(height) * 255 + 0.5).astype(np.uint8)
         tr_u8 = (lin_to_srgb(ds(truth)) * 255 + 0.5).astype(np.uint8)
 
         # fitted per-family params from the numpy ceiling run
@@ -78,6 +83,7 @@ def main():
             "T": png_datauri(T_u8, "RGB"),
             "h": png_datauri(h_u8, "L"),
             "normal": png_datauri(n_u8, "RGB"),
+            "height": png_datauri(ht_u8, "L"),
             "truth": png_datauri(tr_u8, "RGB"),
         })
         print(f"{recipe:26s} sig={res['sigma_scale']:6.1f} refr={res['refr_gain']:5.1f} "
