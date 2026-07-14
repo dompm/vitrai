@@ -1,0 +1,972 @@
+{
+  "samples": [
+    {
+      "sample": "baroque-rolling-wave__seed6001",
+      "recipe": "baroque-rolling-wave",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 3.3966939449310303,
+            "ssim": 0.9995906949043274
+          },
+          "struct": {
+            "mae": 36.92258834838867,
+            "ssim": 0.8519812226295471
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 3.3963128113630603,
+            "ssim": 0.999623793725703
+          },
+          "struct": {
+            "mae": 11.02476376259635,
+            "ssim": 0.9861865533619281
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 3.3963128113630603,
+            "ssim": 0.999623793725703
+          },
+          "struct": {
+            "mae": 11.02476376259635,
+            "ssim": 0.9861865533619281
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 3.3963128113630603,
+            "ssim": 0.999623793725703
+          },
+          "struct": {
+            "mae": 11.02476376259635,
+            "ssim": 0.9861865533619281
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 0.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.00029398759943433106,
+      "uniform_truth_vs_T_mae_linear": 0.023626280948519707
+    },
+    {
+      "sample": "cathedral-amber__seed6002",
+      "recipe": "cathedral-amber",
+      "family": "cathedral",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 3.5798840522766113,
+            "ssim": 0.9994759559631348
+          },
+          "struct": {
+            "mae": 38.884010314941406,
+            "ssim": 0.7750648260116577
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 3.5794775589565555,
+            "ssim": 0.9995008437215586
+          },
+          "struct": {
+            "mae": 13.065834052304032,
+            "ssim": 0.8993306549873924
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 3.5648531011284215,
+            "ssim": 0.9995024242965493
+          },
+          "struct": {
+            "mae": 13.03018116320033,
+            "ssim": 0.8993951351531969
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 3.5648531011284215,
+            "ssim": 0.9995024242965493
+          },
+          "struct": {
+            "mae": 13.03018116320033,
+            "ssim": 0.8993951351531969
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 8.0,
+      "sigma_max_px_refit": 128.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.0003231993177905679,
+      "uniform_truth_vs_T_mae_linear": 0.02576293796300888
+    },
+    {
+      "sample": "cathedral-green__seed6001",
+      "recipe": "cathedral-green",
+      "family": "cathedral",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 3.41644024848938,
+            "ssim": 0.9993452429771423
+          },
+          "struct": {
+            "mae": 37.19778060913086,
+            "ssim": 0.7196940183639526
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 3.416058905178296,
+            "ssim": 0.9993722772190732
+          },
+          "struct": {
+            "mae": 12.721536197043504,
+            "ssim": 0.8320909562003277
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 3.408910045670852,
+            "ssim": 0.9993733539762043
+          },
+          "struct": {
+            "mae": 12.633238244561142,
+            "ssim": 0.832216509536285
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 3.408910045670852,
+            "ssim": 0.9993733539762043
+          },
+          "struct": {
+            "mae": 12.633238244561142,
+            "ssim": 0.832216509536285
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -4.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.0002751313440967351,
+      "uniform_truth_vs_T_mae_linear": 0.02327885292470455
+    },
+    {
+      "sample": "confetti-shard__seed6002",
+      "recipe": "confetti-shard",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 3.4795072078704834,
+            "ssim": 0.9990324378013611
+          },
+          "struct": {
+            "mae": 37.90782928466797,
+            "ssim": 0.8518280386924744
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 3.4791232652106356,
+            "ssim": 0.9990476444773416
+          },
+          "struct": {
+            "mae": 11.46412293708559,
+            "ssim": 0.9841632227502266
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 3.481920478363183,
+            "ssim": 0.9990473763766755
+          },
+          "struct": {
+            "mae": 11.405192221354456,
+            "ssim": 0.9842475077436805
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 3.481920478363183,
+            "ssim": 0.9990473763766755
+          },
+          "struct": {
+            "mae": 11.405192221354456,
+            "ssim": 0.9842475077436805
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -1.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.0003467150672804564,
+      "uniform_truth_vs_T_mae_linear": 0.025774888694286346
+    },
+    {
+      "sample": "dark-ruby__seed6001",
+      "recipe": "dark-ruby",
+      "family": "dark",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.0113004446029663,
+            "ssim": 0.9932861328125
+          },
+          "struct": {
+            "mae": 10.508013725280762,
+            "ssim": 0.9268641471862793
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.0111473542713392,
+            "ssim": 0.9932880737042404
+          },
+          "struct": {
+            "mae": 1.1446013258210515,
+            "ssim": 0.9932573259861455
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.0127068881432832,
+            "ssim": 0.9932873609137671
+          },
+          "struct": {
+            "mae": 1.1201875019395677,
+            "ssim": 0.9933782705916075
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.0127120288939109,
+            "ssim": 0.9932867775472242
+          },
+          "struct": {
+            "mae": 1.1201895708550063,
+            "ssim": 0.9933781618317451
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -2.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 6.9394445745274425e-09,
+        "struct": 1.8639525478647556e-09
+      },
+      "uniform_L0_equals_T_mae_linear": 2.9564826036221348e-05,
+      "uniform_truth_vs_T_mae_linear": 0.0017874912591651082
+    },
+    {
+      "sample": "dark-textured__seed6002",
+      "recipe": "dark-textured",
+      "family": "dark",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.3303073644638062,
+            "ssim": 0.9958655834197998
+          },
+          "struct": {
+            "mae": 12.36515998840332,
+            "ssim": 0.9306718707084656
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.3301751831150366,
+            "ssim": 0.9958692131486458
+          },
+          "struct": {
+            "mae": 0.943768610146842,
+            "ssim": 0.996726289613275
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.331398714556324,
+            "ssim": 0.9958690568836462
+          },
+          "struct": {
+            "mae": 0.8823069464195449,
+            "ssim": 0.9967534299374735
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.331398714556324,
+            "ssim": 0.9958690568836462
+          },
+          "struct": {
+            "mae": 0.8823069464195449,
+            "ssim": 0.9967534299374735
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 6.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 4.1649353079264984e-05,
+      "uniform_truth_vs_T_mae_linear": 0.003654395928606391
+    },
+    {
+      "sample": "fracture-streamer__seed6003",
+      "recipe": "fracture-streamer",
+      "family": "baroque/fracture/confetti",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 3.2961719036102295,
+            "ssim": 0.9989757537841797
+          },
+          "struct": {
+            "mae": 35.33010482788086,
+            "ssim": 0.8657387495040894
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 3.2958158194024403,
+            "ssim": 0.9989976112778866
+          },
+          "struct": {
+            "mae": 8.264722979311925,
+            "ssim": 0.9935817197399062
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 3.301155932572228,
+            "ssim": 0.9989971266136163
+          },
+          "struct": {
+            "mae": 8.218797248444252,
+            "ssim": 0.9936175863215876
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 3.301155932572228,
+            "ssim": 0.9989971266136163
+          },
+          "struct": {
+            "mae": 8.218797248444252,
+            "ssim": 0.9936175863215876
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 6.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.0003022598975803703,
+      "uniform_truth_vs_T_mae_linear": 0.023373981937766075
+    },
+    {
+      "sample": "ring-mottle__seed6001",
+      "recipe": "ring-mottle",
+      "family": "ring-mottle",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.8133169412612915,
+            "ssim": 0.9997122883796692
+          },
+          "struct": {
+            "mae": 19.280576705932617,
+            "ssim": 0.905665934085846
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.813115764330595,
+            "ssim": 0.999726944606381
+          },
+          "struct": {
+            "mae": 1.5710743475584186,
+            "ssim": 0.9991326380322834
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.8162351163747066,
+            "ssim": 0.9997266708580648
+          },
+          "struct": {
+            "mae": 1.4379800629099446,
+            "ssim": 0.9991592261434926
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.8162351163747066,
+            "ssim": 0.9997266708580648
+          },
+          "struct": {
+            "mae": 1.4379800629099446,
+            "ssim": 0.9991592261434926
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -2.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.00010431761620566249,
+      "uniform_truth_vs_T_mae_linear": 0.00774751603603363
+    },
+    {
+      "sample": "saturated-opalescent__seed6001",
+      "recipe": "saturated-opalescent",
+      "family": "saturated-opalescent",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 2.132917642593384,
+            "ssim": 0.9997820258140564
+          },
+          "struct": {
+            "mae": 10.962041854858398,
+            "ssim": 0.9529275894165039
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 2.132995484255305,
+            "ssim": 0.9997900719815788
+          },
+          "struct": {
+            "mae": 1.8237445209772598,
+            "ssim": 0.9996888364603249
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 2.1304249919694818,
+            "ssim": 0.9997901278999748
+          },
+          "struct": {
+            "mae": 1.689532466620287,
+            "ssim": 0.9996950684248789
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 2.1304249919694818,
+            "ssim": 0.9997901278999748
+          },
+          "struct": {
+            "mae": 1.689532466620287,
+            "ssim": 0.9996950684248789
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 8.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.00011106100282631814,
+      "uniform_truth_vs_T_mae_linear": 0.015902316197752953
+    },
+    {
+      "sample": "streaky-fine-texture__seed6002",
+      "recipe": "streaky-fine-texture",
+      "family": "streaky",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.308509111404419,
+            "ssim": 0.9984261393547058
+          },
+          "struct": {
+            "mae": 18.392728805541992,
+            "ssim": 0.9076740741729736
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.3083548443110478,
+            "ssim": 0.9984286972456596
+          },
+          "struct": {
+            "mae": 1.4301840321440216,
+            "ssim": 0.9973163073507743
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.3084069199959556,
+            "ssim": 0.9984286845824558
+          },
+          "struct": {
+            "mae": 1.4297966612078088,
+            "ssim": 0.9973172194586412
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.3084069199959556,
+            "ssim": 0.9984286845824558
+          },
+          "struct": {
+            "mae": 1.4297966612078088,
+            "ssim": 0.9973172194586412
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -0.5,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.00011626663763308898,
+      "uniform_truth_vs_T_mae_linear": 0.006616875529289246
+    },
+    {
+      "sample": "streaky-mix__seed6001",
+      "recipe": "streaky-mix",
+      "family": "streaky",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.6256183385849,
+            "ssim": 0.9992851614952087
+          },
+          "struct": {
+            "mae": 12.353741645812988,
+            "ssim": 0.9412015080451965
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.6254068082786246,
+            "ssim": 0.9992932786585242
+          },
+          "struct": {
+            "mae": 3.0313151391627766,
+            "ssim": 0.9937581745621661
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.6254931049345236,
+            "ssim": 0.9992932471144337
+          },
+          "struct": {
+            "mae": 3.0272360391241295,
+            "ssim": 0.9937564187397523
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.6254931049345236,
+            "ssim": 0.9992932471144337
+          },
+          "struct": {
+            "mae": 3.0272360391241295,
+            "ssim": 0.9937564187397523
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": -1.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.00010225189180346206,
+      "uniform_truth_vs_T_mae_linear": 0.010304441675543785
+    },
+    {
+      "sample": "wispy-white__seed6001",
+      "recipe": "wispy-white",
+      "family": "wispy",
+      "tiers": {
+        "t0_current": {
+          "uniform": {
+            "mae": 1.482358455657959,
+            "ssim": 0.9997594952583313
+          },
+          "struct": {
+            "mae": 14.421065330505371,
+            "ssim": 0.9368545413017273
+          }
+        },
+        "t1_scatter": {
+          "uniform": {
+            "mae": 1.482349004726713,
+            "ssim": 0.9997661334837732
+          },
+          "struct": {
+            "mae": 1.3037242478346585,
+            "ssim": 0.9996907471681451
+          }
+        },
+        "t2_lensing": {
+          "uniform": {
+            "mae": 1.4816702266206907,
+            "ssim": 0.9997661198059434
+          },
+          "struct": {
+            "mae": 1.2649835773227174,
+            "ssim": 0.999690377707868
+          }
+        },
+        "t3_veil": {
+          "uniform": {
+            "mae": 1.4816702266206907,
+            "ssim": 0.9997661198059434
+          },
+          "struct": {
+            "mae": 1.2649835773227174,
+            "ssim": 0.999690377707868
+          }
+        }
+      },
+      "sigma_max_px": 256.0,
+      "lens_gain": 8.0,
+      "sigma_max_px_refit": 256.0,
+      "veil_mean_linear": {
+        "uniform": 0.0,
+        "struct": 0.0
+      },
+      "uniform_L0_equals_T_mae_linear": 0.0001207337190862745,
+      "uniform_truth_vs_T_mae_linear": 0.010422511957585812
+    }
+  ],
+  "family_agg": {
+    "baroque/fracture/confetti": {
+      "t0_current": {
+        "uniform": {
+          "mae": 3.3907910188039145,
+          "ssim": 0.999199628829956
+        },
+        "struct": {
+          "mae": 36.720174153645836,
+          "ssim": 0.8565160036087036
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 3.3904172986587118,
+          "ssim": 0.9992230164936436
+        },
+        "struct": {
+          "mae": 10.25120322633129,
+          "ssim": 0.9879771652840202
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 3.3931297407661574,
+          "ssim": 0.9992227655719983
+        },
+        "struct": {
+          "mae": 10.216251077465019,
+          "ssim": 0.9880172158090654
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 3.3931297407661574,
+          "ssim": 0.9992227655719983
+        },
+        "struct": {
+          "mae": 10.216251077465019,
+          "ssim": 0.9880172158090654
+        }
+      }
+    },
+    "cathedral": {
+      "t0_current": {
+        "uniform": {
+          "mae": 3.4981621503829956,
+          "ssim": 0.9994105994701385
+        },
+        "struct": {
+          "mae": 38.04089546203613,
+          "ssim": 0.7473794221878052
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 3.4977682320674255,
+          "ssim": 0.9994365604703159
+        },
+        "struct": {
+          "mae": 12.893685124673768,
+          "ssim": 0.86571080559386
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 3.4868815733996366,
+          "ssim": 0.9994378891363769
+        },
+        "struct": {
+          "mae": 12.831709703880737,
+          "ssim": 0.8658058223447409
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 3.4868815733996366,
+          "ssim": 0.9994378891363769
+        },
+        "struct": {
+          "mae": 12.831709703880737,
+          "ssim": 0.8658058223447409
+        }
+      }
+    },
+    "dark": {
+      "t0_current": {
+        "uniform": {
+          "mae": 1.1708039045333862,
+          "ssim": 0.9945758581161499
+        },
+        "struct": {
+          "mae": 11.436586856842041,
+          "ssim": 0.9287680089473724
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 1.1706612686931879,
+          "ssim": 0.9945786434264432
+        },
+        "struct": {
+          "mae": 1.0441849679839468,
+          "ssim": 0.9949918077997102
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 1.1720528013498037,
+          "ssim": 0.9945782088987067
+        },
+        "struct": {
+          "mae": 1.0012472241795562,
+          "ssim": 0.9950658502645405
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 1.1720553717251174,
+          "ssim": 0.9945779172154352
+        },
+        "struct": {
+          "mae": 1.0012482586372755,
+          "ssim": 0.9950657958846093
+        }
+      }
+    },
+    "ring-mottle": {
+      "t0_current": {
+        "uniform": {
+          "mae": 1.8133169412612915,
+          "ssim": 0.9997122883796692
+        },
+        "struct": {
+          "mae": 19.280576705932617,
+          "ssim": 0.905665934085846
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 1.813115764330595,
+          "ssim": 0.999726944606381
+        },
+        "struct": {
+          "mae": 1.5710743475584186,
+          "ssim": 0.9991326380322834
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 1.8162351163747066,
+          "ssim": 0.9997266708580648
+        },
+        "struct": {
+          "mae": 1.4379800629099446,
+          "ssim": 0.9991592261434926
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 1.8162351163747066,
+          "ssim": 0.9997266708580648
+        },
+        "struct": {
+          "mae": 1.4379800629099446,
+          "ssim": 0.9991592261434926
+        }
+      }
+    },
+    "saturated-opalescent": {
+      "t0_current": {
+        "uniform": {
+          "mae": 2.132917642593384,
+          "ssim": 0.9997820258140564
+        },
+        "struct": {
+          "mae": 10.962041854858398,
+          "ssim": 0.9529275894165039
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 2.132995484255305,
+          "ssim": 0.9997900719815788
+        },
+        "struct": {
+          "mae": 1.8237445209772598,
+          "ssim": 0.9996888364603249
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 2.1304249919694818,
+          "ssim": 0.9997901278999748
+        },
+        "struct": {
+          "mae": 1.689532466620287,
+          "ssim": 0.9996950684248789
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 2.1304249919694818,
+          "ssim": 0.9997901278999748
+        },
+        "struct": {
+          "mae": 1.689532466620287,
+          "ssim": 0.9996950684248789
+        }
+      }
+    },
+    "streaky": {
+      "t0_current": {
+        "uniform": {
+          "mae": 1.4670637249946594,
+          "ssim": 0.9988556504249573
+        },
+        "struct": {
+          "mae": 15.37323522567749,
+          "ssim": 0.9244377911090851
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 1.4668808262948363,
+          "ssim": 0.998860987952092
+        },
+        "struct": {
+          "mae": 2.230749585653399,
+          "ssim": 0.9955372409564702
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 1.4669500124652397,
+          "ssim": 0.9988609658484447
+        },
+        "struct": {
+          "mae": 2.228516350165969,
+          "ssim": 0.9955368190991967
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 1.4669500124652397,
+          "ssim": 0.9988609658484447
+        },
+        "struct": {
+          "mae": 2.228516350165969,
+          "ssim": 0.9955368190991967
+        }
+      }
+    },
+    "wispy": {
+      "t0_current": {
+        "uniform": {
+          "mae": 1.482358455657959,
+          "ssim": 0.9997594952583313
+        },
+        "struct": {
+          "mae": 14.421065330505371,
+          "ssim": 0.9368545413017273
+        }
+      },
+      "t1_scatter": {
+        "uniform": {
+          "mae": 1.482349004726713,
+          "ssim": 0.9997661334837732
+        },
+        "struct": {
+          "mae": 1.3037242478346585,
+          "ssim": 0.9996907471681451
+        }
+      },
+      "t2_lensing": {
+        "uniform": {
+          "mae": 1.4816702266206907,
+          "ssim": 0.9997661198059434
+        },
+        "struct": {
+          "mae": 1.2649835773227174,
+          "ssim": 0.999690377707868
+        }
+      },
+      "t3_veil": {
+        "uniform": {
+          "mae": 1.4816702266206907,
+          "ssim": 0.9997661198059434
+        },
+        "struct": {
+          "mae": 1.2649835773227174,
+          "ssim": 0.999690377707868
+        }
+      }
+    }
+  }
+}
