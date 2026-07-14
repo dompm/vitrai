@@ -9,9 +9,10 @@ the shipping preview does not need path tracing — a screen-space transmission 
 Code (new, self-contained): `research/delighting/render046/` — `browser_render_046.py` (numpy
 mirror of the real-time shader + 12-family ceiling bench), `export_assets_046.py` (bakes each
 family's maps to base64 PNGs), `build_html_046.py` (assembles the WebGL2 prototype),
-`validate_browser_path.py` (browser-vs-numpy faithfulness check). Artifacts (committed):
-`results/046/render046.html` (the self-contained WebGL2 prototype), `results/046/browser_ceiling_board.jpg`
-(12-family strip), `results/046/browser_ceiling_metrics.json`. Inputs are oracle 045's ground-truth
+`validate_browser_path.py` (browser-vs-numpy faithfulness check), `sideview_046.py` (the grazing-angle
+thickness study, §5). Artifacts (committed): `results/046/render046.html` (the self-contained WebGL2
+prototype), `results/046/browser_ceiling_board.jpg` (12-family strip), `results/046/sideview_thickness_board.jpg`
+(the side-view thickness board), `results/046/{browser_ceiling,sideview}_metrics.json`. Inputs are oracle 045's ground-truth
 renders (`oracle45_data/`, gitignored, read by absolute path). Metrics (MAE 0–255 sRGB, SSIM on
 luma) are byte-identical to oracle 045's `recon_bench_045` so the two tables are directly comparable.
 
@@ -51,6 +52,14 @@ luma) are byte-identical to oracle 045's `recon_bench_045` so the two tables are
   on all 12 families** — even weaker than oracle's < 0.15, and the best gain pins to the ±grid edge
   with zero effect (fitting noise). The front veil is identically zero in a backlit rig (045 §4);
   the prototype's veil toggle *adds* error, demonstrating it belongs to a future front-lit scene. §4.
+- **Thickness estimation is NOT needed for the preview, and not separable from T anyway.** The
+  head-on transmittance already bakes thickness into its exponent (`gt_T = T_base^thickness(x)`), so
+  the grazing-angle absorption correction is a **global** `T^(1/cos θ_r)` factor — and a per-pixel
+  thickness map is *algebraically identical* to it (verified: max pixel diff 5×10⁻⁸ on the highest-
+  coupling relief family). The one genuinely thickness-dependent view effect is **slab refraction
+  parallax**, which only exists in a *volumetric* glass model; our flat surface-BSDF preview has none.
+  So: thickness is unnecessary for the flat backlit preview and for angled *absorption*; it becomes
+  necessary only if we adopt a volumetric glass model for angled/3D views (a future 047). §5.
 
 ## 1. The renderer: the real deployable technique, mirrored faithfully
 
@@ -135,7 +144,60 @@ zero in a black-room backlit rig (045 §4); the prototype includes a Fresnel vei
 *future front-lit 3D case*, and toggling it ON in this backlit rig visibly *raises* the MAE — a live
 demonstration that veil is the wrong term for backlit glass, not merely a null one.
 
-## 5. Production recommendation
+## 5. Side view: do we actually need a thickness map?
+
+The CTO's follow-on: the grazing angle is where a baked-T preview *should* break and a thickness map
+*should* become necessary. We tested it — and the answer, for our current material model, is decided
+analytically without a new render. **Why no new Cycles render:** the generator models the glass as a
+**zero-thickness Principled "thin glass" surface BSDF** (`gen045_module.py:1675-1708`: Transmission=1,
+IOR 1.5, Base Color = gt_T², Roughness = h; a flat `primitive_plane_add`, no Volume node, no
+solidify). Surface transmission is **angle-independent**, and Blender is not available on this
+machine, so there is no volumetric grazing truth to render. But the physics is unambiguous from the
+maps, so we demonstrate it directly (`sideview_046.py`, `sideview_thickness_board.jpg`).
+
+The head-on transmittance already **bakes thickness into its exponent**: `couple_T_to_height`
+(`gen045_module.py:376-387`) authors `gt_T(x) = T_base(x)^thickness(x)`, `thickness(x) =
+1 − coupling·(2·height(x)−1)` (coupling largest for cathedral, ~0 for opal). Three variants at a
+55° view (θ_r = 33.1° refracted, 1/cos θ_r = 1.19):
+
+| family | (a) baked-T vs (b) T^(1/cos) MAE | (b) global-cos **vs (c) per-pixel thickness** | (d) differential slab-parallax vs (b) MAE |
+|---|---|---|---|
+| cathedral-green | 5.7 | **max 5.2×10⁻⁸ (identical)** | 4.4 |
+| baroque-rolling-wave | 5.4 | **5.0×10⁻⁸** | 3.6 |
+| streaky-mix | 7.2 | **5.2×10⁻⁸** | 4.4 |
+| cathedral-green, **flattened** control | 5.7 | **3.9×10⁻⁸** | **0.0** |
+
+Reading the columns:
+
+- **(a) vs (b): the angle correction is real** (MAE 5–7): if the glass had volume, a grazing ray's
+  longer path darkens the transmission, and a **global** factor `T^(1/cos θ_r)` handles it — because
+  `gt_T` already carries the per-pixel thickness, `gt_T^(1/cos) = T_base^(thickness/cos)`.
+- **(b) ≡ (c): a thickness MAP buys nothing over that global factor** for absorption. Computed by an
+  independent code path (factor `gt_T` into `(T_base, thickness)`, then per-pixel Beer-Lambert), it
+  matches the global correction to **float epsilon (≤5×10⁻⁸)** on every family, cathedral included.
+  This is an identity, `(X^t)^{1/c} = X^{t/c}`, not a coincidence: thickness and intrinsic tint are
+  not separable from a single head-on transmittance in the first place.
+- **(d) the one genuinely thickness-dependent view effect is slab refraction PARALLAX** — the
+  background seen through the glass shifts by ∝ thickness·tan θ_r, so relief ridges displace it more
+  than valleys (MAE 3.6–4.4 on relief families; **exactly 0 on the flattened control** — a flat sheet
+  has none). But this is a **volumetric** effect: our flat surface-BSDF preview produces no parallax
+  at all, so it is shown as *what a thickness map would buy in a 3D/volumetric preview*, not something
+  the current model exhibits. Note it also only survives at **low haze** — the σ_s scatter (§2) that
+  solves the hazy families washes parallax out entirely, which is why it matters, if ever, only for
+  low-haze high-relief glass (cathedral/baroque).
+
+**Verdict on thickness:** not needed for the flat backlit head-on preview, and not needed for angled
+*absorption* either (a global cos factor is exact; a per-pixel thickness map is algebraically the same
+thing). Thickness becomes a real, separately-useful quantity only if we adopt a **volumetric glass
+model** (a solid slab: solidify + displacement from `gt_height` + Volume Absorption / slab refraction)
+for **angled, camera-orbit 3D views**, where slab parallax and self-occlusion appear. That is a
+material-model *extension* (in the spirit of 045's σ_s addition), needs Blender for a proper truth,
+and is scoped as a future **report 047** — it does not change the flat-view ceiling above. The WebGL
+prototype exposes this interactively: a view-angle slider with `T^(1/cos)` and slab-parallax toggles,
+where at grazing the diff panel shows the (parallax) thickness contribution since no grazing truth
+exists.
+
+## 6. Production recommendation
 
 **Ship a screen-space transmission shader; do not build or wait on a path tracer for the preview.**
 Concretely:
@@ -152,15 +214,22 @@ Concretely:
   until the material model gains a refraction term. This is the *ceiling with perfect maps*; the
   product's real quality is then gated by map-estimation error (the extract/fine-tune track), not by
   the renderer.
-- **Do not spend engineering on** a screen-space refraction pass or a veil/Fresnel term for the
-  backlit preview — both are measurably worthless here. Revisit veil + refraction only when/if the
-  preview moves to a front-lit, camera-orbit 3D scene.
+- **Do not spend engineering on** a screen-space refraction pass, a veil/Fresnel term, or a
+  **thickness channel** for the backlit preview — all three are measurably worthless here (§4, §5).
+  A `thickness`/roughness-thickness input to `MeshPhysicalMaterial` can stay at a constant; the
+  per-pixel absorption is already in T. Revisit veil + refraction + a real thickness map only if the
+  preview moves to a front-lit or camera-orbit **volumetric 3D** scene (→ 047).
 
 Deliverable for review: `results/046/render046.html` (self-contained WebGL2 prototype — family
-selector, scatter/refraction/veil toggles, σ_s slider, live MAE, truth/render/diff panels). Handed to
-the team lead to review + publish as the artifact.
+selector, scatter/refraction/veil toggles, σ_s slider, a **view-angle slider with T^(1/cos) +
+slab-parallax toggles**, live MAE, truth/render/diff panels). Handed to the team lead to review +
+publish as the artifact.
 
 Reproduction: `research/delighting/render046/`; `.venv/bin/python browser_render_046.py --data
-<oracle45_data> --out ../results/046` (ceiling + board), then `DATA046=<oracle45_data> python
-export_assets_046.py && python build_html_046.py` (prototype), `python validate_browser_path.py`
-(faithfulness). Twelve families as in report 045.
+<oracle45_data> --out ../results/046` (flat ceiling + board), `python sideview_046.py --data
+<oracle45_data> --out ../results/046` (side-view thickness board), then `DATA046=<oracle45_data>
+python export_assets_046.py && python build_html_046.py` (prototype), `python validate_browser_path.py`
+(faithfulness). Twelve families as in report 045. **Side-view caveat:** the grazing panels are a
+physics/model demonstration on the existing maps, not an empirical Cycles-truth ceiling — the current
+generator's zero-thickness surface BSDF has no volumetric grazing truth to render, and Blender was
+unavailable; a true volumetric grazing study is deferred to 047.
