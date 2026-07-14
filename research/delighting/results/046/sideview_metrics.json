@@ -1,0 +1,70 @@
+{
+  "theta_incidence_deg": 55.0,
+  "relief_gain_px": 80.0,
+  "samples": [
+    {
+      "recipe": "cathedral-green",
+      "flat_control": false,
+      "coupling": 0.3,
+      "theta_incidence_deg": 55.0,
+      "theta_refracted_deg": 33.099959089185745,
+      "inv_cos_r": 1.1937175506421172,
+      "parallax_px_std": 5.157355465039921,
+      "parallax_px_range": [
+        -24.250384809327862,
+        13.81607390685103
+      ],
+      "b_vs_c_max_abs": 5.1697721326071644e-08,
+      "a_vs_b_mae": 5.726750859616227,
+      "d_vs_b_mae": 4.428299134794544
+    },
+    {
+      "recipe": "baroque-rolling-wave",
+      "flat_control": false,
+      "coupling": 0.22,
+      "theta_incidence_deg": 55.0,
+      "theta_refracted_deg": 33.099959089185745,
+      "inv_cos_r": 1.1937175506421172,
+      "parallax_px_std": 4.016254647051804,
+      "parallax_px_range": [
+        -14.459344313853293,
+        8.13542071320393
+      ],
+      "b_vs_c_max_abs": 5.00395231917139e-08,
+      "a_vs_b_mae": 5.357658103146711,
+      "d_vs_b_mae": 3.6275102671618353
+    },
+    {
+      "recipe": "streaky-mix",
+      "flat_control": false,
+      "coupling": 0.18,
+      "theta_incidence_deg": 55.0,
+      "theta_refracted_deg": 33.099959089185745,
+      "inv_cos_r": 1.1937175506421172,
+      "parallax_px_std": 5.63678539192756,
+      "parallax_px_range": [
+        -18.306447132536462,
+        14.151930303304948
+      ],
+      "b_vs_c_max_abs": 5.1881118734442566e-08,
+      "a_vs_b_mae": 7.224384132217006,
+      "d_vs_b_mae": 4.352514002520986
+    },
+    {
+      "recipe": "cathedral-green",
+      "flat_control": true,
+      "coupling": 0.3,
+      "theta_incidence_deg": 55.0,
+      "theta_refracted_deg": 33.099959089185745,
+      "inv_cos_r": 1.1937175506421172,
+      "parallax_px_std": 4.743384504624082e-20,
+      "parallax_px_range": [
+        -3.108457476018709e-05,
+        -3.108457476018709e-05
+      ],
+      "b_vs_c_max_abs": 3.911292212332995e-08,
+      "a_vs_b_mae": 5.726750859616227,
+      "d_vs_b_mae": 5.58822070276113e-05
+    }
+  ]
+}

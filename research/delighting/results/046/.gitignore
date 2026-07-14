@@ -1,0 +1,3 @@
+# intermediate build artifact (base64 PNGs), fully embedded in render046.html and
+# regenerable via export_assets_046.py from the local gitignored oracle45_data EXRs
+webgl_assets.json
