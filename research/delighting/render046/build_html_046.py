@@ -185,15 +185,17 @@ HTML_TMPL = """<!doctype html>
       <label>Angled-view terms</label>
       <div class="toggles">
         <label class="tg"><input type="checkbox" id="tCos"> T<sup>1/cos&theta;</sup> path&#8209;length</label>
-        <label class="tg"><input type="checkbox" id="tParallax"> slab parallax (thickness)</label>
+        <label class="tg"><input type="checkbox" id="tParallax"> slab parallax &mdash; volumetric demo</label>
       </div>
     </div>
     <div class="ctl" style="flex:1 1 240px">
       <span class="note" style="margin:0">At angle 0 the panels show the ceiling vs Cycles truth. Tilt the
       view: <b>T<sup>1/cos</sup></b> is the absorption path&#8209;length correction (a global factor &mdash; a
-      per&#8209;pixel thickness map is algebraically identical, buys nothing). <b>Slab parallax</b> is the one
-      thickness&#8209;dependent effect &mdash; lower &sigma;<sub>s</sub> to see it warp the checker. No Cycles truth
-      exists at grazing (the model is a flat surface BSDF), so the diff then shows the thickness contribution.</span>
+      per&#8209;pixel thickness map is algebraically identical to it, buys nothing). <b>Slab parallax</b> illustrates
+      what a <em>volumetric</em> slab would add (background shift &prop; thickness&middot;tan&theta;) &mdash; it is
+      <b>NOT present in our current flat surface&#8209;BSDF renders or the Cycles truth</b>; lower &sigma;<sub>s</sub>
+      to see it warp the checker. There is no grazing Cycles truth, so the diff then shows this (illustrative)
+      thickness contribution, not an error vs truth.</span>
     </div>
   </div>
 
