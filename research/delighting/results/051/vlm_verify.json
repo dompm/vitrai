@@ -1,0 +1,911 @@
+{
+ "summary": {
+  "n_total": 40,
+  "n_ok": 40,
+  "n_err": 0,
+  "emb_top1_acc": 0.35,
+  "vlm_choice_acc": 0.675,
+  "by_stratum": {
+   "A_top1": {
+    "n": 14,
+    "emb_top1_acc": 1.0,
+    "vlm_choice_acc": 0.786,
+    "vlm_said_none_frac": 0.0
+   },
+   "B_in_top5": {
+    "n": 16,
+    "emb_top1_acc": 0.0,
+    "vlm_choice_acc": 1.0,
+    "vlm_said_none_frac": 0.0
+   },
+   "C_miss": {
+    "n": 10,
+    "emb_top1_acc": 0.0,
+    "vlm_choice_acc": 0.0,
+    "vlm_said_none_frac": 0.7
+   }
+  }
+ },
+ "records": [
+  {
+   "stratum": "A_top1",
+   "query_product_id": "173783",
+   "query_capture": "window",
+   "query_brand": "wissmach-glass",
+   "vlm_choice_pid": "173783",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.97
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    3,
+    4,
+    0,
+    1
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "234943",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "234943",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    2,
+    1,
+    4,
+    3
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "230233",
+   "query_capture": "window",
+   "query_brand": "van-gogh-glass",
+   "vlm_choice_pid": "230233",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.75
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    3,
+    4,
+    0,
+    1
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "190203",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "190203",
+   "vlm_raw": {
+    "choice": 3,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    0,
+    2,
+    4,
+    3
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "234221",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "youghiogheny-yu0005",
+   "vlm_raw": {
+    "choice": 4,
+    "confidence": 0.75
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    0,
+    4,
+    2,
+    3
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "224989",
+   "query_capture": "window",
+   "query_brand": "kokomo-glass",
+   "vlm_choice_pid": "224989",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    3,
+    1,
+    0,
+    4
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "234259",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "234259",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    3,
+    2,
+    4,
+    0
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "174093",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "174093",
+   "vlm_raw": {
+    "choice": 3,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    0,
+    4,
+    1,
+    3
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "191919",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "191919",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    2,
+    3,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "175884",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "wissmach-wi9001cut",
+   "vlm_raw": {
+    "choice": 4,
+    "confidence": 0.75
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    0,
+    3,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "191911",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "oceanside-of308s",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.55
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    0,
+    4,
+    3,
+    1
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "238635",
+   "query_capture": "window",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "238635",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    1,
+    4,
+    0,
+    3
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "234913",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "234913",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    4,
+    1,
+    3,
+    2,
+    0
+   ]
+  },
+  {
+   "stratum": "A_top1",
+   "query_product_id": "174093",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "174093",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": true,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    2,
+    3,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "230153",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "230153",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "238675",
+   "query_capture": "shop",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "238675",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    3,
+    1,
+    0,
+    4
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "239157",
+   "query_capture": "shop",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "239157",
+   "vlm_raw": {
+    "choice": 2,
+    "confidence": 0.97
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    0,
+    2,
+    4,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "224989",
+   "query_capture": "window",
+   "query_brand": "kokomo-glass",
+   "vlm_choice_pid": "224989",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    3,
+    1,
+    0,
+    4,
+    2
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "238687",
+   "query_capture": "shop",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "238687",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    2,
+    1,
+    3,
+    0,
+    4
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "234933",
+   "query_capture": "shop",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "234933",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    0,
+    4,
+    3,
+    2
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "234953",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "234953",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.97
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    4,
+    2,
+    1,
+    0,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "239169",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "239169",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.97
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    3,
+    0,
+    2,
+    4,
+    1
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "218189",
+   "query_capture": "window",
+   "query_brand": "kokomo-glass",
+   "vlm_choice_pid": "218189",
+   "vlm_raw": {
+    "choice": 4,
+    "confidence": 0.93
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    3,
+    4,
+    2,
+    1,
+    0
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "238531",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "238531",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    1,
+    4,
+    2,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "239177",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "239177",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    1,
+    0,
+    4,
+    2,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "214783",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "214783",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    4,
+    0,
+    2,
+    1,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "205421",
+   "query_capture": "window",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "205421",
+   "vlm_raw": {
+    "choice": 4,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    4,
+    2,
+    1,
+    0,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "230322",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "230322",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    3,
+    2,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "239153",
+   "query_capture": "window",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "239153",
+   "vlm_raw": {
+    "choice": 5,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    0,
+    4,
+    1,
+    2,
+    3
+   ]
+  },
+  {
+   "stratum": "B_in_top5",
+   "query_product_id": "234933",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "234933",
+   "vlm_raw": {
+    "choice": 4,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": true,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": true,
+   "shuffle_order": [
+    3,
+    4,
+    1,
+    2,
+    0
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "239935",
+   "query_capture": "shop",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.75
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    3,
+    0,
+    2,
+    4,
+    1
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "238719",
+   "query_capture": "shop",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "238715",
+   "vlm_raw": {
+    "choice": 6,
+    "confidence": 0.55
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    1,
+    3,
+    4,
+    2,
+    0
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "234226",
+   "query_capture": "shop",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "238627",
+   "vlm_raw": {
+    "choice": 3,
+    "confidence": 0.55
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    2,
+    3,
+    1,
+    4,
+    0
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "238731",
+   "query_capture": "window",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.85
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    4,
+    0,
+    3,
+    1,
+    2
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "238531",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.75
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    0,
+    2,
+    3,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "238663",
+   "query_capture": "window",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.6
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    2,
+    3,
+    4,
+    1,
+    0
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "173759",
+   "query_capture": "shop",
+   "query_brand": "wissmach-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.9
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    0,
+    3,
+    2,
+    1,
+    4
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "212196",
+   "query_capture": "shop",
+   "query_brand": "clear-textured-glass",
+   "vlm_choice_pid": "173820",
+   "vlm_raw": {
+    "choice": 3,
+    "confidence": 0.55
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    0,
+    1,
+    4,
+    3,
+    2
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "234853",
+   "query_capture": "window",
+   "query_brand": "uro-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.95
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    1,
+    2,
+    0,
+    4,
+    3
+   ]
+  },
+  {
+   "stratum": "C_miss",
+   "query_product_id": "238691",
+   "query_capture": "shop",
+   "query_brand": "tiffany-today-glass",
+   "vlm_choice_pid": "NONE",
+   "vlm_raw": {
+    "choice": 0,
+    "confidence": 0.7
+   },
+   "err": null,
+   "vlm_correct": false,
+   "emb_top1_correct": false,
+   "gt_in_shortlist": false,
+   "shuffle_order": [
+    0,
+    4,
+    1,
+    3,
+    2
+   ]
+  }
+ ]
+}

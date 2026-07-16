@@ -55,3 +55,11 @@ render047/node_modules/
 render047/pnpm-lock.yaml
 render047/package.json
 results/047/boards/
+
+# report 051 -- regenerable heavy artifacts (embeddings/caches gitignored, meta+metrics committed)
+results/051/*.npz
+results/051/delight_cache/
+catalog051/__pycache__/
+results/051/*_board.json
+results/051/*_perquery.json
+results/051/*_gatecurve.json

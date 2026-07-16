@@ -1,0 +1,167 @@
+{
+ "tag": "crop50_nodistract",
+ "repr": "crop50",
+ "use_distractors": false,
+ "eval_scope": "all",
+ "n_scorable_products": 176,
+ "n_reference_entries": 490,
+ "n_wild_queries": 674,
+ "index_size": 490,
+ "index_products": 226,
+ "retrieval": {
+  "n_queries": 674,
+  "top1": 0.3323,
+  "top5": 0.5475,
+  "breakdowns": {
+   "brand": {
+    "wissmach-glass": {
+     "n": 76,
+     "top1": 6,
+     "top5": 16,
+     "top1_acc": 0.079,
+     "top5_acc": 0.211
+    },
+    "clear-textured-glass": {
+     "n": 240,
+     "top1": 92,
+     "top5": 146,
+     "top1_acc": 0.383,
+     "top5_acc": 0.608
+    },
+    "van-gogh-glass": {
+     "n": 12,
+     "top1": 2,
+     "top5": 5,
+     "top1_acc": 0.167,
+     "top5_acc": 0.417
+    },
+    "kokomo-glass": {
+     "n": 30,
+     "top1": 11,
+     "top5": 23,
+     "top1_acc": 0.367,
+     "top5_acc": 0.767
+    },
+    "armstrong-glass": {
+     "n": 4,
+     "top1": 0,
+     "top5": 1,
+     "top1_acc": 0.0,
+     "top5_acc": 0.25
+    },
+    "specialty-finish-glass": {
+     "n": 2,
+     "top1": 0,
+     "top5": 1,
+     "top1_acc": 0.0,
+     "top5_acc": 0.5
+    },
+    "uro-glass": {
+     "n": 137,
+     "top1": 56,
+     "top5": 83,
+     "top1_acc": 0.409,
+     "top5_acc": 0.606
+    },
+    "tiffany-today-glass": {
+     "n": 161,
+     "top1": 52,
+     "top5": 87,
+     "top1_acc": 0.323,
+     "top5_acc": 0.54
+    },
+    "delphi-superior-glass": {
+     "n": 12,
+     "top1": 5,
+     "top5": 7,
+     "top1_acc": 0.417,
+     "top5_acc": 0.583
+    }
+   },
+   "capture": {
+    "window": {
+     "n": 444,
+     "top1": 148,
+     "top5": 245,
+     "top1_acc": 0.333,
+     "top5_acc": 0.552
+    },
+    "shop": {
+     "n": 230,
+     "top1": 76,
+     "top5": 124,
+     "top1_acc": 0.33,
+     "top5_acc": 0.539
+    }
+   },
+   "opal_caution": {
+    "clean_id": {
+     "n": 410,
+     "top1": 129,
+     "top5": 211,
+     "top1_acc": 0.315,
+     "top5_acc": 0.515
+    },
+    "opal": {
+     "n": 264,
+     "top1": 95,
+     "top5": 158,
+     "top1_acc": 0.36,
+     "top5_acc": 0.598
+    }
+   },
+   "holdout": {
+    "eval_eligible": {
+     "n": 527,
+     "top1": 168,
+     "top5": 286,
+     "top1_acc": 0.319,
+     "top5_acc": 0.543
+    },
+    "holdout": {
+     "n": 147,
+     "top1": 56,
+     "top5": 83,
+     "top1_acc": 0.381,
+     "top5_acc": 0.565
+    }
+   }
+  }
+ },
+ "gate": {
+  "auc": 0.5659499951571292,
+  "n_pos": 674,
+  "n_neg": 674,
+  "pos_median": 0.710846892209211,
+  "neg_median": 0.6852348088566032,
+  "pick_precision90": {
+   "t": 0.9104039675068784,
+   "precision": 0.9090909090909091,
+   "recall": 0.02967359050445104,
+   "specificity": 0.9970326409495549,
+   "youden": 0.026706231454005858,
+   "f1": 0.0574712643678161
+  },
+  "pick_youden": {
+   "t": 0.7262408517962416,
+   "precision": 0.5585585585585585,
+   "recall": 0.4599406528189911,
+   "specificity": 0.6364985163204748,
+   "youden": 0.09643916913946593,
+   "f1": 0.5044751830756713
+  },
+  "at_p90_threshold": {
+   "t": 0.9104039675068784,
+   "n_confident": 20,
+   "frac_confident": 0.03,
+   "top1_acc_among_confident": 1.0
+  }
+ },
+ "gate_score_summary": {
+  "in_catalog_correct_median": 0.759495414176159,
+  "in_catalog_wrong_median": 0.6939149834475516,
+  "ooc_median": 0.6852348088566032,
+  "n_in_cat_correct": 224,
+  "n_in_cat_wrong": 450
+ }
+}

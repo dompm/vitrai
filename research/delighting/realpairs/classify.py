@@ -24,7 +24,7 @@ import cv2
 import numpy as np
 from PIL import Image
 
-UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) research-delighting-030 (internal eval; contact via github)"
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) research-delighting-033-restore (internal research eval, non-redistributed; contact dompm@hotmail.com)"
 
 HERO_URL = "https://images.delphiglass.com/image_new/{id}.jpg"          # ~300x300
 GALLERY_THUMB_URL = "https://www.delphiglass.com/syscat/image_add/{id}_{n}.jpg"  # ~70x55
