@@ -1,0 +1,54 @@
+{
+  "az0": {
+    "full": {
+      "mae": 31.65,
+      "ssim": 0.7391
+    },
+    "no_normal": {
+      "mae": 31.5,
+      "ssim": 0.7588
+    },
+    "no_haze": {
+      "mae": 32.24,
+      "ssim": 0.7341
+    },
+    "no_tint": {
+      "mae": 81.69,
+      "ssim": 0.7079
+    },
+    "const_atten": {
+      "mae": 24.17,
+      "ssim": 0.8266
+    },
+    "surface_only": {
+      "mae": 31.5,
+      "ssim": 0.7588
+    }
+  },
+  "az15": {
+    "full": {
+      "mae": 31.65,
+      "ssim": 0.7227
+    },
+    "no_normal": {
+      "mae": 31.58,
+      "ssim": 0.7335
+    },
+    "no_haze": {
+      "mae": 33.47,
+      "ssim": 0.7109
+    },
+    "no_tint": {
+      "mae": 78.18,
+      "ssim": 0.7053
+    },
+    "const_atten": {
+      "mae": 23.84,
+      "ssim": 0.7976
+    },
+    "surface_only": {
+      "mae": 31.58,
+      "ssim": 0.7335
+    }
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "az0": {
+    "full": {
+      "mae": 19.52,
+      "ssim": 0.7482
+    },
+    "no_normal": {
+      "mae": 18.95,
+      "ssim": 0.8341
+    },
+    "no_haze": {
+      "mae": 19.53,
+      "ssim": 0.7469
+    },
+    "no_tint": {
+      "mae": 56.88,
+      "ssim": 0.7937
+    },
+    "const_atten": {
+      "mae": 19.24,
+      "ssim": 0.7587
+    },
+    "surface_only": {
+      "mae": 18.95,
+      "ssim": 0.8341
+    }
+  },
+  "az10": {
+    "full": {
+      "mae": 22.46,
+      "ssim": 0.6767
+    },
+    "no_normal": {
+      "mae": 22.29,
+      "ssim": 0.7215
+    },
+    "no_haze": {
+      "mae": 22.47,
+      "ssim": 0.6761
+    },
+    "no_tint": {
+      "mae": 51.93,
+      "ssim": 0.7111
+    },
+    "const_atten": {
+      "mae": 22.23,
+      "ssim": 0.6851
+    },
+    "surface_only": {
+      "mae": 22.29,
+      "ssim": 0.7215
+    }
+  },
+  "az15": {
+    "full": {
+      "mae": 24.85,
+      "ssim": 0.6171
+    },
+    "no_normal": {
+      "mae": 24.74,
+      "ssim": 0.6433
+    },
+    "no_haze": {
+      "mae": 24.86,
+      "ssim": 0.6168
+    },
+    "no_tint": {
+      "mae": 50.08,
+      "ssim": 0.6416
+    },
+    "const_atten": {
+      "mae": 24.62,
+      "ssim": 0.6235
+    },
+    "surface_only": {
+      "mae": 24.74,
+      "ssim": 0.6433
+    }
+  },
+  "az30": {
+    "full": {
+      "mae": 22.45,
+      "ssim": 0.7167
+    },
+    "no_normal": {
+      "mae": 22.01,
+      "ssim": 0.7515
+    },
+    "no_haze": {
+      "mae": 22.45,
+      "ssim": 0.7165
+    },
+    "no_tint": {
+      "mae": 56.29,
+      "ssim": 0.7261
+    },
+    "const_atten": {
+      "mae": 22.27,
+      "ssim": 0.7264
+    },
+    "surface_only": {
+      "mae": 22.01,
+      "ssim": 0.7515
+    }
+  }
+}
