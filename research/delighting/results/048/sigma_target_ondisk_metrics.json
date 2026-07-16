@@ -1,0 +1,116 @@
+{
+  "level": "ondisk",
+  "n": 12,
+  "residual_mean_over_samples": 1.7078332045154337e-05,
+  "residual_max_over_samples": 0.05057042837142944,
+  "per_sample": [
+    {
+      "dir": "baroque-rolling-wave__seed6001__light9015",
+      "recipe": "baroque-rolling-wave",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.1094808280467987,
+      "a_glow_max": 0.0,
+      "h_max": 0.1094808280467987
+    },
+    {
+      "dir": "cathedral-amber__seed6002__light2042",
+      "recipe": "cathedral-amber",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.09785553812980652,
+      "a_glow_max": 0.0,
+      "h_max": 0.09785553812980652
+    },
+    {
+      "dir": "cathedral-green__seed6001__light9015",
+      "recipe": "cathedral-green",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.09785553812980652,
+      "a_glow_max": 0.0,
+      "h_max": 0.09785553812980652
+    },
+    {
+      "dir": "confetti-shard__seed6002__light2042",
+      "recipe": "confetti-shard",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.1094808280467987,
+      "a_glow_max": 0.0,
+      "h_max": 0.1094808280467987
+    },
+    {
+      "dir": "dark-ruby__seed6001__light9015",
+      "recipe": "dark-ruby",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.2104363739490509,
+      "a_glow_max": 0.0,
+      "h_max": 0.2104363739490509
+    },
+    {
+      "dir": "dark-textured__seed6002__light2042",
+      "recipe": "dark-textured",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.3097667396068573,
+      "a_glow_max": 0.0,
+      "h_max": 0.3097667396068573
+    },
+    {
+      "dir": "fracture-streamer__seed6003__light4714",
+      "recipe": "fracture-streamer",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.13269729912281036,
+      "a_glow_max": 0.0,
+      "h_max": 0.13269729912281036
+    },
+    {
+      "dir": "ring-mottle__seed6001__light9015",
+      "recipe": "ring-mottle",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.22948777675628662,
+      "a_glow_max": 0.0,
+      "h_max": 0.22948777675628662
+    },
+    {
+      "dir": "saturated-opalescent__seed6001__light9015",
+      "recipe": "saturated-opalescent",
+      "residual_max": 0.04615151882171631,
+      "residual_mean": 5.6738681450951844e-05,
+      "sigma_s_max": 0.7655348181724548,
+      "a_glow_max": 0.2199995517730713,
+      "h_max": 0.841276228427887
+    },
+    {
+      "dir": "streaky-fine-texture__seed6002__light2042",
+      "recipe": "streaky-fine-texture",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.520426332950592,
+      "a_glow_max": 0.0,
+      "h_max": 0.520426332950592
+    },
+    {
+      "dir": "streaky-mix__seed6001__light9015",
+      "recipe": "streaky-mix",
+      "residual_max": 0.0,
+      "residual_mean": 0.0,
+      "sigma_s_max": 0.978990375995636,
+      "a_glow_max": 0.0,
+      "h_max": 0.978990375995636
+    },
+    {
+      "dir": "wispy-white__seed6001__light9015",
+      "recipe": "wispy-white",
+      "residual_max": 0.05057042837142944,
+      "residual_mean": 0.00014820130309090018,
+      "sigma_s_max": 0.9248619675636292,
+      "a_glow_max": 0.33523380756378174,
+      "h_max": 0.9525282979011536
+    }
+  ]
+}
