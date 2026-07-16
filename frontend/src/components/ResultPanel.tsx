@@ -32,7 +32,7 @@ import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
 import { ViewportGroup, ViewportSubscriber } from '../editor/viewport/viewportStore';
-import { createPenSnapIndex, queryAlignment, queryLengthSnap, queryShiftAlignment, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
+import { createPenSnapIndex, queryAlignment, queryEdgeSnap, queryLengthSnap, queryShiftAlignment, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -447,7 +447,7 @@ export function findPenSnapTarget(
   return best;
 }
 
-function findEdgeSnapTarget(
+export function findEdgeSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
@@ -1076,7 +1076,7 @@ export function ResultPanel({
     }
 
     const edgeTarget = snapSettings.edges
-      ? findEdgeSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current)
+      ? queryEdgeSnap(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX)
       : null;
     if (edgeTarget) {
       const constrained = shiftPressed && lastPt ? constrainToAngle(edgeTarget, lastPt) : edgeTarget;
@@ -1123,8 +1123,13 @@ export function ResultPanel({
           matchingSegment: lenSnap.matchingSegment,
         };
       } else if (shiftPressed) {
-        const align = findShiftAlignmentGuides(
-          [imageX, imageY], lastPt, theta, piecesRef.current, effectiveScaleRef.current,
+        const align = queryShiftAlignment(
+          penSnapIndex,
+          [imageX, imageY],
+          lastPt,
+          theta,
+          effectiveScaleRef.current,
+          PEN_SNAP_PX,
         );
         if (align.guides.length > 0) {
           finalX = align.snapped[0];

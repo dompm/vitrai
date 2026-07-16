@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 vi.mock('react-konva', () => ({ Stage: () => null, Layer: () => null, Image: () => null, Line: () => null, Group: () => null, Rect: () => null, Circle: () => null, Text: () => null }));
 vi.mock('use-image', () => ({ default: () => [null] }));
-import { findAlignmentGuides, findLengthSnap, findPenSnapTarget, findShiftAlignmentGuides } from '../../components/ResultPanel';
-import { createPenSnapIndex, queryAlignment, queryLengthSnap, queryShiftAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
+import { findAlignmentGuides, findEdgeSnapTarget, findLengthSnap, findPenSnapTarget, findShiftAlignmentGuides } from '../../components/ResultPanel';
+import { createPenSnapIndex, queryAlignment, queryEdgeSnap, queryLengthSnap, queryShiftAlignment, queryVertexSnap } from '../snapping/penSnapIndex';
 import { makeInteractionPieces } from '../performance/fixtures';
 
 describe('Pen snap index parity', () => {
@@ -32,6 +32,66 @@ describe('Pen snap index parity', () => {
     const index = createPenSnapIndex(pieces);
     const cursor: [number, number] = [52.5, 30];
     expect(queryVertexSnap(index, cursor, 1, 14)).toEqual(findPenSnapTarget(cursor, pieces, 1));
+  });
+
+  it('keeps sampled curve points out of anchor snapping', () => {
+    const [piece] = makeInteractionPieces(1, 4);
+    piece.polygon = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    piece.curvePoints = [{
+      edgeIdx: 0,
+      ctrl: [20, 80],
+      ctrl2: [80, 80],
+      kind: 'cubic',
+    }];
+    const pieces = [piece];
+    const index = createPenSnapIndex(pieces);
+    const sampledCurvePoint: [number, number] = [50, 60];
+    expect(queryVertexSnap(index, sampledCurvePoint, 1, 14)).toEqual(
+      findPenSnapTarget(sampledCurvePoint, pieces, 1),
+    );
+    expect(queryVertexSnap(index, sampledCurvePoint, 1, 14)).toBeNull();
+  });
+
+  it('preserves appended lamp snap labels and project-first ties', () => {
+    const pieces = makeInteractionPieces(1, 6);
+    const index = createPenSnapIndex(pieces);
+    const projectAnchor = pieces[0].polygon[0];
+    const lampPoints = [
+      { pt: projectAnchor, label: 'lamp tie' },
+      { pt: [500, 500] as [number, number], label: 'lamp seam' },
+    ];
+    expect(queryVertexSnap(index, projectAnchor, 1, 14, lampPoints)).toEqual({ pt: projectAnchor });
+    expect(queryVertexSnap(index, [501, 500], 1, 14, lampPoints)).toEqual({
+      pt: [500, 500],
+      label: 'lamp seam',
+    });
+  });
+
+  it('matches scale-aware curved-edge snapping across randomized queries', () => {
+    const pieces = makeInteractionPieces(20, 6);
+    pieces.forEach((piece, index) => {
+      const start = piece.polygon[0];
+      const end = piece.polygon[1];
+      piece.curvePoints = [{
+        edgeIdx: 0,
+        ctrl: [start[0] + 8, start[1] + 24 + index % 3],
+        ctrl2: [end[0] - 8, end[1] + 24 + index % 3],
+        kind: 'cubic',
+      }];
+    });
+    const index = createPenSnapIndex(pieces);
+    let seed = 246813579;
+    const random = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 0x100000000;
+    };
+    for (let sample = 0; sample < 300; sample += 1) {
+      const cursor: [number, number] = [random() * 900, random() * 140];
+      const scale = 0.35 + random() * 3.5;
+      expect(queryEdgeSnap(index, cursor, scale, 14)).toEqual(
+        findEdgeSnapTarget(cursor, pieces, scale, 14),
+      );
+    }
   });
 
   it('preserves project order for equal-length ties regardless of active-point order', () => {

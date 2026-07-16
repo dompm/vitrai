@@ -1,4 +1,5 @@
 import type { Piece } from '../../types';
+import { flattenCurves } from '../../utils/geometry';
 import { getPieceGeometry } from '../geometry/pieceGeometry';
 
 interface IndexedVertex {
@@ -24,7 +25,23 @@ interface SnapTarget {
   label?: string;
 }
 
+interface IndexedSegment {
+  start: [number, number];
+  end: [number, number];
+  order: number;
+}
+
+interface EdgeSnapCache {
+  effectiveScale: number;
+  cellSize: number;
+  segments: readonly IndexedSegment[];
+  grid: ReadonlyMap<string, readonly number[]>;
+}
+
+const edgeSnapCaches = new WeakMap<PenSnapIndex, EdgeSnapCache>();
+
 export interface PenSnapIndex {
+  readonly pieces: readonly Piece[];
   /** Flattened display vertices, matching alignment and Shift-alignment behavior. */
   readonly vertices: readonly IndexedVertex[];
   readonly byX: readonly IndexedVertex[];
@@ -73,6 +90,7 @@ export function createPenSnapIndex(pieces: Piece[]): PenSnapIndex {
   }
 
   return {
+    pieces,
     vertices,
     byX: [...vertices].sort((a, b) => a.x - b.x || a.order - b.order),
     byY: [...vertices].sort((a, b) => a.y - b.y || a.order - b.order),
@@ -81,6 +99,89 @@ export function createPenSnapIndex(pieces: Piece[]): PenSnapIndex {
     segmentsByPiece,
     piecesByVertex: piecesByVertexMutable,
   };
+}
+
+function gridKey(x: number, y: number) {
+  return `${x},${y}`;
+}
+
+function createEdgeSnapCache(index: PenSnapIndex, effectiveScale: number): EdgeSnapCache {
+  const safeScale = Math.max(effectiveScale, 0.01);
+  const cellSize = 64 / safeScale;
+  const segments: IndexedSegment[] = [];
+  const grid = new Map<string, number[]>();
+
+  for (const piece of index.pieces) {
+    const path = flattenCurves(piece.polygon, piece.curvePoints, 0.5 / safeScale);
+    for (let pathIndex = 0; pathIndex < path.length; pathIndex += 1) {
+      const start = path[pathIndex];
+      const end = path[(pathIndex + 1) % path.length];
+      const segment: IndexedSegment = { start, end, order: segments.length };
+      segments.push(segment);
+      const minCellX = Math.floor(Math.min(start[0], end[0]) / cellSize);
+      const maxCellX = Math.floor(Math.max(start[0], end[0]) / cellSize);
+      const minCellY = Math.floor(Math.min(start[1], end[1]) / cellSize);
+      const maxCellY = Math.floor(Math.max(start[1], end[1]) / cellSize);
+      for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+        for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+          const key = gridKey(cellX, cellY);
+          const entries = grid.get(key) ?? [];
+          entries.push(segment.order);
+          grid.set(key, entries);
+        }
+      }
+    }
+  }
+
+  return { effectiveScale, cellSize, segments, grid };
+}
+
+export function queryEdgeSnap(
+  index: PenSnapIndex,
+  cursor: [number, number],
+  effectiveScale: number,
+  tolerancePx: number,
+): [number, number] | null {
+  let cache = edgeSnapCaches.get(index);
+  if (!cache || cache.effectiveScale !== effectiveScale) {
+    cache = createEdgeSnapCache(index, effectiveScale);
+    edgeSnapCaches.set(index, cache);
+  }
+
+  const tolerance = tolerancePx / effectiveScale;
+  const minCellX = Math.floor((cursor[0] - tolerance) / cache.cellSize);
+  const maxCellX = Math.floor((cursor[0] + tolerance) / cache.cellSize);
+  const minCellY = Math.floor((cursor[1] - tolerance) / cache.cellSize);
+  const maxCellY = Math.floor((cursor[1] + tolerance) / cache.cellSize);
+  const candidateOrders = new Set<number>();
+  for (let cellX = minCellX; cellX <= maxCellX; cellX += 1) {
+    for (let cellY = minCellY; cellY <= maxCellY; cellY += 1) {
+      cache.grid.get(gridKey(cellX, cellY))?.forEach(order => candidateOrders.add(order));
+    }
+  }
+
+  let best: [number, number] | null = null;
+  let bestDistance = tolerancePx;
+  for (const order of [...candidateOrders].sort((a, b) => a - b)) {
+    const segment = cache.segments[order];
+    const dx = segment.end[0] - segment.start[0];
+    const dy = segment.end[1] - segment.start[1];
+    const lengthSquared = dx * dx + dy * dy;
+    if (lengthSquared === 0) continue;
+    const parameter = Math.max(0, Math.min(1,
+      ((cursor[0] - segment.start[0]) * dx + (cursor[1] - segment.start[1]) * dy) / lengthSquared,
+    ));
+    const projected: [number, number] = [
+      segment.start[0] + parameter * dx,
+      segment.start[1] + parameter * dy,
+    ];
+    const distance = Math.hypot(projected[0] - cursor[0], projected[1] - cursor[1]) * effectiveScale;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = projected;
+    }
+  }
+  return best;
 }
 
 export function queryLengthSnap(
