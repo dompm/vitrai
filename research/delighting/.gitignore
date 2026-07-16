@@ -44,3 +44,6 @@ results/039/forcedchoice_*/
 results/041/raw_sample/
 pairsources/
 oracle45_data/
+results/048/gen_data/
+results/048/render_all12.log
+results/048/smoke/adapter.pt

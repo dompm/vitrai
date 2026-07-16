@@ -1,0 +1,469 @@
+{
+  "level": "authoring",
+  "n_families": 12,
+  "all_ok": true,
+  "max_identity_residual_over_families": 0.0,
+  "opal_families_with_nonzero_aglow": [
+    "wispy-white",
+    "saturated-opalescent"
+  ],
+  "nonopal_families_with_zero_aglow": 10,
+  "per_family": [
+    {
+      "recipe": "cathedral-green",
+      "seed": 6001,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.09000000357627869,
+        "max": 0.09000000357627869,
+        "mean": 0.09000000357627869,
+        "p99": 0.09000000357627869
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.09000000357627869,
+        "max": 0.09000000357627869,
+        "mean": 0.09000000357627869,
+        "p99": 0.09000000357627869
+      },
+      "T": {
+        "min": 0.16964665055274963,
+        "max": 0.6552020311355591,
+        "mean": 0.348316915852062,
+        "p99": 0.5478285962343216
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "cathedral-amber",
+      "seed": 6002,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.09000000357627869,
+        "max": 0.09000000357627869,
+        "mean": 0.09000000357627869,
+        "p99": 0.09000000357627869
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.09000000357627869,
+        "max": 0.09000000357627869,
+        "mean": 0.09000000357627869,
+        "p99": 0.09000000357627869
+      },
+      "T": {
+        "min": 0.13768234848976135,
+        "max": 0.8171345591545105,
+        "mean": 0.4507325697077249,
+        "p99": 0.6964413166046142
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "streaky-mix",
+      "seed": 6001,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.03014296106994152,
+        "max": 0.9177772998809814,
+        "mean": 0.46145806095597663,
+        "p99": 0.9017448455095292
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.03014296106994152,
+        "max": 0.9177772998809814,
+        "mean": 0.46145806095597663,
+        "p99": 0.9017448455095292
+      },
+      "T": {
+        "min": 0.0,
+        "max": 0.7256946563720703,
+        "mean": 0.2541421051123167,
+        "p99": 0.6368764662742614
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "streaky-fine-texture",
+      "seed": 6002,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.12070292234420776,
+        "max": 0.5191783308982849,
+        "mean": 0.3222417881461297,
+        "p99": 0.5017459034919739
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.12070292234420776,
+        "max": 0.5191783308982849,
+        "mean": 0.3222417881461297,
+        "p99": 0.5017459034919739
+      },
+      "T": {
+        "min": 0.0,
+        "max": 0.5357590317726135,
+        "mean": 0.203667602997717,
+        "p99": 0.4818153592944145
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "wispy-white",
+      "seed": 6001,
+      "is_opal": true,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.2774791717529297,
+        "max": 0.9200000166893005,
+        "mean": 0.4861166700798094,
+        "p99": 0.9200000166893005
+      },
+      "a_glow": {
+        "min": 0.08445017784833908,
+        "max": 0.33297744393348694,
+        "mean": 0.15046755882383422,
+        "p99": 0.3240947723388672
+      },
+      "h": {
+        "min": 0.3384961783885956,
+        "max": 0.9466382265090942,
+        "mean": 0.5487471784076661,
+        "p99": 0.9459275990724564
+      },
+      "T": {
+        "min": 0.0960254967212677,
+        "max": 0.7839075326919556,
+        "mean": 0.2830572199402847,
+        "p99": 0.6850561445951461
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "saturated-opalescent",
+      "seed": 6001,
+      "is_opal": true,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.6899999976158142,
+        "max": 0.6899999976158142,
+        "mean": 0.6899999976158142,
+        "p99": 0.6899999976158142
+      },
+      "a_glow": {
+        "min": 0.21000000834465027,
+        "max": 0.21000000834465027,
+        "mean": 0.21000000834465027,
+        "p99": 0.21000000834465027
+      },
+      "h": {
+        "min": 0.7551000118255615,
+        "max": 0.7551000118255615,
+        "mean": 0.7551000118255615,
+        "p99": 0.7551000118255615
+      },
+      "T": {
+        "min": 0.12071391195058823,
+        "max": 0.7420033812522888,
+        "mean": 0.39550594557696667,
+        "p99": 0.6465731632709503
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "ring-mottle",
+      "seed": 6001,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.2199999988079071,
+        "max": 0.2199999988079071,
+        "mean": 0.2199999988079071,
+        "p99": 0.2199999988079071
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.2199999988079071,
+        "max": 0.2199999988079071,
+        "mean": 0.2199999988079071,
+        "p99": 0.2199999988079071
+      },
+      "T": {
+        "min": 0.0,
+        "max": 0.6475587897492197,
+        "mean": 0.204184030260503,
+        "p99": 0.6209228170280365
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "dark-ruby",
+      "seed": 6001,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.20000000298023224,
+        "max": 0.20000000298023224,
+        "mean": 0.20000000298023224,
+        "p99": 0.20000000298023224
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.20000000298023224,
+        "max": 0.20000000298023224,
+        "mean": 0.20000000298023224,
+        "p99": 0.20000000298023224
+      },
+      "T": {
+        "min": 0.0,
+        "max": 0.1409333050251007,
+        "mean": 0.006899891502195017,
+        "p99": 0.02149633094668388
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "dark-textured",
+      "seed": 6002,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.28999999165534973,
+        "max": 0.28999999165534973,
+        "mean": 0.28999999165534973,
+        "p99": 0.28999999165534973
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.28999999165534973,
+        "max": 0.28999999165534973,
+        "mean": 0.28999999165534973,
+        "p99": 0.28999999165534973
+      },
+      "T": {
+        "min": 0.0,
+        "max": 0.17582236230373383,
+        "mean": 0.017047244931090052,
+        "p99": 0.03463363990187644
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "baroque-rolling-wave",
+      "seed": 6001,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.10000000149011612,
+        "max": 0.10000000149011612,
+        "mean": 0.10000000149011612,
+        "p99": 0.10000000149011612
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.10000000149011612,
+        "max": 0.10000000149011612,
+        "mean": 0.10000000149011612,
+        "p99": 0.10000000149011612
+      },
+      "T": {
+        "min": 0.04212592914700508,
+        "max": 0.4157983362674713,
+        "mean": 0.18563260114007107,
+        "p99": 0.328310505747795
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "confetti-shard",
+      "seed": 6002,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.10000000149011612,
+        "max": 0.10000000149011612,
+        "mean": 0.10000000149011612,
+        "p99": 0.10000000149011612
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.10000000149011612,
+        "max": 0.10000000149011612,
+        "mean": 0.10000000149011612,
+        "p99": 0.10000000149011612
+      },
+      "T": {
+        "min": 0.03429712288073696,
+        "max": 0.769427036996555,
+        "mean": 0.4652559045827382,
+        "p99": 0.769427036996555
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    },
+    {
+      "recipe": "fracture-streamer",
+      "seed": 6003,
+      "is_opal": false,
+      "identity_residual_max": 0.0,
+      "identity_residual_mean": 0.0,
+      "sigma_s": {
+        "min": 0.11999999731779099,
+        "max": 0.11999999731779099,
+        "mean": 0.11999999731779099,
+        "p99": 0.11999999731779099
+      },
+      "a_glow": {
+        "min": 0.0,
+        "max": 0.0,
+        "mean": 0.0,
+        "p99": 0.0
+      },
+      "h": {
+        "min": 0.11999999731779099,
+        "max": 0.11999999731779099,
+        "mean": 0.11999999731779099,
+        "p99": 0.11999999731779099
+      },
+      "T": {
+        "min": 0.6013734509706797,
+        "max": 0.8225331220754795,
+        "mean": 0.6752491454269468,
+        "p99": 0.8077029998008277
+      },
+      "checks": {
+        "identity_ok": true,
+        "aglow_zero_iff_nonopal": true,
+        "ranges_ok": true,
+        "aglow_rule": true
+      },
+      "all_ok": true
+    }
+  ]
+}

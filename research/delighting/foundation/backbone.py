@@ -15,7 +15,7 @@ think"):
   photo --(frozen VAE encode)--> z_rgb (Cx H/8 x W/8)
   [z_rgb ; z_init] --(pretrained UNet + LoRA, fixed timestep)--> z_T_hat
   z_T_hat --(frozen VAE decode)--> T                (the primary intrinsic, Marigold-faithful)
-  [z_rgb ; z_T_hat] --(trainable AuxHead, learned x8 upsample)--> h,B,shadow,mark,conf
+  [z_rgb ; z_T_hat] --(trainable AuxHead, learned x8 upsample)--> h,sigma_s,B,shadow,mark,conf
 
 Backbones (see verify_backbone.py for what actually downloads):
   marigold-iid | marigold-depth : real transfer prior (VAE frozen, UNet LoRA-adapted)
@@ -33,10 +33,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-# tier-1 aux channels emitted alongside the VAE-decoded T
-AUX_CHANNELS = ("h", "B", "shadow", "mark", "conf")
-AUX_DIMS = {"h": 1, "B": 3, "shadow": 1, "mark": 1, "conf": 1}
-AUX_TOTAL = sum(AUX_DIMS.values())  # 7
+# tier-1 aux channels emitted alongside the VAE-decoded T.
+# Report 048 (oracle-045 gate §5): the material target is extended from (T, h) to
+# (T, h, sigma_s) -- sigma_s (haze-driven subsurface-scatter radius) is the dominant
+# missing physical term (closes 66-92% of the structured-light reconstruction gap).
+# It is authored by decompose_haze() and emitted as gt_sigma_s by the generator
+# (report 043); here it becomes a supervised head channel, sigmoid-activated to [0,1]
+# exactly like h. a_glow stays generator-side only (the h = a_glow + (1-a_glow)*sigma_s
+# projection is recoverable from (h, sigma_s)); it is NOT a fine-tune target per §5.
+AUX_CHANNELS = ("h", "sigma_s", "B", "shadow", "mark", "conf")
+AUX_DIMS = {"h": 1, "sigma_s": 1, "B": 3, "shadow": 1, "mark": 1, "conf": 1}
+AUX_TOTAL = sum(AUX_DIMS.values())  # 8
 
 
 def build_vae_unet(backbone, dtype, cache_only=False):
@@ -208,8 +215,8 @@ class FoundationDelighter(nn.Module):
             if name in ("shadow", "mark", "conf"):
                 out[name + "_logit"] = ch
                 out[name] = torch.sigmoid(ch)
-            elif name == "h":
-                out[name] = torch.sigmoid(ch)     # h in [0,1]
+            elif name in ("h", "sigma_s"):
+                out[name] = torch.sigmoid(ch)     # h, sigma_s in [0,1]
             else:                                 # B: non-negative linear
                 out[name] = F.softplus(ch)
         return out

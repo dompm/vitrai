@@ -23,6 +23,11 @@ Per OUTPUT_CONTRACT.md §1 tier-1 (what train.py predicts):
                    eval_synthetic.load_gt_T)
   h       target : haze/scatter, authored-linear (srgb_to_lin-decoded per report 025 /
                    eval_synthetic.load_gt_h)
+  sigma_s target : haze-driven subsurface-scatter radius (report 048; the (T,h)->(T,h,sigma_s)
+                   material-target extension of the oracle-045 gate). Same authored-linear
+                   space + srgb_to_lin decode as h; emitted by the generator as gt_sigma_s
+                   (report 043 decompose_haze). `has_sigma_s` flag false on pre-043 renders,
+                   so old batches (render_022/037) still load (sigma_s zero-filled, unsupervised).
   B       target : through-glass background layer, scene-linear (gt_B.exr; GT-v3 only,
                    `has_B` flag false when absent)
   shadow  target : cast-shadow mask, derived from the with/without-shadow pair diff
@@ -165,6 +170,28 @@ def _load_gt_h(sample):
     return None
 
 
+def _load_gt_sigma_s(sample):
+    """Report 048: haze-driven subsurface-scatter radius, emitted by the generator as
+    gt_sigma_s (report 043 decompose_haze) on the byte-identical encode path as gt_h --
+    so it decodes exactly like h (16-bit PNG / EXR, srgb_to_lin to authored-linear).
+    Returns HxWx1 float32, or None on pre-043 renders (handled as has_sigma_s=False)."""
+    p = os.path.join(sample, "gt_sigma_s.png")
+    if os.path.exists(p):
+        raw = cv2.imread(p, cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535.0
+        if raw.ndim == 3:
+            raw = raw[..., 0]
+        return srgb_to_lin(raw)[..., None]
+    p = os.path.join(sample, "gt_sigma_s.exr")
+    if os.path.exists(p):
+        a = _imread_exr(p)
+        if a is None:
+            return None
+        if a.ndim == 3:
+            a = a[..., 0]
+        return srgb_to_lin(a)[..., None]
+    return None
+
+
 def _load_mask(sample, name):
     p = os.path.join(sample, name)
     if not os.path.exists(p):
@@ -231,6 +258,7 @@ class GlassDelightDataset:
         d = self.samples[idx]["dir"]
         T = _load_gt_T(d)
         h = _load_gt_h(d)
+        sigma_s = _load_gt_sigma_s(d)
         photo_wo = _photo_linear(d, "without")
         if T is None or h is None or photo_wo is None:
             self._cache[idx] = None
@@ -263,10 +291,12 @@ class GlassDelightDataset:
             return np.ascontiguousarray(a.astype(np.float32))
 
         comp = {
-            "T": _fit(T), "h": _fit(h), "photo_wo": _fit(photo_wo),
+            "T": _fit(T), "h": _fit(h), "sigma_s": _fit(sigma_s),
+            "photo_wo": _fit(photo_wo),
             "photo_w": _fit(photo_w), "mark": _fit(mark),
             "B": _fit(B), "veil": _fit(veil), "has_with": has_with,
             "has_B": B is not None, "has_veil": veil is not None,
+            "has_sigma_s": sigma_s is not None,
         }
         self._cache[idx] = comp
         return comp
@@ -297,6 +327,8 @@ class GlassDelightDataset:
             "photo": photo, "T": c["T"], "h": c["h"], "shadow": shadow,
             "mark": c["mark"], "valid": valid, "recipe": s["recipe"], "seed": s["seed"],
             "variant": variant, "dir": s["dir"], "has_B": c["has_B"], "has_veil": c["has_veil"],
+            "has_sigma_s": c["has_sigma_s"],
+            "sigma_s": c["sigma_s"] if c["sigma_s"] is not None else np.zeros((H, W, 1), np.float32),
             "B": c["B"] if c["B"] is not None else np.zeros((H, W, 3), np.float32),
             "veil": c["veil"] if c["veil"] is not None else np.zeros((H, W, 3), np.float32),
         }
@@ -339,17 +371,17 @@ class GlassDelightDataset:
         x0 = int(self.rng.integers(0, W - c + 1))
         sl = (slice(y0, y0 + c), slice(x0, x0 + c))
         out = {}
-        for k in ("photo", "T", "h", "B", "veil", "shadow", "mark", "valid"):
+        for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
             out[k] = np.ascontiguousarray(rec[k][sl])
-        for k in ("recipe", "seed", "variant", "has_B", "has_veil"):
+        for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
             out[k] = rec[k]
         if self.augment:
             out["photo"] = self._augment_photo(out["photo"])
             if self.rng.random() < 0.5:
-                for k in ("photo", "T", "h", "B", "veil", "shadow", "mark", "valid"):
+                for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
                     out[k] = np.ascontiguousarray(out[k][:, ::-1])
             if self.rng.random() < 0.5:
-                for k in ("photo", "T", "h", "B", "veil", "shadow", "mark", "valid"):
+                for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
                     out[k] = np.ascontiguousarray(out[k][::-1])
         return out
 
