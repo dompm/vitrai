@@ -1,0 +1,436 @@
+{
+ "registry": {
+  "label": "shipped registry (1,269 SKUs)",
+  "n": 1269,
+  "name_texture_hits": 249,
+  "category_texture_hits": 155,
+  "texture_named_either": 251,
+  "texture_named_frac": 0.1978,
+  "smooth_named_needs_vision": 1018,
+  "smooth_named_frac": 0.8022,
+  "relief_family_counts": {
+   "stipple": 55,
+   "granite": 44,
+   "waterglass": 35,
+   "ripple": 22,
+   "rough_rolled": 21,
+   "muffle": 17,
+   "generic_textured": 13,
+   "hammered": 10,
+   "reeded": 7,
+   "herringbone": 7,
+   "moss": 6,
+   "flemish": 5,
+   "glacier": 2,
+   "seedy": 2,
+   "artique": 1,
+   "corduroy": 1,
+   "crackle": 1
+  },
+  "family_examples": {
+   "reeded": [
+    "Black Opalescent, Reeded Texture, 3 mm, Fusible",
+    "Black Opalescent, Reeded Texture, Iridescent, rainbow, 3 mm, Fusible",
+    "Black Opalescent, Thin, Reeded Texture, 2 mm, Fusible"
+   ],
+   "generic_textured": [
+    "Black Opalescent, Accordion Texture, 3 mm, Fusible",
+    "Black Opalescent, Accordion Texture, Iridescent, rainbow, 3 mm, Fusibl",
+    "Black Opalescent, Prismatic Texture, 3 mm, Fusible"
+   ],
+   "granite": [
+    "Black Opalescent, Granite Texture, 3 mm, Fusible",
+    "Black Opalescent, Granite Texture, Iridescent, rainbow, 3 mm, Fusible",
+    "Clear Transparent, Granite Texture, 3 mm, Fusible"
+   ],
+   "ripple": [
+    "Black Opalescent, Ripple, 3 mm, Fusible",
+    "Black Opalescent, Ripple, Rainbow Iridescent, 3 mm, Fusible",
+    "Clear Transparent, Ripple, 3 mm, Fusible"
+   ],
+   "herringbone": [
+    "Black Opalescent, Herringbone, 3 mm, Fusible",
+    "Black Opalescent, Herringbone, Rainbow Iridescent, 3 mm, Fusible",
+    "Clear Transparent, Herringbone, 3 mm, Fusible"
+   ],
+   "glacier": [
+    "Glacier Blue Opalescent, Double-rolled, 3 mm, Fusible",
+    "Glacier Blue Opalescent, Thin-rolled, 2 mm, Fusible"
+   ],
+   "moss": [
+    "Moss Green Opalescent, Double-rolled, 3 mm, Fusible",
+    "Moss Green Opalescent, Thin-rolled, 2 mm, Fusible",
+    "96 COE Moss Green Rough Rolled"
+   ],
+   "waterglass": [
+    "96 COE Black Opal Waterglass",
+    "96 COE Clear Waterglass",
+    "96 COE Clear Waterglass Iridescent"
+   ],
+   "artique": [
+    "96 COE Clear Artique"
+   ],
+   "corduroy": [
+    "96 COE Clear Cord"
+   ],
+   "crackle": [
+    "96 COE Clear Crackle"
+   ],
+   "hammered": [
+    "96 COE Clear Hammered",
+    "96 COE Clear Hammered Iridescent",
+    "96 COE Clear Small Hammered"
+   ],
+   "rough_rolled": [
+    "96 COE Clear Rough Rolled",
+    "96 COE Pale Amber Rough Rolled",
+    "96 COE Medium Amber Rough Rolled"
+   ],
+   "seedy": [
+    "96 COE Clear Seedy",
+    "Clear Heavy Seedy"
+   ],
+   "muffle": [
+    "Tulip English Muffle",
+    "Lavender English Muffle",
+    "Clear English Muffle"
+   ],
+   "flemish": [
+    "Clear Flemish",
+    "Denim Flemish",
+    "Translucent White Flemish"
+   ],
+   "stipple": [
+    "White Ice Stipple",
+    "White Ice Stipple Iridescent",
+    "White Ice, Silver Yellow, Purple Stipple"
+   ]
+  },
+  "non_relief_control_counts": {
+   "opalescent": 409,
+   "iridescent": 198,
+   "wispy": 40,
+   "dichroic": 23,
+   "streaky": 12,
+   "mottle": 8
+  },
+  "per_brand": {
+   "Bullseye": {
+    "n": 504,
+    "texture_named": 42,
+    "frac": 0.083
+   },
+   "Oceanside": {
+    "n": 283,
+    "texture_named": 73,
+    "frac": 0.258
+   },
+   "Wissmach": {
+    "n": 217,
+    "texture_named": 53,
+    "frac": 0.244
+   },
+   "Youghiogheny": {
+    "n": 265,
+    "texture_named": 83,
+    "frac": 0.313
+   }
+  }
+ },
+ "clean_corpus": {
+  "label": "clean corpus (1,281 imgs)",
+  "n": 1281,
+  "name_texture_hits": 248,
+  "category_texture_hits": 155,
+  "texture_named_either": 250,
+  "texture_named_frac": 0.1952,
+  "smooth_named_needs_vision": 1031,
+  "smooth_named_frac": 0.8048,
+  "relief_family_counts": {
+   "stipple": 55,
+   "granite": 44,
+   "waterglass": 35,
+   "ripple": 22,
+   "rough_rolled": 21,
+   "muffle": 17,
+   "generic_textured": 13,
+   "hammered": 10,
+   "reeded": 8,
+   "herringbone": 7,
+   "moss": 5,
+   "flemish": 5,
+   "seedy": 2,
+   "glacier": 1,
+   "artique": 1,
+   "corduroy": 1,
+   "crackle": 1
+  },
+  "family_examples": {
+   "reeded": [
+    "Black Opalescent, Reeded Texture, 3 mm, Fusible",
+    "Black Opalescent, Reeded Texture, Iridescent, rainbow, 3 mm, Fusible",
+    "Black Opalescent, Thin, Reeded Texture, 2 mm, Fusible"
+   ],
+   "generic_textured": [
+    "Black Opalescent, Accordion Texture, 3 mm, Fusible",
+    "Black Opalescent, Accordion Texture, Iridescent, rainbow, 3 mm, Fusibl",
+    "Black Opalescent, Prismatic Texture, 3 mm, Fusible"
+   ],
+   "granite": [
+    "Black Opalescent, Granite Texture, 3 mm, Fusible",
+    "Black Opalescent, Granite Texture, Iridescent, rainbow, 3 mm, Fusible",
+    "Clear Transparent, Granite Texture, 3 mm, Fusible"
+   ],
+   "ripple": [
+    "Black Opalescent, Ripple, 3 mm, Fusible",
+    "Black Opalescent, Ripple, Rainbow Iridescent, 3 mm, Fusible",
+    "Clear Transparent, Ripple, 3 mm, Fusible"
+   ],
+   "herringbone": [
+    "Black Opalescent, Herringbone, 3 mm, Fusible",
+    "Black Opalescent, Herringbone, Rainbow Iridescent, 3 mm, Fusible",
+    "Clear Transparent, Herringbone, 3 mm, Fusible"
+   ],
+   "glacier": [
+    "Glacier Blue Opalescent, Double-rolled, 3 mm, Fusible"
+   ],
+   "moss": [
+    "Moss Green Opalescent, Double-rolled, 3 mm, Fusible",
+    "96 COE Moss Green Rough Rolled",
+    "96 COE Moss Green"
+   ],
+   "waterglass": [
+    "96 COE Black Opal Waterglass",
+    "96 COE Clear Waterglass",
+    "96 COE Clear Waterglass Iridescent"
+   ],
+   "artique": [
+    "96 COE Clear Artique"
+   ],
+   "corduroy": [
+    "96 COE Clear Cord"
+   ],
+   "crackle": [
+    "96 COE Clear Crackle"
+   ],
+   "hammered": [
+    "96 COE Clear Hammered",
+    "96 COE Clear Hammered Iridescent",
+    "96 COE Clear Small Hammered"
+   ],
+   "rough_rolled": [
+    "96 COE Clear Rough Rolled",
+    "96 COE Pale Amber Rough Rolled",
+    "96 COE Medium Amber Rough Rolled"
+   ],
+   "seedy": [
+    "96 COE Clear Seedy",
+    "Clear Heavy Seedy"
+   ],
+   "muffle": [
+    "Tulip English Muffle",
+    "Lavender English Muffle",
+    "Clear English Muffle"
+   ],
+   "flemish": [
+    "Clear Flemish",
+    "Denim Flemish",
+    "Translucent White Flemish"
+   ],
+   "stipple": [
+    "White Ice Stipple",
+    "White Ice Stipple Iridescent",
+    "White Ice, Silver Yellow, Purple Stipple"
+   ]
+  },
+  "non_relief_control_counts": {
+   "opalescent": 361,
+   "iridescent": 202,
+   "wispy": 40,
+   "dichroic": 23,
+   "streaky": 12,
+   "mottle": 8
+  },
+  "per_brand": {
+   "Bullseye": {
+    "n": 517,
+    "texture_named": 41,
+    "frac": 0.079
+   },
+   "Oceanside": {
+    "n": 281,
+    "texture_named": 73,
+    "frac": 0.26
+   },
+   "Wissmach": {
+    "n": 217,
+    "texture_named": 53,
+    "frac": 0.244
+   },
+   "Youghiogheny": {
+    "n": 266,
+    "texture_named": 83,
+    "frac": 0.312
+   }
+  }
+ },
+ "realpairs_products": {
+  "label": "realpairs Delphi products (254)",
+  "n": 254,
+  "name_texture_hits": 142,
+  "category_texture_hits": 0,
+  "texture_named_either": 142,
+  "texture_named_frac": 0.5591,
+  "smooth_named_needs_vision": 112,
+  "smooth_named_frac": 0.4409,
+  "relief_family_counts": {
+   "generic_textured": 52,
+   "muffle": 26,
+   "granite": 21,
+   "seedy": 8,
+   "glue_chip": 7,
+   "herringbone": 6,
+   "flemish": 5,
+   "hammered": 4,
+   "waterglass": 2,
+   "wavolite": 2,
+   "ripple": 2,
+   "glacier": 1,
+   "reeded": 1,
+   "corduroy": 1,
+   "rough_rolled": 1,
+   "artique": 1,
+   "vecchio": 1,
+   "crackle": 1
+  },
+  "family_examples": {
+   "glue_chip": [
+    "Glue Chip Glass Pack Stained Sheets | Clear Textured",
+    "Clear Double Glue Chip Stained Glass Sheets | Textured Delphi",
+    "Clear Single Glue Chip Stained Glass Sheets | Textured Delphi"
+   ],
+   "generic_textured": [
+    "Bullseye Clear Transparent Double Thick - 90 COE Stained Glass Sheets ",
+    "Clear German Semi Antique Stained Glass Sheets | Textured Delphi",
+    "Clear Autumn Stained Glass Sheets | Textured Delphi"
+   ],
+   "muffle": [
+    "English Muffle Clear Stained Glass Sheets | Wissmach",
+    "English Muffle Dusky Rose Stained Glass Sheets | Wissmach",
+    "English Muffle Cornwall Green Stained Glass Sheets | Wissmach"
+   ],
+   "glacier": [
+    "Clear Glacier Stained Glass Sheets | Textured Delphi"
+   ],
+   "granite": [
+    "Spectrum Clear Granite - Clear Textured Glass - Spectrum Glass",
+    "Oceanside Clear Iridized Granite Stained Glass Sheets | Textured",
+    "Uroboros Clear Granite Iridized - 90 COE Stained Glass Sheets"
+   ],
+   "hammered": [
+    "Clear Hammered Stained Glass Sheets | Textured Delphi",
+    "Oceanside Clear Hammered - 96 COE Stained Glass Sheets | Textured",
+    "Oceanside Clear Small Hammered Stained Glass Sheets | Textured"
+   ],
+   "seedy": [
+    "Clear Seedy Stained Glass Sheets | Textured Delphi",
+    "Kokomo Light Peacock Blue Transparent Seedy Stained Glass Sheets",
+    "Kokomo Dark Purple Transparent Light Seedy Stained Glass Sheets"
+   ],
+   "waterglass": [
+    "Oceanside Clear Iridized Waterglass Stained Glass Sheets | Textured",
+    "Oceanside Clear Iridized Waterglass - 96 COE Stained Glass Sheets | Te"
+   ],
+   "herringbone": [
+    "Uroboros Clear Herringbone Ripple - 90 COE Stained Glass Sheets | Text",
+    "Uro White Opal Herringbone Ripple Stained Glass Sheets",
+    "Uro Emerald, Chartruese And Turquoise Herringbone Ripple Stained Glass"
+   ],
+   "reeded": [
+    "Clear Reed Stained Glass Sheets | Textured Delphi"
+   ],
+   "flemish": [
+    "Clear Double Flemish Stained Glass Sheets | Textured Delphi",
+    "Kokomo Clear Flemish Stained Glass Sheets",
+    "Kokomo Light Amber Transparent Flemish Stained Glass Sheets"
+   ],
+   "corduroy": [
+    "Oceanside Clear Cord Stained Glass Sheets | Textured"
+   ],
+   "wavolite": [
+    "Kokomo Clear Wavolite Stained Glass Sheets | Textured",
+    "Kokomo Clear Wavolite Iridized Stained Glass Sheets | Textured"
+   ],
+   "ripple": [
+    "Kokomo Clear Ripple Iridized Stained Glass Sheets | Textured",
+    "Kokomo Clear Ripple Stained Glass Sheets"
+   ],
+   "rough_rolled": [
+    "Oceanside Clear Rough Rolled Stained Glass Sheets | Textured"
+   ],
+   "artique": [
+    "Oceanside Clear Artique - 96 COE Stained Glass Sheets | Textured"
+   ],
+   "vecchio": [
+    "Oceanside Clear Vecchio Stained Glass Sheets | Textured"
+   ],
+   "crackle": [
+    "Oceanside Clear Crackle Stained Glass Sheets | Textured"
+   ]
+  },
+  "non_relief_control_counts": {
+   "opalescent": 42,
+   "streaky": 37,
+   "mottle": 15,
+   "wispy": 4,
+   "dichroic": 1
+  },
+  "per_brand": {
+   "armstrong-glass": {
+    "n": 13,
+    "texture_named": 0,
+    "frac": 0.0
+   },
+   "clear-textured-glass": {
+    "n": 88,
+    "texture_named": 88,
+    "frac": 1.0
+   },
+   "delphi-superior-glass": {
+    "n": 2,
+    "texture_named": 0,
+    "frac": 0.0
+   },
+   "kokomo-glass": {
+    "n": 17,
+    "texture_named": 11,
+    "frac": 0.647
+   },
+   "specialty-finish-glass": {
+    "n": 7,
+    "texture_named": 0,
+    "frac": 0.0
+   },
+   "tiffany-today-glass": {
+    "n": 42,
+    "texture_named": 0,
+    "frac": 0.0
+   },
+   "uro-glass": {
+    "n": 30,
+    "texture_named": 17,
+    "frac": 0.567
+   },
+   "van-gogh-glass": {
+    "n": 29,
+    "texture_named": 0,
+    "frac": 0.0
+   },
+   "wissmach-glass": {
+    "n": 26,
+    "texture_named": 26,
+    "frac": 1.0
+   }
+  }
+ }
+}
