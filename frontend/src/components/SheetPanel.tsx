@@ -22,6 +22,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
 import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
 import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
+import { ViewportGroup, ViewportSubscriber, useViewportEffectiveScale, type ViewportStore } from '../editor/viewport/viewportStore';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -139,8 +140,8 @@ const transformsEqual = (a: TextureTransform, b: TextureTransform) =>
 interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
-  effectiveScale: number;
   onSelect?: (multi?: boolean) => void;
+  viewportStore: ViewportStore;
   previewStore: PieceTransformPreviewStore;
   onPreviewTransform?: (transform: TextureTransform, flush?: boolean) => void;
   onRotateStart?: (e: KonvaEventObject<PointerEvent>) => void;
@@ -154,9 +155,10 @@ interface PieceOutlineProps {
 }
 
 const PieceOutline = memo(function PieceOutline({
-  piece, isSelected, effectiveScale, onSelect, previewStore, onPreviewTransform, onRotateStart,
+  piece, isSelected, viewportStore, onSelect, previewStore, onPreviewTransform, onRotateStart,
   fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
+  const effectiveScale = useViewportEffectiveScale(viewportStore);
   const renderedTransform = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
   const { x, y, rotation, scale } = renderedTransform;
   const geometry = getPieceGeometry(piece.polygon, piece.curvePoints);
@@ -715,7 +717,6 @@ export function SheetPanel({
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
   }
 
-  const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
@@ -898,7 +899,7 @@ export function SheetPanel({
           onClick={handleStageClick}
         >
           <Layer listening={false}>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <ViewportGroup store={vp.store}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -911,10 +912,10 @@ export function SheetPanel({
                   <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} listening={false} />
                 )}
               </Group>
-            </Group>
+            </ViewportGroup>
           </Layer>
           <Layer listening={false}>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <ViewportGroup store={vp.store}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -928,23 +929,23 @@ export function SheetPanel({
                     key={piece.id + '-fill'}
                     piece={piece}
                     isSelected={selectedPieceIdSet.has(piece.id)}
-                    effectiveScale={es}
+                    viewportStore={vp.store}
                     previewStore={pieceTransformPreviewStore}
                     fillOnly
                     listening={false}
                   />
                 ))}
               </Group>
-            </Group>
+            </ViewportGroup>
           </Layer>
           <Layer>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+            <ViewportGroup store={vp.store}>
               {pieces.map(piece => (
                 <PieceOutline
                   key={piece.id + '-stroke'}
                   piece={piece}
                   isSelected={selectedPieceIdSet.has(piece.id)}
-                  effectiveScale={es}
+                  viewportStore={vp.store}
                   previewStore={pieceTransformPreviewStore}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
@@ -955,6 +956,22 @@ export function SheetPanel({
                 />
               ))}
 
+              {pieces.map(piece => {
+                if (!selectedPieceIdSet.has(piece.id)) return null;
+                return (
+                  <PieceOutline
+                    key={piece.id + '-handle'}
+                    piece={piece}
+                    isSelected={true}
+                    viewportStore={vp.store}
+                    previewStore={pieceTransformPreviewStore}
+                    handleOnly
+                    onRotateStart={(e) => beginRotation(piece, e)}
+                  />
+                );
+              })}
+            </ViewportGroup>
+            <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <ViewportGroup store={vp.store}>
               {moveSnapGuides.x != null && (
                 <Line
                   points={[moveSnapGuides.x, sheetSnapBounds.top, moveSnapGuides.x, sheetSnapBounds.bottom]}
@@ -973,21 +990,6 @@ export function SheetPanel({
                   listening={false}
                 />
               )}
-
-              {pieces.map(piece => {
-                if (!selectedPieceIdSet.has(piece.id)) return null;
-                return (
-                  <PieceOutline
-                    key={piece.id + '-handle'}
-                    piece={piece}
-                    isSelected={true}
-                    effectiveScale={es}
-                    previewStore={pieceTransformPreviewStore}
-                    handleOnly
-                    onRotateStart={(e) => beginRotation(piece, e)}
-                  />
-                );
-              })}
               {activeTool === 'crop' && (
                 <CropOverlay
                   imageWidth={sheetW} imageHeight={sheetH}
@@ -1007,11 +1009,12 @@ export function SheetPanel({
                   onDragEnd={handleMeasureDragEnd}
                 />
               )}
-            </Group>
+            </ViewportGroup>; }}</ViewportSubscriber>
+            <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <>
             {marqueeBox && (
               <Rect
-                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + vp.pan.x}
-                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + vp.pan.y}
+                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + viewport.pan.x}
+                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + viewport.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
                 fill={CANVAS.amberSelectionFill}
@@ -1020,6 +1023,7 @@ export function SheetPanel({
                 listening={false}
               />
             )}
+            </>; }}</ViewportSubscriber>
           </Layer>
         </Stage>
         {showEmptyHint && (
@@ -1027,8 +1031,9 @@ export function SheetPanel({
             {t('emptySheetHint')}
           </div>
         )}
+        <ViewportSubscriber store={vp.store}>{(viewport) => <>
         <ViewportControls
-          zoomPercent={vp.effectiveScale * 100}
+          zoomPercent={viewport.effectiveScale * 100}
           onZoomIn={vp.zoomIn}
           onZoomOut={vp.zoomOut}
           onFit={vp.fitToView}
@@ -1037,7 +1042,7 @@ export function SheetPanel({
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;
-          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+          const sc = toScreenCoords(midX, midY, viewport.pan, viewport.effectiveScale);
           const saved = sheet.scale;
           return (
             <MeasureInput
@@ -1049,7 +1054,7 @@ export function SheetPanel({
               onCancel={() => handleToolChange('select')}
             />
           );
-        })()}
+        })()}</>}</ViewportSubscriber>
       </div>
     </div>
   );
