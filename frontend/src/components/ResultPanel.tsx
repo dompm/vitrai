@@ -32,6 +32,7 @@ import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
 import { ViewportGroup, ViewportSubscriber } from '../editor/viewport/viewportStore';
+import { createPenSnapIndex, queryAlignment, queryEdgeSnap, queryLengthSnap, queryShiftAlignment, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -446,7 +447,7 @@ export function findPenSnapTarget(
   return best;
 }
 
-function findEdgeSnapTarget(
+export function findEdgeSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
@@ -817,13 +818,15 @@ const PenPreviewHost = forwardRef<PenPreviewHandle, {
 
 export function resolvePenPoint({
   cursor, activePoints, shiftPressed, effectiveScale, crop, patternWidth,
-  patternHeight, pieces, translate,
+  patternHeight, pieces, translate, snapIndex,
 }: {
   cursor: [number, number]; activePoints: [number, number][]; shiftPressed: boolean;
   effectiveScale: number; crop: Crop; patternWidth: number; patternHeight: number;
-  pieces: Piece[]; translate: (key: string) => string;
+  pieces: Piece[]; translate: (key: string) => string; snapIndex?: PenSnapIndex;
 }): PenResolution {
-  const vertex = findPenSnapTarget(cursor, pieces, effectiveScale);
+  const vertex = snapIndex
+    ? queryVertexSnap(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+    : findPenSnapTarget(cursor, pieces, effectiveScale);
   if (vertex) return {
     point: vertex.pt,
     vertexSnapped: true,
@@ -839,12 +842,16 @@ export function resolvePenPoint({
     const last = activePoints[activePoints.length - 1];
     let theta = Math.atan2(cursor[1] - last[1], cursor[0] - last[0]);
     if (shiftPressed) theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-    const length = findLengthSnap(cursor, last, pieces, activePoints, effectiveScale);
+    const length = snapIndex
+      ? queryLengthSnap(snapIndex, cursor, last, activePoints, effectiveScale, PEN_SNAP_PX)
+      : findLengthSnap(cursor, last, pieces, activePoints, effectiveScale);
     if (length) {
       point = [last[0] + length.matchLength * Math.cos(theta), last[1] + length.matchLength * Math.sin(theta)];
       lengthGuide = { matchLength: length.matchLength, center: last, snappedPoint: point, matchingSegment: length.matchingSegment };
     } else if (shiftPressed) {
-      const aligned = findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
+      const aligned = snapIndex
+        ? queryShiftAlignment(snapIndex, cursor, last, theta, effectiveScale, PEN_SNAP_PX)
+        : findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
       if (aligned.guides.length > 0) {
         point = aligned.snapped;
         alignmentGuides = aligned.guides;
@@ -853,12 +860,16 @@ export function resolvePenPoint({
         point = [last[0] + radius * Math.cos(theta), last[1] + radius * Math.sin(theta)];
       }
     } else {
-      const aligned = findAlignmentGuides(cursor, pieces, effectiveScale);
+      const aligned = snapIndex
+        ? queryAlignment(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+        : findAlignmentGuides(cursor, pieces, effectiveScale);
       point = aligned.snapped;
       alignmentGuides = aligned.guides;
     }
   } else {
-    const aligned = findAlignmentGuides(cursor, pieces, effectiveScale);
+    const aligned = snapIndex
+      ? queryAlignment(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+      : findAlignmentGuides(cursor, pieces, effectiveScale);
     point = aligned.snapped;
     alignmentGuides = aligned.guides;
   }
@@ -906,6 +917,31 @@ export function ResultPanel({
   const { patternWidth: pw, patternHeight: ph } = project;
   const isTraceMode = project.projectType !== 'lamp' && Boolean(project.patternImageUrl);
   const vp = useViewport(pw, ph);
+  const isLamp = project.projectType === 'lamp';
+  const unrolledLamp = useMemo(
+    () => (isLamp ? computeUnrolledLamp(project.lampConfig) : null),
+    [isLamp, project.lampConfig],
+  );
+  const unrolledLampRef = useRef(unrolledLamp);
+  unrolledLampRef.current = unrolledLamp;
+  const lampSnapPointsCacheRef = useRef<{
+    lamp: NonNullable<typeof unrolledLamp>;
+    effectiveScale: number;
+    translate: typeof t;
+    points: LampSnapPoint[];
+  } | null>(null);
+
+  function getCurrentLampSnapPoints(effectiveScale: number) {
+    const lamp = unrolledLampRef.current;
+    if (!lamp) return undefined;
+    const cached = lampSnapPointsCacheRef.current;
+    if (cached?.lamp === lamp && cached.effectiveScale === effectiveScale && cached.translate === t) {
+      return cached.points;
+    }
+    const points = getLampSnapPoints(lamp, effectiveScale, t);
+    lampSnapPointsCacheRef.current = { lamp, effectiveScale, translate: t, points };
+    return points;
+  }
 
   function isInsideDrawableBounds(point: [number, number], padding = 0) {
     return isPointWithinBounds(point, {
@@ -967,6 +1003,28 @@ export function ResultPanel({
 
   const piecesRef = useRef(project.pieces);
   piecesRef.current = project.pieces;
+  const penSnapIndexRef = useRef<{
+    pieces: Array<{ id: string; polygon: Piece['polygon']; curves: Piece['curvePoints'] }>;
+    index: PenSnapIndex;
+  } | null>(null);
+  const sameSnapGeometry = penSnapIndexRef.current?.pieces.length === project.pieces.length
+    && project.pieces.every((piece, index) => {
+      const cached = penSnapIndexRef.current!.pieces[index];
+      return cached.id === piece.id
+        && cached.polygon === piece.polygon
+        && cached.curves === piece.curvePoints;
+    });
+  if (!sameSnapGeometry) {
+    penSnapIndexRef.current = {
+      pieces: project.pieces.map(piece => ({
+        id: piece.id,
+        polygon: piece.polygon,
+        curves: piece.curvePoints,
+      })),
+      index: createPenSnapIndex(project.pieces),
+    };
+  }
+  const penSnapIndex = penSnapIndexRef.current!.index;
   const effectiveScaleRef = {
     get current() { return vp.getSnapshot().effectiveScale; },
   };
@@ -994,8 +1052,15 @@ export function ResultPanel({
     // True polygon anchors are the highest-priority snap targets. Flattened
     // curve samples are deliberately excluded so editable anchors remain the
     // only magnetic points on curved paths.
+    const effectiveScale = effectiveScaleRef.current;
     const snap = snapSettings.anchors
-      ? findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current, lampSnapPointsRef.current)
+      ? queryVertexSnap(
+        penSnapIndex,
+        [imageX, imageY],
+        effectiveScale,
+        PEN_SNAP_PX,
+        getCurrentLampSnapPoints(effectiveScale),
+      )
       : null;
     if (snap) {
       const constrained = shiftPressed && lastPt ? constrainToAngle(snap.pt, lastPt) : snap.pt;
@@ -1011,7 +1076,7 @@ export function ResultPanel({
     }
 
     const edgeTarget = snapSettings.edges
-      ? findEdgeSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current)
+      ? queryEdgeSnap(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX)
       : null;
     if (edgeTarget) {
       const constrained = shiftPressed && lastPt ? constrainToAngle(edgeTarget, lastPt) : edgeTarget;
@@ -1037,13 +1102,16 @@ export function ResultPanel({
       let theta = Math.atan2(imageY - lastPt[1], imageX - lastPt[0]);
       if (shiftPressed) theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
 
-      const lenSnap = snapSettings.equalLength ? findLengthSnap(
-        [imageX, imageY],
-        lastPt,
-        piecesRef.current,
-        pathPoints,
-        effectiveScaleRef.current,
-      ) : null;
+      const lenSnap = snapSettings.equalLength
+        ? queryLengthSnap(
+          penSnapIndex,
+          [imageX, imageY],
+          lastPt,
+          pathPoints,
+          effectiveScaleRef.current,
+          PEN_SNAP_PX,
+        )
+        : null;
 
       if (lenSnap) {
         finalX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
@@ -1055,8 +1123,13 @@ export function ResultPanel({
           matchingSegment: lenSnap.matchingSegment,
         };
       } else if (shiftPressed) {
-        const align = findShiftAlignmentGuides(
-          [imageX, imageY], lastPt, theta, piecesRef.current, effectiveScaleRef.current,
+        const align = queryShiftAlignment(
+          penSnapIndex,
+          [imageX, imageY],
+          lastPt,
+          theta,
+          effectiveScaleRef.current,
+          PEN_SNAP_PX,
         );
         if (align.guides.length > 0) {
           finalX = align.snapped[0];
@@ -1066,13 +1139,13 @@ export function ResultPanel({
           [finalX, finalY] = constrainToAngle([imageX, imageY], lastPt);
         }
       } else if (snapSettings.alignment) {
-        const align = findAlignmentGuides([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+        const align = queryAlignment(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX);
         finalX = align.snapped[0];
         finalY = align.snapped[1];
         alignmentGuides = align.guides;
       }
     } else if (snapSettings.alignment) {
-      const align = findAlignmentGuides([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+      const align = queryAlignment(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX);
       finalX = align.snapped[0];
       finalY = align.snapped[1];
       alignmentGuides = align.guides;
@@ -1233,13 +1306,6 @@ export function ResultPanel({
   };
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
-  const isLamp = project.projectType === 'lamp';
-  const unrolledLamp = useMemo(() => (isLamp ? computeUnrolledLamp(project.lampConfig) : null), [isLamp, project.lampConfig]);
-  const lampSnapPoints = useMemo(() => (unrolledLamp ? getLampSnapPoints(unrolledLamp, vp.effectiveScale, t) : undefined), [unrolledLamp, vp.effectiveScale, t]);
-  const lampSnapPointsRef = useRef(lampSnapPoints);
-  lampSnapPointsRef.current = lampSnapPoints;
-  const unrolledLampRef = useRef(unrolledLamp);
-  unrolledLampRef.current = unrolledLamp;
 
   function commitActivePolygon() {
     if (activePolygonPointsRef.current.length >= 3) {
