@@ -56,15 +56,76 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DELIGHT = os.path.dirname(HERE)
 sys.path.insert(0, DELIGHT)
 from extract import srgb_to_lin, lum  # noqa: E402  (frozen colour helpers)
+sys.path.insert(0, HERE)
+from phone_pipeline import PRESET_NAMES, apply_phone_pipeline  # noqa: E402  (report 053)
 
 # report-023 reserved holdout batch (EVAL_PROTOCOL §3b): TEST wholesale.
 HOLDOUT_BATCH = range(800, 813)
+
+# ------------------------------------------------------ report 053 multi-axis holdout
+# The external review (docs/external/053-dataset-capture-review.md) warned that a pure
+# seed%5 IDENTITY holdout still lets a model train on EVERY texture-generator family, glass
+# taxon, HDRI, camera pipeline, and capture geometry it is tested on — so a strong test score
+# can reflect "I have seen this generator / this device grammar before", not deployment
+# generalization. EVAL_PROTOCOL §3b-ext (report 053) therefore RESERVES ENTIRE families of
+# each nuisance/material axis to TEST, by deterministic documented rule. All rules are pure
+# functions of meta.json (or, for the loader-side camera preset, of the split), so a freshly
+# rendered batch auto-partitions with no shared list to maintain.
+
+# (1) Whole texture-generator families / glass taxa reserved test-only. One generator family
+#     that exists ONLY here (ring_mottle_blobs -> ring-mottle; the confetti compositor ->
+#     confetti-shard) plus one cathedral and one dark taxon, so a held-out TAXON and a held-out
+#     GENERATOR are both represented. A model never sees these recipes in training.
+HOLDOUT_RECIPES = frozenset({
+    "ring-mottle",        # entire ring_mottle_blobs generator family
+    "confetti-shard",     # entire confetti-shard compositor family
+    "cathedral-red",      # a held-out cathedral taxon
+    "dark-slate",         # a held-out dark taxon
+})
+
+# (2) HDRIs / background scenes: reserve ~20% of distinct HDRIs by a deterministic hash of the
+#     basename (same style as EVAL_PROTOCOL §3c's product-id rule). A reserved HDRI's lighting
+#     environment is never seen in training.
+def hdri_is_test(hdri_name):
+    if not hdri_name or hdri_name == "UniformWhite":
+        return False
+    import hashlib
+    base = os.path.splitext(os.path.basename(str(hdri_name)))[0]
+    return int(hashlib.sha1(base.encode()).hexdigest(), 16) % 5 == 0
+
+# (3) Camera-pipeline presets (loader-side): reserve one COMPLETE device preset to test-only,
+#     so "can this model handle a phone tuning it never trained on" is a measurable axis.
+TEST_ONLY_PRESETS = ("wide_edge",)
+TRAIN_PRESETS = tuple(p for p in PRESET_NAMES if p not in TEST_ONLY_PRESETS)
+
+# (4) Capture geometries (report 053 crop-workflow sim, meta['capture_geometry']): reserve the
+#     four-corner perspective-rectified capture to test-only. Old batches lack the field ->
+#     treated as the default 'axis_crop' (train-eligible), so this never retro-holds-out data.
+HOLDOUT_GEOMETRIES = frozenset({"perspective_rectified"})
 
 
 # ------------------------------------------------------------------ split rule
 def seed_is_test(seed):
     """EVAL_PROTOCOL §3b: TEST iff seed%5==0 OR in the 800-812 reserved batch."""
     return (seed % 5 == 0) or (seed in HOLDOUT_BATCH)
+
+
+def holdout_reason(meta, seed):
+    """Report 053 / EVAL_PROTOCOL §3b-ext: return a short reason string if this sample is
+    TEST (by ANY reserved-family axis), else None (train-eligible). Deterministic, documented.
+    The camera-preset axis is enforced separately in the loader (it is loader-side, not a
+    property of the render), so it is not decided here."""
+    if seed_is_test(seed):
+        return "seed%5" if seed % 5 == 0 else "seed800-812"
+    recipe = (meta or {}).get("class_label")
+    if recipe in HOLDOUT_RECIPES:
+        return f"recipe:{recipe}"
+    if hdri_is_test((meta or {}).get("hdri_name")):
+        return f"hdri:{(meta or {}).get('hdri_name')}"
+    geom = (meta or {}).get("capture_geometry", "axis_crop")
+    if geom in HOLDOUT_GEOMETRIES:
+        return f"geometry:{geom}"
+    return None
 
 
 def parse_seed(sample_dir, meta):
@@ -236,7 +297,8 @@ class GlassDelightDataset:
                     seed = parse_seed(d, meta)
                 except Exception:
                     continue
-                is_test = seed_is_test(seed)
+                reason = holdout_reason(meta, seed)   # report 053 multi-axis rule
+                is_test = reason is not None
                 if self.split == "train" and is_test:
                     continue
                 if self.split == "test" and not is_test:
@@ -244,7 +306,9 @@ class GlassDelightDataset:
                 if self.require_B and not os.path.exists(os.path.join(d, "gt_B.exr")):
                     continue
                 out.append({"dir": d, "seed": seed, "recipe": meta.get("class_label", "?"),
-                            "is_test": is_test})
+                            "is_test": is_test, "test_reason": reason,
+                            "hdri": meta.get("hdri_name"),
+                            "geometry": meta.get("capture_geometry", "axis_crop")})
         return out
 
     def __len__(self):
@@ -335,27 +399,24 @@ class GlassDelightDataset:
 
     # ---------------------------------------------------------- augmentations
     def _augment_photo(self, photo):
-        """Loader-side camera pipeline (consultant brief): applied to the INPUT photo
-        only; every target is the intrinsic and stays fixed, so this directly trains
-        nuisance (N) invariance. All ops in scene-linear except the tone-map/JPEG round
-        trip which goes through the sRGB view."""
-        p = photo
-        # 1) exposure jitter: global gain in stops
-        p = p * float(2.0 ** self.rng.uniform(-0.7, 0.7))
-        # 2) sensor noise: signal-dependent Gaussian in linear
-        sigma = float(self.rng.uniform(0.0, 0.02))
-        if sigma > 0:
-            p = p + self.rng.normal(0, sigma, p.shape).astype(np.float32) * np.sqrt(np.clip(p, 0, None) + 1e-3)
-        # 3) tone-map jitter + 4) JPEG recompress: round-trip through the sRGB view
-        srgb = np.clip(p, 0, 1) ** (1.0 / self.rng.uniform(2.0, 2.8))   # gamma/tone jitter
-        u8 = (np.clip(srgb, 0, 1) * 255).astype(np.uint8)
-        if self.rng.random() < 0.8:
-            q = int(self.rng.integers(35, 95))
-            ok, enc = cv2.imencode(".jpg", u8[..., ::-1], [cv2.IMWRITE_JPEG_QUALITY, q])
-            if ok:
-                u8 = cv2.imdecode(enc, cv2.IMREAD_COLOR)[..., ::-1]
-        p = srgb_to_lin(u8.astype(np.float32) / 255.0)
-        return p.astype(np.float32)
+        """Loader-side camera pipeline. Report 053: replaced the four INDEPENDENTLY
+        randomized effects (exposure + noise + gamma + JPEG) the external review flagged as
+        "Blender glass grammar"-friendly with several COMPLETE, CORRELATED device ISP presets
+        (foundation/phone_pipeline.py) applied in physical order — AWB error, lens shading,
+        chromatic aberration, motion/defocus blur, local HDR/tonemap with halos, denoise,
+        sharpen with overshoot, saturation/per-channel clip, rescale, JPEG/HEIC quantization.
+
+        Applied to the INPUT photo ONLY; every target is the intrinsic and stays fixed, so
+        this directly trains nuisance (N) invariance. In/out scene-linear (report 025).
+
+        Holdout (EVAL_PROTOCOL §3b-ext): a TRAIN loader draws only from TRAIN_PRESETS, so the
+        one test-only device tuning (TEST_ONLY_PRESETS) is never seen in training; a TEST
+        loader may draw from ALL presets (the held-out device included) to measure preset
+        generalization. Returns (photo_lin, preset_name); callers wanting only the array can
+        index [0]."""
+        allowed = None if self.split == "test" else TRAIN_PRESETS
+        out, _preset = apply_phone_pipeline(photo, self.rng, allowed_presets=allowed)
+        return out
 
     def sample_crop(self, idx=None):
         """One augmented training crop (dict of HxWxC numpy). Identity-holdout is
