@@ -1,0 +1,69 @@
+{
+  "categories": {
+    "smooth": {
+      "desc": "float / cast sheet -- essentially flat, only faint sub-mm imperfection",
+      "knobs": [
+        "amplitude"
+      ],
+      "default_amplitude": "subtle",
+      "default_scale": "fine"
+    },
+    "hammered": {
+      "desc": "isotropic mm-scale pebbled cells (classic cathedral glass)",
+      "knobs": [
+        "amplitude",
+        "feature_scale"
+      ],
+      "default_amplitude": "medium",
+      "default_scale": "medium"
+    },
+    "granite": {
+      "desc": "dense fine stipple / granite tooth (rolled dark & textured sheet)",
+      "knobs": [
+        "amplitude",
+        "feature_scale"
+      ],
+      "default_amplitude": "medium",
+      "default_scale": "fine"
+    },
+    "seedy": {
+      "desc": "sparse discrete round bumps / seeds / small bubbles on a soft ground",
+      "knobs": [
+        "amplitude",
+        "feature_scale"
+      ],
+      "default_amplitude": "medium",
+      "default_scale": "medium"
+    },
+    "ripple": {
+      "desc": "directional pulled / reeded streaks (streaky & waterglass sheet)",
+      "knobs": [
+        "amplitude",
+        "feature_scale",
+        "angle"
+      ],
+      "default_amplitude": "subtle",
+      "default_scale": "medium"
+    },
+    "rolling_wave": {
+      "desc": "coarse cm-scale rolling waves (baroque / hammered-coarse sheet)",
+      "knobs": [
+        "amplitude",
+        "feature_scale"
+      ],
+      "default_amplitude": "strong",
+      "default_scale": "coarse"
+    }
+  },
+  "amplitude_bins": {
+    "subtle": 0.35,
+    "medium": 0.65,
+    "strong": 1.0
+  },
+  "feature_scale_bins": {
+    "fine": 0.045,
+    "medium": 0.11,
+    "coarse": 0.26
+  },
+  "grounding": "generate_synthetic.generate_relief_height families + real sheet-glass corpus classes"
+}

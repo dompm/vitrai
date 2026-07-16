@@ -1,0 +1,9 @@
+# raw renders + intermediates are regenerable (deterministic); keep only boards + JSON
+assets/
+assets_ms/
+photos/
+photos_soft/
+photos_v2/
+*.png
+*.hdr
+*.npy
