@@ -1,0 +1,146 @@
+[
+  {
+    "file": "corpus_bullseye-0001000047f1010.jpg",
+    "category": "ripple",
+    "amplitude": "strong",
+    "feature_scale": "medium",
+    "angle_deg": 0.0,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0011370050f1010.jpg",
+    "category": "seedy",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0014140051f1010.jpg",
+    "category": "ripple",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": -85.1,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0014260030f1010.jpg",
+    "category": "seedy",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0021000000f1010.jpg",
+    "category": "rolling_wave",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0023050030f1010.jpg",
+    "category": "ripple",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": -8.7,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_bullseye-0041110000ffull.jpg",
+    "category": "seedy",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_oceanside-of22272s.jpg",
+    "category": "smooth",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_oceanside-of23072s.jpg",
+    "category": "hammered",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "corpus_wissmach-wblacki.jpg",
+    "category": "seedy",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_sheets_handblown.jpg",
+    "category": "rolling_wave",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_sheets_shelf.jpg",
+    "category": "ripple",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": -2.2,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_sheets_waterglass_pair.jpg",
+    "category": "rolling_wave",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_panel_green_bg_distortion.jpg",
+    "category": "granite",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_panel_lightbox.jpg",
+    "category": "ripple",
+    "amplitude": "subtle",
+    "feature_scale": "coarse",
+    "angle_deg": 83.5,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_panel_reflected_vs_transmitted.jpg",
+    "category": "ripple",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": 3.8,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "wild_panel_tungsten_backlit.jpg",
+    "category": "hammered",
+    "amplitude": "strong",
+    "feature_scale": "coarse",
+    "angle_deg": null,
+    "source": "vlm-cat+classical-knobs"
+  },
+  {
+    "file": "PXL_20260508_165112222 (1).jpg",
+    "category": "ripple",
+    "amplitude": "medium",
+    "feature_scale": "coarse",
+    "angle_deg": -81.1,
+    "source": "vlm-cat+classical-knobs"
+  }
+]

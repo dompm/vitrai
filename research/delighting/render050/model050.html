@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;padding:0;background:#000;overflow:hidden}</style>
+<script type="importmap">{"imports":{"three":"/render047/vendor/three.module.min.js"}}</script>
+</head><body>
+<script type="module">
+// 050 A/B model: the 047 window-nudge scene rendered with a chosen RELIEF normal
+// source -- gt (authored GT normal) | auto (procedural preset normal) | off --
+// same T/haze/env otherwise. Headless-Chrome renderable (posts canvas to /save).
+import * as THREE from 'three';
+import { HDRLoader } from '/render047/vendor/HDRLoader.js';
+const Q = new URLSearchParams(location.search);
+const num = (k,d)=>Q.has(k)?parseFloat(Q.get(k)):d;
+const abase = Q.get('abase')||'/results/050/assets_ms';
+const family = Q.get('family')||'cathedral-green__6001';
+const relief = Q.get('relief')||'gt';            // gt|auto|off
+const normurl = Q.get('normurl')||(abase+'/'+family+'/normal.png');
+const res = num('res',512), az = num('az',0), fov = num('fov',30), dist = num('dist',0.9), elev = num('elev',8);
+const dslab = num('dslab',0.003), nscale = num('nscale',1.0);
+const log = (m)=>console.log('R050 '+m);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:false});
+renderer.setPixelRatio(1); renderer.setSize(res,res);
+renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.0;
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(fov,1,0.01,100);
+cam.position.set(0,0,dist); cam.up.set(0,1,0); cam.lookAt(0,0,0);
+const grp = new THREE.Group();
+grp.rotation.set(-elev*Math.PI/180, az*Math.PI/180, 0, 'XYZ');
+scene.add(grp);
+const texLoader = new THREE.TextureLoader();
+function loadTex(url, srgb){ const t=texLoader.load(url); t.colorSpace=srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;
+  t.flipY=false; t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; t.anisotropy=8; return t; }
+async function loadHDR(url){ return new Promise((r)=>{ new HDRLoader().load(url,(t)=>{t.mapping=THREE.EquirectangularReflectionMapping; r(t);}); }); }
+
+async function main(){
+  const env = await loadHDR(abase+'/env.hdr');
+  const pmrem = new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
+  scene.environment = pmrem.fromEquirectangular(env).texture; scene.background = env;
+  const scale = parseFloat(await (await fetch(abase+'/backdrop_scale.txt')).text());
+  const tint = loadTex(abase+'/'+family+'/tint.png', true);
+  const haze = loadTex(abase+'/'+family+'/haze.png', false);
+  const m = new THREE.MeshPhysicalMaterial({transmission:1.0, thickness:dslab, ior:1.5,
+    metalness:0.0, roughness:1.0, side:THREE.FrontSide, transparent:true});
+  m.map = tint; m.roughnessMap = haze;
+  if(relief!=='off'){
+    const nrm = loadTex(relief==='auto'?normurl:(abase+'/'+family+'/normal.png'), false);
+    m.normalMap = nrm; m.normalScale = new THREE.Vector2(nscale,nscale);
+  }
+  m.needsUpdate = true;
+  const bd = loadTex(abase+'/backdrop.png', true);
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),
+    new THREE.MeshBasicMaterial({map:bd, color:new THREE.Color(scale,scale,scale), toneMapped:false}));
+  back.position.set(0,0,-0.55); grp.add(back);
+  grp.add(new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5,1,1), m));
+  await new Promise(r=>setTimeout(r,450));
+  for(let i=0;i<14;i++) renderer.render(scene,cam);
+  const url = renderer.domElement.toDataURL('image/png');
+  const name = Q.get('name') || (family+'_'+relief+'_az'+Math.round(az));
+  await fetch('/save?name='+encodeURIComponent(name), {method:'POST', body:url});
+  log('SAVED '+name); document.title='DONE';
+}
+main().catch(e=>{log('ERR '+e.message); document.title='ERR';});
+</script>
+</body></html>
