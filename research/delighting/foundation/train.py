@@ -2,8 +2,9 @@
 """Iteration 038 / deliverable 3 — TRAIN the Bet-2 FoundationDelighter.
 
 LoRA/adapter fine-tune of a pretrained latent-diffusion dense predictor (backbone.py)
-to emit the OUTPUT_CONTRACT tier-1 state: T, haze/scatter h, background layer B,
-shadow+mark masks, and a calibrated confidence. Runs BOTH:
+to emit the OUTPUT_CONTRACT tier-1 state: T, haze/scatter h, haze-driven scatter radius
+sigma_s (report 048 material-target extension), background layer B, shadow+mark masks,
+and a calibrated confidence. Runs BOTH:
 
   * locally on MPS with a tiny config (`--smoke`) for the end-to-end loop test, and
   * as a Modal A100 app (modal_app.py imports `train_loop` from here).
@@ -49,8 +50,9 @@ def collate(dataset, bs, device):
         a = np.stack([r[key] for r in recs])          # (B,H,W,C)
         return torch.from_numpy(a).permute(0, 3, 1, 2).float().to(device)
 
-    batch = {k: stack(k) for k in ("photo", "T", "h", "B", "shadow", "mark", "valid")}
+    batch = {k: stack(k) for k in ("photo", "T", "h", "sigma_s", "B", "shadow", "mark", "valid")}
     batch["has_B"] = torch.tensor([1.0 if r["has_B"] else 0.0 for r in recs], device=device)
+    batch["has_sigma_s"] = torch.tensor([1.0 if r["has_sigma_s"] else 0.0 for r in recs], device=device)
     return batch
 
 
@@ -67,6 +69,12 @@ def compute_losses(out, batch, w):
     l_T = (torch.abs(_gamma(out["T"]) - _gamma(batch["T"])) * wmap3).sum() / wmap3.sum().clamp_min(1)
     # h
     l_h = (torch.abs(out["h"] - batch["h"]) * valid).sum() / valid.sum().clamp_min(1)
+    # sigma_s (report 048): L1 in authored-linear [0,1], valid-masked, ONLY on renders
+    # that carry gt_sigma_s (has_sigma_s gate mirrors has_B) so pre-043 batches whose
+    # sigma_s is zero-filled contribute no spurious gradient.
+    hasS = batch["has_sigma_s"].view(-1, 1, 1, 1)
+    smask = (valid * hasS)
+    l_sigma_s = (torch.abs(out["sigma_s"] - batch["sigma_s"]) * smask).sum() / smask.sum().clamp_min(1)
     # B (only where GT-v3 gt_B exists), in log1p space
     hasB = batch["has_B"].view(-1, 1, 1, 1)
     bmask = (valid * hasB).expand_as(out["B"])
@@ -82,11 +90,11 @@ def compute_losses(out, batch, w):
         conf_target = torch.exp(-err / 0.05)
     l_conf = (torch.abs(out["conf"] - conf_target) * valid).sum() / valid.sum().clamp_min(1)
 
-    total = (w["T"] * l_T + w["h"] * l_h + w["B"] * l_B +
+    total = (w["T"] * l_T + w["h"] * l_h + w["sigma_s"] * l_sigma_s + w["B"] * l_B +
              w["shadow"] * l_sh + w["mark"] * l_mk + w["conf"] * l_conf)
-    return total, {"T": float(l_T), "h": float(l_h), "B": float(l_B),
-                   "shadow": float(l_sh), "mark": float(l_mk), "conf": float(l_conf),
-                   "total": float(total)}
+    return total, {"T": float(l_T), "h": float(l_h), "sigma_s": float(l_sigma_s),
+                   "B": float(l_B), "shadow": float(l_sh), "mark": float(l_mk),
+                   "conf": float(l_conf), "total": float(total)}
 
 
 def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
@@ -96,7 +104,10 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     device = device or ("mps" if torch.backends.mps.is_available()
                         else "cuda" if torch.cuda.is_available() else "cpu")
     dtype = torch.float32 if fp32 else torch.float16
-    weights = weights or {"T": 6.0, "h": 2.0, "B": 2.0, "shadow": 1.0, "mark": 1.0, "conf": 1.0}
+    # sigma_s weighted like h (2.0): the oracle-045 gate makes it a first-order material
+    # channel (report 048), co-equal with h in the material target (T, h, sigma_s).
+    weights = weights or {"T": 6.0, "h": 2.0, "sigma_s": 2.0, "B": 2.0,
+                          "shadow": 1.0, "mark": 1.0, "conf": 1.0}
 
     ds = GlassDelightDataset(data_roots, split="train", crop=crop, augment=True)
     print(f"[train] {len(ds)} TRAIN identities-crops source | backbone={backbone} device={device}")
@@ -126,7 +137,8 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
             parts["sec"] = round(time.time() - t0, 1)
             log.append(parts)
             print(f"  step {step:4d}  total={parts['total']:.4f}  "
-                  f"T={parts['T']:.4f} h={parts['h']:.4f} B={parts['B']:.4f} "
+                  f"T={parts['T']:.4f} h={parts['h']:.4f} ss={parts['sigma_s']:.4f} "
+                  f"B={parts['B']:.4f} "
                   f"sh={parts['shadow']:.4f} mk={parts['mark']:.4f} cf={parts['conf']:.4f}  "
                   f"{parts['sec']:.0f}s")
         if save_every and step and step % save_every == 0:
