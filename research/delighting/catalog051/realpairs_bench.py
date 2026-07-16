@@ -180,6 +180,53 @@ def run(img_root, use_distractors=True, repr_name="raw", transform=None,
     return result, per_q, gate, board
 
 
+def diagnostic_any_capture(img_root, use_distractors=True, cache_path=None):
+    """Upper-bound diagnostic: target = ANY other capture of the product
+    (leave-one-image-out), not just clean references. The gap vs the primary
+    clean-target number isolates the closeup/lightbox 'clean-reference is hard'
+    penalty from raw same-product matching ability."""
+    products, images = build_image_table(img_root)
+    usable = [i for i in images if i["role"] in ("reference", "wild")]
+    scorable = {pid for pid, p in products.items()
+                if (p["n_reference"] + p["n_wild"]) >= 2}
+    usable = [i for i in usable if i["product_id"] in scorable]
+    cache = EmbedCache(cache_path or os.path.join(OUT_DIR, "rp_embed_cache.npz"))
+    vecs = cache.get([i["path"] for i in usable], "raw", None)
+    entries = [{"entry_id": f"rp::{i['product_id']}::{i['image_key']}",
+                "product_id": i["product_id"], "source": "realpairs",
+                "brand": i["brand"], "path": i["path"]} for i in usable]
+    emb_list, ent_list = [vecs], list(entries)
+    if use_distractors and os.path.exists(CLEAN_IDX):
+        cz = np.load(CLEAN_IDX, allow_pickle=True)
+        emb_list.append(cz["embeddings"])
+        ent_list += json.load(open(CLEAN_META))["entries"]
+    index = Index(np.concatenate(emb_list, 0), ent_list)
+    # queries = wild only (consistent w/ primary), exclude self row
+    q_rows = [k for k, i in enumerate(usable) if i["role"] == "wild"]
+    qv = vecs[q_rows]
+    excl = q_rows  # self row in the (realpairs-first) index is the same position
+    res = index.rank_products(qv, topk=5, exclude_rows=excl)
+    gt = [usable[k]["product_id"] for k in q_rows]
+    caps = [usable[k]["capture_type"] for k in q_rows]
+    top1 = top5 = 0
+    bycap = {}
+    for r, g, cap in zip(res, gt, caps):
+        pids = [p for p, _, _ in r["ranked"]]
+        rank = pids.index(g) + 1 if g in pids else None
+        d = bycap.setdefault(cap, {"n": 0, "t1": 0, "t5": 0})
+        d["n"] += 1
+        if rank == 1:
+            top1 += 1; d["t1"] += 1
+        if rank and rank <= 5:
+            top5 += 1; d["t5"] += 1
+    n = len(gt)
+    return {"mode": "any_capture_leave1out", "n_queries": n,
+            "top1": round(top1 / n, 4), "top5": round(top5 / n, 4),
+            "by_capture": {c: {"n": d["n"], "top1": round(d["t1"] / d["n"], 3),
+                               "top5": round(d["t5"] / d["n"], 3)}
+                           for c, d in bycap.items()}}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--img-root", default=os.path.join(RP, "data", "images"))

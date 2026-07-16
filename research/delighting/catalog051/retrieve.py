@@ -47,16 +47,22 @@ class Index:
     def n_products(self):
         return len(self._by_prod)
 
-    def rank_products(self, qvecs, topk=5):
+    def rank_products(self, qvecs, topk=5, exclude_rows=None):
         """qvecs: (Q, d) normalized. Returns list (per query) of dicts:
         {ranked: [(product_id, score, best_entry_idx), ...topk],
-         best_entry_idx, best_score}. Product score = max-pool over entries."""
+         best_entry_idx, best_score}. Product score = max-pool over entries.
+        exclude_rows: optional list (len Q) of a row index to suppress for that
+        query (leave-one-image-out, so a query cannot match its own entry)."""
         qvecs = np.asarray(qvecs, dtype=np.float64)
         # errstate guard: macOS Accelerate BLAS raises spurious div0/overflow
         # FP flags on this matmul even though both operands are verified finite
         # and outputs are exact (self-retrieval == 1.0). Data, not precision.
         with np.errstate(all="ignore"):
             sims = qvecs @ self.emb.astype(np.float64).T  # (Q, N)
+        if exclude_rows is not None:
+            for q, row in enumerate(exclude_rows):
+                if row is not None:
+                    sims[q, row] = -np.inf
         results = []
         prod_list = list(self._by_prod.items())
         for q in range(sims.shape[0]):
