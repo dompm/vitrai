@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { memo, useState, useRef, useMemo, useEffect } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -20,6 +20,9 @@ import { MeasureLineOverlay } from './MeasureLineOverlay';
 import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
+import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
+import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
+import { ViewportGroup, ViewportSubscriber, useViewportEffectiveScale, type ViewportStore } from '../editor/viewport/viewportStore';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -131,12 +134,16 @@ function snapPiecePosition(
   };
 }
 
+const transformsEqual = (a: TextureTransform, b: TextureTransform) =>
+  a.x === b.x && a.y === b.y && a.rotation === b.rotation && a.scale === b.scale;
+
 interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
-  effectiveScale: number;
   onSelect?: (multi?: boolean) => void;
-  onTransformChange?: (t: Partial<TextureTransform>, skipHistory?: boolean) => void;
+  viewportStore: ViewportStore;
+  previewStore: PieceTransformPreviewStore;
+  onPreviewTransform?: (transform: TextureTransform, flush?: boolean) => void;
   onRotateStart?: (e: KonvaEventObject<PointerEvent>) => void;
   fillOnly?: boolean;
   strokeOnly?: boolean;
@@ -147,22 +154,25 @@ interface PieceOutlineProps {
   onSnapChange?: (guides: { x: number | null; y: number | null }) => void;
 }
 
-function PieceOutline({
-  piece, isSelected, effectiveScale, onSelect, onTransformChange, onRotateStart,
+const PieceOutline = memo(function PieceOutline({
+  piece, isSelected, viewportStore, onSelect, previewStore, onPreviewTransform, onRotateStart,
   fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
-  const { x, y, rotation, scale } = piece.transform;
-  const displayPolygon = flattenCurves(piece.polygon, piece.curvePoints);
-  const centroid = computeCentroid(displayPolygon);
-  const relPts = displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]);
+  const effectiveScale = useViewportEffectiveScale(viewportStore);
+  const renderedTransform = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
+  const { x, y, rotation, scale } = renderedTransform;
+  const geometry = getPieceGeometry(piece.polygon, piece.curvePoints);
+  const { centroid } = geometry;
+  const relPts = useMemo(
+    () => geometry.displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]),
+    [geometry, centroid],
+  );
 
   // Combined divisor so sizes stay fixed in display pixels
   const es = effectiveScale * scale;
 
   // Bounding radius in display px, converted to local coords for the handle stem
-  const radiusPx = Math.max(
-    ...displayPolygon.map(([px, py]) => Math.hypot(px - centroid.x, py - centroid.y))
-  ) * es;
+  const radiusPx = geometry.localBoundingRadius * es;
   const handleOffset = (radiusPx + HANDLE_GAP + HANDLE_RADIUS) / es;
 
   // Prevent drag from starting when the pointer went down on the rotation handle
@@ -212,12 +222,14 @@ function PieceOutline({
     const position = { x: snapped.x, y: snapped.y };
     e.target.position(position);
     onSnapChange?.({ x: snapped.guideX, y: snapped.guideY });
-    onTransformChange?.(position, true);
+    const current = previewStore.get(piece.id) ?? renderedTransform;
+    onPreviewTransform?.({ ...current, ...position });
   }
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
     onSnapChange?.({ x: null, y: null });
-    onTransformChange?.({ x: e.target.x(), y: e.target.y() }, false);
+    const current = previewStore.get(piece.id) ?? renderedTransform;
+    onPreviewTransform?.({ ...current, x: e.target.x(), y: e.target.y() }, true);
   }
 
   function handleRotateDown(e: KonvaEventObject<PointerEvent>) {
@@ -272,7 +284,7 @@ function PieceOutline({
       )}
     </Group>
   );
-}
+});
 
 const PackIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -285,12 +297,13 @@ const PackIcon = () => (
 );
 
 interface SheetPanelProps {
+  pieceTransformPreviewStore: PieceTransformPreviewStore;
   sheet: GlassSheet;
   pieces: Piece[];
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
-  onTransformsChange: (updates: { pieceId: string; transform: Partial<TextureTransform> }[], skipHistory?: boolean) => void;
+  onCommitTransforms: (updates: Array<{ pieceId: string; transform: TextureTransform }>) => void;
   onCropChange: (c: Partial<Crop>) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
@@ -301,10 +314,11 @@ interface SheetPanelProps {
 }
 
 export function SheetPanel({
-  sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onTransformsChange, onCropChange, onScaleChange, onImageLoad,
+  pieceTransformPreviewStore, sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onCommitTransforms, onCropChange, onScaleChange, onImageLoad,
   showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false,
 }: SheetPanelProps) {
   const { t } = useTranslation();
+  const selectedPieceIdSet = useMemo(() => new Set(selectedPieceIds), [selectedPieceIds]);
   // activeTool is now passed as a prop from the parent App component
   const [isSpaceDown, setIsSpaceDown] = useState(false);
   const [isPacking, setIsPacking] = useState(false);
@@ -392,12 +406,23 @@ export function SheetPanel({
   const marqueeJustEndedRef = useRef(false);
   const [moveSnapGuides, setMoveSnapGuides] = useState<{ x: number | null; y: number | null }>({ x: null, y: null });
 
-  function handlePieceTransform(pieceId: string, transform: Partial<TextureTransform>, skipHistory = false) {
+  function handlePieceTransform(pieceId: string, transform: TextureTransform, flush = false) {
     const targetX = transform.x;
     const targetY = transform.y;
-    const isGroupMove = selectedPieceIds.length > 1 && targetX !== undefined && targetY !== undefined;
+    const isGroupMove = selectedPieceIds.length > 1;
     if (!isGroupMove) {
-      onTransformChange(pieceId, transform, skipHistory);
+      const update = { pieceId, transform };
+      if (flush) {
+        const committed = pieces.find(piece => piece.id === pieceId)?.transform;
+        if (committed && transformsEqual(transform, committed)) {
+          pieceTransformPreviewStore.clear(pieceId);
+          return;
+        }
+        pieceTransformPreviewStore.flushMany([update]);
+        onCommitTransforms([update]);
+      } else {
+        pieceTransformPreviewStore.scheduleMany([update]);
+      }
       return;
     }
     if (!groupMoveStartRef.current) {
@@ -413,15 +438,28 @@ export function SheetPanel({
     const gesture = groupMoveStartRef.current;
     const draggedStart = gesture.transforms.get(gesture.draggedId);
     if (!draggedStart) return;
-    if (targetX === undefined || targetY === undefined) return;
     const dx = targetX - draggedStart.x;
     const dy = targetY - draggedStart.y;
     const updates = [...gesture.transforms.entries()].map(([id, start]) => ({
       pieceId: id,
-      transform: { x: start.x + dx, y: start.y + dy },
+      transform: { ...start, x: start.x + dx, y: start.y + dy },
     }));
-    onTransformsChange(updates, skipHistory);
-    if (!skipHistory) groupMoveStartRef.current = null;
+    if (flush) {
+      const committedTransforms = new Map(pieces.map(piece => [piece.id, piece.transform]));
+      if (updates.every(update => {
+        const committed = committedTransforms.get(update.pieceId);
+        return committed != null && transformsEqual(update.transform, committed);
+      })) {
+        updates.forEach(update => pieceTransformPreviewStore.clear(update.pieceId));
+        groupMoveStartRef.current = null;
+        return;
+      }
+      pieceTransformPreviewStore.flushMany(updates);
+      onCommitTransforms(updates);
+      groupMoveStartRef.current = null;
+    } else {
+      pieceTransformPreviewStore.scheduleMany(updates);
+    }
   }
 
   // When switching sheets, reload the ruler for the new sheet (if measure is active)
@@ -531,13 +569,14 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
+      const renderedTransform = pieceTransformPreviewStore.get(rotatingPiece.id) ?? rotatingPiece.transform;
       let newRotation =
-        Math.atan2(y - rotatingPiece.transform.y, x - rotatingPiece.transform.x) + Math.PI / 2;
+        Math.atan2(y - renderedTransform.y, x - renderedTransform.x) + Math.PI / 2;
       if (e.evt.shiftKey) {
         newRotation = Math.round(newRotation / ROTATION_SNAP_RADIANS) * ROTATION_SNAP_RADIANS;
       }
       rotationValueRef.current = newRotation;
-      onTransformChange(rotatingPieceId!, { rotation: newRotation }, true);
+      pieceTransformPreviewStore.schedule(rotatingPiece.id, { ...renderedTransform, rotation: newRotation });
       return;
     }
 
@@ -575,11 +614,13 @@ export function SheetPanel({
     }
 
     if (rotatingPiece) {
-      onTransformChange(
-        rotatingPieceId!,
-        { rotation: rotationValueRef.current ?? rotatingPiece.transform.rotation },
-        false,
-      );
+      const finalTransform = pieceTransformPreviewStore.get(rotatingPieceId!) ?? rotatingPiece.transform;
+      if (transformsEqual(finalTransform, rotatingPiece.transform)) {
+        pieceTransformPreviewStore.clear(rotatingPieceId!);
+      } else {
+        pieceTransformPreviewStore.flush(rotatingPieceId!, finalTransform);
+        onCommitTransforms([{ pieceId: rotatingPieceId!, transform: finalTransform }]);
+      }
     }
     rotationValueRef.current = null;
     setRotatingPieceId(null);
@@ -589,7 +630,19 @@ export function SheetPanel({
   function handlePointerCancel() {
     // A canceled rotation keeps the last visible angle and finalizes one history entry.
     if (rotatingPieceId && rotationValueRef.current != null) {
-      onTransformChange(rotatingPieceId, { rotation: rotationValueRef.current }, false);
+      const piece = pieces.find(candidate => candidate.id === rotatingPieceId);
+      if (piece) {
+        const finalTransform = pieceTransformPreviewStore.get(rotatingPieceId) ?? {
+          ...piece.transform,
+          rotation: rotationValueRef.current,
+        };
+        if (transformsEqual(finalTransform, piece.transform)) {
+          pieceTransformPreviewStore.clear(rotatingPieceId);
+        } else {
+          pieceTransformPreviewStore.flush(rotatingPieceId, finalTransform);
+          onCommitTransforms([{ pieceId: rotatingPieceId, transform: finalTransform }]);
+        }
+      }
     }
     setMarqueeBox(null);
     setMoveSnapGuides({ x: null, y: null });
@@ -664,7 +717,6 @@ export function SheetPanel({
     if (vp.containerRef.current) vp.containerRef.current.style.cursor = cursor;
   }
 
-  const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
@@ -846,8 +898,8 @@ export function SheetPanel({
           onPointerCancel={handlePointerCancel}
           onClick={handleStageClick}
         >
-          <Layer>
-            <Group x={vp.pan.x} y={vp.pan.y} scaleX={es} scaleY={es}>
+          <Layer listening={false}>
+            <ViewportGroup store={vp.store}>
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -857,35 +909,69 @@ export function SheetPanel({
                 })}
               >
                 {sheetImg && (
-                  <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} />
+                  <KonvaImage id="bg" image={sheetImg} width={sheetW} height={sheetH} listening={false} />
                 )}
+              </Group>
+            </ViewportGroup>
+          </Layer>
+          <Layer listening={false}>
+            <ViewportGroup store={vp.store}>
+              <Group
+                {...(activeTool === 'crop' ? {} : {
+                  clipX: sheet.crop.left,
+                  clipY: sheet.crop.top,
+                  clipWidth: Math.max(1, sheetW - sheet.crop.left - sheet.crop.right),
+                  clipHeight: Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom),
+                })}
+              >
                 {pieces.map(piece => (
                   <PieceOutline
                     key={piece.id + '-fill'}
                     piece={piece}
-                    isSelected={selectedPieceIds.includes(piece.id)}
-                    effectiveScale={es}
+                    isSelected={selectedPieceIdSet.has(piece.id)}
+                    viewportStore={vp.store}
+                    previewStore={pieceTransformPreviewStore}
                     fillOnly
                     listening={false}
                   />
                 ))}
               </Group>
-
+            </ViewportGroup>
+          </Layer>
+          <Layer>
+            <ViewportGroup store={vp.store}>
               {pieces.map(piece => (
                 <PieceOutline
                   key={piece.id + '-stroke'}
                   piece={piece}
-                  isSelected={selectedPieceIds.includes(piece.id)}
-                  effectiveScale={es}
+                  isSelected={selectedPieceIdSet.has(piece.id)}
+                  viewportStore={vp.store}
+                  previewStore={pieceTransformPreviewStore}
                   strokeOnly
                   onSelect={(multi) => onSelectPiece(piece.id, multi)}
-                  onTransformChange={(t, skip) => handlePieceTransform(piece.id, t, skip)}
+                  onPreviewTransform={(transform, flush) => handlePieceTransform(piece.id, transform, flush)}
                   snapPieces={pieces}
                   snapBounds={sheetSnapBounds}
                   onSnapChange={setMoveSnapGuides}
                 />
               ))}
 
+              {pieces.map(piece => {
+                if (!selectedPieceIdSet.has(piece.id)) return null;
+                return (
+                  <PieceOutline
+                    key={piece.id + '-handle'}
+                    piece={piece}
+                    isSelected={true}
+                    viewportStore={vp.store}
+                    previewStore={pieceTransformPreviewStore}
+                    handleOnly
+                    onRotateStart={(e) => beginRotation(piece, e)}
+                  />
+                );
+              })}
+            </ViewportGroup>
+            <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <ViewportGroup store={vp.store}>
               {moveSnapGuides.x != null && (
                 <Line
                   points={[moveSnapGuides.x, sheetSnapBounds.top, moveSnapGuides.x, sheetSnapBounds.bottom]}
@@ -904,20 +990,6 @@ export function SheetPanel({
                   listening={false}
                 />
               )}
-
-              {pieces.map(piece => {
-                if (!selectedPieceIds.includes(piece.id)) return null;
-                return (
-                  <PieceOutline
-                    key={piece.id + '-handle'}
-                    piece={piece}
-                    isSelected={true}
-                    effectiveScale={es}
-                    handleOnly
-                    onRotateStart={(e) => beginRotation(piece, e)}
-                  />
-                );
-              })}
               {activeTool === 'crop' && (
                 <CropOverlay
                   imageWidth={sheetW} imageHeight={sheetH}
@@ -937,11 +1009,12 @@ export function SheetPanel({
                   onDragEnd={handleMeasureDragEnd}
                 />
               )}
-            </Group>
+            </ViewportGroup>; }}</ViewportSubscriber>
+            <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <>
             {marqueeBox && (
               <Rect
-                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + vp.pan.x}
-                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + vp.pan.y}
+                x={Math.min(marqueeBox.x1, marqueeBox.x2) * es + viewport.pan.x}
+                y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + viewport.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
                 fill={CANVAS.amberSelectionFill}
@@ -950,6 +1023,7 @@ export function SheetPanel({
                 listening={false}
               />
             )}
+            </>; }}</ViewportSubscriber>
           </Layer>
         </Stage>
         {showEmptyHint && (
@@ -957,8 +1031,9 @@ export function SheetPanel({
             {t('emptySheetHint')}
           </div>
         )}
+        <ViewportSubscriber store={vp.store}>{(viewport) => <>
         <ViewportControls
-          zoomPercent={vp.effectiveScale * 100}
+          zoomPercent={viewport.effectiveScale * 100}
           onZoomIn={vp.zoomIn}
           onZoomOut={vp.zoomOut}
           onFit={vp.fitToView}
@@ -967,7 +1042,7 @@ export function SheetPanel({
         {activeTool === 'measure' && measure.line && (() => {
           const midX = (measure.line.x1 + measure.line.x2) / 2;
           const midY = (measure.line.y1 + measure.line.y2) / 2;
-          const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+          const sc = toScreenCoords(midX, midY, viewport.pan, viewport.effectiveScale);
           const saved = sheet.scale;
           return (
             <MeasureInput
@@ -979,7 +1054,7 @@ export function SheetPanel({
               onCancel={() => handleToolChange('select')}
             />
           );
-        })()}
+        })()}</>}</ViewportSubscriber>
       </div>
     </div>
   );

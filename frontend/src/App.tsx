@@ -12,7 +12,7 @@ import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
-import type { BoundingBox, GlassSheet, CurvePoint } from './types';
+import type { BoundingBox, GlassSheet, CurvePoint, Scale } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
@@ -22,6 +22,8 @@ import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
 import { parseProject } from './storage/projectSchema';
 import type { ToolId } from './components/Toolbar';
+import { PieceTransformPreviewStore } from './editor/interaction/pieceTransformPreviewStore';
+import { PenStatusStore, usePenStatus } from './editor/interaction/penStatusStore';
 import './App.css';
 
 interface SheetTabProps {
@@ -270,8 +272,26 @@ function SheetTab({
   );
 }
 
+function PenStatusDisplay({ store, active, scale }: { store: PenStatusStore; active: boolean; scale: Scale | null }) {
+  const { t } = useTranslation();
+  const status = usePenStatus(store);
+  if (!active || !status.coords) return null;
+  const dx = status.lastPoint ? status.coords.x - status.lastPoint.x : 0;
+  const dy = status.lastPoint ? status.coords.y - status.lastPoint.y : 0;
+  const lengthPx = status.lastPoint ? Math.hypot(dx, dy) : null;
+  let angle = Math.round((Math.atan2(-dy, dx) * 180) / Math.PI);
+  if (angle < 0) angle += 360;
+  return <>
+    <span className="status-bar-divider" />
+    <span>{t('statusPenPosition')}: {status.coords.x.toFixed(0)}, {status.coords.y.toFixed(0)} px{scale && scale.pxPerUnit > 0 ? ` (${(status.coords.x / scale.pxPerUnit).toFixed(1)} × ${(status.coords.y / scale.pxPerUnit).toFixed(1)} ${t('unit_' + scale.unit)})` : ''}</span>
+    {lengthPx !== null && <><span className="status-bar-divider" /><span>{t('statusPenLength')}: {lengthPx.toFixed(0)} px{scale && scale.pxPerUnit > 0 ? ` (${(lengthPx / scale.pxPerUnit).toFixed(1)} ${t('unit_' + scale.unit)})` : ''}</span><span className="status-bar-divider" /><span>{t('statusPenAngle')}: {angle}°</span></>}
+  </>;
+}
+
 export function App() {
   const { t, i18n } = useTranslation();
+  const [pieceTransformPreviewStore] = useState(() => new PieceTransformPreviewStore());
+  const [penStatusStore] = useState(() => new PenStatusStore());
   const {
     project,
     isLoaded,
@@ -282,7 +302,7 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
-    updatePieceTransforms,
+    commitPieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -336,6 +356,16 @@ export function App() {
   const projectRef = useRef(project);
   projectRef.current = project;
 
+  useEffect(() => {
+    pieceTransformPreviewStore.reconcile(project.pieces);
+  }, [pieceTransformPreviewStore, project.pieces]);
+
+  useEffect(() => {
+    pieceTransformPreviewStore.cancelAll();
+  }, [pieceTransformPreviewStore, project.name]);
+
+  useEffect(() => () => pieceTransformPreviewStore.cancelAll(), [pieceTransformPreviewStore]);
+
   const [backendStatus, setBackendStatus] = useState('');
   const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
@@ -359,10 +389,6 @@ export function App() {
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
-  const [penStatus, setPenStatus] = useState<{
-    coords: { x: number; y: number } | null;
-    lastPoint: { x: number; y: number } | null;
-  }>({ coords: null, lastPoint: null });
   const tutorialLoadedRef = useRef(false);
   const preTutorialProjectRef = useRef<string | null>(null);
 
@@ -731,14 +757,16 @@ export function App() {
   }
 
 
-  const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const piecesOnActiveSheet = project.pieces
-    .filter(p => p.glassSheetId === activeSheetId)
-    .sort((a, b) => {
-      const aSelected = selectedPieceIds.includes(a.id) ? 1 : 0;
-      const bSelected = selectedPieceIds.includes(b.id) ? 1 : 0;
-      return aSelected - bSelected;
-    });
+  const activeSheet = useMemo(
+    () => project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0],
+    [project.sheets, activeSheetId],
+  );
+  const piecesOnActiveSheet = useMemo(() => {
+    const selected = new Set(selectedPieceIds);
+    return project.pieces
+      .filter(p => p.glassSheetId === activeSheetId)
+      .sort((a, b) => Number(selected.has(a.id)) - Number(selected.has(b.id)));
+  }, [project.pieces, activeSheetId, selectedPieceIds]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -1100,18 +1128,6 @@ export function App() {
     e.preventDefault();
   };
 
-  const penSegment = (() => {
-    if ((patternTool === 'pen' || patternTool === 'polygon') && penStatus.coords && penStatus.lastPoint) {
-      const dx = penStatus.coords.x - penStatus.lastPoint.x;
-      const dy = penStatus.coords.y - penStatus.lastPoint.y;
-      const lengthPx = Math.hypot(dx, dy);
-      let angle = Math.round((Math.atan2(-dy, dx) * 180) / Math.PI);
-      if (angle < 0) angle += 360;
-      return { lengthPx, angle };
-    }
-    return null;
-  })();
-
   return (
     <div 
       className="app" 
@@ -1281,6 +1297,7 @@ export function App() {
             )}
           </div>
           <ResultPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
             project={project}
             selectedPieceIds={selectedPieceIds}
             pendingPieceIds={pendingPieceIds}
@@ -1315,7 +1332,7 @@ export function App() {
             tutorialStep={tutorialStep}
             refineMode={patternRefineMode}
             onRefineModeChange={setPatternRefineMode}
-            onPenStatusChange={setPenStatus}
+            penStatusStore={penStatusStore}
             onUpdateSolderWidthMM={updateSolderWidthMM}
             onUpdateSolderColor={updateSolderColor}
             onOpenLampProfile={isLamp ? (() => setLampProfileDialog({ isFirstTime: false })) : undefined}
@@ -1331,6 +1348,7 @@ export function App() {
             <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
               <Lamp3DPreview
                 project={project}
+                pieceTransformPreviewStore={pieceTransformPreviewStore}
                 selectedPieceIds={selectedPieceIds}
                 onSelectPiece={selectPiece}
                 onUpdateLampConfig={updateLampConfig}
@@ -1405,12 +1423,13 @@ export function App() {
 
         {activeSheet ? (
           <SheetPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
             onSelectPiece={selectPiece}
             onTransformChange={updatePieceTransform}
-            onTransformsChange={updatePieceTransforms}
+            onCommitTransforms={commitPieceTransforms}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
@@ -1445,32 +1464,11 @@ export function App() {
               ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
               : t('statusNoScale')}
           </span>
-          {(patternTool === 'pen' || patternTool === 'polygon') && penStatus.coords && (
-            <>
-              <span className="status-bar-divider" />
-              <span>
-                {t('statusPenPosition')}: {penStatus.coords.x.toFixed(0)}, {penStatus.coords.y.toFixed(0)} px
-                {project.patternScale && project.patternScale.pxPerUnit > 0 && (
-                  ` (${(penStatus.coords.x / project.patternScale.pxPerUnit).toFixed(1)} × ${(penStatus.coords.y / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
-                )}
-              </span>
-              {penSegment && (
-                <>
-                  <span className="status-bar-divider" />
-                  <span>
-                    {t('statusPenLength')}: {penSegment.lengthPx.toFixed(0)} px
-                    {project.patternScale && project.patternScale.pxPerUnit > 0 && (
-                      ` (${(penSegment.lengthPx / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
-                    )}
-                  </span>
-                  <span className="status-bar-divider" />
-                  <span>
-                    {t('statusPenAngle')}: {penSegment.angle}°
-                  </span>
-                </>
-              )}
-            </>
-          )}
+          <PenStatusDisplay
+            store={penStatusStore}
+            active={patternTool === 'pen' || patternTool === 'polygon'}
+            scale={project.patternScale}
+          />
           {activeSheet && (
             <>
               <span className="status-bar-divider" />
