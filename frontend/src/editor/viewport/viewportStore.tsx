@@ -21,6 +21,7 @@ export class ViewportStore {
   private frame: number | null = null;
 
   getSnapshot = () => this.snapshot;
+  getEffectiveScale = () => this.snapshot.effectiveScale;
   subscribe = (listener: () => void) => { this.listeners.add(listener); return () => this.listeners.delete(listener); };
 
   update(values: Partial<Omit<ViewportSnapshot, 'version'>>, immediate = false) {
@@ -44,6 +45,10 @@ export class ViewportStore {
 
 export function useViewportSnapshot(store: ViewportStore) {
   return useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+}
+
+export function useViewportEffectiveScale(store: ViewportStore) {
+  return useSyncExternalStore(store.subscribe, store.getEffectiveScale, store.getEffectiveScale);
 }
 
 export function ViewportSubscriber({ store, children }: { store: ViewportStore; children: (snapshot: ViewportSnapshot) => React.ReactNode }) {

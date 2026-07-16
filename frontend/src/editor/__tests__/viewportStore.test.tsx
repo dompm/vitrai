@@ -1,7 +1,7 @@
 import { act, create } from 'react-test-renderer';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('react-konva', () => ({ Group: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-import { ViewportGroup, ViewportStore, ViewportSubscriber } from '../viewport/viewportStore';
+import { ViewportGroup, ViewportStore, ViewportSubscriber, useViewportEffectiveScale } from '../viewport/viewportStore';
 
 describe('ViewportStore', () => {
   let frame: FrameRequestCallback | null;
@@ -48,5 +48,26 @@ describe('ViewportStore', () => {
     for (let event = 0; event < 100; event += 1) store.update({ pan: { x: event, y: event } });
     act(() => { frame?.(0); });
     expect(expensivePieceRender).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not rerender scale-aware pieces while panning', () => {
+    const store = new ViewportStore();
+    const pieceRender = vi.fn();
+    function ScaleAwarePiece() {
+      const effectiveScale = useViewportEffectiveScale(store);
+      pieceRender(effectiveScale);
+      return <span>piece</span>;
+    }
+    const stablePiece = <ScaleAwarePiece />;
+    act(() => { create(<ViewportGroup store={store}>{stablePiece}</ViewportGroup>); });
+
+    for (let event = 0; event < 100; event += 1) store.update({ pan: { x: event, y: event } });
+    act(() => { frame?.(0); });
+    expect(pieceRender).toHaveBeenCalledTimes(1);
+
+    store.update({ effectiveScale: 2 });
+    act(() => { frame?.(16); });
+    expect(pieceRender).toHaveBeenCalledTimes(2);
+    expect(pieceRender).toHaveBeenLastCalledWith(2);
   });
 });

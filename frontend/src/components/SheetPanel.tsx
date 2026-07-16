@@ -22,7 +22,7 @@ import { useMeasure } from '../hooks/useMeasure';
 import { ViewportControls } from './ViewportControls';
 import { getPieceGeometry } from '../editor/geometry/pieceGeometry';
 import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
-import { ViewportGroup, ViewportSubscriber, useViewportSnapshot, type ViewportStore } from '../editor/viewport/viewportStore';
+import { ViewportGroup, ViewportSubscriber, useViewportEffectiveScale, type ViewportStore } from '../editor/viewport/viewportStore';
 
 
 // Display-pixel constants — independent of zoom or image resolution
@@ -140,7 +140,6 @@ const transformsEqual = (a: TextureTransform, b: TextureTransform) =>
 interface PieceOutlineProps {
   piece: Piece;
   isSelected: boolean;
-  effectiveScale: number;
   onSelect?: (multi?: boolean) => void;
   viewportStore: ViewportStore;
   previewStore: PieceTransformPreviewStore;
@@ -156,10 +155,10 @@ interface PieceOutlineProps {
 }
 
 const PieceOutline = memo(function PieceOutline({
-  piece, isSelected, effectiveScale: _effectiveScale, viewportStore, onSelect, previewStore, onPreviewTransform, onRotateStart,
+  piece, isSelected, viewportStore, onSelect, previewStore, onPreviewTransform, onRotateStart,
   fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
-  const effectiveScale = useViewportSnapshot(viewportStore).effectiveScale;
+  const effectiveScale = useViewportEffectiveScale(viewportStore);
   const renderedTransform = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
   const { x, y, rotation, scale } = renderedTransform;
   const geometry = getPieceGeometry(piece.polygon, piece.curvePoints);
@@ -930,7 +929,6 @@ export function SheetPanel({
                     key={piece.id + '-fill'}
                     piece={piece}
                     isSelected={selectedPieceIdSet.has(piece.id)}
-                    effectiveScale={vp.effectiveScale}
                     viewportStore={vp.store}
                     previewStore={pieceTransformPreviewStore}
                     fillOnly
@@ -947,7 +945,6 @@ export function SheetPanel({
                   key={piece.id + '-stroke'}
                   piece={piece}
                   isSelected={selectedPieceIdSet.has(piece.id)}
-                  effectiveScale={vp.effectiveScale}
                   viewportStore={vp.store}
                   previewStore={pieceTransformPreviewStore}
                   strokeOnly
@@ -966,7 +963,6 @@ export function SheetPanel({
                     key={piece.id + '-handle'}
                     piece={piece}
                     isSelected={true}
-                    effectiveScale={vp.effectiveScale}
                     viewportStore={vp.store}
                     previewStore={pieceTransformPreviewStore}
                     handleOnly
