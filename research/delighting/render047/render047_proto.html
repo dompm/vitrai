@@ -1,0 +1,129 @@
+<!doctype html><html><head><meta charset="utf-8"><title>047 · volumetric three.js glass — orbit demo</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+ :root{color-scheme:dark}
+ html,body{margin:0;height:100%;background:#0d0f12;color:#e8eaed;font:13px/1.45 -apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+ #wrap{display:flex;height:100%}
+ #view{flex:1;position:relative}
+ canvas{display:block;width:100%;height:100%;touch-action:none}
+ #panel{width:270px;padding:16px 18px;background:#15181d;border-left:1px solid #262b33;overflow:auto}
+ h1{font-size:14px;margin:0 0 2px} .sub{color:#8b93a1;font-size:11px;margin-bottom:14px}
+ .grp{margin:14px 0;border-top:1px solid #23272f;padding-top:12px}
+ .grp b{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#9aa3b2}
+ label{display:flex;align-items:center;gap:8px;margin:7px 0;cursor:pointer}
+ select,input[type=range]{width:100%}
+ .row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:7px 0}
+ .hint{color:#727b8a;font-size:11px;margin-top:4px}
+ .tag{display:inline-block;background:#22303f;color:#7fc4ff;border-radius:4px;padding:1px 6px;font-size:10px;margin-left:6px}
+ #hud{position:absolute;left:12px;bottom:10px;color:#aeb6c2;font-size:11px;background:#0009;padding:4px 8px;border-radius:6px}
+</style>
+<script type="importmap">{"imports":{"three":"/render047/vendor/three.module.min.js"}}</script>
+</head><body>
+<div id="wrap">
+ <div id="view"><div id="hud">drag to orbit · scroll to zoom</div></div>
+ <div id="panel">
+  <h1>Volumetric three.js glass<span class="tag">047</span></h1>
+  <div class="sub">MeshPhysicalMaterial · transmission + IBL. The reflections/glints slide with the view — the glassiness cues 045/046's backlit rig deliberately excluded. Lamp mode shows the interior-emitter limit (screen-space transmission can't carry the glow through the wall).</div>
+  <div class="grp"><b>Scene</b>
+   <div class="row"><span>use case</span><select id="scene">
+     <option value="flat">window nudge (flat slab)</option>
+     <option value="lamp">3D lamp (curved shell)</option></select></div>
+   <div class="row"><span>glass family</span><select id="family">
+     <option value="cathedral-green">cathedral-green (relief)</option>
+     <option value="wispy-white">wispy-white (scatter)</option>
+     <option value="streaky-mix">streaky-mix</option></select></div>
+  </div>
+  <div class="grp"><b>Estimated map set</b>
+   <label><input type="checkbox" id="mTint" checked> T — per-pixel tint <span class="hint">(base-colour map)</span></label>
+   <label><input type="checkbox" id="mHaze" checked> σ_s — haze <span class="hint">(→ roughness)</span></label>
+   <label><input type="checkbox" id="mNorm" checked> Normal — relief <span class="hint">(→ screen-space refraction)</span></label>
+   <div class="row"><span>normal scale</span><input type="range" id="nscale" min="0" max="3" step="0.05" value="1"></div>
+   <div class="hint">Orbit and watch the IBL glints slide across the front face — that motion (front-Fresnel reflection, the "veil" 045 saw vanish in the backlit rig) is what reads as glass. Normal adds high-frequency surface sparkle; per report 047 it does NOT reproduce Cycles' smooth relief lensing — T (tint) + the sliding IBL carry the effect.</div>
+  </div>
+  <div class="grp"><b>Environment</b>
+   <div class="row"><span>IBL intensity</span><input type="range" id="envI" min="0" max="2.5" step="0.05" value="1"></div>
+   <label><input type="checkbox" id="spin"> auto-orbit</label>
+  </div>
+ </div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { HDRLoader } from '/render047/vendor/HDRLoader.js';
+// asset resolver: served mode hits the files; the self-contained build injects
+// window.__AMAP__ (logical path -> data: URI) and window.__SCALE__.
+const ABASE='/results/047/assets/';
+const AMAP = window.__AMAP__ || null;
+const A = (rel)=> (AMAP && AMAP[rel]) ? AMAP[rel] : ABASE+rel;
+const view=document.getElementById('view');
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.outputColorSpace=THREE.SRGBColorSpace; renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.0;
+view.appendChild(renderer.domElement);
+const scene=new THREE.Scene();
+const cam=new THREE.PerspectiveCamera(34,1,0.01,100);
+let R=1.0, az=0, el=6, target=new THREE.Vector3(0,0,0);
+function place(){const a=az*Math.PI/180,e=el*Math.PI/180;
+ cam.position.set(R*Math.sin(a)*Math.cos(e),R*Math.sin(e),R*Math.cos(a)*Math.cos(e));
+ cam.up.set(0,1,0);cam.lookAt(target);}
+function resize(){const w=view.clientWidth,h=view.clientHeight;renderer.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+addEventListener('resize',resize);
+
+// drag orbit
+let drag=false,px=0,py=0;
+renderer.domElement.addEventListener('pointerdown',e=>{drag=true;px=e.clientX;py=e.clientY;});
+addEventListener('pointerup',()=>drag=false);
+addEventListener('pointermove',e=>{if(!drag)return;az+=(e.clientX-px)*0.35;el=Math.max(-40,Math.min(60,el+(e.clientY-py)*0.25));px=e.clientX;py=e.clientY;});
+renderer.domElement.addEventListener('wheel',e=>{R=Math.max(0.25,Math.min(3,R*(1+e.deltaY*0.001)));e.preventDefault();},{passive:false});
+
+const tl=new THREE.TextureLoader();
+function tex(u,srgb){const t=tl.load(u);t.colorSpace=srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;t.anisotropy=8;t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping;return t;}
+let env,pmrem,envRT,backdrop,scale=1;
+const glassRoot=new THREE.Group(); scene.add(glassRoot);
+let mat, params={scene:'flat',family:'cathedral-green',tint:1,haze:1,norm:1,nscale:1,envI:1};
+
+async function loadHDR(u){return new Promise(r=>new HDRLoader().load(u,t=>{t.mapping=THREE.EquirectangularReflectionMapping;r(t);}));}
+
+async function boot(){
+ env=await loadHDR(A('env.hdr'));
+ pmrem=new THREE.PMREMGenerator(renderer);envRT=pmrem.fromEquirectangular(env);
+ scene.environment=envRT.texture; scene.background=env;
+ scale = (window.__SCALE__!=null) ? window.__SCALE__ : parseFloat(await (await fetch(A('backdrop_scale.txt'))).text());
+ backdrop=tex(A('backdrop.png'),true);
+ rebuild(); resize(); animate();
+}
+function famTex(f){return {tint:tex(A(`${f}/tint.png`),true),haze:tex(A(`${f}/haze.png`),false),norm:tex(A(`${f}/normal.png`),false)};}
+function buildMat(f){
+ const T=famTex(f);
+ const m=new THREE.MeshPhysicalMaterial({transmission:1,thickness:0.003,ior:1.5,metalness:0,roughness:1,side:THREE.DoubleSide,transparent:true});
+ if(params.tint)m.map=T.tint;
+ if(params.haze)m.roughnessMap=T.haze; else m.roughness=0.05;
+ if(params.norm){m.normalMap=T.norm;m.normalScale=new THREE.Vector2(params.nscale,params.nscale);}
+ return m;
+}
+function rebuild(){
+ glassRoot.clear();
+ mat=buildMat(params.family);
+ if(params.scene==='flat'){
+   scene.background=env; scene.backgroundIntensity=1; scene.environmentIntensity=params.envI;
+   const back=new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),new THREE.MeshBasicMaterial({map:backdrop,color:new THREE.Color(scale,scale,scale),toneMapped:false}));
+   back.position.set(0,0,-0.55);glassRoot.add(back);
+   glassRoot.add(new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5),mat));
+   R=1.0;el=Math.max(-20,Math.min(20,el));
+ }else{
+   scene.environmentIntensity=params.envI*0.5; scene.backgroundIntensity=0.4;
+   const shell=new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.14,220,24,true),mat);glassRoot.add(shell);
+   const fil=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.12,48,1),new THREE.MeshBasicMaterial({color:new THREE.Color(50,46,40),toneMapped:false}));glassRoot.add(fil);
+   R=0.42;
+ }
+}
+function animate(){requestAnimationFrame(animate);if(document.getElementById('spin').checked)az+=0.25;place();renderer.render(scene,cam);}
+
+// UI
+const $=id=>document.getElementById(id);
+['scene','family'].forEach(id=>$(id).onchange=()=>{params[id]=$(id).value;rebuild();});
+[['mTint','tint'],['mHaze','haze'],['mNorm','norm']].forEach(([id,k])=>$(id).onchange=()=>{params[k]=$(id).checked?1:0;rebuild();});
+$('nscale').oninput=()=>{params.nscale=parseFloat($('nscale').value);if(mat&&mat.normalScale)mat.normalScale.set(params.nscale,params.nscale);};
+$('envI').oninput=()=>{params.envI=parseFloat($('envI').value);scene.environmentIntensity=params.scene==='flat'?params.envI:params.envI*0.5;};
+boot();
+</script>
+</body></html>

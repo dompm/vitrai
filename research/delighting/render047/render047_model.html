@@ -1,0 +1,108 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;padding:0;background:#000;overflow:hidden}</style>
+<script type="importmap">{"imports":{"three":"/render047/vendor/three.module.min.js"}}</script>
+</head><body>
+<script type="module">
+import * as THREE from 'three';
+import { HDRLoader } from '/render047/vendor/HDRLoader.js';
+
+const Q = new URLSearchParams(location.search);
+const num = (k,d)=>Q.has(k)?parseFloat(Q.get(k)):d;
+const family = Q.get('family')||'cathedral-green';
+const scene_kind = Q.get('scene')||'flat';
+const mode = Q.get('mode')||'full';       // full|no_normal|no_haze|no_tint|const_atten|surface_only
+const res = num('res',640), az = num('az',0), fov = num('fov',34), dist = num('dist',1.0), elev = num('elev',6);
+const dslab = num('dslab',0.003), nscale = num('nscale',1.0);
+const ASSET = '/results/047/assets';
+const log = (m)=>console.log('R047 '+m);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, preserveDrawingBuffer:true, alpha:false});
+renderer.setPixelRatio(1); renderer.setSize(res,res);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.NoToneMapping;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camDist = (scene_kind==='lamp') ? dist : dist;
+const cam = new THREE.PerspectiveCamera(fov, 1, 0.01, 100);
+cam.position.set(0,0,camDist); cam.up.set(0,1,0); cam.lookAt(0,0,0);   // fixed, zero roll
+// orbit is a group rotation (matches Blender group_rotate: XYZ euler)
+const grp = new THREE.Group();
+grp.rotation.set(-elev*Math.PI/180, az*Math.PI/180, 0, 'XYZ'); // X sign matches Blender empty rotation about world X
+scene.add(grp);
+
+const texLoader = new THREE.TextureLoader();
+function loadTex(url, srgb){ const t=texLoader.load(url); t.colorSpace = srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;
+  t.flipY = false; t.wrapS=t.wrapT=THREE.ClampToEdgeWrapping; t.anisotropy=8; return t; } // match Blender img_from_np (flipud) V-orientation
+
+async function loadHDR(url){ return new Promise((res_)=>{ new HDRLoader().load(url,(tex)=>{
+  tex.mapping = THREE.EquirectangularReflectionMapping; res_(tex); }); }); }
+
+async function main(){
+  const env = await loadHDR(ASSET+'/env.hdr');
+  const pmrem = new THREE.PMREMGenerator(renderer); pmrem.compileEquirectangularShader();
+  const envRT = pmrem.fromEquirectangular(env);
+  scene.environment = envRT.texture;
+  scene.background = env;                 // equirect visible where no geometry (matches Cycles world)
+
+  const scale = parseFloat(await (await fetch(ASSET+'/backdrop_scale.txt')).text());
+  // maps
+  const tint = loadTex(ASSET+'/'+family+'/tint.png', true);      // per-pixel T (sRGB->linear)
+  const haze = loadTex(ASSET+'/'+family+'/haze.png', false);     // roughness
+  const nrm  = loadTex(ASSET+'/'+family+'/normal.png', false);   // tangent normal
+
+  // glass material per ablation mode
+  const meanT = (Q.get('meanT')||'0.35,0.35,0.35').split(',').map(Number);
+  const m = new THREE.MeshPhysicalMaterial({
+    transmission: 1.0, thickness: dslab, ior: 1.5, metalness: 0.0, roughness: 1.0,
+    side: THREE.FrontSide, transparent: true,
+  });
+  if(mode!=='no_tint' && mode!=='const_atten') m.map = tint;
+  if(mode==='const_atten'){ m.attenuationColor = new THREE.Color(meanT[0],meanT[1],meanT[2]);
+    m.attenuationDistance = dslab; }         // per-pixel T replaced by a single constant
+  if(mode==='no_haze'){ m.roughness = 0.04; } else { m.roughnessMap = haze; }
+  if(mode!=='no_normal' && mode!=='surface_only'){ m.normalMap = nrm; m.normalScale = new THREE.Vector2(nscale,nscale); }
+  m.needsUpdate = true;
+
+  if(scene_kind==='flat'){
+    const bd = loadTex(ASSET+'/backdrop.png', true); // upright in both engines (truth builds backdrop via matching flipud path)
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(1.6,1.6),
+      new THREE.MeshBasicMaterial({map:bd, color:new THREE.Color(scale,scale,scale), toneMapped:false}));
+    back.position.set(0,0,-0.55); grp.add(back);
+    if(mode!=='bg'){
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.5,1,1), m);
+      grp.add(glass);
+    }
+  } else {
+    // lamp: cylindrical shell + interior emitter
+    // optional 'glow' augmentation: the shell EMITS tint-coloured light
+    // (approximating the volumetric interior-light glow that screen-space
+    // transmission cannot carry through the curved wall).
+    const glow = num('glow', 0);
+    if(glow>0){ m.emissive = new THREE.Color(1,1,1); m.emissiveMap = tint; m.emissiveIntensity = glow; }
+    const shell = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.14,256,32,true), m);
+    grp.add(shell);
+    const fil = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.12,64,1),
+      new THREE.MeshBasicMaterial({color:new THREE.Color(25*1.0,25*0.93,25*0.82), toneMapped:false}));
+    grp.add(fil);
+    scene.background = null; scene.backgroundIntensity = 0.35;
+    scene.environmentIntensity = 0.35;
+  }
+
+  // wait for all textures to finish decoding before rendering
+  await new Promise(r=>setTimeout(r,400));
+  log('cam '+cam.position.toArray().map(v=>v.toFixed(2))+' env '+(env.image?env.image.width+'x'+env.image.height:'NULL'));
+  // render several frames so the transmission render-target is populated
+  for(let i=0;i<12;i++) renderer.render(scene,cam);
+  const gl=renderer.getContext(); const px=new Uint8Array(res*res*4);
+  gl.readPixels(0,0,res,res,gl.RGBA,gl.UNSIGNED_BYTE,px);
+  let s=0;for(let i=0;i<px.length;i+=4)s+=px[i]+px[i+1]+px[i+2];
+  log('readback mean '+(s/(res*res*3)).toFixed(1));
+  const url = renderer.domElement.toDataURL('image/png');
+  const name = Q.get('name') || (family+'_'+scene_kind+'_'+mode+'_az'+Math.round(az));
+  await fetch('/save?name='+encodeURIComponent(name), {method:'POST', body:url});
+  log('SAVED '+name); document.title='DONE';
+}
+main().catch(e=>{log('ERR '+e.message+' '+e.stack); document.title='ERR';});
+</script>
+</body></html>

@@ -47,3 +47,11 @@ oracle45_data/
 results/048/gen_data/
 results/048/render_all12.log
 results/048/smoke/adapter.pt
+
+# 047 volumetric three.js glass — regenerable heavy intermediates
+results/047/assets/
+results/047/renders/
+render047/node_modules/
+render047/pnpm-lock.yaml
+render047/package.json
+results/047/boards/
