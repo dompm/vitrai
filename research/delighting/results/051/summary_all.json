@@ -1,0 +1,222 @@
+{
+ "runs": {
+  "raw_distractors": {
+   "repr": "raw",
+   "distractors": true,
+   "scope": "all",
+   "n_queries": 674,
+   "index": 1771,
+   "top1": 0.1261,
+   "top5": 0.2626,
+   "gate_auc": 0.5233,
+   "in_cat_correct_med": 0.6942844797056389,
+   "in_cat_wrong_med": 0.6575493186744168,
+   "ooc_med": 0.6542589522800397,
+   "p90_recall": null,
+   "p90_thresh": null,
+   "confident_frac": null,
+   "top1_among_confident": null
+  },
+  "raw_nodistract": {
+   "repr": "raw",
+   "distractors": false,
+   "scope": "all",
+   "n_queries": 674,
+   "index": 490,
+   "top1": 0.135,
+   "top5": 0.2878,
+   "gate_auc": 0.5238,
+   "in_cat_correct_med": 0.6793456169363973,
+   "in_cat_wrong_med": 0.6595340688013333,
+   "ooc_med": 0.6527885309244674,
+   "p90_recall": null,
+   "p90_thresh": null,
+   "confident_frac": null,
+   "top1_among_confident": null
+  },
+  "delight_distractors": {
+   "repr": "delight_T",
+   "distractors": true,
+   "scope": "all",
+   "n_queries": 674,
+   "index": 1771,
+   "top1": 0.0979,
+   "top5": 0.2374,
+   "gate_auc": 0.5154,
+   "in_cat_correct_med": 0.7323154770417488,
+   "in_cat_wrong_med": 0.7188944439735921,
+   "ooc_med": 0.714646070162389,
+   "p90_recall": 0.002967359050445104,
+   "p90_thresh": 0.9137751424540468,
+   "confident_frac": 0.003,
+   "top1_among_confident": 0.5
+  },
+  "quotient_distractors": {
+   "repr": "luma_quotient",
+   "distractors": true,
+   "scope": "all",
+   "n_queries": 674,
+   "index": 1771,
+   "top1": 0.1217,
+   "top5": 0.2641,
+   "gate_auc": 0.5234,
+   "in_cat_correct_med": 0.7114857549786076,
+   "in_cat_wrong_med": 0.6451580295623058,
+   "ooc_med": 0.642750612727542,
+   "p90_recall": null,
+   "p90_thresh": null,
+   "confident_frac": null,
+   "top1_among_confident": null
+  },
+  "raw_holdout": {
+   "repr": "raw",
+   "distractors": true,
+   "scope": "holdout",
+   "n_queries": 147,
+   "index": 1771,
+   "top1": 0.1565,
+   "top5": 0.2721,
+   "gate_auc": 0.525,
+   "in_cat_correct_med": 0.6472014318225647,
+   "in_cat_wrong_med": 0.646439892378358,
+   "ooc_med": 0.6387979001143759,
+   "p90_recall": 0.006802721088435374,
+   "p90_thresh": 0.9253505825184124,
+   "confident_frac": 0.007,
+   "top1_among_confident": 0.0
+  },
+  "any_capture_diag": {
+   "mode": "any_capture_leave1out",
+   "n_queries": 718,
+   "top1": 0.1281,
+   "top5": 0.2841,
+   "by_capture": {
+    "window": {
+     "n": 483,
+     "top1": 0.143,
+     "top5": 0.29
+    },
+    "shop": {
+     "n": 235,
+     "top1": 0.098,
+     "top5": 0.272
+    }
+   }
+  }
+ },
+ "primary_breakdowns": {
+  "brand": {
+   "wissmach-glass": {
+    "n": 76,
+    "top1": 3,
+    "top5": 9,
+    "top1_acc": 0.039,
+    "top5_acc": 0.118
+   },
+   "clear-textured-glass": {
+    "n": 240,
+    "top1": 51,
+    "top5": 87,
+    "top1_acc": 0.212,
+    "top5_acc": 0.362
+   },
+   "van-gogh-glass": {
+    "n": 12,
+    "top1": 2,
+    "top5": 2,
+    "top1_acc": 0.167,
+    "top5_acc": 0.167
+   },
+   "kokomo-glass": {
+    "n": 30,
+    "top1": 3,
+    "top5": 9,
+    "top1_acc": 0.1,
+    "top5_acc": 0.3
+   },
+   "armstrong-glass": {
+    "n": 4,
+    "top1": 0,
+    "top5": 1,
+    "top1_acc": 0.0,
+    "top5_acc": 0.25
+   },
+   "specialty-finish-glass": {
+    "n": 2,
+    "top1": 0,
+    "top5": 0,
+    "top1_acc": 0.0,
+    "top5_acc": 0.0
+   },
+   "uro-glass": {
+    "n": 137,
+    "top1": 12,
+    "top5": 31,
+    "top1_acc": 0.088,
+    "top5_acc": 0.226
+   },
+   "tiffany-today-glass": {
+    "n": 161,
+    "top1": 13,
+    "top5": 37,
+    "top1_acc": 0.081,
+    "top5_acc": 0.23
+   },
+   "delphi-superior-glass": {
+    "n": 12,
+    "top1": 1,
+    "top5": 1,
+    "top1_acc": 0.083,
+    "top5_acc": 0.083
+   }
+  },
+  "capture": {
+   "window": {
+    "n": 444,
+    "top1": 63,
+    "top5": 122,
+    "top1_acc": 0.142,
+    "top5_acc": 0.275
+   },
+   "shop": {
+    "n": 230,
+    "top1": 22,
+    "top5": 55,
+    "top1_acc": 0.096,
+    "top5_acc": 0.239
+   }
+  },
+  "opal_caution": {
+   "clean_id": {
+    "n": 410,
+    "top1": 66,
+    "top5": 117,
+    "top1_acc": 0.161,
+    "top5_acc": 0.285
+   },
+   "opal": {
+    "n": 264,
+    "top1": 19,
+    "top5": 60,
+    "top1_acc": 0.072,
+    "top5_acc": 0.227
+   }
+  },
+  "holdout": {
+   "eval_eligible": {
+    "n": 527,
+    "top1": 62,
+    "top5": 137,
+    "top1_acc": 0.118,
+    "top5_acc": 0.26
+   },
+   "holdout": {
+    "n": 147,
+    "top1": 23,
+    "top5": 40,
+    "top1_acc": 0.156,
+    "top5_acc": 0.272
+   }
+  }
+ }
+}

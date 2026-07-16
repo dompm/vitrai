@@ -91,3 +91,31 @@ def luma_quotient(path, size=512):
     # rescale to keep median luminance ~ original (avoid global brightness drift)
     out = ex.lin_to_srgb(np.clip(lin_norm, 0, 1))
     return (np.clip(out, 0, 1) * 255).astype(np.uint8)
+
+
+def center_crop(path, frac=0.5, size=518):
+    """Central-fraction crop: a hypothesis probe for the scene-domination
+    failure (wild window/shop photos are mostly background; the sheet tends to
+    occupy the central region). frac=0.5 keeps the middle 50% per axis."""
+    img = Image.open(path).convert("RGB")
+    w, h = img.size
+    cw, ch = int(w * frac), int(h * frac)
+    x0, y0 = (w - cw) // 2, (h - ch) // 2
+    img = img.crop((x0, y0, x0 + cw, y0 + ch))
+    if size:
+        img.thumbnail((size, size), Image.LANCZOS)
+    return np.asarray(img)
+
+
+def crop_then_quotient(path, frac=0.5, size=512):
+    """Center-crop then 019 luma-quotient — the combined cheap normalization."""
+    a = center_crop(path, frac, size=None)
+    img = Image.fromarray(a)
+    img.thumbnail((size, size), Image.LANCZOS)
+    a = np.asarray(img).astype(np.float64) / 255.0
+    lin = ex.srgb_to_lin(a)
+    Y = ex.lum(lin)
+    env = ex.luminance_envelope_quotient(Y)
+    lin_norm = lin / np.clip(env, 1e-3, None)[..., None]
+    out = ex.lin_to_srgb(np.clip(lin_norm, 0, 1))
+    return (np.clip(out, 0, 1) * 255).astype(np.uint8)

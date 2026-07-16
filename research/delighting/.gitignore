@@ -60,3 +60,6 @@ results/047/boards/
 results/051/*.npz
 results/051/delight_cache/
 catalog051/__pycache__/
+results/051/*_board.json
+results/051/*_perquery.json
+results/051/*_gatecurve.json

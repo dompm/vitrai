@@ -1,0 +1,38 @@
+{
+ "raw": {
+  "rank_distribution": {
+   "None": 497,
+   "1": 85,
+   "2": 34,
+   "3": 29,
+   "5": 13,
+   "4": 16
+  },
+  "n_misses": 589,
+  "top1_same_relief_family_frac_of_misses": 0.212,
+  "top1_same_brand_frac_of_misses": 0.553,
+  "top1_same_line_frac_of_misses": 0.114,
+  "top1_source": {
+   "clean_corpus": 54,
+   "realpairs": 620
+  }
+ },
+ "crop50": {
+  "rank_distribution": {
+   "None": 375,
+   "1": 179,
+   "4": 17,
+   "5": 11,
+   "3": 32,
+   "2": 60
+  },
+  "n_misses": 495,
+  "top1_same_relief_family_frac_of_misses": 0.226,
+  "top1_same_brand_frac_of_misses": 0.372,
+  "top1_same_line_frac_of_misses": 0.131,
+  "top1_source": {
+   "clean_corpus": 231,
+   "realpairs": 443
+  }
+ }
+}
