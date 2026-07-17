@@ -15,7 +15,6 @@ frontend/.vite/
 
 # Local data assets
 data/
-frontend/public/assets/catalog_images/
 
 # Project save files at repo root (can contain large base64 images)
 /*.json
