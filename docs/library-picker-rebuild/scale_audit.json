@@ -7,7 +7,8 @@
   "aspect_p10": 1.318,
   "aspect_p90": 1.331,
   "field_semantics": "real_world_{width,height}_in = the IMAGE physical footprint (inches of glass the swatch spans; app needs in/px), NOT the cart sale size.",
-  "calibration": "Whole-sheet photo is a fixed studio sample, true aspect ~1.326 (rotation ruled out: minAreaRect rectified aspect == bbox, tilt ~0deg). Absolute long side is NOT pixel-recoverable (detail->sheet SIFT/NCC/FFT bridge fails; reeded-rib anchor consistent at ~82 ribs/sheet but no ribs/in reference). SAMPLE_LONG_IN=10.0 in is a documented assumption; retune globally to rescale all Bullseye scales together."
+  "calibration": "Whole-sheet photo is a fixed studio sample, true aspect ~1.326 (rotation ruled out: minAreaRect rectified aspect == bbox, tilt ~0deg). Absolute long side is NOT pixel-recoverable (detail->sheet SIFT/NCC/FFT bridge fails; reeded-rib anchor consistent at ~82 ribs/sheet but no ribs/in reference). SAMPLE_LONG_IN=10.0 in is a documented assumption; retune globally to rescale all Bullseye scales together.",
+  "sample_size_candidate": "UNVERIFIED: 1.327 ~= 4:3 within rolled-edge slop -> possibly a 40x30cm studio blank (15.75x11.8in). If so SAMPLE_LONG_IN~15.75 (1.57x rescale). Rib pitch under each: 10in->~3.1mm, 15.75in->~4.9mm. One tape-measure reading (rib pitch or sample size) adjudicates."
  },
  "products": [
   {

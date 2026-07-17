@@ -22,6 +22,11 @@ This is the canonical checklist; the release PR body mirrors it.
 - [ ] **Image hosting** -- resolve catalog-image hosting/CDN for the shipped registry
   (`VITE_SWATCH_CDN_URL`).
 - [ ] **Final review** -- CTO sign-off on the consolidated library before merge.
+- [ ] **CTO tape-measure calibration** (scale audit follow-up) -- measure the rib pitch
+  (mm) of any physical Bullseye reeded/textured sheet, OR the size of any Bullseye
+  studio-style sample; one number closes `SAMPLE_LONG_IN` (candidates: 10.0in→~3.1mm
+  pitch, or 40x30cm blank 15.75in→~4.9mm, a 1.57x rescale). Rides along with the CTO's
+  physical-sheet / real-photo collection next week.
 
 Footnotes:
 - Scale re-pick coupling: activating `SCALE_AWARE_REPICK` (build_swatch_library.py) and

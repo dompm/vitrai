@@ -218,7 +218,11 @@ def main():
                      'bridge fails; reeded-rib anchor consistent at ~82 ribs/sheet but no ribs/in '
                      'reference). SAMPLE_LONG_IN=%.1f in is a documented assumption; retune '
                      'globally to rescale all Bullseye scales together.'
-                     % (sample_aspect, SAMPLE_LONG_IN))
+                     % (sample_aspect, SAMPLE_LONG_IN),
+                sample_size_candidate='UNVERIFIED: 1.327 ~= 4:3 within rolled-edge slop -> '
+                     'possibly a 40x30cm studio blank (15.75x11.8in). If so SAMPLE_LONG_IN~15.75 '
+                     '(1.57x rescale). Rib pitch under each: 10in->~3.1mm, 15.75in->~4.9mm. '
+                     'One tape-measure reading (rib pitch or sample size) adjudicates.')
     os.makedirs(os.path.dirname(SIDECAR), exist_ok=True)
     json.dump(dict(meta=meta, products=products), open(SIDECAR, 'w'), indent=1)
 

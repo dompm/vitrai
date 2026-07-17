@@ -46,6 +46,21 @@ relative correction below is independent of this constant**; a single global ret
 of `SAMPLE_LONG_IN` rescales all Bullseye scales together if a physical reference
 (a published rib pitch, or an in-frame shipping-label measurement) lands. **← flag for CTO.**
 
+**Candidate sample identity (UNVERIFIED, lead-noted).** The confirmed 1.327 aspect is
+within rolled-edge tolerance of **4:3 (1.333)** — consistent with a **metric 40×30cm
+studio blank (15.75×11.8in)**, a very common product-photography format. If that is the
+truth, `SAMPLE_LONG_IN ≈ 15.75`, not 10.0 — **a 1.57× shift on every Bullseye scale**.
+We do **not** switch the constant on this speculation; we record it so one physical
+measurement adjudicates instantly. The ~80–83 ribs/sheet then implies a rib pitch of:
+
+| hypothesis | SAMPLE_LONG_IN | implied reeded rib pitch |
+|---|---:|---:|
+| 10x10 convention (current) | 10.0in | ~3.1 mm |
+| 40×30cm studio blank | 15.75in | ~4.9 mm |
+
+So a tape measure on **either** the rib pitch of any physical reeded sheet **or** the
+size of any studio-style sample closes it (see the release checklist's deferred item).
+
 ## What the field means (registry semantics)
 
 `real_world_{width,height}_in` describes **the swatch IMAGE's physical footprint**
