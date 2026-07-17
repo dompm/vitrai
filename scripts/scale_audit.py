@@ -210,8 +210,14 @@ def main():
                 sample_short_in=round(SAMPLE_LONG_IN / sample_aspect, 2), n_products=len(products),
                 aspect_p10=round(sorted(aspects)[len(aspects)//10], 3) if aspects else None,
                 aspect_p90=round(sorted(aspects)[len(aspects)*9//10], 3) if aspects else None,
-                note='Whole-sheet photo is a fixed studio sample (aspect ~%.3f). Absolute long '
-                     'side is a documented assumption (%.1f in), retune globally via SAMPLE_LONG_IN.'
+                field_semantics='real_world_{width,height}_in = the IMAGE physical footprint '
+                     '(inches of glass the swatch spans; app needs in/px), NOT the cart sale size.',
+                calibration='Whole-sheet photo is a fixed studio sample, true aspect ~%.3f '
+                     '(rotation ruled out: minAreaRect rectified aspect == bbox, tilt ~0deg). '
+                     'Absolute long side is NOT pixel-recoverable (detail->sheet SIFT/NCC/FFT '
+                     'bridge fails; reeded-rib anchor consistent at ~82 ribs/sheet but no ribs/in '
+                     'reference). SAMPLE_LONG_IN=%.1f in is a documented assumption; retune '
+                     'globally to rescale all Bullseye scales together.'
                      % (sample_aspect, SAMPLE_LONG_IN))
     os.makedirs(os.path.dirname(SIDECAR), exist_ok=True)
     json.dump(dict(meta=meta, products=products), open(SIDECAR, 'w'), indent=1)

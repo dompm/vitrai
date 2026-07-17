@@ -22,3 +22,14 @@ This is the canonical checklist; the release PR body mirrors it.
 - [ ] **Image hosting** -- resolve catalog-image hosting/CDN for the shipped registry
   (`VITE_SWATCH_CDN_URL`).
 - [ ] **Final review** -- CTO sign-off on the consolidated library before merge.
+
+Footnotes:
+- Scale re-pick coupling: activating `SCALE_AWARE_REPICK` (build_swatch_library.py) and
+  clearing the 198 `needs_repick` Bullseye rows is part of the **image hosting** item --
+  re-picking regenerates the gitignored `catalog_images` crops, so it only makes sense
+  once image hosting is decided.
+- Scale absolute calibration: `SAMPLE_LONG_IN=10.0in` is a documented assumption (true
+  sample aspect 1.327 confirmed; absolute size not pixel-recoverable). Retune the single
+  constant at final review if a physical reference lands.
+- Frontend typecheck for the null-safe `GlassLibraryDialog.tsx` change is **deferred to
+  final review** (no `node_modules` in the audit worktree; change is minimal null-safe).

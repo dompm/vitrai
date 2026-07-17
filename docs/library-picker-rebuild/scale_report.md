@@ -20,13 +20,41 @@ lead on 000100-0051-F; reproduced here (SIFT `_01`→`_03` scale 0.31, 305 inlie
 The whole-sheet studio shot is a **fixed studio sample**, not a per-product sale
 size: measured aspect (w/h) is a very tight **1.326** (median; p10–p90 1.318–1.331)
 across 361 cleanly-measured products, matching *none* of the sale sizes (10x10=1.0,
-half=1.176, full=1.75). Its **absolute** long side is **not recoverable from pixels**
-— there is no scale reference in an edge-free glass photo. We adopt
-`SAMPLE_LONG_IN = 10.0in` as a documented assumption (anchored to the 10x10
+half=1.176, full=1.75).
+
+**Two calibration checks were run (lead-requested), both negative for a cleaner anchor:**
+
+1. **Rotation / tilt — rejected.** The 1.326 is *not* a studio-tilt artifact on a
+   17x20 (1.176) sheet. Fitting the sheet as a rotated rectangle (`cv2.minAreaRect`)
+   gives a **rectified** aspect of **1.327** (identical to the axis-aligned bbox) with
+   **median tilt ~0°** across all 361 — the sample genuinely has a ~1.327 physical
+   aspect.
+2. **Reeded-rib physical anchor — consistent but not closable.** The 8 reeded
+   products share one physical roller: 5/6 measurable whole-sheets converge on
+   **~80–83 ribs across the full sheet width** (rib period 12.7–13.2px; strong
+   agreement). But converting ribs→inches needs a ribs/inch reference, and none is
+   obtainable: Bullseye publishes no rib pitch, and the 2x2in **Color Sample** photos
+   (a known physical size) are unusable — each product's sample `_02` is a *generic
+   multi-sample stock photo* (wrong SKUs) and its `_01` is a sub-2in full-bleed macro
+   (no visible sample edge). So the rib work confirms internal consistency (one
+   roller, one sample size) but cannot pin the absolute.
+
+Its **absolute** long side therefore remains **not recoverable from these images**.
+We adopt `SAMPLE_LONG_IN = 10.0in` as a documented assumption (anchored to the 10x10
 convention + the geometric short-side ≤ 20in bound → short side 7.54in). **Every
 relative correction below is independent of this constant**; a single global retune
 of `SAMPLE_LONG_IN` rescales all Bullseye scales together if a physical reference
-lands. **← flag for CTO.**
+(a published rib pitch, or an in-frame shipping-label measurement) lands. **← flag for CTO.**
+
+## What the field means (registry semantics)
+
+`real_world_{width,height}_in` describes **the swatch IMAGE's physical footprint**
+(inches of real glass spanned by the image), because the app needs inches-per-pixel
+(`pxPerUnit = original_width_px / real_world_width_in`). It is **not** the cart
+variant's purchasable sheet size — that is separate product metadata. **The original
+bug was exactly this conflation**: the builder stamped the 10x10 cart size onto a
+macro image that spans ~3in of glass. Corrected values (and nulls) here always refer
+to the image footprint.
 
 ## Why we don't just "measure" the macro footprint
 
