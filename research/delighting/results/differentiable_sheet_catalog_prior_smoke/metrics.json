@@ -1,0 +1,156 @@
+{
+  "case": "single",
+  "claim": "Noisy catalog mean priors may land close enough to break the T/B gauge.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_catalog_prior_smoke",
+    "registry": "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json",
+    "catalog_category": "Cathedral",
+    "catalog_color": "Green",
+    "top_n": 5,
+    "size": 96,
+    "seed": 91,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "shift_x": 19.0,
+    "shift_y": -11.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_motion": 40,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "curl_weight": 0.3,
+    "prior_weight": 0.25,
+    "prior_modes": "none,cathedral-green-luma,cathedral-green-rgb",
+    "log_every": 20,
+    "sweep": false,
+    "sweep_seeds": "91,92,93,94",
+    "cpu": false,
+    "device": "mps",
+    "shifts": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        19.0,
+        -11.0
+      ]
+    ]
+  },
+  "gt_mean_rgb": [
+    0.03001510351896286,
+    0.5592644214630127,
+    0.12535950541496277
+  ],
+  "gt_mean_luma": 0.415418416261673,
+  "prior_info": {
+    "none": {
+      "internal_mode": "none",
+      "target": null,
+      "selected_ids": [],
+      "selected_n": 0
+    },
+    "cathedral-green-luma": {
+      "internal_mode": "luma-oracle",
+      "target": [
+        0.37259912490844727
+      ],
+      "selected_ids": [
+        "bullseye-0011070030f1010",
+        "bullseye-0011070031f1010",
+        "bullseye-0011070050f1010",
+        "bullseye-0011070051f1010",
+        "bullseye-0011120030f1010",
+        "bullseye-0011120031f1010",
+        "bullseye-0011120050f1010",
+        "bullseye-0011120051f1010",
+        "bullseye-0011260030f1010",
+        "bullseye-0011260031f1010",
+        "bullseye-0011260050f1010",
+        "bullseye-0011260051f1010"
+      ],
+      "selected_n": 85
+    },
+    "cathedral-green-rgb": {
+      "internal_mode": "rgb-oracle",
+      "target": [
+        0.2765374779701233,
+        0.4223037362098694,
+        0.1253497153520584
+      ],
+      "selected_ids": [
+        "bullseye-0011070030f1010",
+        "bullseye-0011070031f1010",
+        "bullseye-0011070050f1010",
+        "bullseye-0011070051f1010",
+        "bullseye-0011120030f1010",
+        "bullseye-0011120031f1010",
+        "bullseye-0011120050f1010",
+        "bullseye-0011120051f1010",
+        "bullseye-0011260030f1010",
+        "bullseye-0011260031f1010",
+        "bullseye-0011260050f1010",
+        "bullseye-0011260051f1010"
+      ],
+      "selected_n": 85
+    }
+  },
+  "metrics": [
+    {
+      "name": "none",
+      "renderer_recon_mae": 0.005515257362276316,
+      "T_mae": 0.11429542303085327,
+      "T_lum_mae": 0.21304422616958618,
+      "B_mae": 0.23685289919376373,
+      "preview_lum_cv": 0.11237989049195164,
+      "T_highfreq_corr_with_bg": 0.15497341740429624,
+      "disp_epe_px": 3.4493579864501953,
+      "disp_corr_x": 0.1918275083577565,
+      "disp_corr_y": 0.013452290462470746,
+      "curl_abs": 0.004006690811365843,
+      "mean_rgb_mae": 0.11419850587844849,
+      "mean_luma_abs": 0.2130441963672638,
+      "prior_mode": "none"
+    },
+    {
+      "name": "cathedral-green-luma",
+      "renderer_recon_mae": 0.01382050896063447,
+      "T_mae": 0.05483296886086464,
+      "T_lum_mae": 0.08796700090169907,
+      "B_mae": 0.15307283401489258,
+      "preview_lum_cv": 0.09642183170727146,
+      "T_highfreq_corr_with_bg": 0.04784473724745364,
+      "disp_epe_px": 3.563044309616089,
+      "disp_corr_x": 0.08564952467594335,
+      "disp_corr_y": -0.06444316797867838,
+      "curl_abs": 0.004217107314616442,
+      "mean_rgb_mae": 0.052404846996068954,
+      "mean_luma_abs": 0.08488640189170837,
+      "prior_mode": "cathedral-green-luma"
+    },
+    {
+      "name": "cathedral-green-rgb",
+      "renderer_recon_mae": 0.008309172932058573,
+      "T_mae": 0.09630192071199417,
+      "T_lum_mae": 0.16367846727371216,
+      "B_mae": 0.15878723561763763,
+      "preview_lum_cv": 0.05487661717486612,
+      "T_highfreq_corr_with_bg": 0.14855350114901858,
+      "disp_epe_px": 3.448519229888916,
+      "disp_corr_x": 0.1922114710139716,
+      "disp_corr_y": -0.008971006386061473,
+      "curl_abs": 0.004027546849101782,
+      "mean_rgb_mae": 0.09515366703271866,
+      "mean_luma_abs": 0.16367846727371216,
+      "prior_mode": "cathedral-green-rgb"
+    }
+  ]
+}

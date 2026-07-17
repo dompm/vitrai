@@ -1,0 +1,330 @@
+{
+  "case": "single",
+  "claim": "Noisy catalog mean priors may land close enough to break the T/B gauge.",
+  "config": {
+    "out": "research/delighting/results/differentiable_sheet_catalog_prior_single",
+    "registry": "/Users/dominiquepiche-meunier/Documents/vitraux/frontend/public/assets/glass_swatch_registry.json",
+    "catalog_category": "Cathedral",
+    "catalog_color": "Green",
+    "top_n": 5,
+    "size": 144,
+    "seed": 91,
+    "ambient": 0.12,
+    "leak": 0.88,
+    "max_disp": 10.0,
+    "shift_x": 19.0,
+    "shift_y": -11.0,
+    "t_low_res": 26,
+    "disp_low_res": 54,
+    "b_low_res": 72,
+    "steps_motion": 1200,
+    "lr_t": 0.08,
+    "lr_d": 0.05,
+    "lr_b": 0.035,
+    "t_tv": 0.01,
+    "b_tv": 0.0015,
+    "disp_tv": 0.004,
+    "disp_lap": 0.004,
+    "disp_mag": 0.001,
+    "curl_weight": 0.3,
+    "prior_weight": 0.25,
+    "prior_modes": "none,luma-oracle,rgb-oracle,cathedral-green-luma,cathedral-green-rgb,greenest-luma,greenest-rgb,low-redgreen-luma,low-redgreen-rgb",
+    "log_every": 450,
+    "sweep": false,
+    "sweep_seeds": "91,92,93,94",
+    "cpu": false,
+    "device": "mps",
+    "shifts": [
+      [
+        0.0,
+        0.0
+      ],
+      [
+        19.0,
+        -11.0
+      ]
+    ]
+  },
+  "gt_mean_rgb": [
+    0.030020976439118385,
+    0.5592835545539856,
+    0.12536385655403137
+  ],
+  "gt_mean_luma": 0.4154321551322937,
+  "prior_info": {
+    "none": {
+      "internal_mode": "none",
+      "target": null,
+      "selected_ids": [],
+      "selected_n": 0
+    },
+    "luma-oracle": {
+      "internal_mode": "luma-oracle",
+      "target": [
+        0.4154321551322937
+      ],
+      "selected_ids": [],
+      "selected_n": 0
+    },
+    "rgb-oracle": {
+      "internal_mode": "rgb-oracle",
+      "target": [
+        0.030020976439118385,
+        0.5592835545539856,
+        0.12536385655403137
+      ],
+      "selected_ids": [],
+      "selected_n": 0
+    },
+    "cathedral-green-luma": {
+      "internal_mode": "luma-oracle",
+      "target": [
+        0.37259912490844727
+      ],
+      "selected_ids": [
+        "bullseye-0011070030f1010",
+        "bullseye-0011070031f1010",
+        "bullseye-0011070050f1010",
+        "bullseye-0011070051f1010",
+        "bullseye-0011120030f1010",
+        "bullseye-0011120031f1010",
+        "bullseye-0011120050f1010",
+        "bullseye-0011120051f1010",
+        "bullseye-0011260030f1010",
+        "bullseye-0011260031f1010",
+        "bullseye-0011260050f1010",
+        "bullseye-0011260051f1010"
+      ],
+      "selected_n": 85
+    },
+    "cathedral-green-rgb": {
+      "internal_mode": "rgb-oracle",
+      "target": [
+        0.2765374779701233,
+        0.4223037362098694,
+        0.1253497153520584
+      ],
+      "selected_ids": [
+        "bullseye-0011070030f1010",
+        "bullseye-0011070031f1010",
+        "bullseye-0011070050f1010",
+        "bullseye-0011070051f1010",
+        "bullseye-0011120030f1010",
+        "bullseye-0011120031f1010",
+        "bullseye-0011120050f1010",
+        "bullseye-0011120051f1010",
+        "bullseye-0011260030f1010",
+        "bullseye-0011260031f1010",
+        "bullseye-0011260050f1010",
+        "bullseye-0011260051f1010"
+      ],
+      "selected_n": 85
+    },
+    "greenest-luma": {
+      "internal_mode": "luma-oracle",
+      "target": [
+        0.37259912490844727
+      ],
+      "selected_ids": [
+        "youghiogheny-yf444",
+        "wissmach-wi343dr",
+        "wissmach-wf17105",
+        "oceanside-of125s",
+        "wissmach-wi343cc"
+      ],
+      "selected_n": 5
+    },
+    "greenest-rgb": {
+      "internal_mode": "rgb-oracle",
+      "target": [
+        0.0075607905164361,
+        0.5092560052871704,
+        0.03227792680263519
+      ],
+      "selected_ids": [
+        "youghiogheny-yf444",
+        "wissmach-wi343dr",
+        "wissmach-wf17105",
+        "oceanside-of125s",
+        "wissmach-wi343cc"
+      ],
+      "selected_n": 5
+    },
+    "low-redgreen-luma": {
+      "internal_mode": "luma-oracle",
+      "target": [
+        0.2683566212654114
+      ],
+      "selected_ids": [
+        "wissmach-wf17105",
+        "bullseye-0011450050f1010",
+        "oceanside-of125s",
+        "oceanside-of123s",
+        "youghiogheny-yf444"
+      ],
+      "selected_n": 5
+    },
+    "low-redgreen-rgb": {
+      "internal_mode": "rgb-oracle",
+      "target": [
+        0.0032822065986692905,
+        0.37092652916908264,
+        0.03766617923974991
+      ],
+      "selected_ids": [
+        "wissmach-wf17105",
+        "bullseye-0011450050f1010",
+        "oceanside-of125s",
+        "oceanside-of123s",
+        "youghiogheny-yf444"
+      ],
+      "selected_n": 5
+    }
+  },
+  "metrics": [
+    {
+      "name": "none",
+      "renderer_recon_mae": 0.0024240517523139715,
+      "T_mae": 0.10091565549373627,
+      "T_lum_mae": 0.1940181851387024,
+      "B_mae": 0.16006487607955933,
+      "preview_lum_cv": 0.128645912502157,
+      "T_highfreq_corr_with_bg": 0.033928512362106485,
+      "disp_epe_px": 2.4597864151000977,
+      "disp_corr_x": 0.5041253043430386,
+      "disp_corr_y": 0.5086390849918354,
+      "curl_abs": 0.0025092768482863903,
+      "mean_rgb_mae": 0.10022594779729843,
+      "mean_luma_abs": 0.19401822984218597,
+      "prior_mode": "none"
+    },
+    {
+      "name": "luma-oracle",
+      "renderer_recon_mae": 0.002326003974303603,
+      "T_mae": 0.020061073824763298,
+      "T_lum_mae": 0.024988707154989243,
+      "B_mae": 0.05330397188663483,
+      "preview_lum_cv": 0.06455947971366352,
+      "T_highfreq_corr_with_bg": 0.040171171342973856,
+      "disp_epe_px": 2.5341315269470215,
+      "disp_corr_x": 0.5180071483028612,
+      "disp_corr_y": 0.5070693443074564,
+      "curl_abs": 0.002621297026053071,
+      "mean_rgb_mae": 0.007799545302987099,
+      "mean_luma_abs": 0.0005695521831512451,
+      "prior_mode": "luma-oracle"
+    },
+    {
+      "name": "rgb-oracle",
+      "renderer_recon_mae": 0.0023271323880180717,
+      "T_mae": 0.014290356077253819,
+      "T_lum_mae": 0.02333022654056549,
+      "B_mae": 0.03706888481974602,
+      "preview_lum_cv": 0.07209658065223044,
+      "T_highfreq_corr_with_bg": 0.007091767123998375,
+      "disp_epe_px": 2.3745322227478027,
+      "disp_corr_x": 0.5462949496959044,
+      "disp_corr_y": 0.5902220588719441,
+      "curl_abs": 0.0025628467556089163,
+      "mean_rgb_mae": 0.0010272413492202759,
+      "mean_luma_abs": 0.0016894638538360596,
+      "prior_mode": "rgb-oracle"
+    },
+    {
+      "name": "cathedral-green-luma",
+      "renderer_recon_mae": 0.002453640685416758,
+      "T_mae": 0.027887968346476555,
+      "T_lum_mae": 0.042879194021224976,
+      "B_mae": 0.06431777030229568,
+      "preview_lum_cv": 0.06430597835892235,
+      "T_highfreq_corr_with_bg": 0.0012640307270071255,
+      "disp_epe_px": 2.398115396499634,
+      "disp_corr_x": 0.5543476306697219,
+      "disp_corr_y": 0.55235639444299,
+      "curl_abs": 0.0025708142202347517,
+      "mean_rgb_mae": 0.025518089532852173,
+      "mean_luma_abs": 0.04006722569465637,
+      "prior_mode": "cathedral-green-luma"
+    },
+    {
+      "name": "cathedral-green-rgb",
+      "renderer_recon_mae": 0.011235378682613373,
+      "T_mae": 0.12954893708229065,
+      "T_lum_mae": 0.07519689202308655,
+      "B_mae": 0.08715472370386124,
+      "preview_lum_cv": 0.12805963724107314,
+      "T_highfreq_corr_with_bg": 0.0036561562876138735,
+      "disp_epe_px": 2.326460361480713,
+      "disp_corr_x": 0.5722574944598132,
+      "disp_corr_y": 0.5996517081234535,
+      "curl_abs": 0.002629831898957491,
+      "mean_rgb_mae": 0.12721897661685944,
+      "mean_luma_abs": 0.04386645555496216,
+      "prior_mode": "cathedral-green-rgb"
+    },
+    {
+      "name": "greenest-luma",
+      "renderer_recon_mae": 0.002349264803342521,
+      "T_mae": 0.02940819039940834,
+      "T_lum_mae": 0.04564845561981201,
+      "B_mae": 0.06425467878580093,
+      "preview_lum_cv": 0.064787938517879,
+      "T_highfreq_corr_with_bg": -0.0012614321087997039,
+      "disp_epe_px": 2.4095518589019775,
+      "disp_corr_x": 0.5515187074056863,
+      "disp_corr_y": 0.552102496305184,
+      "curl_abs": 0.0025846578646451235,
+      "mean_rgb_mae": 0.02749343402683735,
+      "mean_luma_abs": 0.043368130922317505,
+      "prior_mode": "greenest-luma"
+    },
+    {
+      "name": "greenest-rgb",
+      "renderer_recon_mae": 0.0029769877437502146,
+      "T_mae": 0.05255000665783882,
+      "T_lum_mae": 0.051591649651527405,
+      "B_mae": 0.4469565153121948,
+      "preview_lum_cv": 0.0798520321833898,
+      "T_highfreq_corr_with_bg": -0.010358578013548074,
+      "disp_epe_px": 2.4239859580993652,
+      "disp_corr_x": 0.49335871936580245,
+      "disp_corr_y": 0.5391228809457493,
+      "curl_abs": 0.0026046806015074253,
+      "mean_rgb_mae": 0.04978792369365692,
+      "mean_luma_abs": 0.048131704330444336,
+      "prior_mode": "greenest-rgb"
+    },
+    {
+      "name": "low-redgreen-luma",
+      "renderer_recon_mae": 0.002535819774493575,
+      "T_mae": 0.07951968163251877,
+      "T_lum_mae": 0.1494864970445633,
+      "B_mae": 0.11991315335035324,
+      "preview_lum_cv": 0.056226804711057184,
+      "T_highfreq_corr_with_bg": 0.0375525480638024,
+      "disp_epe_px": 2.3310482501983643,
+      "disp_corr_x": 0.5574170348441703,
+      "disp_corr_y": 0.5830411174455798,
+      "curl_abs": 0.002666194923222065,
+      "mean_rgb_mae": 0.07923060655593872,
+      "mean_luma_abs": 0.14948654174804688,
+      "prior_mode": "low-redgreen-luma"
+    },
+    {
+      "name": "low-redgreen-rgb",
+      "renderer_recon_mae": 0.003010752610862255,
+      "T_mae": 0.09499656409025192,
+      "T_lum_mae": 0.14403364062309265,
+      "B_mae": 0.5618245601654053,
+      "preview_lum_cv": 0.04745028573878782,
+      "T_highfreq_corr_with_bg": 0.029498590187679006,
+      "disp_epe_px": 2.4479851722717285,
+      "disp_corr_x": 0.5279574136332237,
+      "disp_corr_y": 0.50197896872063,
+      "curl_abs": 0.0025777285918593407,
+      "mean_rgb_mae": 0.09489139169454575,
+      "mean_luma_abs": 0.14388898015022278,
+      "prior_mode": "low-redgreen-rgb"
+    }
+  ]
+}
