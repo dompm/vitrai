@@ -1,0 +1,1362 @@
+{
+  "policy": "exclude-unfired-strikers-and-kiln-transformative-2026-07-17",
+  "library_count_before": 1332,
+  "library_count_after": 1182,
+  "excluded_count": 150,
+  "excluded_by_category": {
+    "kiln_transformative": 4,
+    "unfired_striker": 146
+  },
+  "excluded": [
+    {
+      "id": "bullseye-0010150031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001015-0031-F-1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": null,
+      "category": "kiln_transformative",
+      "reason": "kiln-transformative: ships silver-toned and only develops its named color ('Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible') when kiln-fused; cold-process (foil/came) users never trigger the transformation, so any render misrepresents what ships (WYSIWYG). Distinct mechanism from strikers."
+    },
+    {
+      "id": "bullseye-0010150051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001015-0051-F-1010",
+      "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": null,
+      "category": "kiln_transformative",
+      "reason": "kiln-transformative: ships silver-toned and only develops its named color ('Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible') when kiln-fused; cold-process (foil/came) users never trigger the transformation, so any render misrepresents what ships (WYSIWYG). Distinct mechanism from strikers."
+    },
+    {
+      "id": "bullseye-0010160031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001016-0031-F-1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": null,
+      "category": "kiln_transformative",
+      "reason": "kiln-transformative: ships silver-toned and only develops its named color ('Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible') when kiln-fused; cold-process (foil/came) users never trigger the transformation, so any render misrepresents what ships (WYSIWYG). Distinct mechanism from strikers."
+    },
+    {
+      "id": "bullseye-0010160051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001016-0051-F-1010",
+      "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": null,
+      "category": "kiln_transformative",
+      "reason": "kiln-transformative: ships silver-toned and only develops its named color ('Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible') when kiln-fused; cold-process (foil/came) users never trigger the transformation, so any render misrepresents what ships (WYSIWYG). Distinct mechanism from strikers."
+    },
+    {
+      "id": "bullseye-0000240030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000024-0030-F-1010",
+      "name": "Tomato Red Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Tomato Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Tomato Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0000240050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000024-0050-F-1010",
+      "name": "Tomato Red Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Tomato Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Tomato Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0000250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000025-0030-F-1010",
+      "name": "Tangerine Orange Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Tangerine Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Tangerine Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0000250050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000025-0050-F-1010",
+      "name": "Tangerine Orange Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Tangerine Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Tangerine Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000120-0030-F-1010",
+      "name": "Canary Yellow Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Canary Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Canary Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001200050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000120-0050-F-1010",
+      "name": "Canary Yellow Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Canary Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Canary Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001240030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000124-0030-F-1010",
+      "name": "Red Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001240050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000124-0050-F-1010",
+      "name": "Red Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000125-0030-F-1010",
+      "name": "Orange Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001250050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000125-0050-F-1010",
+      "name": "Orange Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001260030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000126-0030-F-1010",
+      "name": "Spring Green Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Spring Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Spring Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001260050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000126-0050-F-1010",
+      "name": "Spring Green Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Spring Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Spring Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001380030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000138-0030-F-1010",
+      "name": "Marzipan Striker Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Marzipan",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marzipan') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001380050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000138-0050-F-1010",
+      "name": "Marzipan Striker Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Marzipan",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marzipan') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001390030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000139-0030-F-1010",
+      "name": "Almond Striker Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Almond",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Almond') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0001390050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000139-0050-F-1010",
+      "name": "Almond Striker Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Almond",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Almond') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002030030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000203-0030-F-1010",
+      "name": "Woodland Brown Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Woodland Brown",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Woodland Brown') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002030050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000203-0050-F-1010",
+      "name": "Woodland Brown Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Woodland Brown",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Woodland Brown') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000220-0030-F-1010",
+      "name": "Sunflower Yellow Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Sunflower Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunflower Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002200050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000220-0050-F-1010",
+      "name": "Sunflower Yellow Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Sunflower Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunflower Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002240030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000224-0030-F-1010",
+      "name": "Deep Red Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Deep Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Deep Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002240050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000224-0050-F-1010",
+      "name": "Deep Red Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Deep Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Deep Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000225-0030-F-1010",
+      "name": "Pimento Red Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Pimento Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pimento Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002250050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000225-0050-F-1010",
+      "name": "Pimento Red Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Pimento Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pimento Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002270030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000227-0030-F-1010",
+      "name": "Golden Green Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Golden Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Golden Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002270050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000227-0050-F-1010",
+      "name": "Golden Green Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Golden Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Golden Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002430030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000243-0030-F-1010",
+      "name": "Translucent White Translucent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Translucent White",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Translucent White') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0002430050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000243-0050-F-1010",
+      "name": "Translucent White Translucent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Translucent White",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Translucent White') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003010030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000301-0030-F-1010",
+      "name": "Pink Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003010050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000301-0050-F-1010",
+      "name": "Pink Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003050030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000305-0030-F-1010",
+      "name": "Salmon Pink Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Salmon Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Salmon Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003050050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000305-0050-F-1010",
+      "name": "Salmon Pink Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Salmon Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Salmon Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003090030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000309-0030-F-1010",
+      "name": "Cinnabar Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Cinnabar",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cinnabar') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003090050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000309-0050-F-1010",
+      "name": "Cinnabar Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Cinnabar",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cinnabar') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003100030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000310-0030-F-1010",
+      "name": "Umber Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Umber",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Umber') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003100050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000310-0050-F-1010",
+      "name": "Umber Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Umber",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Umber') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000320-0030-F-1010",
+      "name": "Marigold Yellow Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003200050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000320-0050-F-1010",
+      "name": "Marigold Yellow Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003210030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000321-0030-F-1010",
+      "name": "Pumpkin Orange Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Pumpkin Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pumpkin Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003210050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000321-0050-F-1010",
+      "name": "Pumpkin Orange Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Pumpkin Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pumpkin Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003290030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000329-0030-F-1010",
+      "name": "Burnt Orange Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Burnt Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Burnt Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003290050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000329-0050-F-1010",
+      "name": "Burnt Orange Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Burnt Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Burnt Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003320030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000332-0030-F-1010",
+      "name": "Plum Striker Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Plum",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Plum') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003320050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000332-0050-F-1010",
+      "name": "Plum Striker Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Plum",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Plum') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003340030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000334-0030-F-1010",
+      "name": "Gold Purple Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003340050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000334-0050-F-1010",
+      "name": "Gold Purple Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003370030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000337-0030-F-1010",
+      "name": "Butterscotch Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Butterscotch",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Butterscotch') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0003370050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000337-0050-F-1010",
+      "name": "Butterscotch Opalescent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Butterscotch",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Butterscotch') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0004310030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000431-0030-F-1010",
+      "name": "Pink Blush Opalescent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Pink Blush",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pink Blush') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0004340030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000434-0030-F-1010",
+      "name": "Purple Blush Opalescent, Double-rolled, 3mm, Fusible",
+      "strikes_to": "Purple Blush",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Purple Blush') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0004350030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "000435-0030-F-1010",
+      "name": "Peach Blush Opalescent, Double-rolled, 3mm, Fusible",
+      "strikes_to": "Peach Blush",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Peach Blush') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0010250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001025-0030-F-1010",
+      "name": "Light Orange Striker Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Light Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0010250031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001025-0031-F-1010",
+      "name": "Light Orange Striker Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Light Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0010250050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001025-0050-F-1010",
+      "name": "Light Orange Striker Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Light Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0010250051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001025-0051-F-1010",
+      "name": "Light Orange Striker Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Light Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011190030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001119-0030-F-1010",
+      "name": "Sienna Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Sienna",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sienna') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011190031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001119-0031-F-1010",
+      "name": "Sienna Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Sienna",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sienna') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011190050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001119-0050-F-1010",
+      "name": "Sienna Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Sienna",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sienna') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011190051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001119-0051-F-1010",
+      "name": "Sienna Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Sienna",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sienna') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001120-0030-F-1010",
+      "name": "Yellow Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011200031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001120-0031-F-1010",
+      "name": "Yellow Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011200050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001120-0050-F-1010",
+      "name": "Yellow Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011200051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001120-0051-F-1010",
+      "name": "Yellow Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011220030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001122-0030-F-1010",
+      "name": "Red Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011220031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001122-0031-F-1010",
+      "name": "Red Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011220050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001122-0050-F-1010",
+      "name": "Red Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011220051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001122-0051-F-1010",
+      "name": "Red Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001125-0030-F-1010",
+      "name": "Orange Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011250031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001125-0031-F-1010",
+      "name": "Orange Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011250050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001125-0050-F-1010",
+      "name": "Orange Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011250051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001125-0051-F-1010",
+      "name": "Orange Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011260030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001126-0030-F-1010",
+      "name": "Chartreuse Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Chartreuse",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Chartreuse') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011260031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001126-0031-F-1010",
+      "name": "Chartreuse Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Chartreuse",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Chartreuse') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011260050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001126-0050-F-1010",
+      "name": "Chartreuse Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Chartreuse",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Chartreuse') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0011260051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001126-0051-F-1010",
+      "name": "Chartreuse Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Chartreuse",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Chartreuse') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012050030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001205-0030-F-1010",
+      "name": "Light Coral Striker Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Light Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012050031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001205-0031-F-1010",
+      "name": "Light Coral Striker Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Light Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012050050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001205-0050-F-1010",
+      "name": "Light Coral Striker Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Light Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012050051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001205-0051-F-1010",
+      "name": "Light Coral Striker Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Light Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012070030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001207-0030-F-1010",
+      "name": "Fern Green Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Fern Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fern Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012070031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001207-0031-F-1010",
+      "name": "Fern Green Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Fern Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fern Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012070050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001207-0050-F-1010",
+      "name": "Fern Green Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Fern Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fern Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012070051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001207-0051-F-1010",
+      "name": "Fern Green Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Fern Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fern Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012150030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001215-0030-F-1010",
+      "name": "Light Pink Striker Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Light Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012150031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001215-0031-F-1010",
+      "name": "Light Pink Striker Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Light Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012150050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001215-0050-F-1010",
+      "name": "Light Pink Striker Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Light Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012150051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001215-0051-F-1010",
+      "name": "Light Pink Striker Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Light Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Light Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012340030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001234-0030-F-1010",
+      "name": "Violet Striker Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Violet",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Violet') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012340031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001234-0031-F-1010",
+      "name": "Violet Striker Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Violet",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Violet') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012340050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001234-0050-F-1010",
+      "name": "Violet Striker Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Violet",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Violet') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012340051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001234-0051-F-1010",
+      "name": "Violet Striker Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Violet",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Violet') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012410030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001241-0030-F-1010",
+      "name": "Pine Green Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Pine Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pine Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012410031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001241-0031-F-1010",
+      "name": "Pine Green Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Pine Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pine Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012410050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001241-0050-F-1010",
+      "name": "Pine Green Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Pine Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pine Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0012410051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001241-0051-F-1010",
+      "name": "Pine Green Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Pine Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Pine Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013050030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001305-0030-F-1010",
+      "name": "Sunset Coral Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Sunset Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunset Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013050031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001305-0031-F-1010",
+      "name": "Sunset Coral Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Sunset Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunset Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013050050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001305-0050-F-1010",
+      "name": "Sunset Coral Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Sunset Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunset Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013050051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001305-0051-F-1010",
+      "name": "Sunset Coral Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Sunset Coral",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Sunset Coral') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013110030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001311-0030-F-1010",
+      "name": "Cranberry Pink Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Cranberry Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cranberry Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013110031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001311-0031-F-1010",
+      "name": "Cranberry Pink Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Cranberry Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cranberry Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013110050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001311-0050-F-1010",
+      "name": "Cranberry Pink Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Cranberry Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cranberry Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013110051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001311-0051-F-1010",
+      "name": "Cranberry Pink Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Cranberry Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Cranberry Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001320-0030-F-1010",
+      "name": "Marigold Yellow Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013200031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001320-0031-F-1010",
+      "name": "Marigold Yellow Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013200050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001320-0050-F-1010",
+      "name": "Marigold Yellow Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013200051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001320-0051-F-1010",
+      "name": "Marigold Yellow Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Marigold Yellow",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Marigold Yellow') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013210030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001321-0030-F-1010",
+      "name": "Carnelian Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Carnelian",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Carnelian') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013210031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001321-0031-F-1010",
+      "name": "Carnelian Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Carnelian",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Carnelian') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013210050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001321-0050-F-1010",
+      "name": "Carnelian Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Carnelian",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Carnelian') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013210051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001321-0051-F-1010",
+      "name": "Carnelian Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Carnelian",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Carnelian') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013220030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001322-0030-F-1010",
+      "name": "Garnet Red Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Garnet Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Garnet Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013220031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001322-0031-F-1010",
+      "name": "Garnet Red Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Garnet Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Garnet Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013220050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001322-0050-F-1010",
+      "name": "Garnet Red Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Garnet Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Garnet Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013220051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001322-0051-F-1010",
+      "name": "Garnet Red Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Garnet Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Garnet Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013320030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001332-0030-F-1010",
+      "name": "Fuchsia Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Fuchsia",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fuchsia') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013320031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001332-0031-F-1010",
+      "name": "Fuchsia Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Fuchsia",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fuchsia') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013320050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001332-0050-F-1010",
+      "name": "Fuchsia Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Fuchsia",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fuchsia') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013320051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001332-0051-F-1010",
+      "name": "Fuchsia Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Fuchsia",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Fuchsia') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013340030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001334-0030-F-1010",
+      "name": "Gold Purple Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013340031f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001334-0031-F-1010",
+      "name": "Gold Purple Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013340050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001334-0050-F-1010",
+      "name": "Gold Purple Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0013340051f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001334-0051-F-1010",
+      "name": "Gold Purple Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
+      "strikes_to": "Gold Purple",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Purple') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0014220030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001422-0030-F-1010",
+      "name": "Lemon Lime Green Transparent, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Lemon Lime Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Lemon Lime Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0014220050f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001422-0050-F-1010",
+      "name": "Lemon Lime Green Transparent, Thin-rolled, 2 mm, Fusible",
+      "strikes_to": "Lemon Lime Green",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Lemon Lime Green') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0018230030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001823-0030-F-1010",
+      "name": "Burnt Scarlet Striker Tint, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Burnt Scarlet",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Burnt Scarlet') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0018240030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001824-0030-F-1010",
+      "name": "Ruby Red Striker Tint, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Ruby Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Ruby Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0018310030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001831-0030-F-1010",
+      "name": "Ruby Pink Striker Tint, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Ruby Pink",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Ruby Pink') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0018340030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "001834-0030-F-1010",
+      "name": "Coral Orange Tint, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Coral Orange",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Coral Orange') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0020200030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002020-0030-F-1010",
+      "name": "Clear, Sunflower Yellow Opal 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Clear, Sunflower Yellow Opal 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Clear, Sunflower Yellow Opal 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0020260030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002026-0030-F-1010",
+      "name": "Clear, Spring Green Opal 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Clear, Spring Green Opal 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Clear, Spring Green Opal 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0021250030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002125-0030-F-1010",
+      "name": "Yellow, Red Striker 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Yellow, Red 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Yellow, Red 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0022500000f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002250-0000-F-1010",
+      "name": "Soft Yellow Opal, Deep Red 2-Color Mix, Single-rolled, 3 mm, Fusible",
+      "strikes_to": "Soft Yellow Opal, Deep Red 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Soft Yellow Opal, Deep Red 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0022500030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002250-0030-F-1010",
+      "name": "Soft Yellow Opal, Deep Red 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Soft Yellow Opal, Deep Red 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Soft Yellow Opal, Deep Red 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-002537ca30f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002537-CA30-F-1010",
+      "name": "French Vanilla with Lt Turquoise Blue 2-Color Mix, Cascade, 3 mm, Fusible",
+      "strikes_to": "French Vanilla with Lt Turquoise Blue 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('French Vanilla with Lt Turquoise Blue 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-002537in30f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002537-IN30-F-1010",
+      "name": "French Vanilla with Lt Turquoise Blue 2-Color Mix, Infusion, 3 mm, Fusible",
+      "strikes_to": "French Vanilla with Lt Turquoise Blue 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('French Vanilla with Lt Turquoise Blue 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-002941ca30f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002941-CA30-F-1010",
+      "name": "Warm White, Pine Green 2-Color Mix, Cascade, 3 mm, Fusible",
+      "strikes_to": "Warm White, Pine Green 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Warm White, Pine Green 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0029710030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "002971-0030-F-1010",
+      "name": "Petrified Wood 2-Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Petrified Wood 2-Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Petrified Wood 2-Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0032030030f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "003203-0030-F-1010",
+      "name": "Woodland Brown Opal, Ivory, Black 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+      "strikes_to": "Woodland Brown Opal, Ivory, Black 3+ Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Woodland Brown Opal, Ivory, Black 3+ Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "bullseye-0032030072f1010",
+      "manufacturer": "Bullseye",
+      "base_sku": "003203-0072-F-1010",
+      "name": "Woodland Brown Opal, Ivory, Black 3+ Color Mix, Ripple, 3 mm, Fusible",
+      "strikes_to": "Woodland Brown Opal, Ivory, Black 3+ Color Mix",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Woodland Brown Opal, Ivory, Black 3+ Color Mix') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf08105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF08-10.5",
+      "name": "96 COE String of Pearls Opal Reactive",
+      "strikes_to": "String of Pearls Opal Reactive",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('String of Pearls Opal Reactive') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf09105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF09-10.5",
+      "name": "96 COE Oyster Pearl Opal Reactive",
+      "strikes_to": "Oyster Pearl Opal Reactive",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Oyster Pearl Opal Reactive') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf10105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF10-10.5",
+      "name": "96 COE Gold Tone Opal",
+      "strikes_to": "Gold Tone",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Gold Tone') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf40105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF40-10.5",
+      "name": "96 COE Orange-Red Opal Striker",
+      "strikes_to": "Orange-Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange-Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf40lum105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF40LUM-10.5",
+      "name": "96 COE Orange-Red Opal Striker Luminescent",
+      "strikes_to": "Orange-Red Opal Luminescent",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Orange-Red Opal Luminescent') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    },
+    {
+      "id": "wissmach-wf41105",
+      "manufacturer": "Wissmach",
+      "base_sku": "WF41-10.5",
+      "name": "96 COE Red Opal Striker",
+      "strikes_to": "Red",
+      "reason": "unfired striker: ships pale/unstruck and only reaches its named color ('Red') once kiln-fired to ~1200F+; cold-process (foil/came) users never strike it, so any render misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) signal in the name/code.",
+      "category": "unfired_striker"
+    }
+  ]
+}
