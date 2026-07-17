@@ -151,7 +151,36 @@ it. Added, on the held-out-identity test split:
   front-light), `board_crop_workflow` (full render → cropped sheet → detail patches, geometry-
   labeled), `board_shadows` (clean vs varied-silhouette shadow).
 
-<!-- PILOT_STATS placeholder: filled after the render completes -->
+### Pilot composition (as rendered)
+
+**68 samples** (34 identities × 2 light variations, seeds 500–533) through `render_farm.py`
+with `--deploy-scene --cover-recipes --gt-b --gt-aov --no-tex-dump --exr-codec DWAA
+--shadow-prob 0.3`, then `crop_sim.py` + `build_boards_053.py`:
+
+- **17/17 recipes** covered (`--cover-recipes`); **23 distinct HDRIs**.
+- **Shadows 25%** (17/68; target 0.3 — sampling noise), all varied-silhouette.
+- **Front light 71%** (48/68; target 0.7); specular + dim interior on 100% (deploy default);
+  frame occluders 25%.
+- **Background depth mix**: 0.1 m ×16 · 0.5 m ×16 · 2 m ×16 · ∞/HDRI-only ×20.
+- **Capture geometry**: tilt_scale_crop 42 · perspective_rectified 26 (each sample also
+  emits 3 registered detail patches).
+- **Storage**: ≤80 MB/sample max (production flags) — inside the ≤100 MB budget.
+- **Holdout partition** (dataset.py rules, precedence seed→recipe→hdri→geometry):
+  train 12 · seed%5 14 · recipe-family 10 · hdri 14 · geometry 18 → **56/68 test (82%)**.
+  The small pilot deliberately over-covers held-out families so the lead/CTO can eyeball
+  every axis; **at scale, rebalance** with `crop_sim.py --perspective-prob 0.1–0.15` (the
+  geometry axis is the largest test contributor) and by rendering more seeds (the recipe/
+  hdri reservations are fixed fractions).
+
+Boards (committed): `results/053/boards/board_overview.jpg` (full sheets tagged
+recipe/bg-depth/shadow/front-light), `board_crop_workflow.jpg` (full render → cropped sheet →
+detail patches, one row per recipe), `board_shadows.jpg` (clean vs shadow pairs, varied
+silhouettes). Interim smoke boards: `results/053/boards_smoke/`.
+
+Operational note (honest): the render was interrupted once mid-run by a session stall that
+killed the background Blender (seeds 500–513 survived on disk; seed 514 was detected partial
+by manifest check, deleted, and seeds 514–533 re-rendered with identical flags — the per-seed
+deterministic RNG makes this resume exact). `_farm/farm_summary.json`: shards_ok=1, failed=0.
 
 ---
 

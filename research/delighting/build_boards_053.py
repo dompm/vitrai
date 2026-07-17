@@ -87,8 +87,17 @@ def board_overview(dirs, out, cell=256, ncol=5):
         print("wrote", out, g.shape)
 
 
-def board_crop_workflow(dirs, out, cell=256):
+def board_crop_workflow(dirs, out, cell=256, max_rows=12):
     rows = []
+    # one representative per recipe (first hit), capped — a 68-row board is unreviewable
+    seen = set()
+    picked = []
+    for d in dirs:
+        r = _meta(d).get("class_label", "?")
+        if r not in seen:
+            seen.add(r)
+            picked.append(d)
+    dirs = picked[:max_rows]
     for d in dirs:
         crop_dir = os.path.join(d, "crop")
         pdir = os.path.join(d, "patches")
@@ -117,8 +126,9 @@ def board_crop_workflow(dirs, out, cell=256):
         print("wrote", out, g.shape)
 
 
-def board_shadows(dirs, out, cell=256):
+def board_shadows(dirs, out, cell=256, max_rows=10):
     rows = []
+    dirs = [d for d in dirs if _meta(d).get("has_shadow")][:max_rows]
     for d in dirs:
         m = _meta(d)
         if not m.get("has_shadow"):
