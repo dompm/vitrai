@@ -6,19 +6,24 @@ import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
 import { GlassLibraryDialog } from './components/GlassLibraryDialog';
+import { Lamp3DPreview } from './components/Lamp3DPreview';
+import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
-import type { BoundingBox, GlassSheet, CurvePoint } from './types';
+import type { BoundingBox, GlassSheet, CurvePoint, Scale } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
-import { STORAGE_KEY, STEPS, STEP_ORDER } from './components/Tutorial/types';
+import { STORAGE_KEY, STEP_ORDER } from './components/Tutorial/types';
 import type { StepId, PersistedTutorialState } from './components/Tutorial/types';
 import { Tutorial } from './components/Tutorial/Tutorial';
 import { DEFAULT_PROJECT } from './defaultProject';
+import { parseProject } from './storage/projectSchema';
 import type { ToolId } from './components/Toolbar';
+import { PieceTransformPreviewStore } from './editor/interaction/pieceTransformPreviewStore';
+import { PenStatusStore, usePenStatus } from './editor/interaction/penStatusStore';
 import './App.css';
 
 function shortenLabel(label: string): string {
@@ -276,10 +281,29 @@ function SheetTab({
   );
 }
 
+function PenStatusDisplay({ store, active, scale }: { store: PenStatusStore; active: boolean; scale: Scale | null }) {
+  const { t } = useTranslation();
+  const status = usePenStatus(store);
+  if (!active || !status.coords) return null;
+  const dx = status.lastPoint ? status.coords.x - status.lastPoint.x : 0;
+  const dy = status.lastPoint ? status.coords.y - status.lastPoint.y : 0;
+  const lengthPx = status.lastPoint ? Math.hypot(dx, dy) : null;
+  let angle = Math.round((Math.atan2(-dy, dx) * 180) / Math.PI);
+  if (angle < 0) angle += 360;
+  return <>
+    <span className="status-bar-divider" />
+    <span>{t('statusPenPosition')}: {status.coords.x.toFixed(0)}, {status.coords.y.toFixed(0)} px{scale && scale.pxPerUnit > 0 ? ` (${(status.coords.x / scale.pxPerUnit).toFixed(1)} × ${(status.coords.y / scale.pxPerUnit).toFixed(1)} ${t('unit_' + scale.unit)})` : ''}</span>
+    {lengthPx !== null && <><span className="status-bar-divider" /><span>{t('statusPenLength')}: {lengthPx.toFixed(0)} px{scale && scale.pxPerUnit > 0 ? ` (${(lengthPx / scale.pxPerUnit).toFixed(1)} ${t('unit_' + scale.unit)})` : ''}</span><span className="status-bar-divider" /><span>{t('statusPenAngle')}: {angle}°</span></>}
+  </>;
+}
+
 export function App() {
   const { t, i18n } = useTranslation();
+  const [pieceTransformPreviewStore] = useState(() => new PieceTransformPreviewStore());
+  const [penStatusStore] = useState(() => new PenStatusStore());
   const {
     project,
+    isLoaded,
     selectedPieceIds,
     activeSheetId,
     pendingPieceIds,
@@ -287,6 +311,7 @@ export function App() {
     selectPiece,
     selectPieces,
     updatePieceTransform,
+    commitPieceTransforms,
     updatePatternCrop,
     updatePatternScale,
     updateSheetCrop,
@@ -320,9 +345,11 @@ export function App() {
     loadProjectData,
     updatePatternImage,
     startBlankCanvas,
+    startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
+    updateLampConfig,
     availableProjects,
     setProjectName,
     createNewProject,
@@ -330,23 +357,56 @@ export function App() {
     deleteProject,
     saveStatus,
     retrySave,
+    isSymmetryEnabled,
+    setIsSymmetryEnabled,
   } = useProject();
 
+  // Always-current project, for async handlers that resolve after re-renders.
+  const projectRef = useRef(project);
+  projectRef.current = project;
+
+  useEffect(() => {
+    pieceTransformPreviewStore.reconcile(project.pieces);
+  }, [pieceTransformPreviewStore, project.pieces]);
+
+  useEffect(() => {
+    pieceTransformPreviewStore.cancelAll();
+  }, [pieceTransformPreviewStore, project.name]);
+
+  useEffect(() => () => pieceTransformPreviewStore.cancelAll(), [pieceTransformPreviewStore]);
+
   const [backendStatus, setBackendStatus] = useState('');
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
+
+  useEffect(() => {
+    let lastUpdate = 0;
+    const backend = getSamBackend(setBackendStatus);
+    backend.onProgress = (fraction) => {
+      const now = Date.now();
+      if (fraction >= 1 || now - lastUpdate > 250) {
+        lastUpdate = now;
+        setDownloadProgress(fraction);
+        if (fraction >= 1) {
+          setTimeout(() => setDownloadProgress(null), 500);
+        }
+      }
+    };
+  }, []);
 
   const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
-  const [penStatus, setPenStatus] = useState<{
-    coords: { x: number; y: number } | null;
-    lastPoint: { x: number; y: number } | null;
-  }>({ coords: null, lastPoint: null });
   const tutorialLoadedRef = useRef(false);
   const preTutorialProjectRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // Wait for the OPFS project load before deciding whether to show the
+    // welcome tutorial — at mount `project` is still the empty placeholder,
+    // so a returning user with saved work (but cleared localStorage) would
+    // be dumped into the tutorial on top of their project.
+    if (!isLoaded || tutorialLoadedRef.current) return;
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -366,7 +426,8 @@ export function App() {
     } finally {
       tutorialLoadedRef.current = true;
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded]);
 
   const startTutorialTour = () => {
     preTutorialProjectRef.current = project.name;
@@ -441,8 +502,16 @@ export function App() {
 
   const [patternImageId, setPatternImageId] = useState<string | null>(null);
   const [isAutoSegmenting, setIsAutoSegmenting] = useState(false);
-  const [debugMask, setDebugMask] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
+  const [debugMask, setDebugMaskState] = useState<{ bitmap: ImageBitmap; width: number; height: number } | null>(null);
   const [debugMaskPieceId, setDebugMaskPieceId] = useState<string | null>(null);
+  // Close the previous ImageBitmap when replacing it — they pin large
+  // buffers and repeated refine clicks accumulate tens of MB otherwise.
+  const setDebugMask = (m: { bitmap: ImageBitmap; width: number; height: number } | null) => {
+    setDebugMaskState(prev => {
+      if (prev && prev.bitmap !== m?.bitmap) prev.bitmap.close();
+      return m;
+    });
+  };
   const [nameDraft, setNameDraft] = useState(project.name);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -451,6 +520,26 @@ export function App() {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
   const [showGlassLibrary, setShowGlassLibrary] = useState(false);
+  const [, setFocusedPanelIdx] = useState<number | null>(null);
+  const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
+  const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
+  const isLamp = project.projectType === 'lamp';
+
+  function startLampPreviewResize(e: React.PointerEvent) {
+    e.preventDefault();
+    const startY = e.clientY;
+    const startH = lampPreviewHeight;
+    function onMove(ev: PointerEvent) {
+      const next = Math.max(120, Math.min(800, startH + (ev.clientY - startY)));
+      setLampPreviewHeight(next);
+    }
+    function onUp() {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    }
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  }
   const moveSourceSheetIdRef = useRef<string | null>(null);
   const newSheetFileInputRef = useRef<HTMLInputElement>(null);
   const projectDropdownRef = useRef<HTMLDivElement>(null);
@@ -501,7 +590,7 @@ export function App() {
   useEffect(() => {
     setPatternImageId(null);
     if (!project.patternImageUrl) {
-      setBackendStatus("No pattern image uploaded");
+      setBackendStatus(t('statusNoPatternImage', 'No pattern image uploaded'));
       return;
     }
     const backend = getSamBackend(setBackendStatus);
@@ -525,16 +614,21 @@ export function App() {
     }
   }
 
-  async function handleAddPiece(box: BoundingBox) {
-    const pieceId = addPieceFromBox(box, activeSheetId);
+  async function handleAddPiece(box: BoundingBox, tierIndex?: number) {
+    const pieceId = addPieceFromBox(box, activeSheetId, tierIndex);
     if (!patternImageId) return;
     markPiecePending(pieceId);
     try {
-      const others = project.pieces.filter(p => p.id !== pieceId);
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, box);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
+      // Read neighbors through the ref, not the render-time snapshot: another
+      // segmentation may have finished while this one was awaiting, and
+      // clipping against its pre-segment polygon would leave the two pieces
+      // overlapping.
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
       if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
@@ -545,20 +639,40 @@ export function App() {
     }
   }
 
-  function handleAddManualPiece(polygon: [number, number][]) {
+  function handleAddManualPiece(
+    polygon: [number, number][],
+    curvePoints: CurvePoint[] = [],
+    anchorTypes: ('corner' | 'smooth')[] = [],
+    tierIndex?: number,
+  ) {
     const others = project.pieces;
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+    const displayPolygon = flattenCurves(polygon, curvePoints);
+    // Curved paths are already snapped interactively at their true anchors.
+    // Snapping dense curve samples here would destroy their editable controls.
+    const snapped = curvePoints.length > 0
+      ? displayPolygon
+      : snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
     const clipped = subtractPolygons(snapped, neighborPolygons);
     if (clipped.length >= 3) {
-      addManualPiece(clipped, activeSheetId);
+      const keptCurves = curvePoints.length > 0 && arePolygonsEqual(displayPolygon, clipped, 0.1);
+      addManualPiece(
+        keptCurves ? polygon : clipped,
+        activeSheetId,
+        tierIndex,
+        keptCurves ? curvePoints : [],
+        keptCurves ? anchorTypes : [],
+      );
     }
   }
 
   async function handleUpdatePrompt(pieceId: string, point: { x: number; y: number; label: 1 | 0 }) {
     addPiecePromptPoint(pieceId, point);
 
-    const piece = project.pieces.find(p => p.id === pieceId);
+    // Read through the ref so rapid refine clicks build on the freshest
+    // prompt-point list — a stale render snapshot here would silently drop
+    // the previous click's point from the request.
+    const piece = projectRef.current.pieces.find(p => p.id === pieceId);
     if (!piece || !patternImageId) return;
 
     const newPoints = [...(piece.promptPoints || []), point];
@@ -567,9 +681,10 @@ export function App() {
     try {
       const { polygon, debugMask } = await getSamBackend().segment(patternImageId, piece.promptBox, newPoints);
       if (debugMask) { setDebugMask(debugMask); setDebugMaskPieceId(pieceId); }
-      const others = project.pieces.filter(p => p.id !== pieceId);
+      const latest = projectRef.current;
+      const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
@@ -597,51 +712,74 @@ export function App() {
     });
   }
 
-  function handleUpdatePiecePolygon(pieceId: string, polygon: [number, number][]) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (!piece) return;
-    const others = project.pieces.filter(p => p.id !== pieceId);
-    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
-    if (clipped.length >= 3) {
-      if (clipped.length !== piece.polygon.length) {
-        updatePiecePolygonAndCurves(pieceId, clipped, []);
-      } else {
-        updatePiecePolygon(pieceId, clipped);
-      }
+  function constrainEditedPieceGeometry(
+    pieceId: string,
+    polygon: [number, number][],
+    curvePoints: CurvePoint[],
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) {
+    const latest = projectRef.current;
+    const neighborPolygons = latest.pieces
+      .filter(piece => piece.id !== pieceId)
+      .map(piece => flattenCurves(piece.polygon, piece.curvePoints));
+    const displayPolygon = flattenCurves(polygon, curvePoints);
+    const clipped = subtractPolygons(displayPolygon, neighborPolygons);
+    if (clipped.length < 3) return null;
+
+    // Preserve editable Bézier metadata when the proposed edit is valid. If
+    // it crosses another piece, fall back to the clipped outline: topology may
+    // change at the intersection, so the old control-point indices no longer
+    // describe the resulting boundary.
+    if (arePolygonsEqual(displayPolygon, clipped, 0.1)) {
+      return { polygon, curvePoints, anchorTypes, clipped: false };
     }
+    return { polygon: clipped, curvePoints: [] as CurvePoint[], anchorTypes: undefined, clipped: true };
   }
 
-  function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[]) {
-    const piece = project.pieces.find(p => p.id === pieceId);
+  function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) {
+    const piece = projectRef.current.pieces.find(candidate => candidate.id === pieceId);
     if (!piece) return;
-    const flatPolygon = flattenCurves(piece.polygon, curvePoints);
-    const others = project.pieces.filter(p => p.id !== pieceId);
-    const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-    const snapped = snapPolygonToNeighbors(flatPolygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
-
-    if (clipped.length >= 3 && !arePolygonsEqual(flatPolygon, clipped, 0.1)) {
-      updatePiecePolygonAndCurves(pieceId, clipped, []);
-    } else {
-      updatePieceCurves(pieceId, curvePoints);
+    const constrained = constrainEditedPieceGeometry(pieceId, piece.polygon, curvePoints, anchorTypes);
+    if (!constrained) return;
+    if (!constrained.clipped) {
+      updatePieceCurves(pieceId, curvePoints, false, anchorTypes);
+      return;
     }
+    updatePiecePolygonAndCurves(pieceId, constrained.polygon, constrained.curvePoints, false);
+  }
+
+  function handleUpdatePieceGeometry(
+    pieceId: string,
+    polygon: [number, number][],
+    curvePoints: CurvePoint[],
+    anchorTypes?: ('corner' | 'smooth')[],
+  ) {
+    const constrained = constrainEditedPieceGeometry(pieceId, polygon, curvePoints, anchorTypes);
+    if (!constrained) return;
+    updatePiecePolygonAndCurves(
+      pieceId,
+      constrained.polygon,
+      constrained.curvePoints,
+      false,
+      constrained.anchorTypes,
+    );
   }
 
 
-  const activeSheet = project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0];
-  const piecesOnActiveSheet = project.pieces
-    .filter(p => p.glassSheetId === activeSheetId)
-    .sort((a, b) => {
-      const aSelected = selectedPieceIds.includes(a.id) ? 1 : 0;
-      const bSelected = selectedPieceIds.includes(b.id) ? 1 : 0;
-      return aSelected - bSelected;
-    });
+  const activeSheet = useMemo(
+    () => project.sheets.find(s => s.id === activeSheetId) ?? project.sheets[0],
+    [project.sheets, activeSheetId],
+  );
+  const piecesOnActiveSheet = useMemo(() => {
+    const selected = new Set(selectedPieceIds);
+    return project.pieces
+      .filter(p => p.glassSheetId === activeSheetId)
+      .sort((a, b) => Number(selected.has(a.id)) - Number(selected.has(b.id)));
+  }, [project.pieces, activeSheetId, selectedPieceIds]);
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
 
       if (e.key === '?' || (e.shiftKey && e.key === '/')) {
         e.preventDefault();
@@ -655,13 +793,15 @@ export function App() {
         if (printRef.current.ready) printRef.current.fn();
         return;
       }
-      if (isMod && e.key === 'z') {
+      // Compare lowercase: Shift (Cmd+Shift+Z) and Caps Lock both make
+      // e.key uppercase, which used to leave the redo branch unreachable.
+      if (isMod && e.key.toLowerCase() === 'z') {
         e.preventDefault();
         if (e.shiftKey) redo();
         else undo();
         return;
       }
-      if (isMod && e.key === 'y') {
+      if (isMod && e.key.toLowerCase() === 'y') {
         e.preventDefault();
         redo();
         return;
@@ -674,7 +814,23 @@ export function App() {
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPieceIds, deletePiece, undo, redo]);
+  }, [selectedPieceIds, deletePieces, undo, redo]);
+
+  // Validates/migrates/repairs a just-parsed project file (see
+  // storage/projectSchema.ts) and either loads it — surfacing a warning if
+  // anything had to be dropped — or refuses it with an explanatory alert.
+  const handleProjectFileData = (data: unknown) => {
+    const result = parseProject(data);
+    if (!result.ok) {
+      alert(t(result.reasonKey));
+      return;
+    }
+    loadProjectData(result.project);
+    if (result.repairs.length > 0) {
+      const details = result.repairs.map(r => t(r.reasonKey, { path: r.path })).join('\n');
+      alert(t('schemaRepairWarning', { details }));
+    }
+  };
 
   const handleLoadProject = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -683,7 +839,7 @@ export function App() {
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        loadProjectData(data);
+        handleProjectFileData(data);
       } catch (err) {
         console.error(err);
         alert(t('invalidProject'));
@@ -694,18 +850,20 @@ export function App() {
   };
 
   const handleSaveProject = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(project));
+    // Blob instead of a data: URI — projects embed base64 images and easily
+    // exceed browser URL length limits.
+    const blob = new Blob([JSON.stringify(project)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = dataStr;
+    a.href = url;
     a.download = `${project.name}.json`;
     document.body.appendChild(a);
     a.click();
     a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
-  const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const loadPatternImageFile = (file: File) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
@@ -716,7 +874,19 @@ export function App() {
       img.src = dataUrl;
     };
     reader.readAsDataURL(file);
-    e.target.value = '';
+  };
+
+  const handleUploadPattern = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      loadPatternImageFile(file);
+      setPatternTool('select');
+    }
+  };
+
+  const handleStartLampMode = () => {
+    startLampMode();
+    setLampProfileDialog({ isFirstTime: true });
   };
 
   const isPrintReady = !!project.patternScale && project.patternScale.pxPerUnit > 0 && project.pieces.length > 0;
@@ -951,7 +1121,7 @@ export function App() {
       reader.onload = (ev) => {
         try {
           const data = JSON.parse(ev.target?.result as string);
-          loadProjectData(data);
+          handleProjectFileData(data);
         } catch (err) {
           console.error(err);
           alert(t('invalidProject'));
@@ -959,34 +1129,13 @@ export function App() {
       };
       reader.readAsText(file);
     } else if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result as string;
-        const img = new Image();
-        img.onload = () => {
-          updatePatternImage(dataUrl, img.width, img.height);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+      loadPatternImageFile(file);
     }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
-
-  const penSegment = (() => {
-    if (patternTool === 'pen' && penStatus.coords && penStatus.lastPoint) {
-      const dx = penStatus.coords.x - penStatus.lastPoint.x;
-      const dy = penStatus.coords.y - penStatus.lastPoint.y;
-      const lengthPx = Math.hypot(dx, dy);
-      let angle = Math.round((Math.atan2(-dy, dx) * 180) / Math.PI);
-      if (angle < 0) angle += 360;
-      return { lengthPx, angle };
-    }
-    return null;
-  })();
 
   return (
     <div 
@@ -1014,12 +1163,12 @@ export function App() {
                 if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
                 if (e.key === 'Escape') { setNameDraft(project.name); (e.target as HTMLInputElement).blur(); }
               }}
-              title="Click to rename"
+              title={t('clickToRename')}
             />
             <button
               className="project-chevron-btn"
               onClick={() => setIsProjectDropdownOpen(o => !o)}
-              title="Switch project"
+              title={t('switchProjectTooltip', 'Switch project')}
             >
               ▾
             </button>
@@ -1039,12 +1188,12 @@ export function App() {
                         className="project-delete-btn"
                         onClick={e => {
                           e.stopPropagation();
-                          if (window.confirm(`Delete "${name}"? This cannot be undone.`)) {
+                          if (window.confirm(t('confirmDeleteProject', { defaultValue: 'Delete "{{name}}"? This cannot be undone.', name }))) {
                             void deleteProject(name);
                             setIsProjectDropdownOpen(false);
                           }
                         }}
-                        title="Delete project"
+                        title={t('deleteProjectTooltip', 'Delete project')}
                       >
                         ×
                       </button>
@@ -1056,14 +1205,13 @@ export function App() {
           </div>
           <button
             className="btn-ghost"
-            onClick={() => {
-              const name = 'Project ' + (availableProjects.length + 1);
-              void createNewProject(name).then(() => {
-                projectNameInputRef.current?.focus();
-                projectNameInputRef.current?.select();
-              });
+            onClick={async () => {
+              const defaultName = t('defaultProjectName', { defaultValue: 'Project {{num}}', num: availableProjects.length + 1 });
+              await createNewProject(defaultName, 'flat');
+              projectNameInputRef.current?.focus();
+              projectNameInputRef.current?.select();
             }}
-            title="New project"
+            title={t('newProjectTooltip', 'New project')}
             style={{ fontSize: '1.1rem', lineHeight: 1, padding: '2px 8px' }}
           >
             +
@@ -1072,10 +1220,10 @@ export function App() {
           <div style={{ width: 1, height: 16, background: 'var(--hairline-2)', margin: '0 4px' }} />
 
           {/* Undo / Redo */}
-          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={undo} disabled={!canUndo} title={t('undoTooltip', 'Undo (Ctrl+Z)')} style={{ padding: '4px 8px' }}>
             <IconUndo size={14} />
           </button>
-          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" style={{ padding: '4px 8px' }}>
+          <button className="btn-ghost" onClick={redo} disabled={!canRedo} title={t('redoTooltip', 'Redo (Ctrl+Y)')} style={{ padding: '4px 8px' }}>
             <IconRedo size={14} />
           </button>
 
@@ -1130,7 +1278,7 @@ export function App() {
           <button
             className="mobile-menu-btn"
             onClick={() => setIsMobileMenuOpen(true)}
-            title="Menu"
+            title={t('menuTitle', 'Menu')}
           >
             ···
           </button>
@@ -1157,47 +1305,83 @@ export function App() {
               </label>
             )}
           </div>
-        <ResultPanel
-          project={project}
-          selectedPieceIds={selectedPieceIds}
-          pendingPieceIds={pendingPieceIds}
-          onSelectPiece={selectPiece}
-          onSelectPieces={selectPieces}
-          onPatternCropChange={updatePatternCrop}
-          onPatternScaleChange={updatePatternScale}
-          onAddPiece={handleAddPiece}
-          onAddManualPiece={handleAddManualPiece}
-          onUpdatePieceLabel={updatePieceLabel}
-          onUpdatePieceSheet={updatePieceSheet}
-          onUpdatePiecesSheet={updatePiecesSheet}
-          onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-          onAddSheetAndAssignPieces={addSheetAndAssignPieces}
-          onDeletePiece={deletePiece}
-          onDeletePieces={deletePieces}
-          onSmoothPiece={handleSmoothPiece}
-          onSmoothPieces={handleSmoothPieces}
-          onUpdatePiecePolygon={handleUpdatePiecePolygon}
-          onUpdatePieceCurves={handleUpdatePieceCurves}
-          onUpdatePrompt={handleUpdatePrompt}
-          onUploadPattern={handleUploadPattern}
-          onStartBlankCanvas={startBlankCanvas}
-          onAutoSegment={handleAutoSegment}
-          isAutoSegmenting={isAutoSegmenting}
-          isEncoding={!!project.patternImageUrl && patternImageId === null}
-          debugMask={debugMask}
-          activeTool={patternTool}
-          onChangeActiveTool={setPatternTool}
-          tutorialStep={tutorialStep}
-          refineMode={patternRefineMode}
-          onRefineModeChange={setPatternRefineMode}
-          onPenStatusChange={setPenStatus}
-          onUpdateSolderWidthMM={updateSolderWidthMM}
-          onUpdateSolderColor={updateSolderColor}
-        />
-      </div>
+          <ResultPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
+            project={project}
+            selectedPieceIds={selectedPieceIds}
+            pendingPieceIds={pendingPieceIds}
+            onSelectPiece={selectPiece}
+            onSelectPieces={selectPieces}
+            onPatternCropChange={updatePatternCrop}
+            onPatternScaleChange={updatePatternScale}
+            onAddPiece={handleAddPiece}
+            onAddManualPiece={handleAddManualPiece}
+            onUpdatePieceLabel={updatePieceLabel}
+            onUpdatePieceSheet={updatePieceSheet}
+            onUpdatePiecesSheet={updatePiecesSheet}
+            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
+            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
+            onDeletePiece={deletePiece}
+            onDeletePieces={deletePieces}
+            onSmoothPiece={handleSmoothPiece}
+            onSmoothPieces={handleSmoothPieces}
+            onUpdatePieceCurves={handleUpdatePieceCurves}
+            onUpdatePiecePolygonAndCurves={handleUpdatePieceGeometry}
+            onUpdatePrompt={handleUpdatePrompt}
+            onUploadPattern={handleUploadPattern}
+            onStartBlankCanvas={startBlankCanvas}
+            onStartLampMode={handleStartLampMode}
+            onAutoSegment={handleAutoSegment}
+            isAutoSegmenting={isAutoSegmenting}
+            isEncoding={!!project.patternImageUrl && patternImageId === null}
+            downloadProgress={downloadProgress}
+            debugMask={debugMask}
+            activeTool={patternTool}
+            onChangeActiveTool={setPatternTool}
+            tutorialStep={tutorialStep}
+            refineMode={patternRefineMode}
+            onRefineModeChange={setPatternRefineMode}
+            penStatusStore={penStatusStore}
+            onUpdateSolderWidthMM={updateSolderWidthMM}
+            onUpdateSolderColor={updateSolderColor}
+            onOpenLampProfile={isLamp ? (() => setLampProfileDialog({ isFirstTime: false })) : undefined}
+            isSymmetryEnabled={isSymmetryEnabled}
+            onToggleSymmetry={setIsSymmetryEnabled}
+          />
+        </div>
 
       {/* ── Right: glass sheet workspace ── */}
       <div className="panel panel-right">
+        {isLamp && (
+          <>
+            <div style={{ height: lampPreviewHeight, flexShrink: 0, position: 'relative', overflow: 'hidden', borderBottom: '1px solid var(--hairline)' }}>
+              <Lamp3DPreview
+                project={project}
+                pieceTransformPreviewStore={pieceTransformPreviewStore}
+                selectedPieceIds={selectedPieceIds}
+                onSelectPiece={selectPiece}
+                onUpdateLampConfig={updateLampConfig}
+                activeSheetId={activeSheetId}
+                onSetFocusedPanelIdx={setFocusedPanelIdx}
+              />
+            </div>
+            <div
+              onPointerDown={startLampPreviewResize}
+              style={{
+                height: 6,
+                cursor: 'row-resize',
+                background: 'var(--chrome-700)',
+                flexShrink: 0,
+                position: 'relative',
+              }}
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label={t('resizePreviewLabel', 'Resize 3D preview')}
+            >
+              <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 30, height: 2, background: 'var(--hairline-2)', borderRadius: 1 }} />
+            </div>
+          </>
+        )}
         <div className="panel-header">
           <div className="panel-title" style={{ flexShrink: 0 }}>
             <span className="panel-title-eyebrow">{t('glass')}</span>
@@ -1248,31 +1432,23 @@ export function App() {
 
         {activeSheet ? (
           <SheetPanel
+            pieceTransformPreviewStore={pieceTransformPreviewStore}
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
-            pendingPieceIds={pendingPieceIds}
             onSelectPiece={selectPiece}
-            onSelectPieces={selectPieces}
             onTransformChange={updatePieceTransform}
-            onUpdatePieceLabel={updatePieceLabel}
-            onUpdatePieceSheet={updatePieceSheet}
-            onUpdatePiecesSheet={updatePiecesSheet}
+            onCommitTransforms={commitPieceTransforms}
             onCropChange={c => updateSheetCrop(activeSheetId, c)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
-            onDeletePiece={deletePiece}
-            onDeletePieces={deletePieces}
-            onSmoothPiece={handleSmoothPiece}
-            onSmoothPieces={handleSmoothPieces}
-            onAddSheetAndAssignPiece={addSheetAndAssignPiece}
-            onAddSheetAndAssignPieces={addSheetAndAssignPieces}
             showEmptyHint={
               piecesOnActiveSheet.length === 0 &&
               project.pieces.length > 0
             }
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
+            isTutorial={project.name === 'Tutorial'}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1297,32 +1473,11 @@ export function App() {
               ? `${t('statusScale')} · ${parseFloat(project.patternScale.pxPerUnit.toFixed(2))} px/${t('unit_' + project.patternScale.unit)}`
               : t('statusNoScale')}
           </span>
-          {patternTool === 'pen' && penStatus.coords && (
-            <>
-              <span className="status-bar-divider" />
-              <span>
-                {t('statusPenPosition')}: {penStatus.coords.x.toFixed(0)}, {penStatus.coords.y.toFixed(0)} px
-                {project.patternScale && project.patternScale.pxPerUnit > 0 && (
-                  ` (${(penStatus.coords.x / project.patternScale.pxPerUnit).toFixed(1)} × ${(penStatus.coords.y / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
-                )}
-              </span>
-              {penSegment && (
-                <>
-                  <span className="status-bar-divider" />
-                  <span>
-                    {t('statusPenLength')}: {penSegment.lengthPx.toFixed(0)} px
-                    {project.patternScale && project.patternScale.pxPerUnit > 0 && (
-                      ` (${(penSegment.lengthPx / project.patternScale.pxPerUnit).toFixed(1)} ${t('unit_' + project.patternScale.unit)})`
-                    )}
-                  </span>
-                  <span className="status-bar-divider" />
-                  <span>
-                    {t('statusPenAngle')}: {penSegment.angle}°
-                  </span>
-                </>
-              )}
-            </>
-          )}
+          <PenStatusDisplay
+            store={penStatusStore}
+            active={patternTool === 'pen' || patternTool === 'polygon'}
+            scale={project.patternScale}
+          />
           {activeSheet && (
             <>
               <span className="status-bar-divider" />
@@ -1368,7 +1523,7 @@ export function App() {
         <div className="mobile-drawer-backdrop" onClick={() => setIsMobileMenuOpen(false)} />
         <div className="mobile-drawer-panel">
           <div className="mobile-drawer-header">
-            <span className="mobile-drawer-title">Menu</span>
+            <span className="mobile-drawer-title">{t('menuTitle', 'Menu')}</span>
             <button className="mobile-drawer-close" onClick={() => setIsMobileMenuOpen(false)}>×</button>
           </div>
 
@@ -1448,6 +1603,20 @@ export function App() {
           onClose={() => setShowGlassLibrary(false)}
         />
       )}
+
+      {lampProfileDialog && project.lampConfig && (
+        <LampProfileDialog
+          project={project}
+          initialConfig={project.lampConfig}
+          isFirstTime={lampProfileDialog.isFirstTime}
+          onCancel={() => setLampProfileDialog(null)}
+          onUpdatePatternScale={updatePatternScale}
+          onConfirm={config => {
+            updateLampConfig(config);
+            setLampProfileDialog(null);
+          }}
+        />
+      )}
       <ShortcutsOverlay open={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} onStartTutorial={startTutorialTour} />
       <Tutorial
         step={tutorialStep}
@@ -1465,6 +1634,8 @@ export function App() {
         onStartTour={startTutorialTour}
         onSkip={skipTutorial}
         onComplete={completeTutorial}
+        isEncoding={!!project.patternImageUrl && patternImageId === null}
+        downloadProgress={downloadProgress}
       />
   </div>
   );

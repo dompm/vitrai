@@ -1,4 +1,11 @@
 import * as ort from "onnxruntime-web/webgpu";
+import { maskToPolygon as extractMaskPolygon, smoothMaskLogits } from './utils/maskContour';
+// Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
+// bundle). Vite emits the file as a same-origin asset, so segmentation no
+// longer depends on a third-party CDN being reachable, and the JS/wasm
+// versions can never drift apart. The relative node_modules path is needed
+// because the package's exports map doesn't expose ./dist/*.
+import ortWasmUrl from "../node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm?url";
 
 // onnxruntime-web's WASM backend can spawn Emscripten pthread workers using
 // this module's own URL when its preferred worker script isn't reachable.
@@ -7,10 +14,11 @@ import * as ort from "onnxruntime-web/webgpu";
 const isPthread = (self as { name?: string }).name === 'em-pthread';
 
 if (!isPthread) {
-  // Disable WASM threading entirely — WebGPU EP doesn't need threads, and
-  // this keeps ORT from spawning pthread workers in the first place.
+  // numThreads stays 1 on the WebGPU path (the EP doesn't need threads, and
+  // this keeps ORT from spawning pthread workers needlessly); the wasm
+  // fallback raises it in detectExecutionProviders().
   ort.env.wasm.numThreads = 1;
-  ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/';
+  ort.env.wasm.wasmPaths = { wasm: new URL(ortWasmUrl, self.location.href).href };
 }
 
 const HF = 'https://huggingface.co/onnx-community/sam2.1-hiera-base-plus-ONNX/resolve/main/onnx';
@@ -23,6 +31,9 @@ const INPUT_SIZE = 1024;
 const MEAN = [0.485, 0.456, 0.406];
 const STD  = [0.229, 0.224, 0.225];
 const MASK_THRESHOLD = 0;
+// Keep smoothing stable in model-input coordinates even if a model variant
+// returns a decoder mask other than the usual 256×256.
+const MASK_SMOOTHING_SIGMA_INPUT_PX = 6;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,10 +44,21 @@ export type WorkerInMsg =
       points?: [number, number, number][] }
   | { type: 'autoSegment'; id: string; sessionId: string };
 
+export type SamDevice = 'webgpu' | 'wasm';
+
+/** i18n keys (resolved on the main thread — workers can't use i18next). */
+export type SamStatusKey =
+  | 'samStatusInit'
+  | 'samStatusLoadingDecoder'
+  | 'samStatusCompilingDecoder'
+  | 'samStatusLoadingEncoder'
+  | 'samStatusCompilingEncoder';
+
 export type WorkerOutMsg =
-  | { type: 'ready';            device: string }
+  | { type: 'ready';            device: SamDevice }
   | { type: 'init:error';       error: string }
-  | { type: 'status';           text: string }
+  | { type: 'status';           key: SamStatusKey }
+  | { type: 'progress';         fraction: number }
   | { type: 'encode:done';      id: string; sessionId: string }
   | { type: 'encode:error';     id: string; error: string }
   | { type: 'segment:done';     id: string; polygon: [number, number][];
@@ -75,32 +97,108 @@ let initStarted = false;
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 
+const downloadProgress = new Map<string, { loaded: number; total: number }>();
+
+function reportProgress() {
+  let loaded = 0;
+  let total = 0;
+  for (const stats of downloadProgress.values()) {
+    loaded += stats.loaded;
+    total += stats.total;
+  }
+  if (total > 0) {
+    post({ type: 'progress', fraction: loaded / total });
+  }
+}
+
 async function fetchCached(url: string, filename: string): Promise<ArrayBuffer> {
+  let guessTotal = 4000000; // default for .onnx
+  if (filename.endsWith('.onnx_data')) {
+    guessTotal = filename.includes('encoder') ? 305000000 : 21000000;
+  }
+  if (!downloadProgress.has(filename)) {
+    downloadProgress.set(filename, { loaded: 0, total: guessTotal });
+  }
+
   try {
     const root = await navigator.storage.getDirectory();
     try {
       const handle = await root.getFileHandle(filename);
       const file = await handle.getFile();
       console.log(`[SAM Worker] Loading ${filename} from OPFS cache...`);
-      return await file.arrayBuffer();
+      const buf = await file.arrayBuffer();
+      downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+      reportProgress();
+      return buf;
     } catch {
       console.log(`[SAM Worker] Fetching ${filename} from ${url}...`);
       const res = await fetch(url);
       if (!res.ok) throw new Error(`Fetch failed: ${res.statusText}`);
-      const buf = await res.arrayBuffer();
+      
+      const contentLength = res.headers.get('Content-Length');
+      // If we don't know the exact size, we can guess or use 0. But we know approximate sizes:
+      // decoder: 4MB + 15MB = 19MB, encoder: 4MB + 30MB = 34MB. Let's just use what's provided.
+      const total = contentLength ? parseInt(contentLength, 10) : (filename.includes('encoder') ? 30000000 : 15000000);
+      let loaded = 0;
+      
+      downloadProgress.set(filename, { loaded, total });
+      reportProgress();
 
-      // Save to cache for next time
-      const handle = await root.getFileHandle(filename, { create: true });
-      const writable = await (handle as any).createWritable();
-      await writable.write(buf);
-      await writable.close();
-      console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
-      return buf;
+      if (!res.body) {
+        const buf = await res.arrayBuffer();
+        downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+        reportProgress();
+        return buf;
+      }
+
+      const reader = res.body.getReader();
+      const chunks: Uint8Array[] = [];
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          chunks.push(value);
+          loaded += value.length;
+          // `total` is a guess when Content-Length is missing; never let the
+          // reported fraction hit/exceed 1 while bytes are still streaming.
+          downloadProgress.set(filename, { loaded, total: Math.max(total, loaded + 1) });
+          reportProgress();
+        }
+      }
+      // The true size is known now — replace the guessed total so the
+      // aggregate fraction can actually reach 1 (and never overshoots it).
+      downloadProgress.set(filename, { loaded, total: loaded });
+      reportProgress();
+
+      let position = 0;
+      const buf = new Uint8Array(loaded);
+      for (const chunk of chunks) {
+        buf.set(chunk, position);
+        position += chunk.length;
+      }
+
+      // Save to cache for next time — best-effort: a failed cache write must
+      // not throw away the bytes we just downloaded.
+      try {
+        const handle = await root.getFileHandle(filename, { create: true });
+        const writable = await (handle as any).createWritable();
+        await writable.write(buf);
+        await writable.close();
+        console.log(`[SAM Worker] Saved ${filename} to OPFS cache.`);
+      } catch (cacheErr) {
+        console.warn(`[SAM Worker] Could not cache ${filename} in OPFS:`, cacheErr);
+      }
+
+      return buf.buffer;
     }
   } catch (err) {
     console.warn(`[SAM Worker] Cache failed for ${filename}, falling back to network:`, err);
     const res = await fetch(url);
-    return await res.arrayBuffer();
+    if (!res.ok) throw new Error(`Fetch failed for ${filename}: ${res.status} ${res.statusText}`);
+    const buf = await res.arrayBuffer();
+    downloadProgress.set(filename, { loaded: buf.byteLength, total: buf.byteLength });
+    reportProgress();
+    return buf;
   }
 }
 
@@ -214,6 +312,35 @@ async function saveEmbedToDB(imageUrl: string, embed: CachedEmbed): Promise<void
 
 let initDecoderStarted = false;
 let initEncoderStarted = false;
+
+// Probe for a usable WebGPU adapter (in this worker — page-level support is
+// not enough) instead of assuming it. Previously the worker always reported
+// device 'webgpu' even when ORT silently fell back to single-threaded wasm.
+let detectedDevice: 'webgpu' | 'wasm' = 'wasm';
+let epPromise: Promise<ort.InferenceSession.ExecutionProviderConfig[]> | null = null;
+function detectExecutionProviders(): Promise<ort.InferenceSession.ExecutionProviderConfig[]> {
+  if (!epPromise) {
+    epPromise = (async () => {
+      try {
+        const gpu = (navigator as { gpu?: { requestAdapter(): Promise<unknown | null> } }).gpu;
+        const adapter = gpu ? await gpu.requestAdapter() : null;
+        if (adapter) {
+          detectedDevice = 'webgpu';
+          return ['webgpu', 'wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+        }
+      } catch {
+        // No usable adapter — fall through to wasm.
+      }
+      detectedDevice = 'wasm';
+      // Single-threaded CPU inference of the ~300 MB encoder is unusably
+      // slow, and the site is cross-origin isolated precisely so threaded
+      // wasm works — use it. (em-pthread workers are guarded at module top.)
+      ort.env.wasm.numThreads = Math.max(1, Math.min(navigator.hardwareConcurrency || 1, 8));
+      return ['wasm'] as ort.InferenceSession.ExecutionProviderConfig[];
+    })();
+  }
+  return epPromise;
+}
 let decoderReadyPromise: Promise<void> | null = null;
 let encoderReadyPromise: Promise<void> | null = null;
 
@@ -232,14 +359,14 @@ async function initDecoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 decoder model…' });
+    post({ type: 'status', key: 'samStatusLoadingDecoder' });
     const [decModel, decData] = await Promise.all([
       fetchCached(DECODER_URL, 'sam2_base_decoder.onnx'),
       fetchCached(DECODER_DATA_URL, 'sam2_base_decoder.onnx_data'),
     ]);
 
-    post({ type: 'status', text: 'Compiling SAM2 decoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    post({ type: 'status', key: 'samStatusCompilingDecoder' });
+    const ep = await detectExecutionProviders();
     decoderSession = await ort.InferenceSession.create(new Uint8Array(decModel), {
       executionProviders: ep,
       externalData: [{
@@ -253,6 +380,23 @@ async function initDecoder() {
     rejectReady(err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
+}
+
+// Shared fetch of the encoder model files. Deduplicated so the post-init
+// background warm-up and the first encode can't download the ~309 MB twice
+// concurrently.
+let encoderFetchPromise: Promise<[ArrayBuffer, ArrayBuffer]> | null = null;
+function fetchEncoderModels(): Promise<[ArrayBuffer, ArrayBuffer]> {
+  if (!encoderFetchPromise) {
+    const p = Promise.all([
+      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
+      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
+    ]);
+    // On failure allow a later retry, but never clobber a newer attempt.
+    p.catch(() => { if (encoderFetchPromise === p) encoderFetchPromise = null; });
+    encoderFetchPromise = p;
+  }
+  return encoderFetchPromise;
 }
 
 async function initEncoder() {
@@ -270,14 +414,11 @@ async function initEncoder() {
   });
 
   try {
-    post({ type: 'status', text: 'Loading SAM2 encoder model…' });
-    const [encModel, encData] = await Promise.all([
-      fetchCached(ENCODER_URL, 'sam2_base_encoder.onnx'),
-      fetchCached(ENCODER_DATA_URL, 'sam2_base_encoder.onnx_data'),
-    ]);
+    post({ type: 'status', key: 'samStatusLoadingEncoder' });
+    const [encModel, encData] = await fetchEncoderModels();
 
-    post({ type: 'status', text: 'Compiling SAM2 encoder model…' });
-    const ep: ort.InferenceSession.ExecutionProviderConfig[] = ['webgpu', 'wasm'];
+    post({ type: 'status', key: 'samStatusCompilingEncoder' });
+    const ep = await detectExecutionProviders();
     encoderSession = await ort.InferenceSession.create(new Uint8Array(encModel), {
       executionProviders: ep,
       externalData: [{
@@ -285,6 +426,8 @@ async function initEncoder() {
         path: 'vision_encoder.onnx_data'
       }]
     });
+    // Session owns its copies now; release the raw buffers.
+    encoderFetchPromise = null;
     resolveReady();
   } catch (err) {
     console.error("[SAM Worker] Encoder initialization failed:", err);
@@ -293,13 +436,56 @@ async function initEncoder() {
   }
 }
 
+async function fileExistsInCache(filename: string): Promise<boolean> {
+  try {
+    const root = await navigator.storage.getDirectory();
+    await root.getFileHandle(filename);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Background warm-up of the encoder download right after init. Without this,
+// the first encode triggered a second ~309 MB download after the progress UI
+// had already reported 100% for the (much smaller) decoder — looking like the
+// model was downloading twice.
+async function warmEncoderCache() {
+  try {
+    await fetchEncoderModels();
+    // If no encode has claimed the buffers yet, drop them — they're in the
+    // OPFS cache now and the first encode will read them from disk instead
+    // of pinning ~300 MB in worker memory indefinitely.
+    if (!initEncoderStarted) encoderFetchPromise = null;
+  } catch (err) {
+    console.warn('[SAM Worker] Encoder warm-up failed (will retry on first segment):', err);
+    // Don't leave unfinished entries stalling the progress bar below 100%.
+    downloadProgress.delete('sam2_base_encoder.onnx');
+    downloadProgress.delete('sam2_base_encoder.onnx_data');
+    reportProgress();
+  }
+}
+
 async function init() {
   if (initStarted) return;
   initStarted = true;
   try {
-    post({ type: 'status', text: 'Initializing SAM2 models…' });
+    post({ type: 'status', key: 'samStatusInit' });
+    // On a first run, register the encoder files in the progress accounting
+    // before the decoder downloads, so the reported fraction covers the full
+    // first-run download instead of completing after the decoder and
+    // restarting for the encoder.
+    if (!(await fileExistsInCache('sam2_base_encoder.onnx_data'))) {
+      if (!downloadProgress.has('sam2_base_encoder.onnx')) {
+        downloadProgress.set('sam2_base_encoder.onnx', { loaded: 0, total: 4000000 });
+      }
+      if (!downloadProgress.has('sam2_base_encoder.onnx_data')) {
+        downloadProgress.set('sam2_base_encoder.onnx_data', { loaded: 0, total: 305000000 });
+      }
+    }
     await initDecoder();
-    post({ type: 'ready', device: 'webgpu' });
+    post({ type: 'ready', device: detectedDevice });
+    void warmEncoderCache();
   } catch (err) {
     console.error("[SAM Worker] Initialization failed:", err);
     const error = err instanceof Error ? `${err.message}\n${err.stack ?? ''}` : String(err);
@@ -390,7 +576,7 @@ async function segment(
     return;
   }
 
-  const { scale, padX, padY, encoderOut } = cached;
+  const { scale, padX, padY, origW, origH, encoderOut } = cached;
 
   const coords: number[] = [];
   const labels: number[] = [];
@@ -453,9 +639,14 @@ async function segment(
     const maskData = (masksTensor.data as Float32Array)
       .slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
 
-    const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
+    const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+    const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+    const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
 
-    const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+    const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
+      inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
+      threshold: MASK_THRESHOLD,
+    });
 
     // Debug overlay: paint upsampled mask as a semi-transparent bitmap.
     const debugCanvas = new OffscreenCanvas(INPUT_SIZE, INPUT_SIZE);
@@ -543,8 +734,13 @@ async function autoSegment(id: string, sessionId: string) {
           const planeSize = H * W;
           const maskData = (masksTensor.data as Float32Array).slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
           
-          const upsampled = bilinearUpsample(maskData, W, H, INPUT_SIZE, INPUT_SIZE);
-          const polygon = maskToPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, scale, padX, padY);
+          const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
+          const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+          const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
+          const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
+            inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
+            threshold: MASK_THRESHOLD,
+          });
 
           if (polygon.length >= 3) {
             const centroid = computeCentroid(polygon);
@@ -602,102 +798,6 @@ function bilinearUpsample(
 
 // ─── Mask → polygon ───────────────────────────────────────────────────────────
 
-function maskToPolygon(
-  data: Float32Array, W: number, H: number,
-  scale: number, padX: number, padY: number,
-): [number, number][] {
-  const get = (x: number, y: number): boolean =>
-    x >= 0 && x < W && y >= 0 && y < H && data[y * W + x] > MASK_THRESHOLD;
-
-  // Mask is 256x256, representing the 1024x1024 preprocessed space.
-  // To map back to original: ((maskCoord * (1024/256)) - pad) / scale
-  const toOrigX = (mx: number) => (mx * (INPUT_SIZE / W) - padX) / scale;
-  const toOrigY = (my: number) => (my * (INPUT_SIZE / H) - padY) / scale;
-
-  const visited = new Uint8Array(W * H);
-  let bestPts: [number, number][] = [];
-
-  // Directions in clockwise order
-  const dx = [0, 1, 1, 1, 0, -1, -1, -1];
-  const dy = [-1, -1, 0, 1, 1, 1, 0, -1];
-
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      const idx = y * W + x;
-      if (data[idx] > MASK_THRESHOLD && !visited[idx]) {
-        // Found a potential new island! Trace it.
-        const currentPts: [number, number][] = [];
-        let cx = x, cy = y;
-        let prevX = x, prevY = y - 1;
-        let firstX = x, firstY = y;
-
-        for (let i = 0; i < W * H; i++) {
-          currentPts.push([toOrigX(cx), toOrigY(cy)]);
-          visited[cy * W + cx] = 1; // Mark as visited
-          
-          let startDir = 0;
-          for (let d = 0; d < 8; d++) {
-            if (cx + dx[d] === prevX && cy + dy[d] === prevY) {
-              startDir = (d + 1) % 8;
-              break;
-            }
-          }
-
-          let foundNext = false;
-          for (let d = 0; d < 8; d++) {
-            const dir = (startDir + d) % 8;
-            const nx = cx + dx[dir], ny = cy + dy[dir];
-            if (get(nx, ny)) {
-              prevX = cx; prevY = cy;
-              cx = nx; cy = ny;
-              foundNext = true;
-              break;
-            }
-          }
-
-          if (!foundNext || (cx === firstX && cy === firstY)) break;
-        }
-
-        // Is this the biggest island we've seen?
-        if (currentPts.length > bestPts.length) {
-          bestPts = currentPts;
-        }
-      }
-    }
-  }
-
-  if (bestPts.length < 3) return bestPts;
-
-  // Calculate perimeter for dynamic simplification (matching Modal's 0.005 * arcLength)
-  let perimeter = 0;
-  for (let i = 0; i < bestPts.length; i++) {
-    const p1 = bestPts[i];
-    const p2 = bestPts[(i + 1) % bestPts.length];
-    perimeter += Math.sqrt((p1[0] - p2[0]) ** 2 + (p1[1] - p2[1]) ** 2);
-  }
-
-  const dynamicEps = Math.max(2.0, perimeter * 0.005);
-  return douglasPeucker(bestPts, dynamicEps);
-}
-
-function douglasPeucker(pts: [number, number][], eps: number): [number, number][] {
-  if (pts.length <= 2) return pts;
-  const [x1, y1] = pts[0], [x2, y2] = pts[pts.length - 1];
-  const len = Math.hypot(x2 - x1, y2 - y1);
-  let maxD = 0, idx = 0;
-  for (let i = 1; i < pts.length - 1; i++) {
-    const [px, py] = pts[i];
-    const d = len < 1e-10
-      ? Math.hypot(px - x1, py - y1)
-      : Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) / len;
-    if (d > maxD) { maxD = d; idx = i; }
-  }
-  if (maxD > eps) {
-    return [...douglasPeucker(pts.slice(0, idx + 1), eps).slice(0, -1),
-            ...douglasPeucker(pts.slice(idx), eps)];
-  }
-  return [pts[0], pts[pts.length - 1]];
-}
 
 // ─── Messaging ────────────────────────────────────────────────────────────────
 

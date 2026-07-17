@@ -30,9 +30,18 @@ export interface PromptPoint {
   label: 1 | 0; // 1 for positive, 0 for negative
 }
 
+/**
+ * Parametric curve metadata for the edge that starts at `polygon[edgeIdx]`.
+ *
+ * Older projects only contain `edgeIdx` and `ctrl`; those entries are
+ * quadratic Bezier curves. Cubic edges keep the first control point in
+ * `ctrl` for source compatibility and add `ctrl2` for the second handle.
+ */
 export interface CurvePoint {
-  edgeIdx: number;            // index of the start vertex of the curved edge
-  ctrl: [number, number];     // quadratic bezier control point (image coords)
+  edgeIdx: number;
+  ctrl: [number, number];
+  kind?: 'quadratic' | 'cubic';
+  ctrl2?: [number, number];
 }
 
 export interface Piece {
@@ -40,10 +49,14 @@ export interface Piece {
   label: string;
   polygon: [number, number][]; // clean vertex skeleton — never grows from curve edits
   curvePoints?: CurvePoint[];  // parametric curves on edges; absent = all straight
+  anchorTypes?: ('corner' | 'smooth')[]; // per polygon vertex; explicit Pen handle behavior
   glassSheetId: string;
   transform: TextureTransform;
   promptBox?: BoundingBox;
   promptPoints?: PromptPoint[];
+  tierIndex?: number;          // if present, this piece belongs to a lamp tier
+  facetIndex?: number;         // column index for symmetry mirroring
+  symmetryGroupId?: string;    // links symmetrical duplicates
 }
 
 export interface GlassSheet {
@@ -59,7 +72,24 @@ export interface GlassSheet {
 
 export type SolderColor = 'black' | 'silver' | 'copper';
 
+export interface LampProfilePoint {
+  r: number;
+  y: number;
+}
+
+export interface LampConfig {
+  facetCount: number;
+  profilePoints: LampProfilePoint[];
+  activeTierIndex: number;
+  // When true, the lamp surface is treated as continuous: each tier unrolls to
+  // its true smooth shape (rectangle for a cylinder, annular sector for a cone)
+  // instead of N flat facets. `facetCount` is ignored except for visualization.
+  smooth?: boolean;
+}
+
 export interface Project {
+  /** Schema version this project's shape conforms to; see storage/projectSchema.ts. */
+  version: number;
   name: string;
   patternImageUrl: string;
   patternWidth: number;
@@ -70,5 +100,6 @@ export interface Project {
   sheets: GlassSheet[];
   solderWidthMM?: number;
   solderColor?: SolderColor;
+  projectType?: 'flat' | 'lamp';
+  lampConfig?: LampConfig;
 }
-

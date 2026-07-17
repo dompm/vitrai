@@ -1,9 +1,9 @@
-export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'pen' | 'pencil';
+export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'polygon' | 'pen' | 'pencil';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
 import {
-  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconRuler, IconEye,
+  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconRuler, IconEye, IconPolygon,
 } from './icons';
 
 interface ToolTooltipData {
@@ -17,8 +17,9 @@ interface Tool {
   id: ToolId;
   label: string;
   icon: React.ReactNode;
+  sectionStart?: boolean;
   disabled?: boolean;
-  loading?: boolean;
+  loading?: boolean | number;
   tooltip?: ToolTooltipData;
 }
 
@@ -46,6 +47,8 @@ export const PenIcon = () => (
   </svg>
 );
 
+export const PolygonIcon = () => <IconPolygon />;
+
 export const PencilIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 20h9" />
@@ -57,37 +60,57 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
   return (
     <div className="toolbar">
       {tools.map(tool => (
-        <div key={tool.id} className="tooltip-wrapper">
-          <button
-            className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
-            data-tool-id={tool.id}
-            onClick={() => !tool.disabled && onSelectTool(tool.id)}
-            disabled={tool.disabled}
-            style={tool.loading ? { position: 'relative' } : undefined}
-          >
-            {tool.icon}
-            <span className="tool-label">{tool.label}</span>
-            {tool.loading && (
-              <div style={{
-                position: 'absolute', inset: 0, display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                background: 'rgba(255, 254, 250, 0.7)', borderRadius: 'inherit',
-              }}>
-                <div className="spinner-tiny" />
+        <React.Fragment key={tool.id}>
+          {tool.sectionStart && <div className="toolbar-divider" aria-hidden="true" />}
+          <div className="tooltip-wrapper">
+            <button
+              className={`tool-btn ${activeTool === tool.id ? 'active' : ''}`}
+              data-tool-id={tool.id}
+              onClick={() => !tool.disabled && onSelectTool(tool.id)}
+              disabled={tool.disabled && !tool.loading}
+              style={tool.disabled && tool.loading ? { cursor: 'default' } : undefined}
+            >
+              <div style={{ position: 'relative', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ opacity: tool.disabled && tool.loading ? 0.35 : 1, display: 'flex' }}>
+                  {tool.icon}
+                </div>
+                {tool.loading !== undefined && tool.loading !== false && (
+                  <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {typeof tool.loading === 'number' ? (
+                      <svg width="20" height="20" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
+                        <circle cx="8" cy="8" r="7" stroke="rgba(192, 138, 31, 0.15)" strokeWidth="1.5" fill="none" />
+                        <circle
+                          cx="8" cy="8" r="7"
+                          stroke="var(--amber)"
+                          strokeWidth="1.5"
+                          fill="none"
+                          strokeDasharray={2 * Math.PI * 7}
+                          strokeDashoffset={(2 * Math.PI * 7) - (tool.loading * 2 * Math.PI * 7)}
+                          style={{ transition: 'stroke-dashoffset 0.1s linear' }}
+                        />
+                      </svg>
+                    ) : (
+                      <div className="spinner-tiny" style={{ width: 16, height: 16 }} />
+                    )}
+                  </div>
+                )}
               </div>
+              <span className="tool-label" style={{ opacity: tool.disabled && tool.loading ? 0.35 : 1 }}>
+                {tool.label}
+              </span>
+            </button>
+            {tool.tooltip ? (
+              <ToolTooltip
+                name={tool.tooltip.name}
+                shortcut={tool.tooltip.shortcut}
+                description={tool.tooltip.description}
+                animation={tool.tooltip.animation}
+              />
+            ) : (
+              <span className="tooltip-tip">{tool.label}</span>
             )}
-          </button>
-          {tool.tooltip ? (
-            <ToolTooltip
-              name={tool.tooltip.name}
-              shortcut={tool.tooltip.shortcut}
-              description={tool.tooltip.description}
-              animation={tool.tooltip.animation}
-            />
-          ) : (
-            <span className="tooltip-tip">{tool.label}</span>
-          )}
-        </div>
+          </div>
+        </React.Fragment>
       ))}
       {children}
     </div>

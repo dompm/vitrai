@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { forwardRef, memo, useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -7,11 +7,12 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
-import { computeCentroid, flattenCurves, ctrlToHandle, handleToCtrl } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
-import { IconUpload } from './icons';
+import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
+import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
+import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PolygonAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
 import { MeasureLineOverlay } from './MeasureLineOverlay';
@@ -19,7 +20,19 @@ import { useViewport } from '../hooks/useViewport';
 import { useMeasure } from '../hooks/useMeasure';
 import { toImageCoords, toScreenCoords } from '../utils/viewport';
 import { PieceProperties } from './PieceProperties';
+import { ViewportControls } from './ViewportControls';
 import { CANVAS } from '../theme';
+import { computeUnrolledLamp, findLampEdgeSnap, getLampSnapPoints, LampSnapPoint, patternToSurfaceRobust } from '../utils/lampGeometry';
+import { getSnapFractions } from '../utils/snapping';
+import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../utils/vectorMath';
+import { getPieceGeometry, type PieceGeometry } from '../editor/geometry/pieceGeometry';
+import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
+import { PencilController } from '../editor/interaction/pencilController';
+import { createRafScheduler } from '../editor/interaction/rafScheduler';
+import { PencilOverlay } from './canvas/PencilOverlay';
+import { PenStatusStore } from '../editor/interaction/penStatusStore';
+import { ViewportGroup, ViewportSubscriber } from '../editor/viewport/viewportStore';
+import { createPenSnapIndex, queryAlignment, queryEdgeSnap, queryLengthSnap, queryShiftAlignment, queryVertexSnap, type PenSnapIndex } from '../editor/snapping/penSnapIndex';
 
 function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: number; y: number }) => void; pointerEvents?: 'auto' | 'none' }) {
   const last = useRef<{ x: number; y: number } | null>(null);
@@ -57,17 +70,19 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 interface PieceOverlayProps {
   piece: Piece;
-  displayPolygon: [number, number][];
+  geometry: PieceGeometry;
   glassImageUrl: string;
   isSelected: boolean;
   isPending: boolean;
   opacity?: number;
   solderWidth: number;
   solderColor: string;
-  onSelect: (multi?: boolean) => void;
+  onSelectPiece: (id: string | null, multi?: boolean) => void;
+  selectionDisabled: boolean;
+  previewStore: PieceTransformPreviewStore;
 }
 
-function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelect }: PieceOverlayProps) {
+const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore }: PieceOverlayProps) {
   const [glassImg] = useImage(glassImageUrl);
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
@@ -75,24 +90,15 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
     const id = setInterval(() => setPulseHi(h => !h), 750);
     return () => clearInterval(id);
   }, [isPending]);
-  const { x: tx, y: ty, rotation, scale } = piece.transform;
-  const centroid = computeCentroid(displayPolygon);
-  const flatPts = displayPolygon.flat();
+  const { x: tx, y: ty, rotation, scale } = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
+  const { flatPoints: flatPts, centroid, bounds, clipFunc: clipPolygon } = geometry;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
-
-  function clipPolygon(ctx: any) {
-    ctx.beginPath();
-    displayPolygon.forEach(([x, y], i) => {
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    });
-    ctx.closePath();
-  }
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
     if (longPressFired.current) { longPressFired.current = false; return; }
-    onSelect(e.evt.shiftKey);
+    if (!selectionDisabled) onSelectPiece(piece.id, e.evt.shiftKey);
   }
 
   function handlePointerDown() {
@@ -101,16 +107,13 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
     longPressTimer.current = setTimeout(() => {
       longPressFired.current = true;
       longPressTimer.current = null;
-      onSelect(true);
+      if (!selectionDisabled) onSelectPiece(piece.id, true);
     }, 500);
   }
 
   function cancelLongPress() {
     if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
   }
-
-  const xs = displayPolygon.map(p => p[0]);
-  const ys = displayPolygon.map(p => p[1]);
 
   return (
     <Group
@@ -128,9 +131,9 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
         </Group>
         {isPending && (
           <Rect
-            x={Math.min(...xs)} y={Math.min(...ys)}
-            width={Math.max(...xs) - Math.min(...xs)}
-            height={Math.max(...ys) - Math.min(...ys)}
+            x={bounds.minX} y={bounds.minY}
+            width={bounds.maxX - bounds.minX}
+            height={bounds.maxY - bounds.minY}
             fill={`rgba(245,158,11,${pulseHi ? 0.28 : 0.10})`}
             listening={false}
           />
@@ -146,9 +149,10 @@ function PieceOverlay({ piece, displayPolygon, glassImageUrl, isSelected, isPend
       />
     </Group>
   );
-}
+});
 
 interface ResultPanelProps {
+  pieceTransformPreviewStore: PieceTransformPreviewStore;
   project: Project;
   selectedPieceIds: string[];
   pendingPieceIds: ReadonlySet<string>;
@@ -157,7 +161,7 @@ interface ResultPanelProps {
   onPatternCropChange: (c: Partial<Crop>) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
-  onAddManualPiece: (polygon: [number, number][]) => void;
+  onAddManualPiece: (polygon: [number, number][], curvePoints?: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
   onUpdatePieceLabel: (id: string, label: string) => void;
   onUpdatePieceSheet: (id: string, sheetId: string) => void;
   onUpdatePiecesSheet: (ids: string[], sheetId: string) => void;
@@ -167,70 +171,28 @@ interface ResultPanelProps {
   onDeletePieces: (ids: string[]) => void;
   onSmoothPiece: (id: string) => void;
   onSmoothPieces: (ids: string[]) => void;
-  onUpdatePiecePolygon: (id: string, polygon: [number, number][]) => void;
-  onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[]) => void;
+  onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
+  onUpdatePiecePolygonAndCurves: (id: string, polygon: [number, number][], curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
   isEncoding?: boolean;
+  downloadProgress?: number | null;
   onUploadPattern: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onStartBlankCanvas: () => void;
+  onStartLampMode?: () => void;
   debugMask?: { bitmap: ImageBitmap; width: number; height: number } | null;
   activeTool: ToolId;
   onChangeActiveTool: (tool: ToolId) => void;
   tutorialStep?: StepId | null;
   refineMode: 'add' | 'remove' | null;
   onRefineModeChange: (mode: 'add' | 'remove' | null) => void;
-  onPenStatusChange?: (status: {
-    coords: { x: number; y: number } | null;
-    lastPoint: { x: number; y: number } | null;
-  }) => void;
+  penStatusStore: PenStatusStore;
   onUpdateSolderWidthMM: (width: number) => void;
   onUpdateSolderColor: (color: import('../types').SolderColor) => void;
-}
-
-function getTooltipAnchor(piece: Piece, allPieces: Piece[], _pw: number, _ph: number, vp: { pan: {x: number, y: number}, effectiveScale: number, dims: {w: number, h: number} }) {
-  const xs = piece.polygon.map(p => p[0]);
-  const ys = piece.polygon.map(p => p[1]);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
-  const midX = (minX + maxX) / 2, midY = (minY + maxY) / 2;
-
-  const otherPieces = allPieces.filter(p => p.id !== piece.id);
-  
-  const score = { top: 1.1, bottom: 1.0, left: 1.0, right: 1.0 };
-  
-  // Penalize edges (in screen space)
-  const toScreen = (ix: number, iy: number) => ({
-    x: ix * vp.effectiveScale + vp.pan.x,
-    y: iy * vp.effectiveScale + vp.pan.y
-  });
-
-  const sTop = toScreen(midX, minY);
-  const sBottom = toScreen(midX, maxY);
-  const sLeft = toScreen(minX, midY);
-  const sRight = toScreen(maxX, midY);
-
-  if (sTop.y < 100) score.top -= 10;
-  if (sBottom.y > vp.dims.h - 100) score.bottom -= 10;
-  if (sLeft.x < 200) score.left -= 10;
-  if (sRight.x > vp.dims.w - 200) score.right -= 10;
-
-  // Prefer sides with more neighbors
-  otherPieces.forEach(p => {
-    const c = computeCentroid(p.polygon);
-    if (c.y < minY) score.top += 1;
-    else if (c.y > maxY) score.bottom += 1;
-    if (c.x < minX) score.left += 1;
-    else if (c.x > maxX) score.right += 1;
-  });
-
-  const bestSide = (Object.keys(score) as Array<keyof typeof score>).reduce((a, b) => score[a] > score[b] ? a : b);
-
-  if (bestSide === 'top') return { x: midX, y: minY, transform: 'translate(-50%, -100%)', margin: '0 0 24px 0' };
-  if (bestSide === 'bottom') return { x: midX, y: maxY, transform: 'translate(-50%, 0)', margin: '24px 0 0 0' };
-  if (bestSide === 'left') return { x: minX, y: midY, transform: 'translate(-100%, -50%)', margin: '0 24px 0 0' };
-  return { x: maxX, y: midY, transform: 'translate(0, -50%)', margin: '0 0 0 24px' };
+  onOpenLampProfile?: () => void;
+  isSymmetryEnabled?: boolean;
+  onToggleSymmetry?: (enabled: boolean) => void;
 }
 
 const getMinBoxSize = (width: number) => Math.max(10, width * 0.005);
@@ -278,7 +240,7 @@ function getSquareSegmentDistance(p: [number, number], p1: [number, number], p2:
   return dx * dx + dy * dy;
 }
 
-function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
+export function simplifyPath(points: [number, number][], epsilon: number): [number, number][] {
   if (points.length <= 2) return points;
   
   let maxSqDist = 0;
@@ -307,6 +269,134 @@ function simplifyPath(points: [number, number][], epsilon: number): [number, num
 // targets (and which corner handles are visible). Both share the threshold
 // so the snap set always matches the visible handle set at any zoom.
 const PEN_SNAP_PX = 14;
+const TRACE_ONLY_TOOL_IDS = new Set<ToolId>(['box', 'detect-all', 'inspect']);
+
+interface BezierAnchor {
+  point: [number, number];
+  in?: [number, number];
+  out?: [number, number];
+  smooth: boolean;
+}
+
+function anchorsToCurvePoints(anchors: BezierAnchor[]): CurvePoint[] {
+  if (anchors.length < 2) return [];
+  const curves: CurvePoint[] = [];
+  for (let edgeIdx = 0; edgeIdx < anchors.length; edgeIdx++) {
+    const from = anchors[edgeIdx];
+    const to = anchors[(edgeIdx + 1) % anchors.length];
+    if (!from.out && !to.in) continue;
+    curves.push({
+      edgeIdx,
+      kind: 'cubic',
+      ctrl: from.out ?? from.point,
+      ctrl2: to.in ?? to.point,
+    });
+  }
+  return curves;
+}
+
+function flattenOpenPenPath(anchors: BezierAnchor[], effectiveScale: number): [number, number][] {
+  if (anchors.length === 0) return [];
+  const result: [number, number][] = [anchors[0].point];
+  for (let index = 0; index < anchors.length - 1; index++) {
+    const from = anchors[index];
+    const to = anchors[index + 1];
+    if (!from.out && !to.in) {
+      result.push(to.point);
+      continue;
+    }
+    const ctrl1 = from.out ?? from.point;
+    const ctrl2 = to.in ?? to.point;
+    const estimate = Math.hypot(to.point[0] - from.point[0], to.point[1] - from.point[1]) * effectiveScale;
+    const steps = Math.max(6, Math.min(32, Math.ceil(estimate / 20)));
+    for (let step = 1; step <= steps; step++) {
+      result.push(evaluateCubicBezier(from.point, ctrl1, ctrl2, to.point, step / steps));
+    }
+  }
+  return result;
+}
+
+function translateCurvesWithAnchor(
+  curves: CurvePoint[],
+  vertexIdx: number,
+  vertexCount: number,
+  delta: [number, number],
+): CurvePoint[] {
+  const previousEdge = (vertexIdx - 1 + vertexCount) % vertexCount;
+  return curves.map(curve => {
+    if (isCubicCurvePoint(curve)) {
+      if (curve.edgeIdx === vertexIdx) {
+        return { ...curve, ctrl: [curve.ctrl[0] + delta[0], curve.ctrl[1] + delta[1]] };
+      }
+      if (curve.edgeIdx === previousEdge) {
+        return { ...curve, ctrl2: [curve.ctrl2[0] + delta[0], curve.ctrl2[1] + delta[1]] };
+      }
+      return curve;
+    }
+    if (curve.edgeIdx === vertexIdx || curve.edgeIdx === previousEdge) {
+      return { ...curve, ctrl: [curve.ctrl[0] + delta[0] / 2, curve.ctrl[1] + delta[1] / 2] };
+    }
+    return curve;
+  });
+}
+
+function moveCubicHandle(
+  curves: CurvePoint[],
+  polygon: [number, number][],
+  edgeIdx: number,
+  side: 'ctrl' | 'ctrl2',
+  point: [number, number],
+  breakPair: boolean,
+): CurvePoint[] {
+  const count = polygon.length;
+  const anchorIdx = side === 'ctrl' ? edgeIdx : (edgeIdx + 1) % count;
+  const anchor = polygon[anchorIdx];
+  const oppositeEdge = side === 'ctrl' ? (edgeIdx - 1 + count) % count : (edgeIdx + 1) % count;
+  const oppositeSide: 'ctrl' | 'ctrl2' = side === 'ctrl' ? 'ctrl2' : 'ctrl';
+  const opposite = curves.find(curve => curve.edgeIdx === oppositeEdge && isCubicCurvePoint(curve));
+  const oppositePoint = opposite && isCubicCurvePoint(opposite) ? opposite[oppositeSide] : undefined;
+  const alignedOpposite = !breakPair && oppositePoint
+    ? alignHandle(anchor, point, Math.hypot(oppositePoint[0] - anchor[0], oppositePoint[1] - anchor[1]))
+    : null;
+
+  return curves.map(curve => {
+    if (!isCubicCurvePoint(curve)) return curve;
+    if (curve.edgeIdx === edgeIdx) return { ...curve, [side]: point };
+    if (alignedOpposite && curve.edgeIdx === oppositeEdge) return { ...curve, [oppositeSide]: alignedOpposite };
+    return curve;
+  });
+}
+
+function insertAnchorOnEdge(
+  polygon: [number, number][],
+  curves: CurvePoint[],
+  edgeIdx: number,
+): { polygon: [number, number][]; curves: CurvePoint[]; insertedAt: number; curved: boolean } {
+  const nextIdx = (edgeIdx + 1) % polygon.length;
+  const start = polygon[edgeIdx];
+  const end = polygon[nextIdx];
+  const curve = curves.find(item => item.edgeIdx === edgeIdx);
+  const insertedAt = edgeIdx + 1;
+  let point: [number, number] = [(start[0] + end[0]) / 2, (start[1] + end[1]) / 2];
+  const nextCurves: CurvePoint[] = [];
+
+  for (const item of curves) {
+    if (item.edgeIdx === edgeIdx) continue;
+    nextCurves.push({ ...item, edgeIdx: item.edgeIdx > edgeIdx ? item.edgeIdx + 1 : item.edgeIdx });
+  }
+
+  if (curve) {
+    const [ctrl1, ctrl2] = curveToCubicControls(start, end, curve);
+    const [left, right] = splitCubicBezier({ start, ctrl1, ctrl2, end }, 0.5);
+    point = left.end;
+    nextCurves.push(makeCubicCurvePoint(edgeIdx, left.ctrl1, left.ctrl2));
+    nextCurves.push(makeCubicCurvePoint(edgeIdx + 1, right.ctrl1, right.ctrl2));
+  }
+
+  const nextPolygon = [...polygon];
+  nextPolygon.splice(insertedAt, 0, point);
+  return { polygon: nextPolygon, curves: nextCurves, insertedAt, curved: !!curve };
+}
 
 function isStructuralCorner(
   polygon: [number, number][],
@@ -323,15 +413,16 @@ function isStructuralCorner(
   return edgeLen >= thresholdPx || prevEdgeLen >= thresholdPx;
 }
 
-function findPenSnapTarget(
+export function findPenSnapTarget(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
-): [number, number] | null {
-  let best: [number, number] | null = null;
+  extraVertices?: LampSnapPoint[],
+): { pt: [number, number]; label?: string } | null {
+  let best: { pt: [number, number]; label?: string } | null = null;
   let bestPxDist = PEN_SNAP_PX;
   for (const piece of pieces) {
-    const polygon = flattenCurves(piece.polygon, piece.curvePoints);
+    const polygon = piece.polygon;
     for (let i = 0; i < polygon.length; i++) {
       if (!isStructuralCorner(polygon, i, effectiveScale)) continue;
       const dx = polygon[i][0] - cursor[0];
@@ -339,14 +430,55 @@ function findPenSnapTarget(
       const dist = Math.hypot(dx, dy) * effectiveScale;
       if (dist < bestPxDist) {
         bestPxDist = dist;
-        best = [polygon[i][0], polygon[i][1]];
+        best = { pt: [polygon[i][0], polygon[i][1]] };
+      }
+    }
+  }
+  if (extraVertices) {
+    for (const sv of extraVertices) {
+      const [vx, vy] = sv.pt;
+      const dist = Math.hypot(vx - cursor[0], vy - cursor[1]) * effectiveScale;
+      if (dist < bestPxDist) {
+        bestPxDist = dist;
+        best = { pt: [vx, vy], label: sv.label };
       }
     }
   }
   return best;
 }
 
-function getCanvasSnapping(
+export function findEdgeSnapTarget(
+  cursor: [number, number],
+  pieces: Piece[],
+  effectiveScale: number,
+  tolerancePx = PEN_SNAP_PX,
+): [number, number] | null {
+  let best: [number, number] | null = null;
+  let bestDistance = tolerancePx;
+  for (const piece of pieces) {
+    const path = flattenCurves(piece.polygon, piece.curvePoints, 0.5 / Math.max(effectiveScale, 0.01));
+    for (let index = 0; index < path.length; index++) {
+      const start = path[index];
+      const end = path[(index + 1) % path.length];
+      const dx = end[0] - start[0];
+      const dy = end[1] - start[1];
+      const lengthSquared = dx * dx + dy * dy;
+      if (lengthSquared === 0) continue;
+      const parameter = Math.max(0, Math.min(1,
+        ((cursor[0] - start[0]) * dx + (cursor[1] - start[1]) * dy) / lengthSquared,
+      ));
+      const projected: [number, number] = [start[0] + parameter * dx, start[1] + parameter * dy];
+      const distance = Math.hypot(projected[0] - cursor[0], projected[1] - cursor[1]) * effectiveScale;
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        best = projected;
+      }
+    }
+  }
+  return best;
+}
+
+export function getCanvasSnapping(
   x: number,
   y: number,
   crop: Crop,
@@ -354,6 +486,8 @@ function getCanvasSnapping(
   patternHeight: number,
   effectiveScale: number,
   t: (key: string) => string,
+  disableFractions = false,
+  customBounds?: { left: number; right: number; top: number; bottom: number },
   thresholdPx = PEN_SNAP_PX
 ): { x: number; y: number; guides: AlignmentGuide[]; labels: string[] } {
   const threshold = thresholdPx / effectiveScale;
@@ -362,10 +496,10 @@ function getCanvasSnapping(
   const guides: AlignmentGuide[] = [];
   const labels: string[] = [];
 
-  const left = crop.left;
-  const right = patternWidth - crop.right;
-  const top = crop.top;
-  const bottom = patternHeight - crop.bottom;
+  const left = customBounds ? customBounds.left : crop.left;
+  const right = customBounds ? customBounds.right : patternWidth - crop.right;
+  const top = customBounds ? customBounds.top : crop.top;
+  const bottom = customBounds ? customBounds.bottom : patternHeight - crop.bottom;
   const W = right - left;
   const H = bottom - top;
 
@@ -394,62 +528,44 @@ function getCanvasSnapping(
   }
 
   // 2. Fractional Snapping (Lower Priority)
-  const FRACTIONS: { value: number; label: string }[] = [];
-  const seen = new Set<string>();
-  const denominators = [2, 3, 4, 5, 6, 8, 10, 12, 16];
-  
-  for (const d of denominators) {
-    for (let n = 1; n < d; n++) {
-      const gcd = (a: number, b: number): number => b === 0 ? a : gcd(b, a % b);
-      const g = gcd(n, d);
-      const num = n / g;
-      const den = d / g;
-      const key = `${num}/${den}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        const val = num / den;
-        const label = den === 2 ? t('snapCenter') : key;
-        FRACTIONS.push({ value: val, label });
+  if (!disableFractions) {
+    const FRACTIONS = getSnapFractions(t);
+
+    const minGap = 32; // minimum screen pixels between active guides
+
+    // Choose the nearest eligible division, rather than the first fraction in
+    // denominator order, so dense guides never win over a closer target.
+    if (!snappedX && W > 0) {
+      const candidate = nearestCandidate(
+        x,
+        FRACTIONS
+          .map(frac => ({ ...frac, position: left + frac.value * W }))
+          .filter(item => Math.min(Math.abs(item.position - left), Math.abs(item.position - right)) * effectiveScale >= minGap),
+        effectiveScale,
+        thresholdPx,
+      );
+      if (candidate) {
+        targetX = candidate.position;
+        snappedX = true;
+        guides.push({ type: 'v', from: [candidate.position, top], to: [candidate.position, bottom] });
+        labels.push(candidate.label);
       }
     }
-  }
 
-  const minGap = 32; // minimum screen pixels between active guides
-
-  // X fractional snapping
-  if (!snappedX && W > 0) {
-    const activeXValues = [left, right];
-    for (const frac of FRACTIONS) {
-      const posX = left + frac.value * W;
-      const tooClose = activeXValues.some(val => Math.abs(posX - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeXValues.push(posX);
-        if (Math.abs(x - posX) < threshold) {
-          targetX = posX;
-          snappedX = true;
-          guides.push({ type: 'v', from: [posX, top], to: [posX, bottom] });
-          labels.push(frac.label);
-          break;
-        }
-      }
-    }
-  }
-
-  // Y fractional snapping
-  if (!snappedY && H > 0) {
-    const activeYValues = [top, bottom];
-    for (const frac of FRACTIONS) {
-      const posY = top + frac.value * H;
-      const tooClose = activeYValues.some(val => Math.abs(posY - val) * effectiveScale < minGap);
-      if (!tooClose) {
-        activeYValues.push(posY);
-        if (Math.abs(y - posY) < threshold) {
-          targetY = posY;
-          snappedY = true;
-          guides.push({ type: 'h', from: [left, posY], to: [right, posY] });
-          labels.push(frac.label);
-          break;
-        }
+    if (!snappedY && H > 0) {
+      const candidate = nearestCandidate(
+        y,
+        FRACTIONS
+          .map(frac => ({ ...frac, position: top + frac.value * H }))
+          .filter(item => Math.min(Math.abs(item.position - top), Math.abs(item.position - bottom)) * effectiveScale >= minGap),
+        effectiveScale,
+        thresholdPx,
+      );
+      if (candidate) {
+        targetY = candidate.position;
+        snappedY = true;
+        guides.push({ type: 'h', from: [left, candidate.position], to: [right, candidate.position] });
+        labels.push(candidate.label);
       }
     }
   }
@@ -470,7 +586,7 @@ interface LengthGuide {
   matchingSegment: { p1: [number, number]; p2: [number, number] };
 }
 
-function findAlignmentGuides(
+export function findAlignmentGuides(
   cursor: [number, number],
   pieces: Piece[],
   effectiveScale: number,
@@ -517,7 +633,7 @@ function findAlignmentGuides(
   return { snapped, guides };
 }
 
-function findShiftAlignmentGuides(
+export function findShiftAlignmentGuides(
   cursor: [number, number],
   lastPt: [number, number],
   snappedTheta: number,
@@ -568,7 +684,7 @@ function findShiftAlignmentGuides(
   return { snapped, guides: guide ? [guide] : [] };
 }
 
-function findLengthSnap(
+export function findLengthSnap(
   cursor: [number, number],
   lastPt: [number, number],
   pieces: Piece[],
@@ -623,8 +739,6 @@ function findLengthSnap(
 
   let bestMatch: typeof segments[0] | null = null;
   let bestDistPx = tolerancePx;
-  const tolerance = tolerancePx / effectiveScale;
-
   for (const seg of segments) {
     const dist = Math.abs(currentLen - seg.length);
     const distPx = dist * effectiveScale;
@@ -643,18 +757,144 @@ function findLengthSnap(
   return null;
 }
 
+interface PenResolution {
+  point: [number, number];
+  vertexSnapped: boolean;
+  alignmentGuides: AlignmentGuide[];
+  lengthGuide: LengthGuide | null;
+  labels: string[];
+}
+
+interface PenPreviewHandle {
+  schedule(resolve: () => PenResolution | null): void;
+  publish(preview: PenResolution | null): void;
+  clear(): void;
+}
+
+const EMPTY_PEN_PREVIEW: PenResolution = {
+  point: [0, 0], vertexSnapped: false, alignmentGuides: [], lengthGuide: null, labels: [],
+};
+
+const PenPreviewHost = forwardRef<PenPreviewHandle, {
+  active: boolean;
+  lastPoint: [number, number] | null;
+  statusStore: PenStatusStore;
+  children: (preview: PenResolution & { visible: boolean }) => React.ReactNode;
+}>(function PenPreviewHost({ active, lastPoint, statusStore, children }, ref) {
+  const [preview, setPreview] = useState(EMPTY_PEN_PREVIEW);
+  const [visible, setVisible] = useState(false);
+  const scheduler = useRef(createRafScheduler());
+  function publish(next: PenResolution | null) {
+    if (next) {
+      setPreview(next);
+      setVisible(true);
+    } else {
+      setVisible(false);
+      setPreview(EMPTY_PEN_PREVIEW);
+    }
+  }
+  useImperativeHandle(ref, () => ({
+    schedule(resolve) {
+      scheduler.current.schedule(() => publish(resolve()));
+    },
+    publish(next) {
+      scheduler.current.cancel();
+      publish(next);
+    },
+    clear() {
+      scheduler.current.cancel();
+      publish(null);
+    },
+  }), []);
+  useEffect(() => () => scheduler.current.cancel(), []);
+  useEffect(() => {
+    statusStore.update({
+      coords: active && visible ? { x: preview.point[0], y: preview.point[1] } : null,
+      lastPoint: active && lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
+    });
+  }, [active, visible, preview.point, lastPoint, statusStore]);
+  return children({ ...preview, visible });
+});
+
+export function resolvePenPoint({
+  cursor, activePoints, shiftPressed, effectiveScale, crop, patternWidth,
+  patternHeight, pieces, translate, snapIndex,
+}: {
+  cursor: [number, number]; activePoints: [number, number][]; shiftPressed: boolean;
+  effectiveScale: number; crop: Crop; patternWidth: number; patternHeight: number;
+  pieces: Piece[]; translate: (key: string) => string; snapIndex?: PenSnapIndex;
+}): PenResolution {
+  const vertex = snapIndex
+    ? queryVertexSnap(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+    : findPenSnapTarget(cursor, pieces, effectiveScale);
+  if (vertex) return {
+    point: vertex.pt,
+    vertexSnapped: true,
+    alignmentGuides: [],
+    lengthGuide: null,
+    labels: vertex.label ? [vertex.label] : [],
+  };
+
+  let point: [number, number] = cursor;
+  let alignmentGuides: AlignmentGuide[] = [];
+  let lengthGuide: LengthGuide | null = null;
+  if (activePoints.length > 0) {
+    const last = activePoints[activePoints.length - 1];
+    let theta = Math.atan2(cursor[1] - last[1], cursor[0] - last[0]);
+    if (shiftPressed) theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
+    const length = snapIndex
+      ? queryLengthSnap(snapIndex, cursor, last, activePoints, effectiveScale, PEN_SNAP_PX)
+      : findLengthSnap(cursor, last, pieces, activePoints, effectiveScale);
+    if (length) {
+      point = [last[0] + length.matchLength * Math.cos(theta), last[1] + length.matchLength * Math.sin(theta)];
+      lengthGuide = { matchLength: length.matchLength, center: last, snappedPoint: point, matchingSegment: length.matchingSegment };
+    } else if (shiftPressed) {
+      const aligned = snapIndex
+        ? queryShiftAlignment(snapIndex, cursor, last, theta, effectiveScale, PEN_SNAP_PX)
+        : findShiftAlignmentGuides(cursor, last, theta, pieces, effectiveScale);
+      if (aligned.guides.length > 0) {
+        point = aligned.snapped;
+        alignmentGuides = aligned.guides;
+      } else {
+        const radius = Math.hypot(cursor[0] - last[0], cursor[1] - last[1]);
+        point = [last[0] + radius * Math.cos(theta), last[1] + radius * Math.sin(theta)];
+      }
+    } else {
+      const aligned = snapIndex
+        ? queryAlignment(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+        : findAlignmentGuides(cursor, pieces, effectiveScale);
+      point = aligned.snapped;
+      alignmentGuides = aligned.guides;
+    }
+  } else {
+    const aligned = snapIndex
+      ? queryAlignment(snapIndex, cursor, effectiveScale, PEN_SNAP_PX)
+      : findAlignmentGuides(cursor, pieces, effectiveScale);
+    point = aligned.snapped;
+    alignmentGuides = aligned.guides;
+  }
+  const canvas = getCanvasSnapping(point[0], point[1], crop, patternWidth, patternHeight, effectiveScale, translate);
+  return {
+    point: [canvas.x, canvas.y], vertexSnapped: false,
+    alignmentGuides: [...alignmentGuides, ...canvas.guides], lengthGuide, labels: canvas.labels,
+  };
+}
+
 export function ResultPanel({
-  project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
+  pieceTransformPreviewStore, project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
-  onUpdatePiecePolygon, onUpdatePieceCurves, onUpdatePrompt,
-  onAutoSegment, isAutoSegmenting, isEncoding, onUploadPattern, onStartBlankCanvas, debugMask, activeTool, onChangeActiveTool,
-  tutorialStep, refineMode, onRefineModeChange, onPenStatusChange,
-  onUpdateSolderWidthMM, onUpdateSolderColor,
+  onUpdatePieceCurves, onUpdatePiecePolygonAndCurves, onUpdatePrompt,
+  onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, onStartLampMode, debugMask, activeTool, onChangeActiveTool,
+  tutorialStep, refineMode, onRefineModeChange, penStatusStore,
+  onUpdateSolderWidthMM, onUpdateSolderColor, onOpenLampProfile,
+  isSymmetryEnabled = false, onToggleSymmetry,
 }: ResultPanelProps) {
   const { t } = useTranslation();
+  const selectedPieceIdSet = useMemo(() => new Set(selectedPieceIds), [selectedPieceIds]);
   const [isSolderPopoverOpen, setIsSolderPopoverOpen] = useState(false);
   const solderPopoverRef = useRef<HTMLDivElement>(null);
+  const snapMenuRef = useRef<HTMLDivElement>(null);
   const isSolderPopoverOpenRef = useRef(isSolderPopoverOpen);
   isSolderPopoverOpenRef.current = isSolderPopoverOpen;
 
@@ -675,38 +915,182 @@ export function ResultPanel({
   refineModeRef.current = refineMode;
 
   const { patternWidth: pw, patternHeight: ph } = project;
+  const isTraceMode = project.projectType !== 'lamp' && Boolean(project.patternImageUrl);
   const vp = useViewport(pw, ph);
+  const isLamp = project.projectType === 'lamp';
+  const unrolledLamp = useMemo(
+    () => (isLamp ? computeUnrolledLamp(project.lampConfig) : null),
+    [isLamp, project.lampConfig],
+  );
+  const unrolledLampRef = useRef(unrolledLamp);
+  unrolledLampRef.current = unrolledLamp;
+  const lampSnapPointsCacheRef = useRef<{
+    lamp: NonNullable<typeof unrolledLamp>;
+    effectiveScale: number;
+    translate: typeof t;
+    points: LampSnapPoint[];
+  } | null>(null);
+
+  function getCurrentLampSnapPoints(effectiveScale: number) {
+    const lamp = unrolledLampRef.current;
+    if (!lamp) return undefined;
+    const cached = lampSnapPointsCacheRef.current;
+    if (cached?.lamp === lamp && cached.effectiveScale === effectiveScale && cached.translate === t) {
+      return cached.points;
+    }
+    const points = getLampSnapPoints(lamp, effectiveScale, t);
+    lampSnapPointsCacheRef.current = { lamp, effectiveScale, translate: t, points };
+    return points;
+  }
+
+  function isInsideDrawableBounds(point: [number, number], padding = 0) {
+    return isPointWithinBounds(point, {
+      left: project.patternCrop.left,
+      right: pw - project.patternCrop.right,
+      top: project.patternCrop.top,
+      bottom: ph - project.patternCrop.bottom,
+    }, padding);
+  }
+
+  function clearDraftHoverFeedback() {
+    lastMousePosRef.current = null;
+    penPreviewRef.current?.clear();
+  }
+
+  useEffect(() => {
+    if (!isTraceMode && TRACE_ONLY_TOOL_IDS.has(activeTool)) {
+      onChangeActiveTool('select');
+    }
+  }, [activeTool, isTraceMode, onChangeActiveTool]);
 
   const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
-  const [hoverPoint, setHoverPoint] = useState<[number, number] | null>(null);
-  const [hoverSnapped, setHoverSnapped] = useState(false);
+  const [activePenAnchors, setActivePenAnchors] = useState<BezierAnchor[]>([]);
+  const [penDragIndex, setPenDragIndex] = useState<number | null>(null);
+  const penDragIndexRef = useRef<number | null>(null);
+  const penPreviewRef = useRef<PenPreviewHandle>(null);
   const activePolygonPointsRef = useRef(activePolygonPoints);
   activePolygonPointsRef.current = activePolygonPoints;
+  const activePenAnchorsRef = useRef(activePenAnchors);
+  activePenAnchorsRef.current = activePenAnchors;
 
-  const [isShiftDown, setIsShiftDown] = useState(false);
+  const [snapEnabled, setSnapEnabled] = useState(true);
+  const [snapMenuOpen, setSnapMenuOpen] = useState(false);
+  const [snapSettings, setSnapSettings] = useState({
+    anchors: true,
+    edges: true,
+    alignment: true,
+    canvas: true,
+    equalLength: true,
+  });
+  useEffect(() => {
+    if (!snapMenuOpen) return;
+    function closeSnapMenu(event: PointerEvent | KeyboardEvent) {
+      if (event instanceof KeyboardEvent && event.key !== 'Escape') return;
+      if (event instanceof PointerEvent && snapMenuRef.current?.contains(event.target as Node)) return;
+      setSnapMenuOpen(false);
+    }
+    document.addEventListener('pointerdown', closeSnapMenu);
+    window.addEventListener('keydown', closeSnapMenu);
+    return () => {
+      document.removeEventListener('pointerdown', closeSnapMenu);
+      window.removeEventListener('keydown', closeSnapMenu);
+    };
+  }, [snapMenuOpen]);
   const lastMousePosRef = useRef<{ x: number; y: number } | null>(null);
+  // Tracks whether the pointer is over this panel, so single-key tool
+  // shortcuts only apply here instead of firing into both panels at once.
+  const isPointerInsideRef = useRef(false);
 
   const piecesRef = useRef(project.pieces);
   piecesRef.current = project.pieces;
-  const effectiveScaleRef = useRef(vp.effectiveScale);
-  effectiveScaleRef.current = vp.effectiveScale;
+  const penSnapIndexRef = useRef<{
+    pieces: Array<{ id: string; polygon: Piece['polygon']; curves: Piece['curvePoints'] }>;
+    index: PenSnapIndex;
+  } | null>(null);
+  const sameSnapGeometry = penSnapIndexRef.current?.pieces.length === project.pieces.length
+    && project.pieces.every((piece, index) => {
+      const cached = penSnapIndexRef.current!.pieces[index];
+      return cached.id === piece.id
+        && cached.polygon === piece.polygon
+        && cached.curves === piece.curvePoints;
+    });
+  if (!sameSnapGeometry) {
+    penSnapIndexRef.current = {
+      pieces: project.pieces.map(piece => ({
+        id: piece.id,
+        polygon: piece.polygon,
+        curves: piece.curvePoints,
+      })),
+      index: createPenSnapIndex(project.pieces),
+    };
+  }
+  const penSnapIndex = penSnapIndexRef.current!.index;
+  const effectiveScaleRef = {
+    get current() { return vp.getSnapshot().effectiveScale; },
+  };
 
-  const [activeAlignmentGuides, setActiveAlignmentGuides] = useState<AlignmentGuide[]>([]);
-  const [activeLengthGuide, setActiveLengthGuide] = useState<LengthGuide | null>(null);
-  const [activeSnapLabels, setActiveSnapLabels] = useState<string[]>([]);
+  function resolveHoverPoint(
+    imageX: number,
+    imageY: number,
+    shiftPressed: boolean,
+    suppressSnap = false,
+  ): PenResolution | null {
+    if (activeTool !== 'polygon' && activeTool !== 'pen') return null;
+    suppressSnap = suppressSnap || !snapEnabled;
 
-  function updateHoverPoint(imageX: number, imageY: number, shiftPressed: boolean) {
-    if (activeTool !== 'pen') return;
+    const pathPoints = activeTool === 'polygon'
+      ? activePolygonPointsRef.current
+      : activePenAnchorsRef.current.map(anchor => anchor.point);
+    const lastPt = pathPoints[pathPoints.length - 1];
 
-    // 1. Vertex snapping is highest priority
-    const snap = findPenSnapTarget([imageX, imageY], piecesRef.current, effectiveScaleRef.current);
+    if (suppressSnap) {
+      const raw: [number, number] = [imageX, imageY];
+      const result = shiftPressed && lastPt ? constrainToAngle(raw, lastPt) : raw;
+      return { point: result, vertexSnapped: false, alignmentGuides: [], lengthGuide: null, labels: [] };
+    }
+
+    // True polygon anchors are the highest-priority snap targets. Flattened
+    // curve samples are deliberately excluded so editable anchors remain the
+    // only magnetic points on curved paths.
+    const effectiveScale = effectiveScaleRef.current;
+    const snap = snapSettings.anchors
+      ? queryVertexSnap(
+        penSnapIndex,
+        [imageX, imageY],
+        effectiveScale,
+        PEN_SNAP_PX,
+        getCurrentLampSnapPoints(effectiveScale),
+      )
+      : null;
     if (snap) {
-      setHoverPoint(snap);
-      setHoverSnapped(true);
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
-      return;
+      const constrained = shiftPressed && lastPt ? constrainToAngle(snap.pt, lastPt) : snap.pt;
+      const exact = Math.hypot(constrained[0] - snap.pt[0], constrained[1] - snap.pt[1]) * effectiveScaleRef.current < 0.75;
+      const result = exact ? snap.pt : constrained;
+      return {
+        point: result,
+        vertexSnapped: exact,
+        alignmentGuides: [],
+        lengthGuide: null,
+        labels: exact && snap.label ? [snap.label] : [],
+      };
+    }
+
+    const edgeTarget = snapSettings.edges
+      ? queryEdgeSnap(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX)
+      : null;
+    if (edgeTarget) {
+      const constrained = shiftPressed && lastPt ? constrainToAngle(edgeTarget, lastPt) : edgeTarget;
+      const exact = Math.hypot(constrained[0] - edgeTarget[0], constrained[1] - edgeTarget[1]) * effectiveScaleRef.current < 0.75;
+      const result = exact ? edgeTarget : constrained;
+      return { point: result, vertexSnapped: exact, alignmentGuides: [], lengthGuide: null, labels: [] };
+    }
+
+    // 1b. Lamp seam edge snap — project onto nearest seam line.
+    if (unrolledLampRef.current) {
+      const edgeSnap = findLampEdgeSnap([imageX, imageY], unrolledLampRef.current, effectiveScaleRef.current, PEN_SNAP_PX);
+      if (edgeSnap) {
+        return { point: edgeSnap, vertexSnapped: true, alignmentGuides: [], lengthGuide: null, labels: [] };
+      }
     }
 
     let finalX = imageX;
@@ -714,95 +1098,173 @@ export function ResultPanel({
     let alignmentGuides: AlignmentGuide[] = [];
     let lengthGuide: LengthGuide | null = null;
 
-    if (activePolygonPointsRef.current.length > 0) {
-      const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-
+    if (lastPt) {
       let theta = Math.atan2(imageY - lastPt[1], imageX - lastPt[0]);
-      if (shiftPressed) {
-        theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-      }
+      if (shiftPressed) theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
 
-      // 2. Length Snapping
-      const lenSnap = findLengthSnap(
-        [imageX, imageY],
-        lastPt,
-        piecesRef.current,
-        activePolygonPointsRef.current,
-        effectiveScaleRef.current
-      );
+      const lenSnap = snapSettings.equalLength
+        ? queryLengthSnap(
+          penSnapIndex,
+          [imageX, imageY],
+          lastPt,
+          pathPoints,
+          effectiveScaleRef.current,
+          PEN_SNAP_PX,
+        )
+        : null;
 
       if (lenSnap) {
         finalX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
         finalY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
-
         lengthGuide = {
           matchLength: lenSnap.matchLength,
           center: lastPt,
           snappedPoint: [finalX, finalY],
           matchingSegment: lenSnap.matchingSegment,
         };
-      } else {
-        if (shiftPressed) {
-          const align = findShiftAlignmentGuides(
-            [imageX, imageY],
-            lastPt,
-            theta,
-            piecesRef.current,
-            effectiveScaleRef.current
-          );
-          if (align.guides.length > 0) {
-            finalX = align.snapped[0];
-            finalY = align.snapped[1];
-            alignmentGuides = align.guides;
-          } else {
-            const r = Math.hypot(imageX - lastPt[0], imageY - lastPt[1]);
-            finalX = lastPt[0] + r * Math.cos(theta);
-            finalY = lastPt[1] + r * Math.sin(theta);
-          }
-        } else {
-          // 3. Horizontal/Vertical Alignment Snapping
-          const align = findAlignmentGuides(
-            [imageX, imageY],
-            piecesRef.current,
-            effectiveScaleRef.current
-          );
+      } else if (shiftPressed) {
+        const align = queryShiftAlignment(
+          penSnapIndex,
+          [imageX, imageY],
+          lastPt,
+          theta,
+          effectiveScaleRef.current,
+          PEN_SNAP_PX,
+        );
+        if (align.guides.length > 0) {
           finalX = align.snapped[0];
           finalY = align.snapped[1];
           alignmentGuides = align.guides;
+        } else {
+          [finalX, finalY] = constrainToAngle([imageX, imageY], lastPt);
         }
+      } else if (snapSettings.alignment) {
+        const align = queryAlignment(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX);
+        finalX = align.snapped[0];
+        finalY = align.snapped[1];
+        alignmentGuides = align.guides;
       }
-    } else {
-      // 3. Horizontal/Vertical Alignment Snapping
-      const align = findAlignmentGuides(
-        [imageX, imageY],
-        piecesRef.current,
-        effectiveScaleRef.current
-      );
+    } else if (snapSettings.alignment) {
+      const align = queryAlignment(penSnapIndex, [imageX, imageY], effectiveScaleRef.current, PEN_SNAP_PX);
       finalX = align.snapped[0];
       finalY = align.snapped[1];
       alignmentGuides = align.guides;
     }
 
-    const edgeSnap = getCanvasSnapping(
-      finalX,
-      finalY,
-      project.patternCrop,
-      project.patternWidth,
-      project.patternHeight,
-      effectiveScaleRef.current,
-      t
-    );
+    let customBounds = undefined;
+    if (project.projectType === 'lamp' && unrolledLamp && unrolledLamp.mode === 'faceted') {
+      const N = project.lampConfig?.facetCount ?? 6;
+      const surf = patternToSurfaceRobust(finalX, finalY, unrolledLamp, N);
+      const strip = unrolledLamp.strips[surf.facetIdx];
+      const tier = strip?.tiers[surf.tierIdx];
+      if (strip && tier) {
+        const maxChord = Math.max(tier.topChord, tier.botChord);
+        customBounds = {
+          left: strip.centerX - maxChord / 2,
+          right: strip.centerX + maxChord / 2,
+          top: tier.topY,
+          bottom: tier.botY
+        };
+      }
+    }
+
+    const edgeSnap = snapSettings.canvas
+      ? getCanvasSnapping(
+        finalX, finalY, project.patternCrop, project.patternWidth,
+        project.patternHeight, effectiveScaleRef.current, t, false, customBounds,
+      )
+      : { x: finalX, y: finalY, guides: [] as AlignmentGuide[], labels: [] as string[] };
     finalX = edgeSnap.x;
     finalY = edgeSnap.y;
-    if (edgeSnap.guides.length > 0) {
-      alignmentGuides = [...alignmentGuides, ...edgeSnap.guides];
-    }
-    setActiveSnapLabels(edgeSnap.labels);
+    if (edgeSnap.guides.length > 0) alignmentGuides = [...alignmentGuides, ...edgeSnap.guides];
 
-    setHoverPoint([finalX, finalY]);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides(alignmentGuides);
-    setActiveLengthGuide(lengthGuide);
+    // Modifier constraints are absolute: lower-priority canvas/alignment snaps
+    // may suggest a point, but must never bend a promised 45° segment.
+    if (shiftPressed && lastPt) {
+      const theta = Math.round(Math.atan2(imageY - lastPt[1], imageX - lastPt[0]) / (Math.PI / 4)) * (Math.PI / 4);
+      const radius = Math.hypot(finalX - lastPt[0], finalY - lastPt[1]);
+      const constrained: [number, number] = [
+        lastPt[0] + radius * Math.cos(theta),
+        lastPt[1] + radius * Math.sin(theta),
+      ];
+      const invalidatedSnap = Math.hypot(constrained[0] - finalX, constrained[1] - finalY) * effectiveScaleRef.current > 0.75;
+      finalX = constrained[0];
+      finalY = constrained[1];
+      if (invalidatedSnap) {
+        alignmentGuides = [];
+        lengthGuide = null;
+        edgeSnap.labels = [];
+      }
+    }
+
+    const result: [number, number] = [finalX, finalY];
+    return {
+      point: result,
+      vertexSnapped: false,
+      alignmentGuides,
+      lengthGuide,
+      labels: edgeSnap.labels,
+    };
+  }
+
+  function resolveEditedAnchor(
+    cursor: [number, number],
+    dragOrigin: [number, number],
+    pieceId: string,
+    shiftPressed: boolean,
+    suppressSnap: boolean,
+  ): [number, number] {
+    suppressSnap = suppressSnap || !snapEnabled;
+    if (suppressSnap) return shiftPressed ? constrainToAngle(cursor, dragOrigin) : cursor;
+    const otherPieces = piecesRef.current.filter(piece => piece.id !== pieceId);
+    const anchorSnap = snapSettings.anchors
+      ? findPenSnapTarget(cursor, otherPieces, effectiveScaleRef.current)
+      : null;
+    let result: [number, number] = anchorSnap?.pt
+      ?? (snapSettings.edges ? findEdgeSnapTarget(cursor, otherPieces, effectiveScaleRef.current) : null)
+      ?? cursor;
+    let guides: AlignmentGuide[] = [];
+    if (result === cursor) {
+      const aligned = snapSettings.alignment
+        ? findAlignmentGuides(cursor, otherPieces, effectiveScaleRef.current)
+        : { snapped: cursor, guides: [] };
+      result = aligned.snapped;
+      guides = aligned.guides;
+      const canvas = snapSettings.canvas
+        ? getCanvasSnapping(
+          result[0], result[1], project.patternCrop, project.patternWidth,
+          project.patternHeight, effectiveScaleRef.current, t,
+        )
+        : { x: result[0], y: result[1], guides: [] as AlignmentGuide[], labels: [] as string[] };
+      result = [canvas.x, canvas.y];
+      guides = [...guides, ...canvas.guides];
+    }
+    if (shiftPressed) {
+      const constrained = constrainToAngle(result, dragOrigin);
+      if (Math.hypot(constrained[0] - result[0], constrained[1] - result[1]) * effectiveScaleRef.current > 0.75) {
+        guides = [];
+      }
+      result = constrained;
+    }
+    return result;
+  }
+
+  function updateHoverPoint(
+    imageX: number,
+    imageY: number,
+    shiftPressed: boolean,
+    suppressSnap = false,
+  ) {
+    penPreviewRef.current?.schedule(() => {
+      const resolution = resolveHoverPointRef.current(imageX, imageY, shiftPressed, suppressSnap);
+      return resolution && isInsideDrawableBounds(resolution.point) ? resolution : null;
+    });
+  }
+  const resolveHoverPointRef = useRef(resolveHoverPoint);
+  resolveHoverPointRef.current = resolveHoverPoint;
+
+  function clearPenPreview() {
+    penPreviewRef.current?.clear();
   }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
@@ -813,7 +1275,9 @@ export function ResultPanel({
   const [activeDragCurvePoints, setActiveDragCurvePoints] = useState<CurvePoint[] | null>(null);
   const dragStartCurvePointsRef = useRef<CurvePoint[]>([]);
 
-  const [pencilPoints, setPencilPoints] = useState<[number, number][]>([]);
+  const [pencilController] = useState(() => new PencilController());
+  const [isPencilDrawing, setIsPencilDrawing] = useState(false);
+  useEffect(() => () => pencilController.clear(), [pencilController]);
 
   const [tooltipDrag, setTooltipDrag] = useState<{x: number; y: number}>({x: 0, y: 0});
   const addSheetInputRef = useRef<HTMLInputElement>(null);
@@ -848,11 +1312,33 @@ export function ResultPanel({
       onAddManualPiece(activePolygonPointsRef.current);
     }
     setActivePolygonPoints([]);
-    setHoverPoint(null);
-    setHoverSnapped(false);
-    setActiveAlignmentGuides([]);
-    setActiveLengthGuide(null);
-    setActiveSnapLabels([]);
+    clearPenPreview();
+  }
+
+  function clearActivePen() {
+    setActivePenAnchors([]);
+    setPenDragIndex(null);
+    penDragIndexRef.current = null;
+    clearPenPreview();
+  }
+
+  function commitActivePen() {
+    const anchors = activePenAnchorsRef.current;
+    if (anchors.length >= 3) {
+      const polygon = anchors.map(anchor => anchor.point);
+      const area = Math.abs(polygon.reduce((sum, point, index) => {
+        const next = polygon[(index + 1) % polygon.length];
+        return sum + point[0] * next[1] - next[0] * point[1];
+      }, 0)) / 2;
+      if (area * vp.effectiveScale * vp.effectiveScale >= 4) {
+        onAddManualPiece(
+          polygon,
+          anchorsToCurvePoints(anchors),
+          anchors.map(anchor => anchor.smooth ? 'smooth' : 'corner'),
+        );
+      }
+    }
+    clearActivePen();
   }
 
   useEffect(() => {
@@ -860,91 +1346,110 @@ export function ResultPanel({
     setTooltipDrag({x: 0, y: 0});
   }, [selectedPieceIds]);
 
-  const onPenStatusChangeRef = useRef(onPenStatusChange);
-  onPenStatusChangeRef.current = onPenStatusChange;
+  const lastPoint = activeTool === 'pen'
+    ? activePenAnchors[activePenAnchors.length - 1]?.point ?? null
+    : activePolygonPoints[activePolygonPoints.length - 1] ?? null;
 
-  const lastPoint = activePolygonPoints.length > 0 ? activePolygonPoints[activePolygonPoints.length - 1] : null;
-  useEffect(() => {
-    if (activeTool === 'pen') {
-      onPenStatusChangeRef.current?.({
-        coords: hoverPoint ? { x: hoverPoint[0], y: hoverPoint[1] } : null,
-        lastPoint: lastPoint ? { x: lastPoint[0], y: lastPoint[1] } : null,
-      });
-    } else {
-      onPenStatusChangeRef.current?.({ coords: null, lastPoint: null });
+  // Capture only draft undo so it wins over the app-level history handler.
+  // All other shortcuts remain in bubble phase, allowing open modals to stop
+  // Escape and single-key commands before they reach the canvas.
+  function handleKeyDownCapture(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
+    if (activeTool === 'polygon' && activePolygonPointsRef.current.length > 0) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setActivePolygonPoints(prev => prev.slice(0, -1));
+    } else if (activeTool === 'pen' && activePenAnchorsRef.current.length > 0) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      setActivePenAnchors(prev => prev.slice(0, -1));
     }
-  }, [hoverPoint, lastPoint, activeTool]);
+  }
+
+  function handleKeyDown(e: KeyboardEvent) {
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if (e.key === 'Control') {
+      if (lastMousePosRef.current) updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, e.shiftKey, true);
+      return;
+    }
+    if (e.code === 'Space' && !e.repeat) {
+      if (!isPointerInsideRef.current) return;
+      e.preventDefault();
+      setIsSpaceDown(true);
+      return;
+    }
+    if (e.key === 'Shift') {
+      if (!e.repeat && lastMousePosRef.current) {
+        updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true, e.ctrlKey);
+      }
+      return;
+    }
+    if (e.metaKey || e.ctrlKey || e.altKey || !isPointerInsideRef.current) return;
+
+    const key = e.key.toLowerCase();
+    if (e.key === '+' || e.key === '=') { e.preventDefault(); vp.zoomIn(); return; }
+    if (e.key === '-') { e.preventDefault(); vp.zoomOut(); return; }
+    if (e.shiftKey && e.code === 'Digit1') { e.preventDefault(); vp.fitToView(); return; }
+    if (e.shiftKey && e.code === 'Digit0') { e.preventDefault(); vp.zoomToActualSize(); return; }
+
+    if (key === 'v') handleToolChange('select');
+    else if (key === 'h') handleToolChange('pan');
+    else if (key === 'b' && isTraceMode && !isEncoding) handleToolChange('box');
+    else if (key === 'p') handleToolChange(e.shiftKey ? 'polygon' : 'pen');
+    else if (key === 'n') handleToolChange('pencil');
+    else if (key === 'c') handleToolChange('crop');
+    else if (key === 'm') handleToolChange('measure');
+    else if (key === 'i' && isTraceMode) handleToolChange('inspect');
+    else if (key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
+    else if (key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
+    else if (e.key === 'Enter') {
+      if (activeTool === 'polygon' && activePolygonPointsRef.current.length >= 3) commitActivePolygon();
+      else if (activeTool === 'pen' && activePenAnchorsRef.current.length >= 3) commitActivePen();
+    } else if (e.key === 'Escape') {
+      if (isSolderPopoverOpenRef.current) setIsSolderPopoverOpen(false);
+      else if (refineModeRef.current) onRefineModeChange(null);
+      else if (activePolygonPointsRef.current.length > 0) {
+        setActivePolygonPoints([]);
+        clearPenPreview();
+      } else if (activePenAnchorsRef.current.length > 0) clearActivePen();
+      else handleToolChange('select');
+    }
+  }
+
+  function handleKeyUp(e: KeyboardEvent) {
+    if (e.code === 'Space') setIsSpaceDown(false);
+    if (e.key === 'Control' && lastMousePosRef.current) {
+      updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, e.shiftKey, false);
+    }
+    if (e.key === 'Shift') {
+      if (lastMousePosRef.current) updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false, e.ctrlKey);
+    }
+  }
+
+  // Dispatch through a ref so the listeners always see the latest render's
+  // closures. The previous [activeTool]-dep effect kept stale captures of
+  // isEncoding, project and measure alive between tool changes ('b' stayed
+  // dead after encoding finished; 'm' calibrated against an old crop).
+  const keyHandlersRef = useRef({ downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp });
+  keyHandlersRef.current = { downCapture: handleKeyDownCapture, down: handleKeyDown, up: handleKeyUp };
 
   useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
-      if (e.code === 'Space' && !e.repeat) {
-        e.preventDefault();
-        setIsSpaceDown(true);
-        return;
-      }
-      if (e.key === 'Shift') {
-        if (!e.repeat) {
-          setIsShiftDown(true);
-          if (lastMousePosRef.current) {
-            updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, true);
-          }
-        }
-      }
-      if (e.key === 'v') handleToolChange('select');
-      else if (e.key === 'h') handleToolChange('pan');
-      else if (e.key === 'b' && !isEncoding) handleToolChange('box');
-      else if (e.key === 'p') handleToolChange('pen');
-      else if (e.key === 'n') handleToolChange('pencil');
-      else if (e.key === 'c') handleToolChange('crop');
-      else if (e.key === 'm') handleToolChange('measure');
-      else if (e.key === 'i') handleToolChange('inspect');
-      else if (e.key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
-      else if (e.key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
-      else if (e.key === 'Enter') {
-        if (activeTool === 'pen' && activePolygonPointsRef.current.length >= 3) {
-          commitActivePolygon();
-        }
-      }
-      else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && activeTool === 'pen' && activePolygonPointsRef.current.length > 0) {
-        // Pop the last placed vertex. stopImmediatePropagation blocks App.tsx's
-        // window listener from also firing project undo on the same event.
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        setActivePolygonPoints(prev => prev.slice(0, -1));
-      }
-      else if (e.key === 'Escape') {
-        if (isSolderPopoverOpenRef.current) {
-          setIsSolderPopoverOpen(false);
-        } else if (refineModeRef.current) {
-          onRefineModeChange(null);
-        } else if (activePolygonPointsRef.current.length > 0) {
-          setActivePolygonPoints([]);
-          setHoverPoint(null);
-          setHoverSnapped(false);
-          setActiveSnapLabels([]);
-        } else {
-          handleToolChange('select');
-        }
-      }
-    }
-    function handleKeyUp(e: KeyboardEvent) {
-      if (e.code === 'Space') setIsSpaceDown(false);
-      if (e.key === 'Shift') {
-        setIsShiftDown(false);
-        if (lastMousePosRef.current) {
-          updateHoverPoint(lastMousePosRef.current.x, lastMousePosRef.current.y, false);
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
+    const downCapture = (e: KeyboardEvent) => keyHandlersRef.current.downCapture(e);
+    const down = (e: KeyboardEvent) => keyHandlersRef.current.down(e);
+    const up = (e: KeyboardEvent) => keyHandlersRef.current.up(e);
+    // Capture phase only for the pen Cmd+Z vertex-pop, which must run before
+    // App.tsx's bubble-phase undo listener regardless of registration order.
+    // The rest stay bubble-phase so an open modal can stop them (see above).
+    window.addEventListener('keydown', downCapture, true);
+    window.addEventListener('keydown', down);
+    window.addEventListener('keyup', up);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('keydown', downCapture, true);
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTool]);
+  }, []);
 
   const [drawingBox, setDrawingBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
   const [marqueeBox, setMarqueeBox] = useState<{ x1: number; y1: number; x2: number; y2: number } | null>(null);
@@ -964,11 +1469,25 @@ export function ResultPanel({
   }, [tutorialStep, project.pieces.length]);
   
   const [patternImg] = useImage(project.patternImageUrl);
-  const sheetMap = Object.fromEntries(project.sheets.map(s => [s.id, s]));
+  const sheetMap = useMemo(
+    () => Object.fromEntries(project.sheets.map(s => [s.id, s])),
+    [project.sheets],
+  );
   const measure = useMeasure();
 
   function isBackground(e: KonvaEventObject<PointerEvent | MouseEvent>) {
     return e.target.getType() === 'Stage' || (e.target as { attrs?: { id?: string } }).attrs?.id === 'bg';
+  }
+
+  // Capture the pointer for the duration of a drag gesture so pointermove/
+  // pointerup keep arriving even when the pointer leaves the canvas before
+  // release — otherwise the gesture (pan, box, marquee, pencil) sticks "on"
+  // and keeps following the bare cursor when it re-enters.
+  function capturePointer(e: KonvaEventObject<PointerEvent>) {
+    const evt = e.evt;
+    if (evt?.target instanceof Element && evt.pointerId !== undefined) {
+      try { evt.target.setPointerCapture(evt.pointerId); } catch { /* pointer already gone */ }
+    }
   }
 
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
@@ -977,6 +1496,7 @@ export function ResultPanel({
 
     const isMiddleClick = e.evt && (e.evt as MouseEvent).button === 1;
     if (isMiddleClick || activeTool === 'pan' || isSpaceDown) {
+      capturePointer(e);
       vp.startPan(ptr);
       return;
     }
@@ -988,108 +1508,69 @@ export function ResultPanel({
       return;
     }
 
-    if (activeTool === 'pen') {
+    if (activeTool === 'polygon') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      const isShift = e.evt ? e.evt.shiftKey : false;
-      let targetX = x;
-      let targetY = y;
-      const snap = findPenSnapTarget([x, y], project.pieces, vp.effectiveScale);
-      if (snap) {
-        targetX = snap[0];
-        targetY = snap[1];
-      } else if (activePolygonPointsRef.current.length > 0) {
-        const lastPt = activePolygonPointsRef.current[activePolygonPointsRef.current.length - 1];
-
-        let theta = Math.atan2(y - lastPt[1], x - lastPt[0]);
-        if (isShift) {
-          theta = Math.round(theta / (Math.PI / 4)) * (Math.PI / 4);
-        }
-
-        const lenSnap = findLengthSnap(
-          [x, y],
-          lastPt,
-          project.pieces,
-          activePolygonPointsRef.current,
-          vp.effectiveScale
-        );
-
-        if (lenSnap) {
-          targetX = lastPt[0] + lenSnap.matchLength * Math.cos(theta);
-          targetY = lastPt[1] + lenSnap.matchLength * Math.sin(theta);
-        } else if (isShift) {
-          const align = findShiftAlignmentGuides(
-            [x, y],
-            lastPt,
-            theta,
-            project.pieces,
-            vp.effectiveScale
-          );
-          if (align.guides.length > 0) {
-            targetX = align.snapped[0];
-            targetY = align.snapped[1];
-          } else {
-            const r = Math.hypot(x - lastPt[0], y - lastPt[1]);
-            targetX = lastPt[0] + r * Math.cos(theta);
-            targetY = lastPt[1] + r * Math.sin(theta);
-          }
-        } else {
-          const align = findAlignmentGuides(
-            [x, y],
-            project.pieces,
-            vp.effectiveScale
-          );
-          targetX = align.snapped[0];
-          targetY = align.snapped[1];
-        }
-      } else {
-        const align = findAlignmentGuides(
-          [x, y],
-          project.pieces,
-          vp.effectiveScale
-        );
-        targetX = align.snapped[0];
-        targetY = align.snapped[1];
-      }
-
-      if (!snap) {
-        const edgeSnap = getCanvasSnapping(
-          targetX,
-          targetY,
-          project.patternCrop,
-          project.patternWidth,
-          project.patternHeight,
-          vp.effectiveScale,
-          t
-        );
-        targetX = edgeSnap.x;
-        targetY = edgeSnap.y;
-      }
-
       if (activePolygonPointsRef.current.length >= 3) {
         const [startX, startY] = activePolygonPointsRef.current[0];
-        const dist = Math.hypot(targetX - startX, targetY - startY) * vp.effectiveScale;
+        const dist = Math.hypot(x - startX, y - startY) * vp.effectiveScale;
         if (dist < 15) {
           commitActivePolygon();
           return;
         }
       }
-      setActivePolygonPoints(prev => [...prev, [targetX, targetY]]);
+      const resolution = resolveHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey);
+      penPreviewRef.current?.publish(resolution);
+      const resolved = resolution?.point ?? [x, y];
+      if (!isInsideDrawableBounds(resolved)) {
+        clearDraftHoverFeedback();
+        return;
+      }
+      setActivePolygonPoints(prev => [...prev, resolved]);
+      return;
+    }
+
+    if (activeTool === 'pen') {
+      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const anchors = activePenAnchorsRef.current;
+      if (anchors.length >= 3) {
+        const [startX, startY] = anchors[0].point;
+        if (Math.hypot(x - startX, y - startY) * vp.effectiveScale < 15) {
+          commitActivePen();
+          return;
+        }
+      }
+      const resolution = resolveHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey);
+      penPreviewRef.current?.publish(resolution);
+      const resolved = resolution?.point ?? [x, y];
+      if (!isInsideDrawableBounds(resolved)) {
+        clearDraftHoverFeedback();
+        return;
+      }
+      capturePointer(e);
+      const index = anchors.length;
+      penDragIndexRef.current = index;
+      setPenDragIndex(index);
+      setActivePenAnchors(prev => [...prev, { point: resolved, smooth: false }]);
       return;
     }
 
     if (activeTool === 'pencil') {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      setPencilPoints([[x, y]]);
+      pencilController.start([x, y]);
+      setIsPencilDrawing(true);
       return;
     }
 
     if (activeTool === 'box' && !isEncoding) {
+      capturePointer(e);
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox({ x1: x, y1: y, x2: x, y2: y });
       return;
     }
 
     if (activeTool === 'select' && isBackground(e)) {
+      capturePointer(e);
       if (IS_TOUCH) {
         vp.startPan(ptr);
       } else {
@@ -1103,6 +1584,23 @@ export function ResultPanel({
   function handlePointerMove(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
+    if (activeTool === 'pen' && penDragIndexRef.current !== null) {
+      const index = penDragIndexRef.current;
+      const anchor = activePenAnchorsRef.current[index];
+      if (!anchor) return;
+      const handlePoint = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      let handle: [number, number] = [handlePoint.x, handlePoint.y];
+      if (e.evt.shiftKey) handle = constrainToAngle(handle, anchor.point);
+      const dx = handle[0] - anchor.point[0];
+      const dy = handle[1] - anchor.point[1];
+      setActivePenAnchors(prev => prev.map((item, itemIndex) => itemIndex === index ? {
+        ...item,
+        in: [item.point[0] - dx, item.point[1] - dy],
+        out: [item.point[0] + dx, item.point[1] + dy],
+        smooth: !e.evt.altKey,
+      } : item));
+      return;
+    }
     if (drawingBox) {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       setDrawingBox(b => b ? { ...b, x2: x, y2: y } : null);
@@ -1113,18 +1611,22 @@ export function ResultPanel({
       setMarqueeBox(b => b ? { ...b, x2: x, y2: y } : null);
       return;
     }
-    if (activeTool === 'pen') {
+    if (activeTool === 'polygon' || activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const edgeSnapPadding = PEN_SNAP_PX / Math.max(vp.effectiveScale, Number.EPSILON);
+      if (!isInsideDrawableBounds([x, y], edgeSnapPadding)) {
+        clearDraftHoverFeedback();
+        return;
+      }
       lastMousePosRef.current = { x, y };
       const isShift = e.evt ? e.evt.shiftKey : false;
-      setIsShiftDown(isShift);
-      updateHoverPoint(x, y, isShift);
+      updateHoverPoint(x, y, isShift, e.evt.ctrlKey);
       return;
     }
     if (activeTool === 'pencil') {
-      if (pencilPoints.length > 0) {
+      if (pencilController.rawPointCount > 0) {
         const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-        setPencilPoints(prev => [...prev, [x, y]]);
+        pencilController.capture([x, y]);
       }
       return;
     }
@@ -1132,6 +1634,11 @@ export function ResultPanel({
   }
 
   function handlePointerUp() {
+    if (penDragIndexRef.current !== null) {
+      penDragIndexRef.current = null;
+      setPenDragIndex(null);
+      return;
+    }
     if (drawingBox) {
       const box: BoundingBox = {
         x1: Math.min(drawingBox.x1, drawingBox.x2),
@@ -1153,10 +1660,16 @@ export function ResultPanel({
         x2: Math.max(marqueeBox.x1, marqueeBox.x2),
         y2: Math.max(marqueeBox.y1, marqueeBox.y2),
       };
-      const hitIds = project.pieces.filter(p => {
-        const centroid = computeCentroid(p.polygon);
-        return centroid.x >= box.x1 && centroid.x <= box.x2 && centroid.y >= box.y1 && centroid.y <= box.y2;
-      }).map(p => p.id);
+      const containsMode = marqueeBox.x2 >= marqueeBox.x1;
+      const hitIds = project.pieces.filter(piece => {
+        const display = flattenCurves(piece.polygon, piece.curvePoints);
+        const xs = display.map(point => point[0]);
+        const ys = display.map(point => point[1]);
+        const bounds = { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
+        return containsMode
+          ? bounds.left >= box.x1 && bounds.right <= box.x2 && bounds.top >= box.y1 && bounds.bottom <= box.y2
+          : bounds.right >= box.x1 && bounds.left <= box.x2 && bounds.bottom >= box.y1 && bounds.top <= box.y2;
+      }).map(piece => piece.id);
 
       if (hitIds.length > 0) {
         onSelectPieces(hitIds);
@@ -1167,15 +1680,32 @@ export function ResultPanel({
       return;
     }
     if (activeTool === 'pencil') {
+      const pencilPoints = pencilController.finish();
+      setIsPencilDrawing(false);
       if (pencilPoints.length >= 3) {
         const simplified = simplifyPath(pencilPoints, 2 / vp.effectiveScale);
         if (simplified.length >= 3) {
           onAddManualPiece(simplified);
         }
       }
-      setPencilPoints([]);
       return;
     }
+    vp.endPan();
+  }
+
+  // The browser cancelled the gesture (OS gesture, tab switch, capture lost):
+  // abort in-progress drags without committing anything.
+  function handlePointerCancel() {
+    if (penDragIndexRef.current !== null) {
+      const cancelledIndex = penDragIndexRef.current;
+      setActivePenAnchors(prev => prev.filter((_, index) => index !== cancelledIndex));
+      penDragIndexRef.current = null;
+      setPenDragIndex(null);
+    }
+    setDrawingBox(null);
+    setMarqueeBox(null);
+    pencilController.clear();
+    setIsPencilDrawing(false);
     vp.endPan();
   }
 
@@ -1186,23 +1716,24 @@ export function ResultPanel({
   }
 
   function handleToolChange(id: ToolId) {
+    if (!isTraceMode && TRACE_ONLY_TOOL_IDS.has(id)) return;
     if (id === activeTool && id !== 'select') {
+      if (id === 'polygon') setActivePolygonPoints([]);
+      if (id === 'pen') clearActivePen();
       onChangeActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
     }
 
-    if (id !== 'pen') {
+    if (id !== 'polygon') {
       setActivePolygonPoints([]);
-      setHoverPoint(null);
-      setHoverSnapped(false);
+      clearPenPreview();
       lastMousePosRef.current = null;
-      setActiveAlignmentGuides([]);
-      setActiveLengthGuide(null);
-      setActiveSnapLabels([]);
     }
+    if (id !== 'pen') clearActivePen();
     if (id !== 'pencil') {
-      setPencilPoints([]);
+      pencilController.clear();
+      setIsPencilDrawing(false);
     }
     setDraggedCorner(null);
     setDraggedMidpoint(null);
@@ -1223,9 +1754,10 @@ export function ResultPanel({
       const cropR = pw - project.patternCrop.right;
       const cropB = ph - project.patternCrop.bottom;
       
-      const defaultX1 = cropL + (cropR - cropL) * 0.25;
-      const defaultX2 = cropL + (cropR - cropL) * 0.75;
-      const defaultY = cropT + (cropB - cropT) * 0.5;
+      const isTutorial = project.name === 'Tutorial';
+      const defaultX1 = isTutorial ? 142.774 : cropL + (cropR - cropL) * 0.25;
+      const defaultX2 = isTutorial ? 2859.777 : cropL + (cropR - cropL) * 0.75;
+      const defaultY = isTutorial ? 2040 : cropT + (cropB - cropT) * 0.5;
 
       let x1 = saved?.x1 ?? defaultX1;
       let y1 = saved?.y1 ?? defaultY;
@@ -1274,10 +1806,9 @@ export function ResultPanel({
         ? 'no-drop' 
         : activeTool === 'box' 
           ? 'crosshair' 
-          : activeTool === 'pen'
+          : activeTool === 'polygon' || activeTool === 'pen'
             ? 'crosshair'
             : 'default';
-  const es = vp.effectiveScale;
   const measurePxLength = measure.line
     ? Math.hypot(measure.line.x2 - measure.line.x1, measure.line.y2 - measure.line.y1)
     : 0;
@@ -1318,6 +1849,17 @@ export function ResultPanel({
         shortcut: 'B',
         description: t('tooltipBoxDesc'),
         animation: <BoxAnimation />,
+      },
+    },
+    {
+      id: 'polygon' as ToolId,
+      label: t('toolDrawPolygon'),
+      icon: <PolygonIcon />,
+      tooltip: {
+        name: t('tooltipPolygonName'),
+        shortcut: 'Shift+P',
+        description: t('tooltipPolygonDesc'),
+        animation: <PolygonAnimation />,
       },
     },
     {
@@ -1388,17 +1930,83 @@ export function ResultPanel({
     },
   ], [t]);
 
-  const TOOLS = BASE_TOOLS
-    .filter(tool => !IS_TOUCH || tool.id !== 'pan')
+  const TOOLS = [...BASE_TOOLS]
+    .filter(tool => (!IS_TOUCH || tool.id !== 'pan') && (isTraceMode || !TRACE_ONLY_TOOL_IDS.has(tool.id)))
+    .sort((a, b) => Number(TRACE_ONLY_TOOL_IDS.has(a.id)) - Number(TRACE_ONLY_TOOL_IDS.has(b.id)))
     .map(tool => {
-    if (tool.id === 'box') return { ...tool, disabled: !!isEncoding, loading: !!isEncoding };
-    if (tool.id === 'detect-all') return { ...tool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: !!isAutoSegmenting || !!isEncoding };
-    return tool;
+    const sectionedTool = tool.id === 'box' ? { ...tool, sectionStart: true } : tool;
+    if (tool.id === 'box') return { ...sectionedTool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
+    if (tool.id === 'detect-all') return { ...sectionedTool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
+    return sectionedTool;
   });
 
   return (
-    <div className="result-panel-inner" data-tutorial-panel="pattern" style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+    <div
+      className="result-panel-inner"
+      data-tutorial-panel="pattern"
+      style={{ display: 'flex', flex: 1, minHeight: 0 }}
+      onPointerEnter={() => { isPointerInsideRef.current = true; }}
+      onPointerLeave={() => { isPointerInsideRef.current = false; }}
+    >
       <Toolbar tools={TOOLS} activeTool={activeTool} onSelectTool={handleToolChange}>
+        <div className="toolbar-divider" />
+        <div className="tooltip-wrapper snap-tooltip-wrapper" ref={snapMenuRef}>
+          <button
+            type="button"
+            className={`tool-btn ${snapMenuOpen ? 'active' : ''}`}
+            aria-haspopup="dialog"
+            aria-expanded={snapMenuOpen}
+            aria-label={t('snapSettings')}
+            onClick={() => setSnapMenuOpen(open => !open)}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M6 7v5a6 6 0 0 0 12 0V7" />
+              <rect x="3.5" y="3.5" width="5" height="4" rx="0.75" fill="currentColor" stroke="none" />
+              <rect x="15.5" y="3.5" width="5" height="4" rx="0.75" fill="currentColor" stroke="none" />
+              {!snapEnabled && <path d="M4 4l16 16" />}
+            </svg>
+            <span className="tool-label">{t('snap')}</span>
+          </button>
+          {!snapMenuOpen && (
+            <ToolTooltip
+              name={t('snap')}
+              shortcut="Ctrl"
+              description={t('snapToggleHint')}
+              animation={<SnappingAnimation />}
+            />
+          )}
+          {snapMenuOpen && (
+            <div className="snap-settings-popover" role="dialog" aria-label={t('snapSettings')} onPointerDown={event => event.stopPropagation()}>
+              <strong>{t('snapSettings')}</strong>
+              <label className="snap-master-toggle">
+                <input
+                  type="checkbox"
+                  checked={snapEnabled}
+                  onChange={event => setSnapEnabled(event.target.checked)}
+                />
+                <span>{t('snapToggle')}</span>
+              </label>
+              {([
+                ['anchors', 'snapAnchors'],
+                ['edges', 'snapEdges'],
+                ['alignment', 'snapAlignment'],
+                ['canvas', 'snapCanvas'],
+                ['equalLength', 'snapEqualLength'],
+              ] as const).map(([setting, label]) => (
+                <label key={setting} className={!snapEnabled ? 'snap-setting-disabled' : undefined}>
+                  <input
+                    type="checkbox"
+                    checked={snapSettings[setting]}
+                    disabled={!snapEnabled}
+                    onChange={event => setSnapSettings(current => ({ ...current, [setting]: event.target.checked }))}
+                  />
+                  <span>{t(label)}</span>
+                </label>
+              ))}
+              <small>{t('snapBypassHint')}</small>
+            </div>
+          )}
+        </div>
         <div className="toolbar-divider" />
         <div className="tooltip-wrapper" ref={solderPopoverRef}>
           <button
@@ -1417,7 +2025,14 @@ export function ResultPanel({
             </span>
           </button>
           
-          {!isSolderPopoverOpen && <span className="tooltip-tip">{t('solderThicknessTooltip')}</span>}
+          {!isSolderPopoverOpen && (
+            <ToolTooltip
+              name={t('tooltipSolderName')}
+              shortcut=""
+              description={t('solderThicknessTooltip')}
+              animation={<SolderAnimation />}
+            />
+          )}
           
           {isSolderPopoverOpen && (
             <div className="solder-popover">
@@ -1466,6 +2081,55 @@ export function ResultPanel({
             </div>
           )}
         </div>
+        {project.projectType === 'lamp' && onToggleSymmetry && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="tooltip-wrapper">
+              <button
+                className={`tool-btn ${isSymmetryEnabled ? 'active' : ''}`}
+                onClick={() => onToggleSymmetry(!isSymmetryEnabled)}
+                aria-label={t('lampSymmetryTooltip')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="3 2" />
+                  <path d="M 5,7 L 10,12 L 5,17 Z" />
+                  <path d="M 19,7 L 14,12 L 19,17 Z" />
+                </svg>
+              </button>
+              <ToolTooltip
+                name={t('tooltipSymmetryName')}
+                shortcut=""
+                description={t('lampSymmetryTooltip')}
+                animation={<SymmetryAnimation />}
+              />
+            </div>
+          </>
+        )}
+        {onOpenLampProfile && (
+          <>
+            <div className="toolbar-divider" />
+            <div className="tooltip-wrapper">
+              <button
+                className="tool-btn"
+                onClick={onOpenLampProfile}
+                aria-label={t('lampProfileButtonTooltip')}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <ellipse cx="12" cy="5" rx="6" ry="2" />
+                  <path d="M6 5 L4 19" />
+                  <path d="M18 5 L20 19" />
+                  <ellipse cx="12" cy="19" rx="8" ry="2.5" />
+                </svg>
+              </button>
+              <ToolTooltip
+                name={t('tooltipProfileName')}
+                shortcut=""
+                description={t('lampProfileButtonTooltip')}
+                animation={<ProfileAnimation />}
+              />
+            </div>
+          </>
+        )}
       </Toolbar>
       <div
         ref={vp.containerRef}
@@ -1474,28 +2138,37 @@ export function ResultPanel({
       >
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
-            <div>
-              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '1.6rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 12 }}>{t('noPatternTitle')}</p>
-              <p style={{ fontSize: '0.95rem', lineHeight: 1.5, maxWidth: 300, margin: '0 auto 24px' }}>
-                {t('noPatternDesc')}
-              </p>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-                <label className="btn-ghost" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <IconUpload size={16} />
-                  {t('uploadPatternButton')}
+            <div style={{ maxWidth: 800 }}>
+              <p style={{ fontFamily: '"Instrument Serif", Georgia, serif', fontSize: '2rem', fontWeight: 400, color: 'var(--text-bright)', marginBottom: 32 }}>What would you like to build?</p>
+              
+              <div className="onboarding-grid">
+                <label className="onboarding-card">
+                  <div className="onboarding-card-icon">
+                    <IconUpload size={28} />
+                  </div>
+                  <h3>Trace an Image</h3>
+                  <p>Upload a 2D pattern image to trace stained glass pieces over.</p>
                   <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
                 </label>
-                <button
-                  className="btn-ghost"
-                  onClick={onStartBlankCanvas}
-                  style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '0.9rem' }}
-                >
-                  {t('startBlankCanvasButton')}
+
+                <button className="onboarding-card" onClick={onStartBlankCanvas}>
+                  <div className="onboarding-card-icon">
+                    <IconSquare size={28} />
+                  </div>
+                  <h3>Blank Flat Canvas</h3>
+                  <p>Start with a blank workspace to draw a flat window from scratch.</p>
                 </button>
+
+                {onStartLampMode && (
+                  <button className="onboarding-card" onClick={onStartLampMode}>
+                    <div className="onboarding-card-icon">
+                      <IconLamp size={28} />
+                    </div>
+                    <h3>3D Lamp Shade</h3>
+                    <p>Design a 3D lamp, draw patterns across its facets, and preview in real-time.</p>
+                  </button>
+                )}
               </div>
-              <p style={{ fontSize: '0.8rem', marginTop: 16, opacity: 0.8 }}>
-                {t('noPatternSecondary')}
-              </p>
             </div>
           </div>
         ) : (
@@ -1505,18 +2178,16 @@ export function ResultPanel({
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
+              onPointerCancel={handlePointerCancel}
               onPointerLeave={() => {
-                if (activeTool === 'pen') {
-                  setHoverPoint(null);
-                  setActiveSnapLabels([]);
+                if (activeTool === 'polygon' || activeTool === 'pen') {
+                  clearDraftHoverFeedback();
                 }
               }}
               onContextMenu={e => e.evt.preventDefault()}
             >
-              <Layer>
-                <Group
-                  x={vp.pan.x} y={vp.pan.y}
-                  scaleX={es} scaleY={es}
+              <Layer listening={false}>
+                <ViewportGroup store={vp.store}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
                     clipY: project.patternCrop.top,
@@ -1524,7 +2195,49 @@ export function ResultPanel({
                     clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
                   })}
                 >
-                  {(() => {
+                  {isLamp && unrolledLamp && unrolledLamp.mode === 'faceted' && unrolledLamp.strips.length > 0 ? (
+                    <>
+                      {unrolledLamp.strips.map((strip, si) => (
+                        <Line
+                          key={`strip-poly-${si}`}
+                          points={strip.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5}
+                          strokeScaleEnabled={false}
+                          listening={false}
+                        />
+                      ))}
+                      {unrolledLamp.strips.map((strip, si) =>
+                        strip.tierSeams.map((s, i) => (
+                          <Line
+                            key={`tierseam-${si}-${i}`}
+                            points={[s.x1, s.y1, s.x2, s.y2]}
+                            stroke="rgba(40, 30, 15, 0.18)"
+                            strokeWidth={0.8}
+                            strokeScaleEnabled={false}
+                            listening={false}
+                          />
+                        ))
+                      )}
+                    </>
+                  ) : isLamp && unrolledLamp && unrolledLamp.mode === 'smooth' && unrolledLamp.tiers.length > 0 ? (
+                    <>
+                      {unrolledLamp.tiers.map((tier, ti) => (
+                        <Line
+                          key={`smooth-tier-${ti}`}
+                          points={tier.outline.flat()}
+                          closed
+                          fill="#fffefa"
+                          stroke="rgba(40, 30, 15, 0.32)"
+                          strokeWidth={1.5}
+                          strokeScaleEnabled={false}
+                          listening={false}
+                        />
+                      ))}
+                    </>
+                  ) : (!debugMask || activeTool !== 'box') && (() => {
                     const cL = project.patternCrop.left;
                     const cT = project.patternCrop.top;
                     const cR = project.patternCrop.right;
@@ -1542,7 +2255,7 @@ export function ResultPanel({
                       />
                     );
                   })()}
-                  {patternImg && (
+                  {!isLamp && (!debugMask || activeTool !== 'box') && patternImg && (
                     <KonvaImage
                       id="bg"
                       image={patternImg}
@@ -1550,25 +2263,63 @@ export function ResultPanel({
                       opacity={activeTool === 'box' ? 0.5 : 1}
                     />
                   )}
+                </ViewportGroup>
+              </Layer>
+              <Layer>
+                <ViewportGroup store={vp.store}
+                  {...(activeTool === 'crop' ? {} : {
+                    clipX: project.patternCrop.left,
+                    clipY: project.patternCrop.top,
+                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                  })}
+                >
+                  {debugMask && activeTool === 'box' && (() => {
+                    const cL = project.patternCrop.left;
+                    const cT = project.patternCrop.top;
+                    const cR = project.patternCrop.right;
+                    const cB = project.patternCrop.bottom;
+                    const ux = Math.min(0, cL);
+                    const uy = Math.min(0, cT);
+                    return (
+                      <Rect
+                        x={ux} y={uy}
+                        width={Math.max(pw, pw - cR) - ux}
+                        height={Math.max(ph, ph - cB) - uy}
+                        fill="#fffefa"
+                        listening={false}
+                      />
+                    );
+                  })()}
+                  {debugMask && activeTool === 'box' && patternImg && (
+                    <KonvaImage
+                      id="bg"
+                      image={patternImg}
+                      width={pw} height={ph}
+                      opacity={0.5}
+                    />
+                  )}
                   {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
-                    const isSelected = selectedPieceIds.includes(piece.id);
+                    const isSelected = selectedPieceIdSet.has(piece.id);
                     // Corner drag: override polygon directly (activeDragPolygon)
                     const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
                     // Midpoint drag: override curvePoints (activeDragCurvePoints); polygon stays clean
                     const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
-                    const displayPolygon = flattenCurves(basePolygon, baseCurves);
+                    const geometry = getPieceGeometry(basePolygon, baseCurves);
                     return (
                       <PieceOverlay
                         key={piece.id}
                         piece={piece}
-                        displayPolygon={displayPolygon}
+                        geometry={geometry}
                         glassImageUrl={sheet?.imageUrl ?? ''}
                         isSelected={isSelected}
                         isPending={pendingPieceIds.has(piece.id)}
                         solderWidth={solderWidth}
                         solderColor={SOLDER_COLORS[project.solderColor ?? 'black'] ?? SOLDER_COLORS.black}
-                        onSelect={(multi) => { if (!refineMode) onSelectPiece(piece.id, multi); }}
+                        onSelectPiece={onSelectPiece}
+                        selectionDisabled={Boolean(refineMode)}
+                        previewStore={pieceTransformPreviewStore}
                       />
                     );
                   })}
@@ -1581,7 +2332,32 @@ export function ResultPanel({
                       globalCompositeOperation="difference"
                     />
                   )}
-                  {activeTool === 'pen' && (activePolygonPoints.length > 0 || hoverPoint) && (
+                </ViewportGroup>
+              </Layer>
+              <Layer>
+                <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <ViewportGroup store={vp.store}
+                  {...(activeTool === 'crop' ? {} : {
+                    clipX: project.patternCrop.left,
+                    clipY: project.patternCrop.top,
+                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                  })}
+                >
+                  <PenPreviewHost
+                    ref={penPreviewRef}
+                    active={activeTool === 'polygon' || activeTool === 'pen'}
+                    lastPoint={lastPoint}
+                    statusStore={penStatusStore}
+                  >
+                  {(preview) => {
+                    const hoverPoint = preview.visible ? preview.point : null;
+                    const hoverSnapped = preview.vertexSnapped;
+                    const activeAlignmentGuides = preview.alignmentGuides;
+                    const activeLengthGuide = preview.lengthGuide;
+                    const activeSnapLabels = preview.labels;
+                    return (
+                    <>
+                  {activeTool === 'polygon' && (activePolygonPoints.length > 0 || preview.visible) && (
                     <Group>
                       {/* Alignment Guides */}
                       {activeAlignmentGuides.map((guide, idx) => (
@@ -1723,16 +2499,84 @@ export function ResultPanel({
                       )}
                     </Group>
                   )}
-                  {activeTool === 'pencil' && pencilPoints.length > 0 && (
-                    <Line
-                      points={pencilPoints.flat()}
-                      stroke={CANVAS.amber}
-                      strokeWidth={2.5 / es}
-                      lineJoin="round"
-                      lineCap="round"
-                      dash={[4 / es, 3 / es]}
-                    />
+                  {activeTool === 'pen' && (activePenAnchors.length > 0 || hoverPoint) && (
+                    <Group>
+                      {activeAlignmentGuides.map((guide, idx) => (
+                        <Line
+                          key={`pen-guide-${idx}`}
+                          points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
+                          stroke="rgba(192, 138, 31, 0.45)"
+                          strokeWidth={1 / es}
+                          dash={[4 / es, 4 / es]}
+                          listening={false}
+                        />
+                      ))}
+                      {activePenAnchors.length > 1 && (
+                        <Line
+                          points={flattenOpenPenPath(activePenAnchors, es).flat()}
+                          stroke={CANVAS.amber}
+                          strokeWidth={2.5 / es}
+                          lineJoin="round"
+                          lineCap="round"
+                          listening={false}
+                        />
+                      )}
+                      {hoverPoint && activePenAnchors.length > 0 && penDragIndex === null && (
+                        <Line
+                          points={[activePenAnchors[activePenAnchors.length - 1].point, hoverPoint].flat()}
+                          stroke={CANVAS.amber}
+                          strokeWidth={2.5 / es}
+                          dash={[4 / es, 4 / es]}
+                          listening={false}
+                        />
+                      )}
+                      {activePenAnchors.map((anchor, index) => {
+                        const isStart = index === 0;
+                        const isClose = isStart && hoverPoint && Math.hypot(
+                          hoverPoint[0] - anchor.point[0], hoverPoint[1] - anchor.point[1],
+                        ) * es < 15;
+                        return (
+                          <Group key={`pen-anchor-${index}`}>
+                            {anchor.in && (
+                              <>
+                                <Line
+                                  points={[anchor.in[0], anchor.in[1], anchor.point[0], anchor.point[1]]}
+                                  stroke={CANVAS.amberHandleStem}
+                                  strokeWidth={1.25 / es}
+                                  listening={false}
+                                />
+                                <Circle x={anchor.in[0]} y={anchor.in[1]} radius={3.5 / es} fill={CANVAS.paper} stroke={CANVAS.amber} strokeWidth={1.25 / es} listening={false} />
+                              </>
+                            )}
+                            {anchor.out && (
+                              <>
+                                <Line
+                                  points={[anchor.point[0], anchor.point[1], anchor.out[0], anchor.out[1]]}
+                                  stroke={CANVAS.amberHandleStem}
+                                  strokeWidth={1.25 / es}
+                                  listening={false}
+                                />
+                                <Circle x={anchor.out[0]} y={anchor.out[1]} radius={3.5 / es} fill={CANVAS.paper} stroke={CANVAS.amber} strokeWidth={1.25 / es} listening={false} />
+                              </>
+                            )}
+                            <Rect
+                              x={anchor.point[0] - (isStart ? 5 : 4) / es}
+                              y={anchor.point[1] - (isStart ? 5 : 4) / es}
+                              width={(isStart ? 10 : 8) / es}
+                              height={(isStart ? 10 : 8) / es}
+                              fill={isStart ? (isClose ? CANVAS.patternPending : CANVAS.amber) : CANVAS.paper}
+                              stroke={CANVAS.amber}
+                              strokeWidth={1.75 / es}
+                            />
+                          </Group>
+                        );
+                      })}
+                    </Group>
                   )}
+                  </>
+                  ); }}
+                  </PenPreviewHost>
+                  {activeTool === 'pencil' && <PencilOverlay controller={pencilController} effectiveScale={es} />}
                   {marqueeBox && (
                     <Rect
                       x={Math.min(marqueeBox.x1, marqueeBox.x2)}
@@ -1815,7 +2659,7 @@ export function ResultPanel({
                     return null;
                   })()}
                   {project.pieces.map(piece => {
-                    if (!selectedPieceIds.includes(piece.id) || !piece.promptPoints) return null;
+                    if (!selectedPieceIdSet.has(piece.id) || !piece.promptPoints) return null;
                     return piece.promptPoints.map((pt, i) => (
                       <Circle
                         key={i}
@@ -1867,19 +2711,37 @@ export function ResultPanel({
                               onDragMove={(e) => {
                                 if (!dragStartPolygon) return;
                                 const newPolygon = [...dragStartPolygon];
-                                newPolygon[idx] = [e.target.x(), e.target.y()];
+                                const origin = dragStartPolygon[idx];
+                                const resolved = resolveEditedAnchor(
+                                  [e.target.x(), e.target.y()], origin, selectedId,
+                                  e.evt.shiftKey, e.evt.ctrlKey,
+                                );
+                                e.target.position({ x: resolved[0], y: resolved[1] });
+                                newPolygon[idx] = resolved;
+                                const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
                                 setActiveDragPolygon(newPolygon);
+                                setActiveDragCurvePoints(translateCurvesWithAnchor(
+                                  dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
+                                ));
                               }}
                               onDragEnd={(e) => {
                                 if (!dragStartPolygon) { setDraggedCorner(null); return; }
                                 const newPolygon = [...dragStartPolygon];
-                                newPolygon[idx] = [e.target.x(), e.target.y()];
-                                // Curves use absolute ctrl coordinates so they adapt naturally
-                                // to the moved corner — no need to drop them
-                                onUpdatePiecePolygon(selectedId, newPolygon);
+                                const origin = dragStartPolygon[idx];
+                                const resolved = resolveEditedAnchor(
+                                  [e.target.x(), e.target.y()], origin, selectedId,
+                                  e.evt.shiftKey, e.evt.ctrlKey,
+                                );
+                                newPolygon[idx] = resolved;
+                                const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
+                                const newCurves = translateCurvesWithAnchor(
+                                  dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
+                                );
+                                onUpdatePiecePolygonAndCurves(selectedId, newPolygon, newCurves);
                                 setDraggedCorner(null);
                                 setDragStartPolygon(null);
                                 setActiveDragPolygon(null);
+                                setActiveDragCurvePoints(null);
                               }}
                               onMouseEnter={(e) => {
                                 const stage = e.target.getStage();
@@ -1888,6 +2750,13 @@ export function ResultPanel({
                               onMouseLeave={(e) => {
                                 const stage = e.target.getStage();
                                 if (stage) stage.container().style.cursor = 'default';
+                              }}
+                              onDblClick={() => {
+                                const anchorTypes = piece.anchorTypes?.length === referencePolygon.length
+                                  ? [...piece.anchorTypes]
+                                  : referencePolygon.map(() => 'corner' as const);
+                                anchorTypes[idx] = anchorTypes[idx] === 'smooth' ? 'corner' : 'smooth';
+                                onUpdatePieceCurves(selectedId, piece.curvePoints ?? [], anchorTypes);
                               }}
                             />
                           );
@@ -1902,7 +2771,9 @@ export function ResultPanel({
                           if (dist < MIN_HANDLE_PX && !isActive) return null;
 
                           // Position the handle at the bezier midpoint if a curve exists
-                          const existingCtrl = (activeDragCurvePoints ?? piece.curvePoints ?? []).find(cp => cp.edgeIdx === idx)?.ctrl;
+                          const existingCurve = (activeDragCurvePoints ?? piece.curvePoints ?? []).find(cp => cp.edgeIdx === idx);
+                          if (existingCurve && isCubicCurvePoint(existingCurve)) return null;
+                          const existingCtrl = existingCurve?.ctrl;
                           const [hx, hy] = existingCtrl
                             ? ctrlToHandle([x, y], B, existingCtrl)
                             : [(x + B[0]) / 2, (y + B[1]) / 2];
@@ -1946,7 +2817,109 @@ export function ResultPanel({
                                 const stage = e.target.getStage();
                                 if (stage) stage.container().style.cursor = 'default';
                               }}
+                              onDblClick={() => {
+                                const inserted = insertAnchorOnEdge(
+                                  piece.polygon, piece.curvePoints ?? [], idx,
+                                );
+                                const anchorTypes = piece.anchorTypes?.length === piece.polygon.length
+                                  ? [...piece.anchorTypes]
+                                  : piece.polygon.map(() => 'corner' as const);
+                                anchorTypes.splice(inserted.insertedAt, 0, inserted.curved ? 'smooth' : 'corner');
+                                onUpdatePiecePolygonAndCurves(
+                                  selectedId, inserted.polygon, inserted.curves, anchorTypes,
+                                );
+                              }}
                             />
+                          );
+                        })}
+
+                        {/* Conventional cubic direction handles. Shift constrains
+                            the handle angle; Alt/Option breaks the paired handle. */}
+                        {!draggedCorner && (activeDragCurvePoints ?? piece.curvePoints ?? []).map(curve => {
+                          if (!isCubicCurvePoint(curve)) return null;
+                          const edgeIdx = curve.edgeIdx;
+                          const nextIdx = (edgeIdx + 1) % len;
+                          const A = referencePolygon[edgeIdx];
+                          const B = referencePolygon[nextIdx];
+                          const [ctrl1, ctrl2] = curveToCubicControls(A, B, curve);
+                          const midpoint = evaluateCubicBezier(A, ctrl1, ctrl2, B, 0.5);
+
+                          const renderHandle = (side: 'ctrl' | 'ctrl2', handle: [number, number], anchor: [number, number]) => (
+                            <Group key={`cubic-${edgeIdx}-${side}`}>
+                              <Line
+                                points={[anchor[0], anchor[1], handle[0], handle[1]]}
+                                stroke={CANVAS.amberHandleStem}
+                                strokeWidth={1.25 / es}
+                                listening={false}
+                              />
+                              <Circle
+                                x={handle[0]}
+                                y={handle[1]}
+                                radius={4 / es}
+                                fill={CANVAS.paper}
+                                stroke={CANVAS.amber}
+                                strokeWidth={1.5 / es}
+                                draggable
+                                onDragStart={() => {
+                                  dragStartCurvePointsRef.current = activeDragCurvePoints ?? piece.curvePoints ?? [];
+                                  setActiveDragCurvePoints(dragStartCurvePointsRef.current);
+                                }}
+                                onDragMove={(e) => {
+                                  let point: [number, number] = [e.target.x(), e.target.y()];
+                                  if (e.evt.shiftKey) point = constrainToAngle(point, anchor);
+                                  e.target.position({ x: point[0], y: point[1] });
+                                  const anchorIdx = side === 'ctrl' ? edgeIdx : nextIdx;
+                                  const isCorner = piece.anchorTypes?.[anchorIdx] === 'corner';
+                                  setActiveDragCurvePoints(moveCubicHandle(
+                                    dragStartCurvePointsRef.current, referencePolygon, edgeIdx, side, point, e.evt.altKey || isCorner,
+                                  ));
+                                }}
+                                onDragEnd={(e) => {
+                                  let point: [number, number] = [e.target.x(), e.target.y()];
+                                  if (e.evt.shiftKey) point = constrainToAngle(point, anchor);
+                                  const anchorIdx = side === 'ctrl' ? edgeIdx : nextIdx;
+                                  const isCorner = piece.anchorTypes?.[anchorIdx] === 'corner';
+                                  const updated = moveCubicHandle(
+                                    dragStartCurvePointsRef.current, referencePolygon, edgeIdx, side, point, e.evt.altKey || isCorner,
+                                  );
+                                  const anchorTypes = piece.anchorTypes?.length === referencePolygon.length
+                                    ? [...piece.anchorTypes]
+                                    : referencePolygon.map((_, index) => {
+                                      const hasCubic = updated.some(item => isCubicCurvePoint(item) && (item.edgeIdx === index || (item.edgeIdx + 1) % len === index));
+                                      return hasCubic ? 'smooth' as const : 'corner' as const;
+                                    });
+                                  if (e.evt.altKey) anchorTypes[anchorIdx] = 'corner';
+                                  onUpdatePieceCurves(selectedId, updated, anchorTypes);
+                                  setActiveDragCurvePoints(null);
+                                }}
+                              />
+                            </Group>
+                          );
+
+                          return (
+                            <Group key={`cubic-edge-${edgeIdx}`}>
+                              <Circle
+                                x={midpoint[0]}
+                                y={midpoint[1]}
+                                radius={3 / es}
+                                fill={CANVAS.amber}
+                                opacity={0.55}
+                                onDblClick={() => {
+                                  const inserted = insertAnchorOnEdge(
+                                    piece.polygon, piece.curvePoints ?? [], edgeIdx,
+                                  );
+                                  const anchorTypes = piece.anchorTypes?.length === piece.polygon.length
+                                    ? [...piece.anchorTypes]
+                                    : piece.polygon.map(() => 'corner' as const);
+                                  anchorTypes.splice(inserted.insertedAt, 0, 'smooth');
+                                  onUpdatePiecePolygonAndCurves(
+                                    selectedId, inserted.polygon, inserted.curves, anchorTypes,
+                                  );
+                                }}
+                              />
+                              {renderHandle('ctrl', ctrl1, A)}
+                              {renderHandle('ctrl2', ctrl2, B)}
+                            </Group>
                           );
                         })}
                       </Group>
@@ -1963,13 +2936,21 @@ export function ResultPanel({
                       onCursorChange={setCursor}
                     />
                   )}
-                </Group>
+                </ViewportGroup>; }}</ViewportSubscriber>
               </Layer>
             </Stage>
+            <ViewportSubscriber store={vp.store}>{(viewport) => <>
+            <ViewportControls
+              zoomPercent={viewport.effectiveScale * 100}
+              onZoomIn={vp.zoomIn}
+              onZoomOut={vp.zoomOut}
+              onFit={vp.fitToView}
+              onActualSize={vp.zoomToActualSize}
+            />
             {activeTool === 'measure' && measure.line && (() => {
               const midX = (measure.line.x1 + measure.line.x2) / 2;
               const midY = (measure.line.y1 + measure.line.y2) / 2;
-              const sc = toScreenCoords(midX, midY, vp.pan, vp.effectiveScale);
+              const sc = toScreenCoords(midX, midY, viewport.pan, viewport.effectiveScale);
               const saved = project.patternScale;
               return (
                 <MeasureInput
@@ -1994,30 +2975,32 @@ export function ResultPanel({
               const displayPiece = isMultiple ? {
                 ...piece,
                 id: '__multiple__',
-                label: `${selectedPieceIds.length} pieces`,
+                label: t('pieces', { count: selectedPieceIds.length }),
                 // If all selected pieces share the same sheet, show it; otherwise, use a special value
-                glassSheetId: project.pieces.filter(p => selectedPieceIds.includes(p.id))
+                glassSheetId: project.pieces.filter(p => selectedPieceIdSet.has(p.id))
                   .every((p, _, arr) => p.glassSheetId === arr[0].glassSheetId) 
                     ? piece.glassSheetId 
                     : '__multiple__'
               } : piece;
 
-              const anchor = getTooltipAnchor(piece, project.pieces, pw, ph, vp);
-              const sc = toScreenCoords(anchor.x, anchor.y, vp.pan, vp.effectiveScale);
-              const isDrawing = drawingBox !== null;
-              const isInteracting = isDrawing || marqueeBox !== null || vp.isPanning || isSpaceDown;
+              const isDrawing = drawingBox !== null
+                || isPencilDrawing
+                || (activeTool === 'polygon' && activePolygonPoints.length > 0)
+                || (activeTool === 'pen' && activePenAnchors.length > 0)
+                || draggedCorner !== null
+                || draggedMidpoint !== null;
+              const isInteracting = isDrawing || marqueeBox !== null || viewport.isPanning || isSpaceDown;
 
               return (
                 <div style={{
                   position: 'absolute',
-                  left: sc.x + tooltipDrag.x,
-                  top: sc.y + tooltipDrag.y,
-                  transform: anchor.transform,
-                  padding: anchor.margin,
+                  right: 12 - tooltipDrag.x,
+                  top: 12 + tooltipDrag.y,
                   zIndex: 10,
+                  maxWidth: 'calc(100% - 24px)',
                   pointerEvents: isInteracting ? 'none' : 'auto',
-                  opacity: isDrawing ? 0 : 0.95,
-                  transition: 'opacity 0.2s ease, transform 0.3s ease-out',
+                  opacity: isInteracting ? 0 : 0.95,
+                  transition: 'opacity 0.2s ease',
                 }}>
                   <div style={{ pointerEvents: isInteracting ? 'none' : 'auto' }}>
                     <DragHandle 
@@ -2051,7 +3034,7 @@ export function ResultPanel({
                   </div>
                 </div>
               );
-            })()}
+            })()}</>}</ViewportSubscriber>
             <input
               type="file"
               ref={addSheetInputRef}

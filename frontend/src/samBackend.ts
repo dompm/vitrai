@@ -1,5 +1,6 @@
 import type { BoundingBox } from "./types";
 import type { WorkerInMsg, WorkerOutMsg } from "./samWorker";
+import i18n from "./i18n";
 
 export type SegmentResult = {
   polygon: [number, number][];
@@ -11,6 +12,7 @@ export class SamWorkerBackend {
   private readyPromise: Promise<string>;
   private pending = new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
   onDebugMask: (m: { bitmap: ImageBitmap; width: number; height: number }) => void = () => {};
+  onProgress: (fraction: number) => void = () => {};
 
   constructor(onStatusChange: (s: string) => void = () => {}) {
     this.worker = new Worker(new URL("./samWorker.ts", import.meta.url), { type: "module" });
@@ -25,14 +27,16 @@ export class SamWorkerBackend {
     this.worker.onmessage = (e: MessageEvent<WorkerOutMsg>) => {
       const msg = e.data;
       if (msg.type === "ready") {
-        onStatusChange(`WebGPU ready (${msg.device})`);
+        onStatusChange(i18n.t(msg.device === 'webgpu' ? 'samReadyWebgpu' : 'samReadyWasm'));
         resolveReady(msg.device);
       } else if (msg.type === "init:error") {
         console.error("[SAM Backend] Worker init failed:", msg.error);
-        onStatusChange(`SAM init failed: ${msg.error.split('\n')[0]}`);
+        onStatusChange(i18n.t('samInitFailed', { error: msg.error.split('\n')[0] }));
         rejectReady(new Error(msg.error));
       } else if (msg.type === "status") {
-        onStatusChange(msg.text);
+        onStatusChange(i18n.t(msg.key));
+      } else if (msg.type === "progress") {
+        this.onProgress(msg.fraction);
       } else {
         const p = this.pending.get(msg.id);
         if (!p) return;
@@ -50,8 +54,21 @@ export class SamWorkerBackend {
     };
 
     this.worker.onerror = (e) => {
-      rejectReady(new Error(e.message));
+      const err = new Error(e.message || 'SAM worker crashed');
+      rejectReady(err);
+      this.failAllPending(err);
+      // Drop the singleton so the next getSamBackend() call spawns a fresh
+      // worker instead of posting into a dead one.
+      if (window.__samBackend === this) window.__samBackend = undefined;
     };
+    this.worker.onmessageerror = () => {
+      this.failAllPending(new Error('SAM worker message could not be deserialized'));
+    };
+  }
+
+  private failAllPending(err: Error) {
+    for (const p of this.pending.values()) p.reject(err);
+    this.pending.clear();
   }
 
   private send<T>(msg: WorkerInMsg): Promise<T> {

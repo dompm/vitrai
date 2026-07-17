@@ -1,6 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
+import { ViewportStore } from '../editor/viewport/viewportStore';
 
 interface Dims { w: number; h: number; }
+
+const MIN_EFFECTIVE_SCALE = 0.01; // 1%
+const MAX_EFFECTIVE_SCALE = 32; // 3200%
+
+function clampZoom(value: number, displayScale: number) {
+  const safeDisplayScale = Math.max(displayScale, Number.EPSILON);
+  return Math.max(
+    MIN_EFFECTIVE_SCALE / safeDisplayScale,
+    Math.min(MAX_EFFECTIVE_SCALE / safeDisplayScale, value),
+  );
+}
 
 /**
  * Manages zoom, pan, and container measurement for a Konva panel.
@@ -16,13 +28,12 @@ interface Dims { w: number; h: number; }
 export function useViewport(imageW: number, imageH: number) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [dims, setDims] = useState<Dims>({ w: 800, h: 600 });
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [store] = useState(() => new ViewportStore());
   const initializedRef = useRef(false);
 
   // Mutable refs so native handlers (added once) always see current values
-  const zoomRef = useRef(zoom);
-  const panRef = useRef(pan);
+  const zoomRef = useRef(1);
+  const panRef = useRef({ x: 0, y: 0 });
   const dimsRef = useRef(dims);
   const imageWRef = useRef(imageW);
   const imageHRef = useRef(imageH);
@@ -30,12 +41,72 @@ export function useViewport(imageW: number, imageH: number) {
   const isPanning = useRef(false);
   const lastPanPtr = useRef<{ x: number; y: number } | null>(null);
   const isPinchingRef = useRef(false);
+  const cursorBeforePanRef = useRef('default');
 
-  zoomRef.current = zoom;
-  panRef.current = pan;
   dimsRef.current = dims;
   imageWRef.current = imageW;
   imageHRef.current = imageH;
+
+  function scheduleViewport(nextZoom: number, nextPan: { x: number; y: number }) {
+    zoomRef.current = nextZoom;
+    panRef.current = nextPan;
+    const displayScale = displayScaleRef.current;
+    store.update({ zoom: nextZoom, pan: nextPan, displayScale, effectiveScale: displayScale * nextZoom });
+  }
+
+  useEffect(() => () => store.destroy(), [store]);
+
+  function currentDisplayScale() {
+    const d = dimsRef.current;
+    const iw = imageWRef.current;
+    const ih = imageHRef.current;
+    return iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
+  }
+
+  /** Set zoom while keeping the image point under `anchor` stationary. */
+  function setZoomAround(nextZoom: number, anchor?: { x: number; y: number }) {
+    const d = dimsRef.current;
+    const point = anchor ?? { x: d.w / 2, y: d.h / 2 };
+    const ds = currentDisplayScale();
+    const previousZoom = zoomRef.current;
+    const previousPan = panRef.current;
+    const clampedZoom = clampZoom(nextZoom, ds);
+    const previousEffectiveScale = ds * previousZoom;
+    const nextEffectiveScale = ds * clampedZoom;
+
+    if (previousEffectiveScale <= 0) {
+      scheduleViewport(clampedZoom, previousPan);
+      return;
+    }
+    scheduleViewport(clampedZoom, {
+      x: point.x - (point.x - previousPan.x) * nextEffectiveScale / previousEffectiveScale,
+      y: point.y - (point.y - previousPan.y) * nextEffectiveScale / previousEffectiveScale,
+    });
+  }
+
+  function zoomIn() {
+    setZoomAround(zoomRef.current * 1.25);
+  }
+
+  function zoomOut() {
+    setZoomAround(zoomRef.current / 1.25);
+  }
+
+  /** Fit the full image in the viewport. */
+  function fitToView() {
+    const d = dimsRef.current;
+    const ds = currentDisplayScale();
+    scheduleViewport(1, {
+      x: (d.w - imageWRef.current * ds) / 2,
+      y: (d.h - imageHRef.current * ds) / 2,
+    });
+  }
+
+  /** Show one image pixel as one screen pixel (the conventional 100% view). */
+  function zoomToActualSize() {
+    const ds = currentDisplayScale();
+    if (ds > 0) setZoomAround(1 / ds);
+  }
 
   // Container measurement
   useEffect(() => {
@@ -43,6 +114,32 @@ export function useViewport(imageW: number, imageH: number) {
     if (!el) return;
     const ro = new ResizeObserver(entries => {
       const { width, height } = entries[0].contentRect;
+      const previousDims = dimsRef.current;
+      const iw = imageWRef.current;
+      const ih = imageHRef.current;
+      const previousDisplayScale = iw > 0 && ih > 0
+        ? Math.min(previousDims.w / iw, previousDims.h / ih)
+        : 1;
+      const nextDisplayScale = iw > 0 && ih > 0 ? Math.min(width / iw, height / ih) : 1;
+      const previousEffectiveScale = previousDisplayScale * zoomRef.current;
+      const nextEffectiveScale = nextDisplayScale * zoomRef.current;
+      const previousPan = panRef.current;
+
+      // Preserve the image point at the viewport center when the panel resizes.
+      if (initializedRef.current && previousEffectiveScale > 0) {
+        const imageCenterX = (previousDims.w / 2 - previousPan.x) / previousEffectiveScale;
+        const imageCenterY = (previousDims.h / 2 - previousPan.y) / previousEffectiveScale;
+        const nextPan = {
+          x: width / 2 - imageCenterX * nextEffectiveScale,
+          y: height / 2 - imageCenterY * nextEffectiveScale,
+        };
+        panRef.current = nextPan;
+        store.update({
+          pan: nextPan,
+          displayScale: nextDisplayScale,
+          effectiveScale: nextEffectiveScale,
+        }, true);
+      }
       setDims({ w: width, h: height });
     });
     ro.observe(el);
@@ -55,7 +152,9 @@ export function useViewport(imageW: number, imageH: number) {
   const displayScaleRef = useRef(displayScale);
   displayScaleRef.current = displayScale;
 
-  const effectiveScale = displayScale * zoom;
+  useEffect(() => {
+    store.update({ displayScale, effectiveScale: displayScale * zoomRef.current }, true);
+  }, [displayScale, store]);
 
   // Center pan once per image change (or on first valid dims)
   useEffect(() => {
@@ -66,11 +165,13 @@ export function useViewport(imageW: number, imageH: number) {
     if (initializedRef.current || imageW <= 0 || dims.w <= 0) return;
     initializedRef.current = true;
     const scale = Math.min(dims.w / imageW, dims.h / imageH);
-    setZoom(1);
-    setPan({
+    const centeredPan = {
       x: (dims.w - imageW * scale) / 2,
       y: (dims.h - imageH * scale) / 2,
-    });
+    };
+    zoomRef.current = 1;
+    panRef.current = centeredPan;
+    store.update({ zoom: 1, pan: centeredPan, displayScale: scale, effectiveScale: scale }, true);
   }, [imageW, imageH, dims.w, dims.h]);
 
   // Native (non-passive) wheel handler — added once, uses refs
@@ -79,29 +180,16 @@ export function useViewport(imageW: number, imageH: number) {
     if (!el) return;
     const handler = (e: WheelEvent) => {
       e.preventDefault();
-      const iw = imageWRef.current;
-      const ih = imageHRef.current;
-      const d = dimsRef.current;
-      const ds = iw > 0 && ih > 0 ? Math.min(d.w / iw, d.h / ih) : 1;
-
       if (e.ctrlKey) {
         const rect = el.getBoundingClientRect();
         const mx = e.clientX - rect.left;
         const my = e.clientY - rect.top;
         const raw = e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 400 : 1);
         const factor = Math.pow(0.996, raw);
-        const prev = zoomRef.current;
-        const prevPan = panRef.current;
-        const newZoom = Math.max(0.1, Math.min(20, prev * factor));
-        const oldEff = ds * prev;
-        const newEff = ds * newZoom;
-        setZoom(newZoom);
-        setPan({
-          x: mx - (mx - prevPan.x) * newEff / oldEff,
-          y: my - (my - prevPan.y) * newEff / oldEff,
-        });
+        setZoomAround(zoomRef.current * factor, { x: mx, y: my });
       } else {
-        setPan(p => ({ x: p.x - e.deltaX, y: p.y - e.deltaY }));
+        const current = panRef.current;
+        scheduleViewport(zoomRef.current, { x: current.x - e.deltaX, y: current.y - e.deltaY });
       }
     };
     el.addEventListener('wheel', handler, { passive: false });
@@ -132,8 +220,11 @@ export function useViewport(imageW: number, imageH: number) {
       if (e.touches.length !== 2) return;
       e.preventDefault();
       isPinchingRef.current = true;
+      store.update({ isPinching: true });
       // Cancel any active single-finger pan
       isPanning.current = false;
+      store.update({ isPanning: false });
+      if (containerRef.current) containerRef.current.style.cursor = cursorBeforePanRef.current;
       lastPanPtr.current = null;
       const rect = el!.getBoundingClientRect();
       lastDist = pinchDist(e.touches);
@@ -158,13 +249,12 @@ export function useViewport(imageW: number, imageH: number) {
         const factor = newDist / lastDist;
         const prev = zoomRef.current;
         const prevPan = panRef.current;
-        const newZoom = Math.max(0.1, Math.min(20, prev * factor));
+        const newZoom = clampZoom(prev * factor, ds);
         const oldEff = ds * prev;
         const newEff = ds * newZoom;
         // Keep the image point that was under lastMid pinned to the new mid.
         // Simultaneously handles zoom and the translation of the midpoint.
-        setZoom(newZoom);
-        setPan({
+        scheduleViewport(newZoom, {
           x: m.x - (lastMidX - prevPan.x) * newEff / oldEff,
           y: m.y - (lastMidY - prevPan.y) * newEff / oldEff,
         });
@@ -178,6 +268,7 @@ export function useViewport(imageW: number, imageH: number) {
     function onTouchEnd(e: TouchEvent) {
       if (e.touches.length < 2) {
         isPinchingRef.current = false;
+        store.update({ isPinching: false });
         lastDist = 0;
       }
     }
@@ -195,6 +286,11 @@ export function useViewport(imageW: number, imageH: number) {
   function startPan(pos: { x: number; y: number }) {
     if (isPinchingRef.current) return;
     isPanning.current = true;
+    store.update({ isPanning: true });
+    if (containerRef.current) {
+      cursorBeforePanRef.current = containerRef.current.style.cursor;
+      containerRef.current.style.cursor = 'grabbing';
+    }
     lastPanPtr.current = pos;
   }
 
@@ -203,27 +299,37 @@ export function useViewport(imageW: number, imageH: number) {
     const dx = pos.x - lastPanPtr.current.x;
     const dy = pos.y - lastPanPtr.current.y;
     lastPanPtr.current = pos;
-    setPan(p => ({ x: p.x + dx, y: p.y + dy }));
+    const current = panRef.current;
+    scheduleViewport(zoomRef.current, { x: current.x + dx, y: current.y + dy });
   }
 
   function endPan() {
     isPanning.current = false;
+    store.update({ isPanning: false });
+    if (containerRef.current) containerRef.current.style.cursor = cursorBeforePanRef.current;
     lastPanPtr.current = null;
   }
 
   return {
     containerRef,
     dims,
-    displayScale,
-    effectiveScale,
-    zoom,
-    pan,
+    get displayScale() { return store.getSnapshot().displayScale; },
+    get effectiveScale() { return store.getSnapshot().effectiveScale; },
+    get zoom() { return store.getSnapshot().zoom; },
+    get pan() { return store.getSnapshot().pan; },
+    store,
+    getSnapshot: store.getSnapshot,
     zoomRef,
     panRef,
     displayScaleRef,
-    isPanning: isPanning.current,
+    get isPanning() { return store.getSnapshot().isPanning; },
     startPan,
     movePan,
     endPan,
+    setZoomAround,
+    zoomIn,
+    zoomOut,
+    fitToView,
+    zoomToActualSize,
   };
 }

@@ -41,7 +41,9 @@ export interface StepConfig {
   forceTool?: ToolId;
 }
 
-/** Steps that show the bottom instruction bar with spotlight. */
+/** Steps that show the bottom instruction bar with spotlight (all but the welcome/done overlays). */
+export type AnchoredStepId = Exclude<StepId, 'welcome' | 'done'>;
+
 export const ANCHORED_STEPS: StepId[] = [
   'calibrate-pattern',
   'calibrate-sheet',
@@ -55,7 +57,7 @@ export const ANCHORED_STEPS: StepId[] = [
   'refine-remaining-pieces',
 ];
 
-export const STEPS: Record<(typeof ANCHORED_STEPS)[number], StepConfig> = {
+export const STEPS: Record<AnchoredStepId, StepConfig> = {
   'calibrate-pattern': {
     id: 'calibrate-pattern',
     spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="measure"]',
@@ -204,6 +206,4 @@ export const TUTORIAL_GROUND_TRUTH_POLYGONS: [number, number][][] = [
 ];
 
 export const IS_PLACEHOLDER_GROUND_TRUTH = false;
-
-
 
