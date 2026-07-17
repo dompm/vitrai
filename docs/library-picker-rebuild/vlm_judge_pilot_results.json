@@ -1,0 +1,1378 @@
+[
+  {
+    "id": "oceanside-of161rr",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Yellow Rough Rolled",
+    "category": "Textured/Baroque",
+    "named_failure": true,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-yellow-rough-roll-96-coe",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Yellow_Rough_Rolled.jpg?v=1742589189",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_Coe_Yellow_Rough_Roll_-_Stained_Glass_Express_-4983656.jpg?v=1742589189",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_Coe_Yellow_Rough_Roll_-_Stained_Glass_Express_-4983658.jpg?v=1742589189"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Yellow_Rough_Rolled.jpg?v=1742589189",
+    "heuristic_pick_score": 0.9999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of161rr.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 7894,
+      "cost_usd": 0.077635,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 7799,
+      "cost_usd": 0.022683,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of23071s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Hydrangea Blue Opal",
+    "category": "Opalescent",
+    "named_failure": true,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-hydrangea-blue-opal-glass",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Hydrangea_Blue_Opal_-_Stained_Glass_Express_-4982177.jpg?v=1729913902",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Hydrangea_Blue_Opal_-_Stained_Glass_Express_-4982179.png?v=1729913906",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_purple_fusibles.jpg?v=1768059127",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/20251017_175905.jpg?v=1768059127"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/20251017_175905.jpg?v=1768059127",
+    "heuristic_pick_score": 1.2364,
+    "heuristic_pick_index": 4,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of23071s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 7337,
+      "cost_usd": 0.047326,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 10210,
+      "cost_usd": 0.016006,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of3176s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Dark Amber with White Wispy",
+    "category": "Wispy/Streaky",
+    "named_failure": true,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-dark-amber-and-white-wispy-fusible-glass",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dark_Amber_with_White_Wispy.jpg?v=1776710723",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/20250226_121923.jpg?v=1776710723",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_Coe_Dk_Amber_w-_White_Wispy_-_Stained_Glass_Express_-4980973.jpg?v=1776710723",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/DarkAmberWhite_GarlicGarden.jpg?v=1783447112"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_Coe_Dk_Amber_w-_White_Wispy_-_Stained_Glass_Express_-4980973.jpg?v=1776710723",
+    "heuristic_pick_score": 0.9997,
+    "heuristic_pick_index": 3,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of3176s.jpg",
+    "judge_sonnet": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 4873,
+      "cost_usd": 0.080342,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 9716,
+      "cost_usd": 0.024243,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of3276s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Dark Green with White",
+    "category": "Opalescent",
+    "named_failure": true,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-dark-green-with-white-wispy-glass",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dk_Green_w_White.jpg?v=1755101946",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dk_Green_w_White_3.jpg?v=1755101946",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dk_Green_w_White_2.jpg?v=1749753289"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dk_Green_w_White_3.jpg?v=1755101946",
+    "heuristic_pick_score": 1.4999,
+    "heuristic_pick_index": 2,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of3276s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 4477,
+      "cost_usd": 0.045721,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 19557,
+      "cost_usd": 0.020252,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of3296s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Dark Green with White",
+    "category": "Opalescent",
+    "named_failure": true,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-dark-green-and-white-wispy",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dk_Green_w-_White_-_Stained_Glass_Express_-4980981.jpg?v=1729911499",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF3296S.jpg?v=1777142997",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Dark_Green_White_Wispy_Smooth_Fusible.jpg?v=1731862153"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF3296S.jpg?v=1777142997",
+    "heuristic_pick_score": 1.4982,
+    "heuristic_pick_index": 2,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of3296s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5256,
+      "cost_usd": 0.046114,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 13420,
+      "cost_usd": 0.017388,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of152s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Ruby Red",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-ruby-red-smooth-cathedral-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Ruby_Red_Cathedral.jpg?v=1750267911"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Ruby_Red_Cathedral.jpg?v=1750267911",
+    "heuristic_pick_score": 0.7999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of152s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 4759,
+      "cost_usd": 0.042818,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 7657,
+      "cost_usd": 0.014491,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of4802s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE London Fog Spirit LTD",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-london-fog-spirit-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_London_Fog_Spirit_-_Stained_Glass_Express_-4982291.jpg?v=1729914186"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_London_Fog_Spirit_-_Stained_Glass_Express_-4982291.jpg?v=1729914186",
+    "heuristic_pick_score": 0.7708,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of4802s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5349,
+      "cost_usd": 0.042251,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5660,
+      "cost_usd": 0.012377,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of100s5mm",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Clear Double Thick",
+    "category": "Clear",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-clear-smooth-double-thick-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Double_Thick_-_Stained_Glass_Express_-4980803.jpg?v=1729911074"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Double_Thick_-_Stained_Glass_Express_-4980803.jpg?v=1729911074",
+    "heuristic_pick_score": 0.7656,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of100s5mm.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5059,
+      "cost_usd": 0.043478,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5951,
+      "cost_usd": 0.013482,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of60355s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Marigold Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-marigold-opal-fusible-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Marigold_Opal_-_Stained_Glass_Express_-4982335.jpg?v=1729914290"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Marigold_Opal_-_Stained_Glass_Express_-4982335.jpg?v=1729914290",
+    "heuristic_pick_score": 0.7999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of60355s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 4630,
+      "cost_usd": 0.042534,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5912,
+      "cost_usd": 0.013262,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of22076s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Dark Green Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-dark-green-opal-fusible-glass",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/220-76S-F.webp?v=1744998611",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Dark_Green_Opal_-_Stained_Glass_Express_-4980925.png?v=1750267089"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/220-76S-F.webp?v=1744998611",
+    "heuristic_pick_score": 0.7999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of22076s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5613,
+      "cost_usd": 0.044073,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9011,
+      "cost_usd": 0.01484,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of100sice5mm",
+    "manufacturer": "Oceanside",
+    "name": "96 COE 5mm Clear Ice",
+    "category": "Clear",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/96-clear-dbl-thick-fusible",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_5mm_Clear_Ice_-_Stained_Glass_Express_-4980580.jpg?v=1729910548"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_5mm_Clear_Ice_-_Stained_Glass_Express_-4980580.jpg?v=1729910548",
+    "heuristic_pick_score": 0.7299,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of100sice5mm.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5449,
+      "cost_usd": 0.042463,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6665,
+      "cost_usd": 0.013957,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of6237s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE White, Dark Green, Blue Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-white-dark-green-and-blue-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_White_Dark_Green_Blue_2.jpg?v=1777150254"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_White_Dark_Green_Blue_2.jpg?v=1777150254",
+    "heuristic_pick_score": 0.7198,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of6237s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5372,
+      "cost_usd": 0.042348,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 8600,
+      "cost_usd": 0.013629,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of100cz",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Clear Corteza",
+    "category": "Clear",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/96-coe-clear-corteza",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/ogt100czf_xl.webp?v=1750099477"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/ogt100czf_xl.webp?v=1750099477",
+    "heuristic_pick_score": 0.7672,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of100cz.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6663,
+      "cost_usd": 0.042829,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9741,
+      "cost_usd": 0.014627,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of100w",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Clear Waterglass",
+    "category": "Textured/Baroque",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-clear-waterglass-fusible-96-coe",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Clear_Waterglass_Fusible.webp?v=1749306257"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Clear_Waterglass_Fusible.webp?v=1749306257",
+    "heuristic_pick_score": 0.7657,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of100w.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5208,
+      "cost_usd": 0.043696,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9882,
+      "cost_usd": 0.013733,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of100g",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Clear Granite",
+    "category": "Textured/Baroque",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-clear-granite-glass",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Clear_Granite_Fusible.webp?v=1749306018",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Clear_Granite_Fusible__Fused.webp?v=1749306095"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Clear_Granite_Fusible.webp?v=1749306018",
+    "heuristic_pick_score": 0.7768,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of100g.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5120,
+      "cost_usd": 0.044326,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6256,
+      "cost_usd": 0.014298,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of152rr",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Ruby Red Rough Rolled",
+    "category": "Textured/Baroque",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-ruby-red-rough-rolled-96-coe-glass",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Ruby_Red_Rough_Rolled_Oceanside.jpg?v=1731861535",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Ruby_Red_Rough_Rolled.jpg?v=1731861227",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Ruby_Red_Rough_Rolled_Transparent.jpg?v=1731861306",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Backlit_96_COE_Ruby_Red_RR_Transparent.jpg?v=1731861372"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Backlit_96_COE_Ruby_Red_RR_Transparent.jpg?v=1731861372",
+    "heuristic_pick_score": 1.3423,
+    "heuristic_pick_index": 4,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of152rr.jpg",
+    "judge_sonnet": {
+      "pick": 4,
+      "raw": "4",
+      "latency_ms": 11466,
+      "cost_usd": 0.04736,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 18360,
+      "cost_usd": 0.018971,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of60381cc",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Blue Skies Pearl Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-blue-skies-pearl-opal-glass",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF60381CC_2.webp?v=1780771561",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Blue_Skies_Pearl_Opal.jpg?v=1780771589"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Blue_Skies_Pearl_Opal.jpg?v=1780771589",
+    "heuristic_pick_score": 1.4587,
+    "heuristic_pick_index": 2,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of60381cc.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5343,
+      "cost_usd": 0.045,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 17402,
+      "cost_usd": 0.018594,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of602282cc",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Congo Pearl Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-congo-pearl-opal-mix-glass",
+    "n_candidates": 7,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Congo_Pearl_Opal.jpg?v=1780770832",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Oceanside_Congo.jpg?v=1739642059",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Oceanside_96_Congo.jpg?v=1739642059",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Oceanside_96_Pearl_Opal_Congo.jpg?v=1739642059",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Oceanside_Fusible_96_Congo.jpg?v=1739642059",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Oceanside_Pearl_Opal_Congo.jpg?v=1739642059",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/1_330e82ec-1daa-43fe-9c8a-a33b77c23f58.jpg?v=1739915272"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Congo_Pearl_Opal.jpg?v=1780770832",
+    "heuristic_pick_score": 1.3496,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of602282cc.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 100383,
+      "cost_usd": 0.268744,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 17928,
+      "cost_usd": 0.021362,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of602281cc",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Key Lime Pearl Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-key-lime-pearl-opal-mix-glass",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Key_Lime_Pearl_Opal_3.jpg?v=1781963808",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Key_Lime_Pearl_Opal_2.jpg?v=1780770753"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Key_Lime_Pearl_Opal_3.jpg?v=1781963808",
+    "heuristic_pick_score": 1.3213,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of602281cc.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 8516,
+      "cost_usd": 0.047987,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 20990,
+      "cost_usd": 0.020049,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of3471s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Pale Purple and White",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-pale-purple-and-white-glass",
+    "n_candidates": 5,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF3471S_3.webp?v=1777145923",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Pale_Purple_and_White.jpg?v=1777145884",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF3471S_2.jpg?v=1777145954",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_purple_fusibles.jpg?v=1768059127",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/20251017_175905.jpg?v=1768059127"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF3471S_2.jpg?v=1777145954",
+    "heuristic_pick_score": 1.3506,
+    "heuristic_pick_index": 3,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of3471s.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 8159,
+      "cost_usd": 0.053,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 24826,
+      "cost_usd": 0.025946,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "oceanside-of82872s",
+    "manufacturer": "Oceanside",
+    "name": "96 COE Seafoam Green with White Translucent",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/oceanside-seafoam-green-with-white-translucent-glass",
+    "n_candidates": 5,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_seafoam_green_with_white.jpg?v=1778344403",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Seafoam_green_with_white.jpg?v=1736975754",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/seafoam_green_with_white_96_COE.jpg?v=1736975754",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Backlit_Seafoam_green_with_white.jpg?v=1736975665",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/OF82872_2.webp?v=1778344371"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Backlit_Seafoam_green_with_white.jpg?v=1736975665",
+    "heuristic_pick_score": 1.4061,
+    "heuristic_pick_index": 4,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/oceanside-of82872s.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5188,
+      "cost_usd": 0.053257,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 11283,
+      "cost_usd": 0.01759,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-51105a0030fhalf",
+    "manufacturer": "Bullseye",
+    "name": "Black Opalescent, White Opalescent, Turquoise Transparent Double Cascade, 3+ Color Mix, Double-rolled, 3mm, Fusible",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/black-white-turquoise-double-cascade-3-color-mix-double-rolled-3mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51105A-0030-F_01.jpg?v=1771355037",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51105A-0030-F_02.jpg?v=1771355036"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51105A-0030-F_01.jpg?v=1771355037",
+    "heuristic_pick_score": 0.6542,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-51105a0030fhalf.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5011,
+      "cost_usd": 0.044148,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 16490,
+      "cost_usd": 0.018358,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-51110a0030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Light Cyan Opalescent, White Opalescent, Black Opalescent Graffiti, 3+ Color Mix, Double-rolled, 3mm, Fusible",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/light-cyan-white-black-graffiti-3-color-mix-double-rolled-3mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51110A-0030-F_01.jpg?v=1771360233",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51110A-0030-F_02.jpg?v=1771360233"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/51110A-0030-F_01.jpg?v=1771360233",
+    "heuristic_pick_score": 0.6549,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-51110a0030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5489,
+      "cost_usd": 0.044135,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 14053,
+      "cost_usd": 0.019342,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0011010055f1010",
+    "manufacturer": "Bullseye",
+    "name": "Clear Transparent, Thin, Accordion Texture, 2 mm, Fusible",
+    "category": "Clear",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/clear-transparent-thin-accordion-texture-2-mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001101-0055-F_01.jpg?v=1765591869",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001101-0055-F_02.jpg?v=1765591869"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001101-0055-F_01.jpg?v=1765591869",
+    "heuristic_pick_score": 0.6846,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0011010055f1010.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5920,
+      "cost_usd": 0.044092,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 13690,
+      "cost_usd": 0.015616,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0013320031f1010",
+    "manufacturer": "Bullseye",
+    "name": "Fuchsia Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/fuchsia-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001332-0031-F_01.jpg?v=1765591113",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001332-0031-F_02.jpg?v=1765591112",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001332-0031-F_03.jpg?v=1765591112"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001332-0031-F_03.jpg?v=1765591112",
+    "heuristic_pick_score": 0.6823,
+    "heuristic_pick_index": 3,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0013320031f1010.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 5176,
+      "cost_usd": 0.046222,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9956,
+      "cost_usd": 0.016195,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0018200030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Pale Yellow Tint, Double-rolled, 3 mm, Fusible",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/pale-yellow-tint-double-rolled-3-mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001820-0030-F_01.jpg?v=1765590958",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001820-0030-F_02.jpg?v=1765590958"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001820-0030-F_01.jpg?v=1765590958",
+    "heuristic_pick_score": 0.5927,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0018200030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5825,
+      "cost_usd": 0.044404,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9009,
+      "cost_usd": 0.015117,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-60112b0030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Clear Transparent, White Opalescent, Deep Plum Transparent, 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/clear-white-opalescent-deep-plum-3-color-mix-double-rolled-3-mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/60112B-0030-F_01.jpg?v=1771365049",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/60112B-0030-F_02.jpg?v=1771365049"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/60112B-0030-F_01.jpg?v=1771365049",
+    "heuristic_pick_score": 0.6583,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-60112b0030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6551,
+      "cost_usd": 0.044321,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 16801,
+      "cost_usd": 0.01903,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0032120030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Olive Green Opalescent, Aventurine Green, Deep Brown 3+ Color Mix, Double-rolled, 3 mm, Fusible",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/olive-green-opalescent-aventurine-green-deep-brown-3-color-mix-double-rolled-3-mm-fusible",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/003212-0030-F_01.jpg?v=1765590997",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/003212-0030-F_02.jpg?v=1765590997",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/003212-0030-F_03.jpg?v=1765590997"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/003212-0030-F_01.jpg?v=1765590997",
+    "heuristic_pick_score": 0.9999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0032120030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 6065,
+      "cost_usd": 0.045724,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 10230,
+      "cost_usd": 0.014491,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0024160030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Light Turquoise Blue, True Blue 2-Color Mix, Double-rolled, 3 mm, Fusible",
+    "category": "Wispy/Streaky",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/light-turquoise-blue-true-blue-2-color-mix-double-rolled-3-mm-fusible",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/002416-0030-F_01.jpg?v=1765590992",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/002416-0030-F_02.jpg?v=1765590991",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/002416-0030-F_03.jpg?v=1765590992"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/002416-0030-F_01.jpg?v=1765590992",
+    "heuristic_pick_score": 0.9999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0024160030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 3,
+      "raw": "3",
+      "latency_ms": 5452,
+      "cost_usd": 0.045969,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 9964,
+      "cost_usd": 0.015773,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0014090050f1010",
+    "manufacturer": "Bullseye",
+    "name": "Light Bronze Transparent, Thin-rolled, 2 mm, Fusible",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/light-bronze-transparent-thin-rolled-2-mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001409-0050-F_01.jpg?v=1765591120",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001409-0050-F_02.jpg?v=1765591119"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001409-0050-F_01.jpg?v=1765591120",
+    "heuristic_pick_score": 0.9999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0014090050f1010.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 6179,
+      "cost_usd": 0.044251,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 8013,
+      "cost_usd": 0.014436,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "bullseye-0014120030f1010",
+    "manufacturer": "Bullseye",
+    "name": "Light Aventurine Green Transparent, Double-rolled, 3 mm, Fusible",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://shop.bullseyeglass.com/products/light-aventurine-green-transparent-double-rolled-3-mm-fusible",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001412-0030-F_01.jpg?v=1765590948",
+      "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001412-0030-F_02.jpg?v=1765590948"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001412-0030-F_01.jpg?v=1765590948",
+    "heuristic_pick_score": 0.9999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/bullseye-0014120030f1010.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 5136,
+      "cost_usd": 0.044496,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 7809,
+      "cost_usd": 0.014975,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "wissmach-wf28105",
+    "manufacturer": "Wissmach",
+    "name": "96 COE White and Dark Blue",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/wissmach-white-and-dark-blue-fusible-glass-96-coe",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_White_and_Dark_Blue.jpg?v=1779466411"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_White_and_Dark_Blue.jpg?v=1779466411",
+    "heuristic_pick_score": 0.8371,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/wissmach-wf28105.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 4679,
+      "cost_usd": 0.042897,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 8725,
+      "cost_usd": 0.013931,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "wissmach-w55d",
+    "manufacturer": "Wissmach",
+    "name": "Celery Opal",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/wissmach-green-amber-and-white-opal-glass",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Green_Amber_and_White_Opal_-_Stained_Glass_Express_-4987562.jpg?v=1729927603"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Green_Amber_and_White_Opal_-_Stained_Glass_Express_-4987562.jpg?v=1729927603",
+    "heuristic_pick_score": 0.8261,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/wissmach-w55d.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5814,
+      "cost_usd": 0.043262,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6012,
+      "cost_usd": 0.013964,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "wissmach-wf08105",
+    "manufacturer": "Wissmach",
+    "name": "96 COE String of Pearls Opal Reactive",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/wissmach-reactive-string-of-pearls-opal-fusible-glass-96-coe",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Reactive_String_of_Pearls_Opal_-_Stained_Glass_Express_-4983147.jpg?v=1729916329",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Reactive_String_of_Pearls_Opal_-_Stained_Glass_Express_-4983149.jpg?v=1729916333"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Reactive_String_of_Pearls_Opal_-_Stained_Glass_Express_-4983147.jpg?v=1729916329",
+    "heuristic_pick_score": 0.7935,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/wissmach-wf08105.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 9824,
+      "cost_usd": 0.044543,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 10547,
+      "cost_usd": 0.014153,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "wissmach-wf01dlum105",
+    "manufacturer": "Wissmach",
+    "name": "96 COE Clear Dew Drop Luminescent",
+    "category": "Textured/Baroque",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/wissmach-clear-dew-textured-luminescent-fusible-glass-96-coe",
+    "n_candidates": 6,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Drop_Luminescent_7.jpg?v=1780695123",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Drop_Luminescent.jpg?v=1780695157",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Luminescent_2.jpg?v=1755708272",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Luminescent.jpg?v=1753293891",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Luminescent_3.jpg?v=1753293838",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Luminescent_4.jpg?v=1753293866"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Clear_Dew_Drop_Luminescent.jpg?v=1780695157",
+    "heuristic_pick_score": 1.4998,
+    "heuristic_pick_index": 2,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/wissmach-wf01dlum105.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "**2**",
+      "latency_ms": 29879,
+      "cost_usd": 0.079965,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 24056,
+      "cost_usd": 0.023467,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "wissmach-wf24lum105",
+    "manufacturer": "Wissmach",
+    "name": "96 COE Superior Blue Luminescent",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/wissmach-super-blue-transparent-luminescent-fusible-glass-96-coe",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Superior_Blue_Luminescent.jpg?v=1781968365",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Superior_Blue_Luminescent_2.jpg?v=1781968392"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Superior_Blue_Luminescent_2.jpg?v=1781968392",
+    "heuristic_pick_score": 1.4992,
+    "heuristic_pick_index": 2,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/wissmach-wf24lum105.jpg",
+    "judge_sonnet": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 7039,
+      "cost_usd": 0.044742,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 2,
+      "raw": "2",
+      "latency_ms": 11360,
+      "cost_usd": 0.015043,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "youghiogheny-yf9573",
+    "manufacturer": "Youghiogheny",
+    "name": "96 COE Tiger Stripes",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/96-tiger-stripes-fusi",
+    "n_candidates": 6,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Tiger_Stripes.jpg?v=1758225457",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Tiger_Stripes_2.jpg?v=1758225457",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Tiger_Stripes_3.jpg?v=1758225457",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_Tiger_Stripes_4.jpg?v=1758225457",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_TIGER_STRIPES_-_Stained_Glass_Express_-4983520.jpg?v=1758225457",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_TIGER_STRIPES_-_Stained_Glass_Express_-4983522.jpg?v=1758225457"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/96_COE_TIGER_STRIPES_-_Stained_Glass_Express_-4983522.jpg?v=1758225457",
+    "heuristic_pick_score": 0.9689,
+    "heuristic_pick_index": 6,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/youghiogheny-yf9573.jpg",
+    "judge_sonnet": {
+      "pick": 5,
+      "raw": "5",
+      "latency_ms": 7394,
+      "cost_usd": 0.053054,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 6,
+      "raw": "6",
+      "latency_ms": 9371,
+      "cost_usd": 0.017696,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "youghiogheny-ywaterltsp",
+    "manufacturer": "Youghiogheny",
+    "name": "Blues, Greens, Pink Ripple Stipple",
+    "category": "Textured/Baroque",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/blues-greens-gold-pink-ripple-stipple",
+    "n_candidates": 1,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/YWATERLTSP.jpg?v=1777040096"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/YWATERLTSP.jpg?v=1777040096",
+    "heuristic_pick_score": 0.9766,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/youghiogheny-ywaterltsp.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5837,
+      "cost_usd": 0.043201,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": "NONE",
+      "raw": "NONE",
+      "latency_ms": 7276,
+      "cost_usd": 0.01377,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "youghiogheny-yu00631",
+    "manufacturer": "Youghiogheny",
+    "name": "Golden Yellow Amber",
+    "category": "Cathedral",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/golden-yellow-amber",
+    "n_candidates": 2,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/U-00-631BL.jpg?v=1753992871",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/U-00-631.jpg?v=1753992893"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/U-00-631BL.jpg?v=1753992871",
+    "heuristic_pick_score": 0.8947,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/youghiogheny-yu00631.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 6223,
+      "cost_usd": 0.044442,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 12661,
+      "cost_usd": 0.016977,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "youghiogheny-y700sp",
+    "manufacturer": "Youghiogheny",
+    "name": "Gray Ice Stipple",
+    "category": "Clear",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/youghiogheny-grey-stipple-glass",
+    "n_candidates": 3,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Gray_Ice_Stipple.jpg?v=1768676242",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Grey_Stipple_Glass_-_Stained_Glass_Express_-4987582.jpg?v=1768676242",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Grey_Stipple_Glass_-_Stained_Glass_Express_-4987584.jpg?v=1768676242"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Gray_Ice_Stipple.jpg?v=1768676242",
+    "heuristic_pick_score": 1.4999,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/youghiogheny-y700sp.jpg",
+    "judge_sonnet": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 5007,
+      "cost_usd": 0.046047,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 1,
+      "raw": "1",
+      "latency_ms": 12162,
+      "cost_usd": 0.01656,
+      "parse_ok": true,
+      "retried": false
+    }
+  },
+  {
+    "id": "youghiogheny-y1000hsl",
+    "manufacturer": "Youghiogheny",
+    "name": "Soft White Opal Cottonball High Strike",
+    "category": "Opalescent",
+    "named_failure": false,
+    "product_url": "https://www.stainedglassexpress.com/products/youghiogheny-soft-white-opal-cottonball-high-strike-glass",
+    "n_candidates": 4,
+    "candidate_urls": [
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Soft_White_Opal_Cottonball_High_Strike.jpg?v=1766863306",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Soft_White_Opal_Cottonball_High_Strike_-_Stained_Glass_Express_-4991426.jpg?v=1766863306",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Soft_White_Opal_Cottonball_High_Strike_-_Stained_Glass_Express_-4991420.jpg?v=1766863306",
+      "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Soft_White_Opal_Cottonball_High_Strike_-_Stained_Glass_Express_-4991423.jpg?v=1766863306"
+    ],
+    "heuristic_image_url": "https://cdn.shopify.com/s/files/1/0681/9781/0478/files/Soft_White_Opal_Cottonball_High_Strike.jpg?v=1766863306",
+    "heuristic_pick_score": 1.4993,
+    "heuristic_pick_index": 1,
+    "contact_sheet": "data/vlm_judge_pilot/contact_sheets/youghiogheny-y1000hsl.jpg",
+    "judge_sonnet": {
+      "pick": 3,
+      "raw": "3",
+      "latency_ms": 9253,
+      "cost_usd": 0.050722,
+      "parse_ok": true,
+      "retried": false
+    },
+    "judge_haiku": {
+      "pick": 3,
+      "raw": "3",
+      "latency_ms": 9268,
+      "cost_usd": 0.016181,
+      "parse_ok": true,
+      "retried": false
+    }
+  }
+]
