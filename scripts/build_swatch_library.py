@@ -306,29 +306,118 @@ def should_exclude_striker(item):
     return not is_prestruck(item.get('name', ''), item.get('description', ''))
 
 
+# ==================================================================================
+# KILN-TRANSFORMATIVE EXCLUSION (coordinator/CTO extension 2026-07-17)
+# ==================================================================================
+# A SECOND exclusion category, distinct from unfired strikers by mechanism but the
+# same WYSIWYG failure: glass whose named color only appears after a kiln step the
+# cold-process user never performs. Bullseye's `Alchemy` line (001015 Silver-to-Gold,
+# 001016 Silver-to-Bronze) ships silver-toned and develops gold/bronze only when
+# fired -- verified on the Bullseye product pages (lead, 2026-07-17). Unlike strikers
+# it is not in the `strikers` collection and carries no striker metafield, so it
+# needs its own name-pattern guard: whole-word "Alchemy", or a "Silver to X" /
+# "Silver-to-X" transformation name (the forward guard for any future
+# same-mechanism product that isn't literally branded "Alchemy"). Kept as a separate
+# reason category `kiln_transformative` so the quarantine taxonomy stays clean.
+_KILN_TRANSFORMATIVE_RE = re.compile(r'\bAlchemy\b|\bSilver[\s-]+to[\s-]+\w+\b', re.IGNORECASE)
+
+
+def is_kiln_transformative(name):
+    """True for glass that develops its named color only through a kiln step the cold
+    user never performs (Bullseye Alchemy Silver-to-Gold/Bronze). Name-pattern only;
+    see the module comment for why the strikers-collection signal doesn't cover it."""
+    return bool(_KILN_TRANSFORMATIVE_RE.search(name or ''))
+
+
+def classify_exclusion(item):
+    """Return (category, reason) for a row that must be quarantined out of the shipped
+    library, or None to ship it. Two categories, kiln_transformative checked first
+    (it is the more specific mechanism and its rows are not striker-flagged anyway):
+      - 'kiln_transformative': Alchemy / Silver-to-X, develops color only when fused.
+      - 'unfired_striker':     striker:true and not pre-struck (see should_exclude_striker)."""
+    name = item.get('name', '') or ''
+    if is_kiln_transformative(name):
+        return ('kiln_transformative', (
+            "kiln-transformative: ships silver-toned and only develops its named color "
+            f"('{item.get('strikes_to') or name}') when kiln-fused; cold-process "
+            "(foil/came) users never trigger the transformation, so any render "
+            "misrepresents what ships (WYSIWYG). Distinct mechanism from strikers."))
+    if should_exclude_striker(item):
+        return ('unfired_striker', (
+            "unfired striker: ships pale/unstruck and only reaches its named "
+            f"color ('{item.get('strikes_to')}') once kiln-fired to ~1200F+; "
+            "cold-process (foil/came) users never strike it, so any render "
+            "misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) "
+            "signal in the name/code."))
+    return None
+
+
 def partition_striker_exclusions(registry):
     """Split an assembled registry into (shipped, excluded_log). Each excluded entry
-    records the id/name/strikes_to and a human-readable WYSIWYG reason -- a
-    documented quarantine, never a silent drop."""
+    records id/name/strikes_to, its reason CATEGORY, and a human-readable WYSIWYG
+    reason -- a documented quarantine, never a silent drop. Covers both exclusion
+    categories (unfired_striker + kiln_transformative) via classify_exclusion()."""
     shipped, excluded_log = [], []
     for item in registry:
-        if should_exclude_striker(item):
+        verdict = classify_exclusion(item)
+        if verdict:
+            category, reason = verdict
             excluded_log.append({
                 "id": item.get('id'),
                 "manufacturer": item.get('manufacturer'),
                 "base_sku": item.get('base_sku'),
                 "name": item.get('name'),
                 "strikes_to": item.get('strikes_to'),
-                "reason": (
-                    "unfired striker: ships pale/unstruck and only reaches its named "
-                    f"color ('{item.get('strikes_to')}') once kiln-fired to ~1200F+; "
-                    "cold-process (foil/came) users never strike it, so any render "
-                    "misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) "
-                    "signal in the name/code."),
+                "category": category,
+                "reason": reason,
             })
         else:
             shipped.append(item)
     return shipped, excluded_log
+
+
+# ==================================================================================
+# KEPT-BUT-FLAGGED METADATA (2026-07-17): reactive + iridized
+# ==================================================================================
+# Two properties that are WYSIWYG-safe -- the sheet as sold looks like its photo and
+# STAYS that way in cold work -- so the rows stay shipped, but get a boolean metadata
+# flag for downstream use. Sparse flags (key present only when true) so untouched
+# rows stay byte-identical to before.
+#
+#   reactive: Bullseye Reactive Cloud/Ice/Red Reactive, Wissmach/Yough reactives.
+#     The reaction requires kiln FUSING in contact with a chemically-opposite glass;
+#     the sheet itself does not change in foil/came work. Flag marks it for a future
+#     fusing mode / info badge.
+#   iridized: whole-word irid/iridescent/iridized in the name. Irid coating is a
+#     thin-film front-surface reflection (the rainbow is real, angle-dependent), so
+#     WYSIWYG holds. Flag marks (a) picker special-casing for the transmission-shot
+#     pick rule and (b) future spectral-veil render targets. NOTE: whole-word only,
+#     so "Viridian" (contains the substring "irid") does NOT match.
+_REACTIVE_RE = re.compile(r'\breactive\b', re.IGNORECASE)
+_IRIDIZED_RE = re.compile(r'\biridized\b|\biridescent\b|\birid\b', re.IGNORECASE)
+
+
+def is_reactive(name):
+    return bool(_REACTIVE_RE.search(name or ''))
+
+
+def is_iridized(name):
+    return bool(_IRIDIZED_RE.search(name or ''))
+
+
+def apply_metadata_flags(registry):
+    """Set sparse reactive/iridized:true flags on matching rows in place; returns
+    (n_reactive, n_iridized). Idempotent -- re-running sets the same True values."""
+    n_reactive = n_iridized = 0
+    for item in registry:
+        name = item.get('name', '')
+        if is_reactive(name):
+            item['reactive'] = True
+            n_reactive += 1
+        if is_iridized(name):
+            item['iridized'] = True
+            n_iridized += 1
+    return n_reactive, n_iridized
 
 
 def write_striker_quarantine(excluded_log, before_count, after_count):
@@ -339,55 +428,76 @@ def write_striker_quarantine(excluded_log, before_count, after_count):
     ever exist, stay in the shipped registry and are reported here as a keep-list."""
     import collections as _collections
     os.makedirs(REPORT_DIR, exist_ok=True)
-    excluded_log = sorted(excluded_log, key=lambda x: (x.get('manufacturer') or '', x.get('base_sku') or ''))
+    excluded_log = sorted(excluded_log, key=lambda x: (x.get('category') or '', x.get('manufacturer') or '', x.get('base_sku') or ''))
+    for e in excluded_log:
+        e.setdefault('category', 'unfired_striker')
+    by_cat = _collections.Counter(e.get('category') for e in excluded_log)
     with open(STRIKER_QUARANTINE_JSON, 'w') as f:
         json.dump({
-            "policy": "exclude-unfired-strikers-2026-07-16",
+            "policy": "exclude-unfired-strikers-and-kiln-transformative-2026-07-17",
             "library_count_before": before_count,
             "library_count_after": after_count,
             "excluded_count": len(excluded_log),
+            "excluded_by_category": dict(sorted(by_cat.items())),
             "excluded": excluded_log,
         }, f, indent=2)
 
-    by_mfr = _collections.Counter(e.get('manufacturer') for e in excluded_log)
+    by_mfr_cat = _collections.Counter((e.get('manufacturer'), e.get('category')) for e in excluded_log)
+    cats = sorted(by_cat)
     lines = [
-        "# Striker exclusion -- quarantine list",
+        "# Library exclusion -- quarantine list",
         "",
         "Generated by `scripts/build_swatch_library.py` "
-        "(`partition_striker_exclusions()` / `write_striker_quarantine()`).",
+        "(`partition_striker_exclusions()` / `classify_exclusion()` / `write_striker_quarantine()`).",
         "",
-        "Policy (coordinator/CTO, 2026-07-16, supersedes the pale-photo switch): "
-        "unfired striker glass is filtered OUT of the shipped library entirely "
-        "(WYSIWYG -- cold-process users never fire it). Pre-struck (factory-fired, "
-        "color-locked) sheets are the one exception and stay IN; none exist in the "
+        "Two WYSIWYG exclusion categories (a cold-process artist never performs the "
+        "kiln step that develops the named color, so the shipped sheet never looks "
+        "like a fired-color render):",
+        "",
+        "- **`unfired_striker`** (CTO, 2026-07-16): striker glass ships pale/unstruck "
+        "and only strikes to its named color when kiln-fired to ~1200F+. Pre-struck "
+        "(factory-fired) sheets are the one exception and stay IN; none exist in the "
         "current corpus (see the module comment on the nonexistent 'S'-suffix rule).",
+        "- **`kiln_transformative`** (CTO, 2026-07-17): Bullseye Alchemy Silver-to-Gold/"
+        "Bronze ships silver-toned and develops its color only when kiln-fused. Distinct "
+        "mechanism from strikers; matched by whole-word 'Alchemy' / 'Silver to X'.",
         "",
         f"**Library count: {before_count} -> {after_count} "
         f"({len(excluded_log)} excluded).**",
         "",
-        "## Excluded per manufacturer",
+        "## Excluded per category",
         "",
-        "| Manufacturer | Excluded (unfired strikers) |",
+        "| Category | Excluded |",
         "|---|---:|",
     ]
-    for mfr, n in sorted(by_mfr.items()):
-        lines.append(f"| {mfr} | {n} |")
+    for c in cats:
+        lines.append(f"| `{c}` | {by_cat[c]} |")
     lines.append(f"| **Total** | **{len(excluded_log)}** |")
+    lines += [
+        "",
+        "## Excluded per manufacturer x category",
+        "",
+        "| Manufacturer | Category | Excluded |",
+        "|---|---|---:|",
+    ]
+    for (mfr, cat), n in sorted(by_mfr_cat.items(), key=lambda kv: (kv[0][0] or '', kv[0][1] or '')):
+        lines.append(f"| {mfr} | `{cat}` | {n} |")
     lines += [
         "",
         "## Excluded SKUs",
         "",
-        "| id | manufacturer | base_sku | name | strikes_to |",
-        "|---|---|---|---|---|",
+        "| id | manufacturer | base_sku | name | category | strikes_to |",
+        "|---|---|---|---|---|---|",
     ]
     for e in excluded_log:
         lines.append(
             f"| {e.get('id')} | {e.get('manufacturer')} | `{e.get('base_sku')}` | "
-            f"{e.get('name')} | {e.get('strikes_to')} |")
+            f"{e.get('name')} | `{e.get('category')}` | {e.get('strikes_to')} |")
     lines.append("")
     with open(STRIKER_QUARANTINE_MD, 'w') as f:
         f.write("\n".join(lines))
-    print(f"Wrote striker quarantine list ({len(excluded_log)} SKUs) to "
+    print(f"Wrote quarantine list ({len(excluded_log)} SKUs; "
+          f"{dict(sorted(by_cat.items()))}) to "
           f"{STRIKER_QUARANTINE_JSON} and {STRIKER_QUARANTINE_MD}.")
 
 
@@ -1612,11 +1722,18 @@ def main(only_manufacturer=None):
         # splices above may have appended out of order -- restore the sorted invariant
         final_registry.sort(key=lambda x: (x['manufacturer'], x['base_sku']))
 
-    # Striker-exclusion pivot (2026-07-16): quarantine unfired strikers out of the
-    # shipped registry as the very last assembly step, so it catches every source of
-    # rows (freshly-scraped, legacy-quarantine -v2 carry-through, vlm_judge carry-
-    # through, and the scoped-run splice of other manufacturers alike). Documented,
-    # not silent -- the excluded set is written to its own quarantine list.
+    # Kept-but-flagged metadata (2026-07-17): reactive/iridized flags on shipped rows.
+    # Applied before the exclusion partition so any excluded row (e.g. an iridescent
+    # Alchemy sheet) is simply dropped rather than flagged.
+    n_reactive, n_iridized = apply_metadata_flags(final_registry)
+    print(f"Metadata flags: reactive:true on {n_reactive} rows, iridized:true on {n_iridized} rows.")
+
+    # Library-exclusion filter (2026-07-16 strikers + 2026-07-17 kiln_transformative):
+    # quarantine WYSIWYG-unsafe rows out of the shipped registry as the very last
+    # assembly step, so it catches every source of rows (freshly-scraped, legacy-
+    # quarantine -v2 carry-through, vlm_judge carry-through, and the scoped-run splice
+    # of other manufacturers alike). Documented, not silent -- the excluded set is
+    # written to its own quarantine list with a per-row reason category.
     before_exclusion = len(final_registry)
     final_registry, striker_excluded_log = partition_striker_exclusions(final_registry)
     write_striker_quarantine(striker_excluded_log, before_exclusion, len(final_registry))
@@ -2006,22 +2123,46 @@ def generate_diff_report(existing_by_id, final_registry, quarantine_log, stabili
     print(f"Generated diff report at {REPORT_MD}" + (f" and contact sheet at {CONTACT_SHEET}" if made_sheet else ""))
 
 
-def apply_striker_exclusion_in_place():
-    """Apply ONLY the striker-exclusion filter to the already-built registry, with no
-    network scraping/scoring. The exclusion is a pure function of fields already
+def apply_library_policy_in_place():
+    """Apply the exclusion filter + metadata flags to the already-built registry, with
+    no network scraping/scoring. Everything is a pure function of fields already
     present on every row (striker, name), so this reproduces exactly what a full
-    `main()` rebuild would ship for the striker set -- same partition_striker_
+    `main()` rebuild would ship -- same apply_metadata_flags()/partition_striker_
     exclusions()/write_striker_quarantine() code path -- without re-fetching ~3000
-    catalog products. Used to land the pivot on the current committed registry."""
+    catalog products. Used to land the policy on the current committed registry.
+
+    Idempotent and additive: because the registry it reads may ALREADY have an earlier
+    category removed (e.g. the 2026-07-16 pass already dropped the 146 strikers before
+    the 2026-07-17 Alchemy pass runs), the new exclusions found this pass are MERGED
+    (dedup by id) with the existing quarantine file rather than replacing it, and the
+    original `library_count_before` is carried forward -- so the quarantine always
+    reflects the full cumulative exclusion set, not just this pass's delta."""
     with open(REGISTRY_FILE) as f:
         registry = json.load(f)
-    before = len(registry)
-    shipped, excluded_log = partition_striker_exclusions(registry)
-    write_striker_quarantine(excluded_log, before, len(shipped))
+    n_reactive, n_iridized = apply_metadata_flags(registry)
+    shipped, new_excluded = partition_striker_exclusions(registry)
+
+    prior = []
+    carried_before = None
+    if os.path.exists(STRIKER_QUARANTINE_JSON):
+        with open(STRIKER_QUARANTINE_JSON) as f:
+            prev = json.load(f)
+        prior = prev.get('excluded', [])
+        for e in prior:
+            e.setdefault('category', 'unfired_striker')  # pre-taxonomy entries
+        carried_before = prev.get('library_count_before')
+    merged = {e['id']: e for e in prior}
+    merged.update({e['id']: e for e in new_excluded})
+    merged_log = list(merged.values())
+    # library_count_before = original full count (carried from the prior quarantine if
+    # present; else reconstruct as current-registry + this-pass exclusions).
+    before = carried_before if carried_before is not None else (len(registry) + len(new_excluded))
+    write_striker_quarantine(merged_log, before, len(shipped))
     with open(REGISTRY_FILE, 'w') as f:
         json.dump(shipped, f, indent=2)
-    print(f"\nStriker exclusion applied in place: {before} -> {len(shipped)} rows "
-          f"({len(excluded_log)} unfired strikers excluded). Registry: {REGISTRY_FILE}")
+    print(f"\nLibrary policy applied in place: registry -> {len(shipped)} shipped rows; "
+          f"{len(new_excluded)} newly excluded this pass, {len(merged_log)} total quarantined; "
+          f"reactive:true on {n_reactive}, iridized:true on {n_iridized}. Registry: {REGISTRY_FILE}")
 
 
 if __name__ == '__main__':
@@ -2033,13 +2174,16 @@ if __name__ == '__main__':
                            "registry rows pass through untouched instead of being "
                            "re-scraped. Default: process all manufacturers (original "
                            "behavior).")
-    _ap.add_argument('--exclude-strikers-in-place', action='store_true',
-                      help="Apply ONLY the unfired-striker exclusion filter to the "
-                           "existing registry (no network scrape/score) and write the "
-                           "quarantine list. Reuses the same code path a full rebuild "
-                           "uses for the striker set.")
+    _ap.add_argument('--apply-library-policy-in-place', '--exclude-strikers-in-place',
+                      dest='apply_library_policy_in_place', action='store_true',
+                      help="Apply ONLY the exclusion filter (unfired_striker + "
+                           "kiln_transformative) and metadata flags (reactive/iridized) "
+                           "to the existing registry -- no network scrape/score -- and "
+                           "write/merge the quarantine list. Reuses the same code path a "
+                           "full rebuild uses. (Old name --exclude-strikers-in-place is "
+                           "kept as an alias.)")
     _args = _ap.parse_args()
-    if _args.exclude_strikers_in_place:
-        apply_striker_exclusion_in_place()
+    if _args.apply_library_policy_in_place:
+        apply_library_policy_in_place()
     else:
         main(only_manufacturer=_args.only_manufacturer)

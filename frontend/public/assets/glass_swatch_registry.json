@@ -27,7 +27,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "bullseye-0000090050f1010",
@@ -57,7 +58,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "bullseye-0000130030f1010",
@@ -212,7 +214,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000037f1010",
@@ -237,7 +240,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000038f1010",
@@ -267,7 +271,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000043f1010",
@@ -327,7 +332,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000045f1010",
@@ -377,7 +383,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000047f1010",
@@ -427,7 +434,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000050f1010",
@@ -482,7 +490,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000053f1010",
@@ -542,7 +551,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000055f1010",
@@ -592,7 +602,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000057f1010",
@@ -617,7 +628,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000058f1010",
@@ -642,7 +654,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000060f1010",
@@ -722,7 +735,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000072f1010",
@@ -772,7 +786,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001000074f1010",
@@ -822,7 +837,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001010030f1010",
@@ -1052,7 +1068,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001130050f1010",
@@ -1102,7 +1119,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0001140030f1010",
@@ -3317,7 +3335,9 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true,
+    "iridized": true
   },
   {
     "id": "bullseye-0010090050f1010",
@@ -3342,7 +3362,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "bullseye-0010090051f1010",
@@ -3367,107 +3388,9 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
-  },
-  {
-    "id": "bullseye-0010150031f1010",
-    "manufacturer": "Bullseye",
-    "base_sku": "001015-0031-F-1010",
-    "resolved_sku": "001015-0031-F-1010",
-    "name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
-    "resolved_name": "Alchemy Clear Silver to Gold Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
-    "category": "Clear",
-    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
-    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0031-F_02.jpg?v=1765591054",
-    "status": "Downloaded",
-    "pick_score": 0.7121,
-    "local_image": "/assets/catalog_images/bullseye-0010150031f1010-v2.jpg",
-    "cropped": false,
-    "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
-    "original_width_px": 1200,
-    "original_height_px": 1200,
-    "color_family": "Other",
-    "front_lit": true,
-    "lighting": "front-lit",
-    "striker": false,
-    "strikes_to": null
-  },
-  {
-    "id": "bullseye-0010150051f1010",
-    "manufacturer": "Bullseye",
-    "base_sku": "001015-0051-F-1010",
-    "resolved_sku": "001015-0051-F-1010",
-    "name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
-    "resolved_name": "Alchemy Clear Silver to Gold Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
-    "category": "Clear",
-    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-gold-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
-    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001015-0051-F_02.jpg?v=1765591054",
-    "status": "Downloaded",
-    "pick_score": 0.7122,
-    "local_image": "/assets/catalog_images/bullseye-0010150051f1010-v2.jpg",
-    "cropped": false,
-    "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
-    "original_width_px": 1200,
-    "original_height_px": 1200,
-    "color_family": "Other",
-    "front_lit": true,
-    "lighting": "front-lit",
-    "striker": false,
-    "strikes_to": null
-  },
-  {
-    "id": "bullseye-0010160031f1010",
-    "manufacturer": "Bullseye",
-    "base_sku": "001016-0031-F-1010",
-    "resolved_sku": "001016-0031-F-1010",
-    "name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
-    "resolved_name": "Alchemy Clear Silver to Bronze Transparent, Double-rolled, Iridescent, rainbow, 3 mm, Fusible",
-    "category": "Clear",
-    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-double-rolled-iridescent-rainbow-3-mm-fusible",
-    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0031-F_02.jpg?v=1765591055",
-    "status": "Downloaded",
-    "pick_score": 0.6923,
-    "local_image": "/assets/catalog_images/bullseye-0010160031f1010-v2.jpg",
-    "cropped": false,
-    "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
-    "original_width_px": 1200,
-    "original_height_px": 1200,
-    "color_family": "Other",
-    "front_lit": true,
-    "lighting": "front-lit",
-    "striker": false,
-    "strikes_to": null
-  },
-  {
-    "id": "bullseye-0010160051f1010",
-    "manufacturer": "Bullseye",
-    "base_sku": "001016-0051-F-1010",
-    "resolved_sku": "001016-0051-F-1010",
-    "name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
-    "resolved_name": "Alchemy Clear Silver to Bronze Transparent, Thin-rolled, Iridescent, rainbow, 2 mm, Fusible",
-    "category": "Clear",
-    "product_url": "https://shop.bullseyeglass.com/products/alchemy-clear-silver-to-bronze-transparent-thin-rolled-iridescent-rainbow-2-mm-fusible",
-    "image_url": "https://cdn.shopify.com/s/files/1/0737/5237/9665/files/001016-0051-F_02.jpg?v=1765591056",
-    "status": "Downloaded",
-    "pick_score": 0.6923,
-    "local_image": "/assets/catalog_images/bullseye-0010160051f1010-v2.jpg",
-    "cropped": false,
-    "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
-    "original_width_px": 1200,
-    "original_height_px": 1200,
-    "color_family": "Other",
-    "front_lit": true,
-    "lighting": "front-lit",
-    "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true,
+    "iridized": true
   },
   {
     "id": "bullseye-0010190031f1010",
@@ -3492,7 +3415,9 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true,
+    "iridized": true
   },
   {
     "id": "bullseye-0010190051f1010",
@@ -3517,7 +3442,9 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010000f1010",
@@ -3592,7 +3519,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010037f1010",
@@ -3617,7 +3545,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010038f1010",
@@ -3642,7 +3571,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010043f1010",
@@ -3697,7 +3627,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010045f1010",
@@ -3752,7 +3683,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010047f1010",
@@ -3807,7 +3739,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010050f1010",
@@ -3857,7 +3790,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010053f1010",
@@ -3912,7 +3846,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010055f1010",
@@ -3967,7 +3902,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010057f1010",
@@ -3992,7 +3928,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010058f1010",
@@ -4017,7 +3954,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010070f1010",
@@ -4067,7 +4005,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010072f1010",
@@ -4117,7 +4056,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011010074f1010",
@@ -4167,7 +4107,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011050030f1010",
@@ -4227,7 +4168,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011050050f1010",
@@ -4287,7 +4229,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011070030f1010",
@@ -4342,7 +4285,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011070050f1010",
@@ -4397,7 +4341,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011080030f1010",
@@ -4457,7 +4402,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011080050f1010",
@@ -4512,7 +4458,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011090030f1010",
@@ -4567,7 +4514,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011090050f1010",
@@ -4622,7 +4570,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011120030f1010",
@@ -4677,7 +4626,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011120050f1010",
@@ -4732,7 +4682,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011140030f1010",
@@ -4787,7 +4738,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011140050f1010",
@@ -4847,7 +4799,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011160030f1010",
@@ -4902,7 +4855,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011160050f1010",
@@ -4957,7 +4911,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011180030f1010",
@@ -5012,7 +4967,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011180050f1010",
@@ -5067,7 +5023,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011280030f1010",
@@ -5127,7 +5084,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011280050f1010",
@@ -5187,7 +5145,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011290030f1010",
@@ -5247,7 +5206,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011290050f1010",
@@ -5302,7 +5262,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011370030f1010",
@@ -5362,7 +5323,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011370038f1010",
@@ -5387,7 +5349,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011370050f1010",
@@ -5442,7 +5405,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011380030f1010",
@@ -5497,7 +5461,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011380050f1010",
@@ -5552,7 +5517,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011400030f1010",
@@ -5612,7 +5578,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011400050f1010",
@@ -5667,7 +5634,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011410030f1010",
@@ -5722,7 +5690,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011410050f1010",
@@ -5782,7 +5751,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011450030f1010",
@@ -5837,7 +5807,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011450050f1010",
@@ -5892,7 +5863,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011490030f1010",
@@ -5977,7 +5949,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011640050f1010",
@@ -6032,7 +6005,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011760030f1010",
@@ -6087,7 +6061,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0011760050f1010",
@@ -6147,7 +6122,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012170030f1010",
@@ -6202,7 +6178,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012170050f1010",
@@ -6257,7 +6234,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012210050f1010",
@@ -6397,7 +6375,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012280050f1010",
@@ -6452,7 +6431,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012290030f1010",
@@ -6507,7 +6487,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012290050f1010",
@@ -6562,7 +6543,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0012460030f1010",
@@ -6647,7 +6629,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014010030f1010",
@@ -6752,7 +6735,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014050050f1010",
@@ -6802,7 +6786,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014060030f1010",
@@ -6857,7 +6842,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014060038f1010",
@@ -6882,7 +6868,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014060050f1010",
@@ -6942,7 +6929,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014080030f1010",
@@ -6997,7 +6985,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014080050f1010",
@@ -7052,7 +7041,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014090030f1010",
@@ -7107,7 +7097,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014090038f1010",
@@ -7132,7 +7123,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014090050f1010",
@@ -7187,7 +7179,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014120030f1010",
@@ -7247,7 +7240,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014120050f1010",
@@ -7302,7 +7296,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014140030f1010",
@@ -7362,7 +7357,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014140050f1010",
@@ -7412,7 +7408,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014160030f1010",
@@ -7472,7 +7469,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014160050f1010",
@@ -7532,7 +7530,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014170030f1010",
@@ -7587,7 +7586,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014170050f1010",
@@ -7647,7 +7647,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014190030f1010",
@@ -7707,7 +7708,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014190050f1010",
@@ -7762,7 +7764,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014260030f1010",
@@ -7817,7 +7820,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014260050f1010",
@@ -7872,7 +7876,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014280030f1010",
@@ -7932,7 +7937,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014280050f1010",
@@ -7982,7 +7988,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014290030f1010",
@@ -8037,7 +8044,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014290037f1010",
@@ -8062,7 +8070,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014290050f1010",
@@ -8117,7 +8126,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014370030f1010",
@@ -8172,7 +8182,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014370050f1010",
@@ -8227,7 +8238,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014390030f1010",
@@ -8287,7 +8299,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014390050f1010",
@@ -8337,7 +8350,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014420030f1010",
@@ -8387,7 +8401,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014420050f1010",
@@ -8437,7 +8452,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014440030f1010",
@@ -8497,7 +8513,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014440050f1010",
@@ -8557,7 +8574,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014490030f1010",
@@ -8612,7 +8630,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014490050f1010",
@@ -8667,7 +8686,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014640030f1010",
@@ -8722,7 +8742,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0014640050f1010",
@@ -8777,7 +8798,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0018060030f1010",
@@ -10352,7 +10374,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0021460030f1010",
@@ -10657,7 +10680,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "bullseye-0023020000f1010",
@@ -11902,7 +11926,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of1009snirid",
@@ -11927,7 +11952,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of1009st",
@@ -12152,7 +12178,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of100h",
@@ -12207,7 +12234,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of100hs",
@@ -12532,7 +12560,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of1102rr",
@@ -12987,7 +13016,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of125w",
@@ -13322,7 +13352,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of136w",
@@ -13597,7 +13628,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of151w",
@@ -14032,7 +14064,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-of20161s",
@@ -18602,7 +18635,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "oceanside-ofr1224s",
@@ -19662,7 +19696,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-w01ripirid",
@@ -19687,7 +19722,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-w101d",
@@ -19887,7 +19923,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-w171l",
@@ -20837,7 +20874,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wf01105",
@@ -21362,7 +21400,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf14lum105",
@@ -21387,7 +21426,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf15105",
@@ -21862,7 +21902,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf28105",
@@ -22187,7 +22228,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf38105",
@@ -22212,7 +22254,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf39105",
@@ -22237,7 +22280,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "wissmach-wf42105",
@@ -23487,7 +23531,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wi555sev",
@@ -23562,7 +23607,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wi600d",
@@ -23862,7 +23908,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wiwo101irid",
@@ -23887,7 +23934,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wiwo118irid",
@@ -23912,7 +23960,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wiwo503",
@@ -23962,7 +24011,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wiwo59",
@@ -24212,7 +24262,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "wissmach-wwo25",
@@ -24412,7 +24463,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1000hs",
@@ -24472,7 +24524,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1000hsl",
@@ -24552,7 +24605,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1004hs",
@@ -24632,7 +24686,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1007g7x9",
@@ -24737,7 +24792,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1027rg",
@@ -25142,7 +25198,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y1364rg",
@@ -25617,7 +25674,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y3000sp",
@@ -25672,7 +25730,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y3001g7x9",
@@ -25722,7 +25781,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y3344rg",
@@ -26277,7 +26337,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y5033sp",
@@ -26742,7 +26803,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y6314sp",
@@ -26847,7 +26909,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-y6600sp",
@@ -27827,7 +27890,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf1006",
@@ -27992,7 +28056,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf250",
@@ -28042,7 +28107,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf2536",
@@ -28102,7 +28168,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "youghiogheny-yf2579m",
@@ -28332,7 +28399,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf4040f",
@@ -28407,7 +28475,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf4100",
@@ -28542,7 +28611,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf4544",
@@ -28827,7 +28897,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "reactive": true
   },
   {
     "id": "youghiogheny-yf5500",
@@ -29012,7 +29083,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf606",
@@ -29062,7 +29134,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf6100",
@@ -29412,7 +29485,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf806",
@@ -29542,7 +29616,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yf9011",
@@ -30677,7 +30752,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yu6595",
@@ -30757,7 +30833,8 @@
     "front_lit": true,
     "lighting": "front-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "iridized": true
   },
   {
     "id": "youghiogheny-yuf5100gr",
