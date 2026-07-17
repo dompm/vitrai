@@ -108,6 +108,64 @@ def loader_check(root):
     return True
 
 
+def patch_view_check(root, n_draws=40):
+    """053b addendum (CTO catch: patches were emitted but never consumed). Asserts:
+    (1) the patch view LOADS through GlassDelightDataset.sample_crop (patch_prob=1);
+    (2) GT stays REGISTERED: the patch gt_T file equals the recorded [y0:y0+s, x0:x0+s]
+        window of the lazily-warped full sheet (bit-exact, same warp convention);
+    (3) the SPLIT is respected: every patch draw comes from a sample whose holdout_reason
+        matches the loader's split."""
+    sys.path.insert(0, os.path.join(HERE, "foundation"))
+    import dataset as D
+
+    # (2) registration, file level: every patch of a few samples
+    n_reg = 0
+    for d in sorted(glob.glob(os.path.join(root, "*")))[:6]:
+        mp = os.path.join(d, "meta.json")
+        pdir = os.path.join(d, "patches")
+        if not (os.path.exists(mp) and os.path.isdir(pdir)):
+            continue
+        meta = json.load(open(mp))
+        cs = meta.get("crop_sim") or {}
+        M = np.asarray(cs.get("homography_src_to_crop"), dtype=np.float64)
+        gtT = _read(os.path.join(d, "gt_T.png"))
+        sheet = warp_channel(gtT, M, "gt_T")
+        for p in cs.get("patches", []):
+            f = os.path.join(pdir, f"patch{p['idx']:02d}_gt_T.png")
+            if not os.path.exists(f):
+                continue
+            want = sheet[p["y0"]:p["y0"] + p["size"], p["x0"]:p["x0"] + p["size"]]
+            got = _read(f)
+            if got.shape != want.shape or np.abs(got.astype(np.int64) - want.astype(np.int64)).max() != 0:
+                print(f"PATCH-REG FAIL {os.path.basename(d)} patch{p['idx']:02d}")
+                return False
+            n_reg += 1
+
+    # (1)+(3) loader level: patch draws load and respect the split
+    ok_views = {"patch": 0, "sheet": 0}
+    for split in ("train", "test"):
+        try:
+            ds = D.GlassDelightDataset([root], split=split, augment=False,
+                                       crop_view=True, patch_prob=1.0, crop=320, seed=1)
+        except SystemExit:
+            continue
+        for _ in range(n_draws):
+            c = ds.sample_crop()
+            if c is None:
+                continue
+            ok_views[c.get("view", "sheet")] += 1
+            assert c["photo"].shape[:2] == c["T"].shape[:2] == (320, 320), "shape mismatch"
+            # split respected: re-derive the sample's holdout status from its meta
+            sdir = [s for s in ds.samples if s["seed"] == c["seed"] and s["recipe"] == c["recipe"]]
+            for s in sdir:
+                m = json.load(open(os.path.join(s["dir"], "meta.json")))
+                r = D.holdout_reason(m, s["seed"])
+                assert (r is not None) == (split == "test"), f"SPLIT VIOLATION {s['dir']} {r}"
+    print(f"[patch] registration bit-exact on {n_reg} patches; "
+          f"loader draws: {ok_views['patch']} patch / {ok_views['sheet']} sheet; split respected")
+    return n_reg > 0 and ok_views["patch"] > 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", required=True)
@@ -139,7 +197,9 @@ def main():
           f"worst float-EXR maxdiff={worst_float:.3e} (tol {args.float_tol})")
     wiring_ok = loader_check(args.root)
     print(f"[verify] loader crop_view wiring: {'OK' if wiring_ok else 'FAIL'}")
-    sys.exit(0 if (n_fail == 0 and wiring_ok) else 1)
+    patch_ok = patch_view_check(args.root)
+    print(f"[verify] patch view: {'OK' if patch_ok else 'FAIL'}")
+    sys.exit(0 if (n_fail == 0 and wiring_ok and patch_ok) else 1)
 
 
 if __name__ == "__main__":

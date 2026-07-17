@@ -292,7 +292,7 @@ class GlassDelightDataset:
 
     def __init__(self, roots, split="train", crop=512, work_size=768,
                  augment=None, input_variant="random", require_B=False, seed=0,
-                 crop_view=False):
+                 crop_view=False, patch_prob=0.2):
         assert split in ("train", "test", "all")
         self.crop = crop
         self.work_size = work_size
@@ -306,6 +306,15 @@ class GlassDelightDataset:
         # convention-identical to the old crop/ files (see crop_sim.warp_channel +
         # verify_lazy_crop_053b.py). Samples without crop_sim meta load unwarped (old batches).
         self.crop_view = crop_view
+        # Report 053b addendum (CTO catch): the reviewer's training diet is "the full cropped
+        # sheet AND local detail patches", but the 053 patches were emitted and never consumed.
+        # With probability `patch_prob` a sample_crop draw serves a NATIVE-RESOLUTION detail
+        # patch (photo + registered GT from <sample>/patches/) instead of a crop of the
+        # work_size-downsampled sheet — patches carry the fine texture (seed bubbles, streak
+        # edges -> the σ_s signal) that the 768-px downsample destroys. Patches inherit their
+        # sample's holdout split (drawn from self.samples, which is already split-filtered).
+        # Samples without patches on disk always serve the sheet view.
+        self.patch_prob = patch_prob
         self.rng = np.random.default_rng(seed)
         self._cache = {}   # idx -> downsampled component dict (avoids re-reading 50MB EXRs)
         self.samples = self._index(roots if isinstance(roots, (list, tuple)) else [roots])
@@ -456,24 +465,116 @@ class GlassDelightDataset:
         out, _preset = apply_phone_pipeline(photo, self.rng, allowed_presets=allowed)
         return out
 
+    # ------------------------------------------------- 053b: detail-patch view
+    def _load_patch(self, idx, patch_idx=None):
+        """Load one native-resolution detail patch (photo + REGISTERED GT) emitted by
+        crop_sim.py into <sample>/patches/. Decode conventions mirror the sheet loaders
+        exactly (photo png -> srgb_to_lin; gt_T raw /65535; gt_h/gt_sigma_s /65535 ->
+        srgb_to_lin; mark thresholded). B/veil have no patch files -> zero-filled with
+        has_B/has_veil False (same contract as pre-GT-v3 batches). Returns None if the
+        sample has no patches."""
+        s = self.samples[idx]
+        pdir = os.path.join(s["dir"], "patches")
+        if not os.path.isdir(pdir):
+            return None
+        pids = sorted({os.path.basename(f).split("_")[0] for f in
+                       glob.glob(os.path.join(pdir, "patch*_gt_T.png"))})
+        if not pids:
+            return None
+        pid = pids[int(self.rng.integers(len(pids)))] if patch_idx is None else f"patch{patch_idx:02d}"
+
+        def _rd(name):
+            p = os.path.join(pdir, f"{pid}_{name}")
+            a = cv2.imread(p, cv2.IMREAD_UNCHANGED) if os.path.exists(p) else None
+            return a
+
+        def _photo(name):
+            a = _rd(name)
+            if a is None:
+                return None
+            return srgb_to_lin(a[..., ::-1].astype(np.float32) / 255.0)
+
+        photo_wo = _photo("without_shadow_photo.png")
+        T = _rd("gt_T.png")
+        h = _rd("gt_h.png")
+        if photo_wo is None or T is None or h is None:
+            return None
+        T = T[..., ::-1].astype(np.float32) / (65535.0 if T.max() > 255 else 255.0)
+        h = srgb_to_lin((h if h.ndim == 2 else h[..., 0]).astype(np.float32) / 65535.0)[..., None]
+        sig = _rd("gt_sigma_s.png")
+        has_sigma_s = sig is not None
+        sig = (srgb_to_lin((sig if sig.ndim == 2 else sig[..., 0]).astype(np.float32) / 65535.0)[..., None]
+               if has_sigma_s else np.zeros_like(h))
+        mark = _rd("gt_mark_mask.png")
+        if mark is not None:
+            mark = ((mark if mark.ndim == 2 else mark.mean(-1)).astype(np.float32)
+                    / (65535.0 if mark.max() > 255 else 255.0) > 0.5).astype(np.float32)[..., None]
+        else:
+            mark = np.zeros_like(h)
+
+        photo_w = _photo("with_shadow_photo.png")
+        variant = self.input_variant
+        if variant == "random":
+            variant = "with" if (photo_w is not None and self.rng.random() < 0.5) else "without"
+        if variant == "with" and photo_w is None:
+            variant = "without"
+        photo = photo_w if variant == "with" else photo_wo
+        P = photo.shape[0]
+        shadow = np.zeros((P, P, 1), np.float32)
+        if variant == "with":
+            dY = lum(photo_wo) - lum(photo)
+            shadow = (dY > 0.02).astype(np.float32)[..., None]
+        valid = (1.0 - mark).astype(np.float32)
+        out = {"photo": photo.astype(np.float32), "T": T, "h": h, "sigma_s": sig,
+               "B": np.zeros((P, P, 3), np.float32), "veil": np.zeros((P, P, 3), np.float32),
+               "shadow": shadow, "mark": mark, "valid": valid,
+               "recipe": s["recipe"], "seed": s["seed"], "variant": variant,
+               "has_B": False, "has_veil": False, "has_sigma_s": has_sigma_s,
+               "view": "patch", "patch_id": pid}
+
+        # ---- size adaptation to self.crop (see report 053b: reflect-pad, valid=0 in pad) ----
+        c = self.crop
+        keys = ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid")
+        if P > c:      # patch bigger than the crop window: random-crop down
+            y0 = int(self.rng.integers(0, P - c + 1))
+            x0 = int(self.rng.integers(0, P - c + 1))
+            for k in keys:
+                out[k] = np.ascontiguousarray(out[k][y0:y0 + c, x0:x0 + c])
+        elif P < c:    # patch smaller: reflect-pad (keeps input statistics glass-like,
+            pad = c - P                                     # no invented black borders) and
+            for k in keys:                                  # mask the pad out of every loss
+                out[k] = np.pad(out[k], ((0, pad), (0, pad), (0, 0)), mode="reflect")
+            out["valid"] = out["valid"].copy()
+            out["valid"][P:, :] = 0.0
+            out["valid"][:, P:] = 0.0
+        return out
+
     def sample_crop(self, idx=None):
-        """One augmented training crop (dict of HxWxC numpy). Identity-holdout is
-        already enforced at index time, so any idx here is split-legal."""
+        """One augmented training draw (dict of HxWxC numpy). Identity-holdout is already
+        enforced at index time, so any idx here is split-legal. Report 053b: with probability
+        `patch_prob` (when the sample has crop_sim patches) the draw is a NATIVE-resolution
+        detail patch instead of a window of the work_size-downsampled sheet — the two-view
+        training diet the external review specified (full cropped sheet + local detail)."""
         if idx is None:
             idx = int(self.rng.integers(len(self.samples)))
-        rec = self.load_full(idx)
-        if rec is None:
-            return None
-        H, W = rec["T"].shape[:2]
-        c = min(self.crop, H, W)
-        y0 = int(self.rng.integers(0, H - c + 1))
-        x0 = int(self.rng.integers(0, W - c + 1))
-        sl = (slice(y0, y0 + c), slice(x0, x0 + c))
-        out = {}
-        for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
-            out[k] = np.ascontiguousarray(rec[k][sl])
-        for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
-            out[k] = rec[k]
+        out = None
+        if self.patch_prob > 0 and self.rng.random() < self.patch_prob:
+            out = self._load_patch(idx)              # None if the sample has no patches
+        if out is None:
+            rec = self.load_full(idx)
+            if rec is None:
+                return None
+            H, W = rec["T"].shape[:2]
+            c = min(self.crop, H, W)
+            y0 = int(self.rng.integers(0, H - c + 1))
+            x0 = int(self.rng.integers(0, W - c + 1))
+            sl = (slice(y0, y0 + c), slice(x0, x0 + c))
+            out = {}
+            for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
+                out[k] = np.ascontiguousarray(rec[k][sl])
+            for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
+                out[k] = rec[k]
+            out["view"] = "sheet"
         if self.augment:
             out["photo"] = self._augment_photo(out["photo"])
             if self.rng.random() < 0.5:

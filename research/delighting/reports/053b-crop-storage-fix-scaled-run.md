@@ -37,6 +37,30 @@ pointer amendment).
    `crop/` dirs → pilot **12 G → 4.0 G** (~8 G freed; ~59 MB/sample all-in), disk 30 G → 39 G
    free.
 
+## Addendum — the patch view (CTO catch: patches were emitted, never consumed)
+
+The reviewer's training diet is "**both the full cropped sheet and local detail patches**", but
+053 only ever wired the sheet path — `dataset.py` had zero references to `patches/`. Fixed:
+
+- `GlassDelightDataset(patch_prob=0.2)` (configurable): with that probability a `sample_crop`
+  draw serves a **native-resolution detail patch** (photo + registered gt_T/gt_h/gt_sigma_s/
+  mark from `<sample>/patches/`) instead of a 512² window of the 768-work-res sheet. Patches
+  carry the fine texture (seed bubbles, streak edges — the σ_s signal) that the 768 downsample
+  destroys. Decode conventions mirror the sheet loaders exactly. B/veil have no patch files →
+  zero-filled with `has_B/has_veil` False (the pre-GT-v3 contract). `out["view"]` tags each
+  draw `"sheet"`/`"patch"`.
+- **Size adaptation choice**: patches (320²) smaller than the crop window (512²) are
+  **reflect-padded to crop size with `valid=0` in the pad**. Why this over serving native 320:
+  it keeps every draw the same shape (no mixed-size batch collation burden on train.py), the
+  reflect content keeps input statistics glass-like instead of black borders, and the valid
+  mask guarantees the pad contributes zero loss — so no statistics are distorted where it
+  matters (the loss). When crop < patch, the patch is randomly cropped down instead.
+- **Holdout unchanged**: a patch inherits its sample's split (drawn from the already
+  split-filtered index).
+- **Unit-tested** (`verify_lazy_crop_053b.py::patch_view_check`): patch↔sheet registration
+  bit-exact on 15 patches (patch gt_T == the recorded window of the lazily-warped sheet);
+  78 loader patch draws load at the right shape; split respected on train AND test.
+
 ## The scaled run (NOT 1k locally — plainly)
 
 Per the lead's launch plan: with the honest ~80 MB/sample render cost and ≥5 GB headroom
