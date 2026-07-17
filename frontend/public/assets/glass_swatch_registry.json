@@ -28,7 +28,8 @@
     "lighting": "back-lit",
     "striker": false,
     "strikes_to": null,
-    "reactive": true
+    "reactive": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0000090050f1010",
@@ -59,7 +60,8 @@
     "lighting": "back-lit",
     "striker": false,
     "strikes_to": null,
-    "reactive": true
+    "reactive": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0000130030f1010",
@@ -126,15 +128,16 @@
     "local_image": "/assets/catalog_images/bullseye-0000340030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Orange",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0000340050f1010",
@@ -151,15 +154,16 @@
     "local_image": "/assets/catalog_images/bullseye-0000340050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Orange",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000030f1010",
@@ -206,8 +210,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -215,7 +219,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000037f1010",
@@ -232,8 +237,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000037f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -241,7 +246,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000038f1010",
@@ -350,15 +356,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000045f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000046f1010",
@@ -375,8 +382,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000046f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -384,7 +391,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000047f1010",
@@ -401,15 +409,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000047f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000048f1010",
@@ -426,8 +435,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000048f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -435,7 +444,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000050f1010",
@@ -482,8 +492,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -491,7 +501,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000053f1010",
@@ -569,15 +580,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000055f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000056f1010",
@@ -594,8 +606,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000056f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -603,7 +615,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000057f1010",
@@ -620,8 +633,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000057f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -629,7 +642,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000058f1010",
@@ -646,8 +660,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000058f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -655,7 +669,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000060f1010",
@@ -702,15 +717,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000070f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000071f1010",
@@ -727,8 +743,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000071f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -736,7 +752,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000072f1010",
@@ -753,15 +770,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000072f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000073f1010",
@@ -778,8 +796,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000073f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -787,7 +805,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000074f1010",
@@ -804,15 +823,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001000074f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001000075f1010",
@@ -829,8 +849,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001000075f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -838,7 +858,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001010030f1010",
@@ -1035,15 +1056,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001130030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001130031f1010",
@@ -1060,8 +1082,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001130031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -1069,7 +1091,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001130050f1010",
@@ -1111,8 +1134,8 @@
     "local_image": "/assets/catalog_images/bullseye-0001130051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -1120,7 +1143,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001140030f1010",
@@ -1647,15 +1671,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001370050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001410030f1010",
@@ -1732,15 +1757,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001420030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001420050f1010",
@@ -1757,15 +1783,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001420050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001440030f1010",
@@ -2112,15 +2139,16 @@
     "local_image": "/assets/catalog_images/bullseye-0001610050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0001640030f1010",
@@ -2857,15 +2885,16 @@
     "local_image": "/assets/catalog_images/bullseye-0003060050fhalf.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0003120030f1010",
@@ -2942,15 +2971,16 @@
     "local_image": "/assets/catalog_images/bullseye-0003130030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0003130050f1010",
@@ -3177,15 +3207,16 @@
     "local_image": "/assets/catalog_images/bullseye-0004200030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0004200050f1010",
@@ -3202,15 +3233,16 @@
     "local_image": "/assets/catalog_images/bullseye-0004200050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0004210030f1010",
@@ -3227,15 +3259,16 @@
     "local_image": "/assets/catalog_images/bullseye-0004210030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Pink",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0004210050f1010",
@@ -3252,15 +3285,16 @@
     "local_image": "/assets/catalog_images/bullseye-0004210050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Pink",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0009200030f1010",
@@ -3277,15 +3311,16 @@
     "local_image": "/assets/catalog_images/bullseye-0009200030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0009200050f1010",
@@ -3302,15 +3337,16 @@
     "local_image": "/assets/catalog_images/bullseye-0009200050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0010090031f1010",
@@ -3327,8 +3363,8 @@
     "local_image": "/assets/catalog_images/bullseye-0010090031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3337,7 +3373,8 @@
     "striker": false,
     "strikes_to": null,
     "reactive": true,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0010090050f1010",
@@ -3380,8 +3417,8 @@
     "local_image": "/assets/catalog_images/bullseye-0010090051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3390,7 +3427,8 @@
     "striker": false,
     "strikes_to": null,
     "reactive": true,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0010190031f1010",
@@ -3407,8 +3445,8 @@
     "local_image": "/assets/catalog_images/bullseye-0010190031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3417,7 +3455,8 @@
     "striker": false,
     "strikes_to": null,
     "reactive": true,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0010190051f1010",
@@ -3434,8 +3473,8 @@
     "local_image": "/assets/catalog_images/bullseye-0010190051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3444,7 +3483,8 @@
     "striker": false,
     "strikes_to": null,
     "reactive": true,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010000f1010",
@@ -3461,15 +3501,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010000f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010030f1010",
@@ -3487,7 +3528,7 @@
     "cropped": false,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3511,8 +3552,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3520,7 +3561,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010037f1010",
@@ -3537,8 +3579,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010037f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3546,7 +3588,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010038f1010",
@@ -3563,8 +3606,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010038f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3572,7 +3615,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010043f1010",
@@ -3589,15 +3633,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010043f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010044f1010",
@@ -3628,7 +3673,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010045f1010",
@@ -3645,15 +3691,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010045f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010046f1010",
@@ -3684,7 +3731,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010047f1010",
@@ -3701,15 +3749,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010047f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010048f1010",
@@ -3731,8 +3780,8 @@
       453,
       1191
     ],
-    "real_world_width_in": 3.72,
-    "real_world_height_in": 8.68,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3740,7 +3789,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010050f1010",
@@ -3757,15 +3807,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010051f1010",
@@ -3782,8 +3833,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -3791,7 +3842,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010053f1010",
@@ -3808,15 +3860,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010053f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010054f1010",
@@ -3847,7 +3900,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010055f1010",
@@ -3864,15 +3918,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010055f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010056f1010",
@@ -3903,7 +3958,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010057f1010",
@@ -3920,8 +3976,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010057f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3929,7 +3985,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010058f1010",
@@ -3946,8 +4003,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010058f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -3955,7 +4012,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010070f1010",
@@ -3972,15 +4030,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010070f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010071f1010",
@@ -3997,8 +4056,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010071f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -4006,7 +4065,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010072f1010",
@@ -4023,15 +4083,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010072f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010073f1010",
@@ -4048,8 +4109,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010073f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -4057,7 +4118,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010074f1010",
@@ -4074,15 +4136,16 @@
     "local_image": "/assets/catalog_images/bullseye-0011010074f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011010075f1010",
@@ -4099,8 +4162,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011010075f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -4108,7 +4171,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011050030f1010",
@@ -4277,8 +4341,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011070031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -4286,7 +4350,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011070050f1010",
@@ -4333,8 +4398,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011070051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -4342,7 +4407,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011080030f1010",
@@ -4450,8 +4516,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011080051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -4459,7 +4525,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011090030f1010",
@@ -4506,8 +4573,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011090031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -4515,7 +4582,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011090050f1010",
@@ -4562,8 +4630,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011090051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -4571,7 +4639,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011120030f1010",
@@ -4618,8 +4687,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011120031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -4627,7 +4696,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011120050f1010",
@@ -4674,8 +4744,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011120051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -4683,7 +4753,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011140030f1010",
@@ -4730,8 +4801,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011140031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -4739,7 +4810,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011140050f1010",
@@ -4847,8 +4919,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011160031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -4856,7 +4928,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011160050f1010",
@@ -4903,8 +4976,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011160051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -4912,7 +4985,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011180030f1010",
@@ -4959,8 +5033,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011180031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -4968,7 +5042,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011180050f1010",
@@ -5015,8 +5090,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011180051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -5024,7 +5099,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011280030f1010",
@@ -5254,8 +5330,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011290051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -5263,7 +5339,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011370030f1010",
@@ -5324,7 +5401,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011370038f1010",
@@ -5341,8 +5419,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011370038f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -5350,7 +5428,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011370050f1010",
@@ -5397,8 +5476,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011370051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -5406,7 +5485,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011380030f1010",
@@ -5453,8 +5533,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011380031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Brown",
@@ -5462,7 +5542,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011380050f1010",
@@ -5509,8 +5590,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011380051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Brown",
@@ -5518,7 +5599,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011400030f1010",
@@ -5626,8 +5708,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011400051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -5635,7 +5717,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011410030f1010",
@@ -5682,8 +5765,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011410031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -5691,7 +5774,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011410050f1010",
@@ -5799,8 +5883,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011450031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -5808,7 +5892,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011450050f1010",
@@ -5855,8 +5940,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011450051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -5864,7 +5949,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011490030f1010",
@@ -5941,8 +6027,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011640031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
@@ -5950,7 +6036,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011640050f1010",
@@ -5997,8 +6084,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011640051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -6006,7 +6093,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011760030f1010",
@@ -6053,8 +6141,8 @@
     "local_image": "/assets/catalog_images/bullseye-0011760031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -6062,7 +6150,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0011760050f1010",
@@ -6170,8 +6259,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012170031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 729,
     "color_family": "Green",
@@ -6179,7 +6268,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012170050f1010",
@@ -6226,8 +6316,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012170051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 931,
     "color_family": "Green",
@@ -6235,7 +6325,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012210050f1010",
@@ -6252,15 +6343,16 @@
     "local_image": "/assets/catalog_images/bullseye-0012210050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Orange",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012260030f1010",
@@ -6350,7 +6442,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012280031f1010",
@@ -6367,8 +6460,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012280031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Purple",
@@ -6376,7 +6469,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012280050f1010",
@@ -6423,8 +6517,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012280051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -6432,7 +6526,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012290030f1010",
@@ -6462,7 +6557,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012290031f1010",
@@ -6479,8 +6575,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012290031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -6488,7 +6584,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012290050f1010",
@@ -6518,7 +6615,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012290051f1010",
@@ -6535,8 +6633,8 @@
     "local_image": "/assets/catalog_images/bullseye-0012290051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -6544,7 +6642,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012460030f1010",
@@ -6574,7 +6673,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012460050f1010",
@@ -6604,7 +6704,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0012470031f1010",
@@ -6622,7 +6723,7 @@
     "cropped": false,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -6648,7 +6749,7 @@
     "cropped": false,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
@@ -6672,15 +6773,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014010050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014050030f1010",
@@ -6727,8 +6829,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014050031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -6736,7 +6838,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014050050f1010",
@@ -6753,15 +6856,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014050050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014050051f1010",
@@ -6778,8 +6882,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014050051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -6787,7 +6891,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014060030f1010",
@@ -6834,8 +6939,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014060031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
@@ -6843,7 +6948,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014060038f1010",
@@ -6860,8 +6966,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014060038f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
@@ -6869,7 +6975,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014060050f1010",
@@ -6977,8 +7084,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014080031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Blue",
@@ -6986,7 +7093,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014080050f1010",
@@ -7003,15 +7111,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014080050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014080051f1010",
@@ -7042,7 +7151,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014090030f1010",
@@ -7089,8 +7199,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014090031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -7098,7 +7208,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014090038f1010",
@@ -7115,8 +7226,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014090038f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -7124,7 +7235,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014090050f1010",
@@ -7171,8 +7283,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014090051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -7180,7 +7292,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014120030f1010",
@@ -7288,8 +7401,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014120051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -7297,7 +7410,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014140030f1010",
@@ -7375,15 +7489,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014140050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014140051f1010",
@@ -7400,8 +7515,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014140051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Blue",
@@ -7409,7 +7524,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014160030f1010",
@@ -7578,8 +7694,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014170031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -7587,7 +7703,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014170050f1010",
@@ -7756,8 +7873,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014190051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -7765,7 +7882,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014260030f1010",
@@ -7812,8 +7930,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014260031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -7821,7 +7939,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014260050f1010",
@@ -7868,8 +7987,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014260051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -7877,7 +7996,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014280030f1010",
@@ -7955,15 +8075,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014280050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014280051f1010",
@@ -7980,8 +8101,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014280051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -7989,7 +8110,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014290030f1010",
@@ -8036,8 +8158,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014290031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -8045,7 +8167,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014290037f1010",
@@ -8062,8 +8185,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014290037f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 726,
     "color_family": "Monochrome",
@@ -8071,7 +8194,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014290050f1010",
@@ -8088,15 +8212,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014290050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014290051f1010",
@@ -8157,7 +8282,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014370031f1010",
@@ -8174,8 +8300,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014370031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Brown",
@@ -8183,7 +8309,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014370050f1010",
@@ -8213,7 +8340,8 @@
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014370051f1010",
@@ -8230,8 +8358,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014370051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 736,
     "color_family": "Brown",
@@ -8239,7 +8367,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014390030f1010",
@@ -8317,15 +8446,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014390050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014390051f1010",
@@ -8342,8 +8472,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014390051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
@@ -8351,7 +8481,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014420030f1010",
@@ -8368,15 +8499,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014420030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014420031f1010",
@@ -8393,8 +8525,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014420031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -8402,7 +8534,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014420050f1010",
@@ -8419,15 +8552,16 @@
     "local_image": "/assets/catalog_images/bullseye-0014420050f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 819,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014420051f1010",
@@ -8444,8 +8578,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014420051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
@@ -8453,7 +8587,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014440030f1010",
@@ -8622,8 +8757,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014490031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -8631,7 +8766,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014490050f1010",
@@ -8678,8 +8814,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014490051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
@@ -8687,7 +8823,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014640030f1010",
@@ -8734,8 +8871,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014640031f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -8743,7 +8880,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0014640050f1010",
@@ -8790,8 +8928,8 @@
     "local_image": "/assets/catalog_images/bullseye-0014640051f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
@@ -8799,7 +8937,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018060030f1010",
@@ -8816,15 +8955,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018060030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018070030f1010",
@@ -8841,15 +8981,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018070030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018080030f1010",
@@ -8866,15 +9007,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018080030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018140030f1010",
@@ -8891,15 +9033,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018140030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018160030f1010",
@@ -8946,15 +9089,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018180030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Blue",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018190030f1010",
@@ -8971,15 +9115,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018190030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018200030f1010",
@@ -8996,15 +9141,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018200030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Yellow",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018210030f1010",
@@ -9046,15 +9192,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018260030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018270030f1010",
@@ -9071,15 +9218,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018270030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018290030f1010",
@@ -9096,15 +9244,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018290030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018370030f1010",
@@ -9121,15 +9270,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018370030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Brown",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018410030f1010",
@@ -9146,15 +9296,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018410030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018420030f1010",
@@ -9171,15 +9322,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018420030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Purple",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018440030f1010",
@@ -9196,15 +9348,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018440030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018450030f1010",
@@ -9221,15 +9374,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018450030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018570030f1010",
@@ -9276,15 +9430,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018580030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Red",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018590030f1010",
@@ -9301,15 +9456,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018590030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Red",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018640030f1010",
@@ -9326,15 +9482,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018640030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018670030f1010",
@@ -9351,15 +9508,16 @@
     "local_image": "/assets/catalog_images/bullseye-0018670030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0018770030f1010",
@@ -9377,7 +9535,7 @@
     "cropped": false,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -9401,15 +9559,16 @@
     "local_image": "/assets/catalog_images/bullseye-0019170030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0019200030f1010",
@@ -9426,15 +9585,16 @@
     "local_image": "/assets/catalog_images/bullseye-0019200030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Yellow",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0019320030f1010",
@@ -9451,15 +9611,16 @@
     "local_image": "/assets/catalog_images/bullseye-0019320030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Pink",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0019340030f1010",
@@ -9501,15 +9662,16 @@
     "local_image": "/assets/catalog_images/bullseye-0019480030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0019640030f1010",
@@ -9526,15 +9688,16 @@
     "local_image": "/assets/catalog_images/bullseye-0019640030f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0019770030f1010",
@@ -9552,7 +9715,7 @@
     "cropped": false,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Green",
@@ -9606,15 +9769,16 @@
     "local_image": "/assets/catalog_images/bullseye-0020370030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Clear",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0020470030f1010",
@@ -9631,15 +9795,16 @@
     "local_image": "/assets/catalog_images/bullseye-0020470030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 855,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0020640030f1010",
@@ -9656,15 +9821,16 @@
     "local_image": "/assets/catalog_images/bullseye-0020640030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021000000f1010",
@@ -9681,15 +9847,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021000000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021000030f1010",
@@ -9796,15 +9963,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021070000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021070030f1010",
@@ -9826,15 +9994,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021090000f1010",
@@ -9856,15 +10025,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021090030f1010",
@@ -10001,15 +10171,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021210000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021210030f1010",
@@ -10206,15 +10377,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021290000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021290030f1010",
@@ -10261,15 +10433,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021300000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021300030f1010",
@@ -10286,15 +10459,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021300030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021370030f1010",
@@ -10341,15 +10515,16 @@
     "local_image": "/assets/catalog_images/bullseye-0021400030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021400031f1010",
@@ -10366,8 +10541,8 @@
     "local_image": "/assets/catalog_images/bullseye-0021400031f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
@@ -10375,7 +10550,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0021460030f1010",
@@ -10487,15 +10663,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0022090030f1010",
@@ -10572,15 +10749,16 @@
     "local_image": "/assets/catalog_images/bullseye-002213ca30f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 915,
     "original_height_px": 1056,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0022180030f1010",
@@ -10597,15 +10775,16 @@
     "local_image": "/assets/catalog_images/bullseye-0022180030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0022370030f1010",
@@ -10622,15 +10801,16 @@
     "local_image": "/assets/catalog_images/bullseye-0022370030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-002249ca30f1010",
@@ -10647,15 +10827,16 @@
     "local_image": "/assets/catalog_images/bullseye-002249ca30f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 675,
     "original_height_px": 1023,
     "color_family": "Monochrome",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-002249ca37f1010",
@@ -10672,8 +10853,8 @@
     "local_image": "/assets/catalog_images/bullseye-002249ca37f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1109,
     "original_height_px": 1109,
     "color_family": "Monochrome",
@@ -10681,7 +10862,8 @@
     "lighting": "front-lit",
     "striker": false,
     "strikes_to": null,
-    "iridized": true
+    "iridized": true,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023020000f1010",
@@ -10698,15 +10880,16 @@
     "local_image": "/assets/catalog_images/bullseye-0023020000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023020030f1010",
@@ -10753,15 +10936,16 @@
     "local_image": "/assets/catalog_images/bullseye-0023040000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023040030f1010",
@@ -10783,15 +10967,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023050000f1010",
@@ -10813,15 +10998,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023050030f1010",
@@ -10843,15 +11029,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023100000f1010",
@@ -10868,15 +11055,16 @@
     "local_image": "/assets/catalog_images/bullseye-0023100000f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023100030f1010",
@@ -10898,15 +11086,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0023110030f1010",
@@ -10953,15 +11142,16 @@
     "local_image": "/assets/catalog_images/bullseye-0023120030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0024160030f1010",
@@ -11098,15 +11288,16 @@
     "local_image": "/assets/catalog_images/bullseye-0030450072f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0030860030f1010",
@@ -11123,15 +11314,16 @@
     "local_image": "/assets/catalog_images/bullseye-0030860030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1199,
     "original_height_px": 1199,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0031000030f1010",
@@ -11148,15 +11340,16 @@
     "local_image": "/assets/catalog_images/bullseye-0031000030f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 543,
     "original_height_px": 1056,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-003100gr30f1010",
@@ -11173,15 +11366,16 @@
     "local_image": "/assets/catalog_images/bullseye-003100gr30f1010.jpg",
     "cropped": true,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 936,
     "original_height_px": 1019,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0031160030f1010",
@@ -11233,15 +11427,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0031230030f1010",
@@ -11383,15 +11578,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0033280030f1010",
@@ -11528,15 +11724,16 @@
     "local_image": "/assets/catalog_images/bullseye-0033450072f1010.jpg",
     "cropped": false,
     "crop_box": null,
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0033460030f1010",
@@ -11618,15 +11815,16 @@
       1199,
       1199
     ],
-    "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_width_in": null,
+    "real_world_height_in": null,
     "original_width_px": 1200,
     "original_height_px": 1200,
     "color_family": "Other",
     "front_lit": false,
     "lighting": "back-lit",
     "striker": false,
-    "strikes_to": null
+    "strikes_to": null,
+    "needs_repick": true
   },
   {
     "id": "bullseye-0035010030f1010",
@@ -11704,7 +11902,7 @@
     "cropped": true,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 649,
     "original_height_px": 649,
     "color_family": "Other",
@@ -11729,7 +11927,7 @@
     "cropped": true,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 631,
     "original_height_px": 631,
     "color_family": "Other",
@@ -11754,7 +11952,7 @@
     "cropped": true,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 642,
     "original_height_px": 642,
     "color_family": "Other",
@@ -11814,7 +12012,7 @@
       634
     ],
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 634,
     "original_height_px": 634,
     "color_family": "Other",
@@ -11839,7 +12037,7 @@
     "cropped": true,
     "crop_box": null,
     "real_world_width_in": 10.0,
-    "real_world_height_in": 10.0,
+    "real_world_height_in": 7.54,
     "original_width_px": 633,
     "original_height_px": 633,
     "color_family": "Other",

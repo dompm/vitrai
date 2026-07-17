@@ -23,15 +23,22 @@ interface SwatchItem {
   name: string;
   category: string;
   local_image: string;
-  real_world_width_in: number;
-  real_world_height_in: number;
+  // null = physical scale unknown (scale audit could not measure the pick; the
+  // stamped value was a known-wrong full-sheet assumption). See needs_repick.
+  real_world_width_in: number | null;
+  real_world_height_in: number | null;
   original_width_px: number;
   original_height_px: number;
   color_family?: string;
   product_url?: string;
   front_lit?: boolean;
   lighting?: 'front-lit' | 'back-lit';
+  needs_repick?: boolean;
 }
+
+// Fallback physical width when a swatch's real-world scale is unknown (null).
+// Matches the Bullseye whole-sheet studio-sample long side used by the scale audit.
+const UNKNOWN_SCALE_WIDTH_IN = 10;
 
 interface Props {
   onPick: (url: string, label: string, scale: Scale) => void;
@@ -249,9 +256,12 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
     const widthPx = item.original_width_px || 800;
     const heightPx = item.original_height_px || 800;
     
-    // Calibrated Scale configuration
+    // Calibrated Scale configuration. real_world_width_in is null when the scale
+    // audit could not trust the pick's footprint; fall back to a sane default so
+    // placement never divides by null.
+    const widthIn = item.real_world_width_in || UNKNOWN_SCALE_WIDTH_IN;
     const scale: Scale = {
-      pxPerUnit: widthPx / item.real_world_width_in,
+      pxPerUnit: widthPx / widthIn,
       unit: 'in',
       line: { x1: 0, y1: heightPx / 2, x2: widthPx, y2: heightPx / 2 },
     };
@@ -460,7 +470,9 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
                       <div className="glass-library-card-footer">
                         <span className="glass-library-card-cat">{item.category}</span>
                         <span className="glass-library-card-scale">
-                          {item.real_world_width_in}"&times;{item.real_world_height_in}"
+                          {item.real_world_width_in
+                            ? `${item.real_world_width_in}"×${item.real_world_height_in}"`
+                            : 'scale TBD'}
                         </span>
                       </div>
                     </div>

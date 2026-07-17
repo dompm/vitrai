@@ -530,6 +530,54 @@ THUMB_WIDTH = 320          # Shopify CDN `?width=N` transform. Measured ~10KB vs
 MAX_CANDIDATE_IMAGES = 10  # defensive cap; report 035's validation sample saw 2-8/product
 STABILITY_MARGIN = 0.15    # anti-churn threshold -- see apply_stability_rule() below
 
+# ---------------------------------------------------------------------------
+# SCALE-AWARE PICK PREFERENCE (library-release scale audit, scripts/scale_audit.py)
+# ---------------------------------------------------------------------------
+# The scale audit measured (not assumed) that Bullseye galleries share ONE photo
+# set across cart sizes and that ~45% of picks are zoomed detail/macro crops -- so
+# their real_world scale is un-anchorable and the texture renders 2-3x too coarse.
+# The measured-better swatch is the whole-sheet STUDIO shot (backdrop-framed, its
+# footprint = the fixed ~1.326-aspect sample, a well-defined scale). For IRIDIZED
+# products it must additionally come from the TRANSMISSION (white-backed) side,
+# never the black reflection side or across a split-backdrop seam, because the app
+# preview is backlit (see the audit report for the 001101-0044-F case).
+#
+# preferred_gallery_image() below encodes that rule over a product's downloaded
+# gallery. It is GATED OFF by default: activating it re-picks images, which means
+# downloading every gallery + regenerating the (gitignored) catalog_images crops --
+# that belongs with the release's image-hosting item (it was gitignored assets that
+# forced the #141 revert). Until then the audit's per-product targets live in
+# docs/library-picker-rebuild/scale_audit.json (needs_repick + repick_* fields).
+SCALE_AWARE_REPICK = False   # flip on with the image-hosting re-pick rebuild
+
+
+def preferred_gallery_image(local_paths, iridized):
+    """Return the local path of the scale-preferred swatch image from a product's
+    downloaded gallery, or None to keep the picker's existing choice.
+
+    Prefers a measurable whole-sheet studio shot; for iridized products prefers one
+    on a white/split (transmission) backdrop over a black (reflection) one. Pure
+    function over local files -- no network. See scripts/scale_audit_lib.py."""
+    import scale_audit_lib as _sa
+    best, best_key = None, None
+    for p in local_paths:
+        if not os.path.exists(p):
+            continue
+        try:
+            c = _sa.classify_image(_sa.load_bgr(p))
+        except Exception:
+            continue
+        if not c['is_whole_sheet']:
+            continue
+        b, bg = c['box'], c['bg']['mode']
+        measurable = b['touch'] == 0 and b['fill'] > 0.80
+        # transmission preference for iridized: white/split beats black
+        trans = 0 if not iridized else {'white': 2, 'split': 1}.get(bg, 0)
+        key = (trans, int(measurable), b['fill'], b['w'] * b['h'])
+        if best_key is None or key > best_key:
+            best, best_key = p, key
+    return best
+
 
 # ==================================================================================
 # MANUAL OVERRIDES (ownership cleanup, glass-library-integration-review.md)

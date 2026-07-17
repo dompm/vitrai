@@ -26,3 +26,7 @@ frontend/public/assets/catalog_images/
 
 # TypeScript incremental build state
 *.tsbuildinfo
+
+# Python bytecode
+__pycache__/
+*.pyc
