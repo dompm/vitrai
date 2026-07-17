@@ -1,0 +1,44 @@
+[
+ {
+  "sample": "cathedral-green__seed6001",
+  "t1": 12.72,
+  "t3s2": 12.72,
+  "big": 8.0,
+  "gamma": 0.0
+ },
+ {
+  "sample": "cathedral-amber__seed6002",
+  "t1": 13.07,
+  "t3s2": 13.07,
+  "big": 8.0,
+  "gamma": 0.0
+ },
+ {
+  "sample": "baroque-rolling-wave__seed6001",
+  "t1": 11.02,
+  "t3s2": 11.02,
+  "big": 8.0,
+  "gamma": 0.0
+ },
+ {
+  "sample": "confetti-shard__seed6002",
+  "t1": 11.46,
+  "t3s2": 11.46,
+  "big": 8.0,
+  "gamma": 0.0
+ },
+ {
+  "sample": "fracture-streamer__seed6003",
+  "t1": 8.26,
+  "t3s2": 8.26,
+  "big": 8.0,
+  "gamma": 0.0
+ },
+ {
+  "sample": "streaky-mix__seed6001",
+  "t1": 3.03,
+  "t3s2": 3.03,
+  "big": 8.0,
+  "gamma": 0.0
+ }
+]

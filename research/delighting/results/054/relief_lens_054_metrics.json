@@ -1,0 +1,122 @@
+[
+ {
+  "sample": "cathedral-green__seed6001",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 12.72,
+   "ssim": 0.8462
+  },
+  "t2_fullband": {
+   "gain": -4.0,
+   "mae": 12.63,
+   "ssim": 0.8463
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 12.7215,
+   "ssim": 0.8462
+  }
+ },
+ {
+  "sample": "cathedral-amber__seed6002",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 13.07,
+   "ssim": 0.9058
+  },
+  "t2_fullband": {
+   "gain": 8.0,
+   "mae": 13.06,
+   "ssim": 0.9059
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 13.0658,
+   "ssim": 0.9058
+  }
+ },
+ {
+  "sample": "baroque-rolling-wave__seed6001",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 11.02,
+   "ssim": 0.987
+  },
+  "t2_fullband": {
+   "gain": 0.0,
+   "mae": 11.02,
+   "ssim": 0.987
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 11.0248,
+   "ssim": 0.987
+  }
+ },
+ {
+  "sample": "confetti-shard__seed6002",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 11.46,
+   "ssim": 0.9844
+  },
+  "t2_fullband": {
+   "gain": -1.0,
+   "mae": 11.41,
+   "ssim": 0.9844
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 11.4641,
+   "ssim": 0.9844
+  }
+ },
+ {
+  "sample": "fracture-streamer__seed6003",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 8.26,
+   "ssim": 0.9938
+  },
+  "t2_fullband": {
+   "gain": 6.0,
+   "mae": 8.22,
+   "ssim": 0.9939
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 8.2647,
+   "ssim": 0.9938
+  }
+ },
+ {
+  "sample": "streaky-mix__seed6001",
+  "t1": {
+   "sigma_max": 256.0,
+   "mae": 3.03,
+   "ssim": 0.9926
+  },
+  "t2_fullband": {
+   "gain": -1.0,
+   "mae": 3.03,
+   "ssim": 0.9926
+  },
+  "t2b": {
+   "sigma_l": 2.0,
+   "alpha": 0.0,
+   "sigma_max": 256.0,
+   "mae": 3.0313,
+   "ssim": 0.9926
+  }
+ }
+]
