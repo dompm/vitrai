@@ -5,7 +5,7 @@ import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
 import { AddSheetMenu } from './components/AddSheetMenu';
-import { GlassLibraryDialog } from './components/GlassLibraryDialog';
+
 import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
@@ -25,15 +25,6 @@ import type { ToolId } from './components/Toolbar';
 import { PieceTransformPreviewStore } from './editor/interaction/pieceTransformPreviewStore';
 import { PenStatusStore, usePenStatus } from './editor/interaction/penStatusStore';
 import './App.css';
-
-function shortenLabel(label: string): string {
-  const clean = label.replace(/^\[[^\]]+\]\s*/, '');
-  const words = clean.split(/\s+/);
-  if (words.length <= 4) return clean;
-  const sku = words[0];
-  const rest = words.slice(1, 4).join(' ');
-  return `${sku} ${rest}...`;
-}
 
 interface SheetTabProps {
   sheet: GlassSheet;
@@ -159,7 +150,7 @@ function SheetTab({
           style={{ background: sheet.swatch ?? 'var(--text-dim)' }}
           aria-hidden="true"
         />
-        <span className="sheet-tab-label" title={sheet.label}>{shortenLabel(sheet.label)}</span>
+        <span className="sheet-tab-label">{sheet.label}</span>
         {canDelete && (
           <span
             className="sheet-tab-close"
@@ -219,7 +210,7 @@ function SheetTab({
                             className="sheet-tab-menu-item"
                             onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllTo(s.id); }}
                           >
-                            <span className="sheet-tab-menu-label" title={s.label}>{shortenLabel(s.label)}</span>
+                            <span className="sheet-tab-menu-label">{s.label}</span>
                             <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
                           </button>
                         ))
@@ -255,7 +246,7 @@ function SheetTab({
                           className="sheet-tab-menu-item"
                           onClick={() => { setMenuPos(null); setSubmenu(null); onMoveAllFromSrc(s.id); }}
                         >
-                          <span className="sheet-tab-menu-label" title={s.label}>{shortenLabel(s.label)}</span>
+                          <span className="sheet-tab-menu-label">{s.label}</span>
                           <span className="sheet-tab-menu-count">({pieceCountBySheet[s.id] ?? 0})</span>
                         </button>
                       ))}
@@ -519,7 +510,7 @@ export function App() {
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
-  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
+
   const [, setFocusedPanelIdx] = useState<number | null>(null);
   const [lampPreviewHeight, setLampPreviewHeight] = useState<number>(320);
   const [lampProfileDialog, setLampProfileDialog] = useState<{ isFirstTime: boolean } | null>(null);
@@ -1594,13 +1585,6 @@ export function App() {
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
           onClose={() => setAddSheetMenu(null)}
-          onOpenLibrary={() => setShowGlassLibrary(true)}
-        />
-      )}
-      {showGlassLibrary && (
-        <GlassLibraryDialog
-          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
-          onClose={() => setShowGlassLibrary(false)}
         />
       )}
 
