@@ -1,7 +1,17 @@
-# Glass de-lighting — FROZEN evaluation protocol (v1.1)
+# Glass de-lighting — FROZEN evaluation protocol (v1.2)
 
 Iteration 034. Branch `research/delighting-034`. Status: **FROZEN**.
 
+> **v1.2 (2026-07-16, report 053)** — SYNTHETIC-side extension only, in response to the
+> CTO-commissioned dataset-capture review (`docs/external/053-dataset-capture-review.md`). The
+> review noted that seed%5 identity holdout still lets train and test share every procedural
+> recipe, shader, HDRI-selection path, and phone augmentation — "that mainly measures
+> interpolation within the generator." §3b is therefore extended with **§3b-ext**: whole
+> texture-generator families, glass taxa, HDRIs/background scenes, camera-pipeline presets, and
+> capture geometries are reserved TEST-only by deterministic rule. **The frozen REAL test set
+> (§3c) is UNCHANGED** — this bump touches only the synthetic split, which no method had been
+> scored against under the new rules. v1.1 = commit `7f6f1ee`-successor; see report 053 §C.
+>
 > **v1.1 (2026-07-11)** — the pre-declared bump on harvest-033 completion (v1.0 §3c/§6.2;
 > executed BEFORE any method was scored against the real set). All changes are in §3c: per-brand
 > reserved counts pinned against the final `manifest_033.json` (254 products; the base hash rule
@@ -176,6 +186,30 @@ Frozen split rule (deterministic, seed-based, survives new-recipe additions):
 > side. Reserved reference seeds already in the repo that are TEST under this rule (do not train
 > on): the report-023 holdout batch (seeds 800–812) and any `seed % 5 == 0` render in
 > render_022/render_023_holdout. **A model may never be tuned against a `seed%5==0` identity.**
+
+### 3b-ext. Synthetic FAMILY-level holdout (report 053, v1.2)
+
+seed%5 (§3b) reserves material IDENTITIES but leaves every generator family, taxon, HDRI, camera
+pipeline, and capture geometry present on BOTH sides of the split — so a strong synthetic test
+score can reflect "I have seen this generator / this device grammar before," not deployment
+generalization. v1.2 reserves whole FAMILIES of each nuisance/material axis to TEST, by
+deterministic rule (implemented in `foundation/dataset.py`, `holdout_reason()`; camera-preset
+axis enforced loader-side in `_augment_photo`). A synthetic sample is TEST if seed%5 (§3b) **OR**
+any of the following holds:
+
+| axis | reserved-to-TEST rule | rationale |
+|---|---|---|
+| texture-generator family / glass taxon | `class_label ∈ {ring-mottle, confetti-shard, cathedral-red, dark-slate}` | a held-out GENERATOR (`ring_mottle_blobs`, the confetti compositor) and a held-out cathedral + dark TAXON — never trained on |
+| HDRI / background scene | `sha1(hdri_basename) % 5 == 0` (~20% of the pack) | a held-out lighting environment, same hash style as §3c |
+| camera-pipeline preset | preset ∈ `dataset.TEST_ONLY_PRESETS` (`wide_edge`) | a complete device ISP tuning never seen in training |
+| capture geometry | `meta.capture_geometry ∈ {perspective_rectified}` (report 053 crop-sim) | a held-out user-crop family |
+
+Deterministic and documented, so a freshly rendered batch auto-partitions with no shared list.
+Old batches lacking the new meta fields (`hdri_name`, `capture_geometry`) fall back to
+train-eligible defaults, so this never retro-holds-out existing data. **This is a NECESSARY but
+NOT sufficient sim-to-real test** — the final gate remains untouched real phone captures from
+intended users (§3c item 3 / the CTO action item in report 053), which no synthetic holdout can
+substitute for.
 
 ### 3c. Real frozen test set
 

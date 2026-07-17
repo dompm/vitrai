@@ -34,6 +34,9 @@ import sys
 import numpy as np
 import torch
 
+os.environ.setdefault("OPENCV_IO_ENABLE_OPENEXR", "1")
+import cv2  # noqa: E402  (module-level: σ_s structured-relight helpers, report 053)
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 DELIGHT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
@@ -84,11 +87,16 @@ def predict(model, rec, device, work=512):
     T = np_(out["T"], 3)
     h = np_(out["h"], 1)
     conf = np_(out["conf"], 1)
+    # report 053 (048 owed): σ_s head, scored below (MAE + structured-relight L1).
+    sigma_s = np_(out["sigma_s"], 1) if "sigma_s" in out else None
     # resize GT to the same working grid
     gtT = cv2.resize(rec["T"], wh, interpolation=cv2.INTER_AREA)
     gth = cv2.resize(rec["h"][..., 0], wh, interpolation=cv2.INTER_AREA)[..., None]
+    gtsig = cv2.resize(rec["sigma_s"][..., 0], wh, interpolation=cv2.INTER_AREA)[..., None]
     valid = cv2.resize(rec["valid"][..., 0], wh, interpolation=cv2.INTER_NEAREST)[..., None] > 0.5
-    return {"T": T, "h": h, "conf": conf, "gtT": gtT[:H0(ph), :W0(ph)], "gth": gth,
+    return {"T": T, "h": h, "conf": conf, "sigma_s": sigma_s,
+            "gtT": gtT[:H0(ph), :W0(ph)], "gth": gth, "gt_sigma_s": gtsig,
+            "has_sigma_s": bool(rec.get("has_sigma_s", False)),
             "valid": valid, "recipe": rec["recipe"], "seed": rec["seed"]}
 
 
@@ -120,6 +128,73 @@ def _spearman(x, y):
         xr -= xr.mean(); yr -= yr.mean()
         d = np.sqrt((xr * xr).sum() * (yr * yr).sum())
         return float((xr * yr).sum() / d) if d > 0 else 0.0
+
+
+# ------------------------------------------------ σ_s structured-relight (report 053 / 048 owed)
+# EVAL_PROTOCOL §1c + the report-045/046 methodology: σ_s (haze-driven subsurface-scatter
+# radius) is scored not just by map MAE but by its EFFECT on a STRUCTURED backdrop — the exact
+# gap report 045 found the uniform-backlight validate gate cannot see. σ_s drives a per-pixel
+# roughness-mip blur of a checker (report 045 `variable_blur`, sigma = SIGMA_MAX·σ_s); we relight
+# the checker with the PREDICTED σ_s map and with the GT σ_s map and score the sRGB L1 between
+# the two relights. Isolated to σ_s: same fixed checker + same SIGMA_MAX for both, so the score
+# reflects only how faithfully the predicted scatter field reproduces the GT scatter field's
+# structured-background softening. (Lower = better; 0 = identical relight.)
+SIGMA_RELIGHT_MAX_PX = 24.0
+_SIGMA_LEVELS = [0.0, 2.0, 4.0, 8.0, 16.0, 32.0]
+
+
+def _checker(H, W, tiles=8):
+    """Warm-white / cool-dark checker (report 045's 0.2 m squares), scene-linear HxWx3."""
+    ts = max(4, min(H, W) // tiles)
+    yy, xx = np.mgrid[0:H, 0:W]
+    board = ((xx // ts + yy // ts) % 2).astype(np.float32)
+    warm = np.array([0.85, 0.80, 0.62], np.float32)   # warm white
+    cool = np.array([0.06, 0.08, 0.12], np.float32)   # cool dark
+    return board[..., None] * warm + (1.0 - board[..., None]) * cool
+
+
+def _blur_stack(B, sigmas):
+    out = []
+    for sg in sigmas:
+        out.append(B if sg <= 0 else cv2.GaussianBlur(B, (0, 0), sigmaX=float(sg),
+                                                       borderType=cv2.BORDER_REPLICATE))
+    return np.stack(out, 0)
+
+
+def _variable_blur(stack, sigmas, sigma_map):
+    """Per-pixel lerp between the two nearest blur levels (report 045 recon_bench)."""
+    sig = np.clip(sigma_map, sigmas[0], sigmas[-1])
+    idx = np.clip(np.searchsorted(sigmas, sig, side="right") - 1, 0, len(sigmas) - 2)
+    lo = np.array(sigmas)[idx]; hi = np.array(sigmas)[idx + 1]
+    w = np.where(hi > lo, (sig - lo) / np.maximum(hi - lo, 1e-9), 0.0)[..., None]
+    H, W = sig.shape
+    rows, cols = np.mgrid[0:H, 0:W]
+    return stack[idx, rows, cols] * (1 - w) + stack[idx + 1, rows, cols] * w
+
+
+def _relight_checker(sigma_map, checker, stack):
+    return _variable_blur(stack, _SIGMA_LEVELS, SIGMA_RELIGHT_MAX_PX * np.clip(sigma_map, 0, 1))
+
+
+def sigma_s_relight_l1(pred_sigma, gt_sigma, valid):
+    """sRGB L1 (0-255) between the checker relit by predicted σ_s vs by GT σ_s. Both maps are
+    HxW (single channel). `valid` masks marks. Returns (l1_255, gt_vs_uniform_255) where the
+    second is the GT-relight vs a NO-SCATTER (σ_s=0) relight — a per-sample scale telling how
+    much structured softening the GT σ_s actually induces (a near-zero scale = a see-through
+    sample where σ_s barely matters, read the L1 against it)."""
+    H, W = gt_sigma.shape[:2]
+    checker = _checker(H, W)
+    stack = _blur_stack(checker, _SIGMA_LEVELS)
+    from extract import lin_to_srgb
+    relit_pred = lin_to_srgb(np.clip(_relight_checker(pred_sigma, checker, stack), 0, 1))
+    relit_gt = lin_to_srgb(np.clip(_relight_checker(gt_sigma, checker, stack), 0, 1))
+    relit_zero = lin_to_srgb(np.clip(checker, 0, 1))
+    v = valid.astype(bool)
+    if v.ndim == 3:
+        v = v[..., 0]
+    l1 = float(np.abs(relit_pred - relit_gt)[v].mean() * 255.0)
+    scale = float(np.abs(relit_gt - relit_zero)[v].mean() * 255.0)
+    return l1, scale
 
 
 def calibration(preds, tau=8 / 255.0, nbins=10):
@@ -170,6 +245,7 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
 
     # --- GT accuracy + texture family 2 (per sample) ---
     T_maes, h_maes, retained, fcs, fine_corr = [], [], [], [], []
+    sig_maes, sig_relight_l1, sig_relight_scale = [], [], []
     for p in preds:
         v = p["valid"][..., 0]
         T_maes.append(float(np.abs(p["T"] - p["gtT"])[v].mean()))
@@ -179,6 +255,13 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
         fine_corr.append(tex["mgp"]["fine_grad_corr"])
         if tex["fcs"]["survival"] is not None:
             fcs.append(tex["fcs"]["survival"])
+        # report 053 / 048-owed: σ_s MAE + structured-checker relight L1 (held-out identities
+        # only). Scored where the model emits σ_s AND the sample carries a supervised gt_σ_s.
+        if p.get("sigma_s") is not None and p.get("has_sigma_s"):
+            sig_maes.append(float(np.abs(p["sigma_s"] - p["gt_sigma_s"])[v].mean()))
+            l1, scale = sigma_s_relight_l1(p["sigma_s"][..., 0], p["gt_sigma_s"][..., 0], v)
+            sig_relight_l1.append(l1)
+            sig_relight_scale.append(scale)
 
     # --- PRIMARY family 1: cross-capture consistency over same-(recipe,seed) groups ---
     groups = {}
@@ -207,6 +290,12 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
         "T_mae": float(np.mean(T_maes)), "h_mae": float(np.mean(h_maes)),
         "retained_energy": float(np.mean(retained)), "fine_grad_corr": float(np.mean(fine_corr)),
         "fcs": float(np.mean(fcs)) if fcs else None,
+        # report 053: σ_s accuracy (MAE like h) + structured-background relight L1 (045/046
+        # methodology). n_sigma_s counts held-out samples with a supervised gt_σ_s.
+        "sigma_s_mae": float(np.mean(sig_maes)) if sig_maes else None,
+        "sigma_s_relight_l1": float(np.mean(sig_relight_l1)) if sig_relight_l1 else None,
+        "sigma_s_relight_scale": float(np.mean(sig_relight_scale)) if sig_relight_scale else None,
+        "n_sigma_s": len(sig_maes),
         "n_cross_lighting_groups": sum(1 for m in groups.values() if len(m) >= 2),
     }
 
@@ -274,6 +363,17 @@ def _write_table(rep, path):
         f"{_fmt(F['retained_energy']['quotient'])} | {_fmt(F['retained_energy']['flatten_control'])} | {_fmt(m['retained_energy'])} |",
         f"| FCS survival ↑ | {_fmt(F['fcs']['classical'])} | {_fmt(F['fcs']['quotient'])} | "
         f"{_fmt(F['fcs']['flatten_control'])} | {_fmt(m['fcs'])} |",
+        "",
+        f"**σ_s (haze-driven scatter) — report 053 / 048-owed metric, {m.get('n_sigma_s', 0)} "
+        "held-out samples with supervised gt_σ_s.**",
+        "",
+        "| metric | foundation | note |",
+        "|---|---|---|",
+        f"| σ_s-MAE ↓ | {_fmt(m.get('sigma_s_mae'))} | authored-linear, like h-MAE |",
+        f"| σ_s structured-relight L1 (sRGB, 0-255) ↓ | {_fmt(m.get('sigma_s_relight_l1'))} | "
+        "checker relit by pred σ_s vs GT σ_s (045/046) |",
+        f"| — GT-relight scale (context) | {_fmt(m.get('sigma_s_relight_scale'))} | GT σ_s vs "
+        "no-scatter; read L1 against this |",
         "",
         "**Family 4 — confidence calibration (§1d).**",
         "",

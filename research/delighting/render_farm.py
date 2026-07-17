@@ -71,6 +71,28 @@ def parse_args():
     p.add_argument("--light-variations", type=int, default=1)
     p.add_argument("--validate", action="store_true")
     p.add_argument("--recipe", type=str, default=None)
+    # Report 053: the farm silently DROPPED every generator production flag except
+    # out/light-variations/validate/recipe/hdri-dir — a 20k run through it would omit gt_B/AOV
+    # supervision AND blow the <=100MB/sample storage budget (no --no-tex-dump/--exr-codec).
+    # Expose + forward the full production flag set and the new 053 scene options.
+    p.add_argument("--gt-b", action="store_true", help="forward generate_synthetic --gt-b")
+    p.add_argument("--gt-aov", action="store_true", help="forward --gt-aov")
+    p.add_argument("--no-tex-dump", action="store_true", help="forward --no-tex-dump")
+    p.add_argument("--exr-codec", type=str, default=None,
+                   choices=['NONE', 'ZIP', 'PIZ', 'DWAA', 'DWAB', 'ZIPS', 'RLE', 'PXR24', 'B44', 'B44A'],
+                   help="forward --exr-codec (DWAA is the production choice)")
+    p.add_argument("--specular", action="store_true", help="forward --specular")
+    p.add_argument("--fixed-ev", type=float, default=None, help="forward --fixed-ev")
+    p.add_argument("--no-marks", action="store_true", help="forward --no-marks")
+    p.add_argument("--deploy-scene", action="store_true", help="forward --deploy-scene (report 053)")
+    p.add_argument("--front-light-prob", type=float, default=None, help="forward --front-light-prob")
+    p.add_argument("--finite-bg-prob", type=float, default=None, help="forward --finite-bg-prob")
+    p.add_argument("--shadow-prob", type=float, default=None, help="forward --shadow-prob")
+    p.add_argument("--shadow-pairs", action="store_true", help="forward --shadow-pairs")
+    p.add_argument("--crop-sim", action="store_true", help="forward --crop-sim (records intent)")
+    p.add_argument("--cover-recipes", action="store_true",
+                   help="forward --cover-recipes: cycle all recipes across the shard (report 053; "
+                        "note: applied PER SHARD, so each shard cycles its own seed slice)")
     p.add_argument("--hdri-dir", type=str, default=None,
                     help="Pre-fetched HDRI pack dir (see docs/RENDER_AT_SCALE.md). "
                          "Strongly recommended for >1 shard: without it every shard "
@@ -142,6 +164,35 @@ def build_cmd(args, seed_start, count):
         cmd += ["--recipe", args.recipe]
     if args.hdri_dir:
         cmd += ["--hdri-dir", args.hdri_dir]
+    # Report 053: forward the full production + 053-scene flag set (previously dropped).
+    if args.gt_b:
+        cmd.append("--gt-b")
+    if args.gt_aov:
+        cmd.append("--gt-aov")
+    if args.no_tex_dump:
+        cmd.append("--no-tex-dump")
+    if args.exr_codec:
+        cmd += ["--exr-codec", args.exr_codec]
+    if args.specular:
+        cmd.append("--specular")
+    if args.fixed_ev is not None:
+        cmd += ["--fixed-ev", str(args.fixed_ev)]
+    if args.no_marks:
+        cmd.append("--no-marks")
+    if args.deploy_scene:
+        cmd.append("--deploy-scene")
+    if args.front_light_prob is not None:
+        cmd += ["--front-light-prob", str(args.front_light_prob)]
+    if args.finite_bg_prob is not None:
+        cmd += ["--finite-bg-prob", str(args.finite_bg_prob)]
+    if args.shadow_prob is not None:
+        cmd += ["--shadow-prob", str(args.shadow_prob)]
+    if args.shadow_pairs:
+        cmd.append("--shadow-pairs")
+    if args.crop_sim:
+        cmd.append("--crop-sim")
+    if args.cover_recipes:
+        cmd.append("--cover-recipes")
     return cmd
 
 

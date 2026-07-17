@@ -55,7 +55,21 @@ GT_OPTS = {"no_tex_dump": False, "exr_codec": None, "gt_b": False, "gt_aov": Fal
            # per-seed random draw (representative mid-EV review, not seed-lottery
            # dim/bright); no_marks suppresses the grease-pencil marks so a texture
            # review board / forced-choice test isn't dominated by the mark tell.
-           "fixed_ev": None, "no_marks": False}
+           "fixed_ev": None, "no_marks": False,
+           # Report 053 deployment-capture realism (docs/external/053-dataset-capture-
+           # review.md). `deploy_scene` is the master switch for the new scene
+           # distribution: mixed front/back lighting as the NORM, finite-depth textured
+           # backgrounds, varied-silhouette shadows at a SAMPLED prevalence, and a
+           # synthetic user-crop workflow. Default False = existing (legacy) distribution,
+           # so all pre-053 tooling/reports keep their scenes byte-for-byte. The pilot
+           # (report 053 §F) renders with --deploy-scene ON. VALIDATE mode ignores all of
+           # these (the uniform-backlight math gate is unchanged -> 13/13 preserved).
+           "deploy_scene": False, "front_light_prob": 0.7, "finite_bg_prob": 0.85,
+           "shadow_prob": 0.3, "shadow_pairs": False, "crop_sim": False}
+
+# Report 053: setup_scene stashes the per-sample deploy params (front light + finite
+# background) here for main() to fold into meta.json, without widening its return tuple.
+SCENE_EXTRA = {}
 
 # Report 037 item D (superseded 043/MMv3-G1, kept only for
 # generate_relief_height's shared-relief grouping and comments below): the
@@ -1697,6 +1711,130 @@ def add_frame_occluders(cam):
     return params
 
 
+# Report 053 finite-background depths (metres BEHIND the glass at y=0). 'infinity' == None ==
+# HDRI-only far layer (the legacy behaviour). Closer backgrounds are refracted more strongly by
+# the glass relief, so a sampled depth makes "how much a NEAR object smears through the glass"
+# part of the distribution instead of always being the far HDRI.
+FINITE_BG_DEPTHS = [0.1, 0.5, 2.0, None]
+
+
+def _finite_bg_material(name, drng):
+    """Procedural textured material for a finite background plane (a wall/shelf/foliage/
+    curtain stand-in): coloured noise + a colour ramp, diffuse with a small emission floor so
+    it stays visible through the glass regardless of how the HDRI happens to light it."""
+    mat = bpy.data.materials.new(name=name)
+    mat.use_nodes = True
+    nt = mat.node_tree
+    nodes, links = nt.nodes, nt.links
+    nodes.clear()
+    out = nodes.new('ShaderNodeOutputMaterial')
+    coord = nodes.new('ShaderNodeTexCoord')
+    noise = nodes.new('ShaderNodeTexNoise')
+    noise.inputs['Scale'].default_value = drng.uniform(2.0, 14.0)
+    if 'Detail' in noise.inputs:
+        noise.inputs['Detail'].default_value = drng.uniform(2.0, 8.0)
+    ramp = nodes.new('ShaderNodeValToRGB')
+    c0 = [drng.uniform(0.02, 0.5) for _ in range(3)]
+    c1 = [drng.uniform(0.2, 0.9) for _ in range(3)]
+    ramp.color_ramp.elements[0].color = (c0[0], c0[1], c0[2], 1)
+    ramp.color_ramp.elements[1].color = (c1[0], c1[1], c1[2], 1)
+    diff = nodes.new('ShaderNodeBsdfDiffuse')
+    emit = nodes.new('ShaderNodeEmission')
+    emit.inputs['Strength'].default_value = drng.uniform(0.05, 0.35)
+    add = nodes.new('ShaderNodeAddShader')
+    links.new(coord.outputs['Generated'], noise.inputs['Vector'])
+    links.new(noise.outputs['Fac'], ramp.inputs['Fac'])
+    links.new(ramp.outputs['Color'], diff.inputs['Color'])
+    links.new(ramp.outputs['Color'], emit.inputs['Color'])
+    links.new(diff.outputs['BSDF'], add.inputs[0])
+    links.new(emit.outputs['Emission'], add.inputs[1])
+    links.new(add.outputs['Shader'], out.inputs['Surface'])
+    return mat
+
+
+def add_deploy_lighting_and_background(cam, seed):
+    """Report 053 SCENE REALISM. Two deployment-capture facts the legacy scene lacked:
+
+      (1) MIXED FRONT/BACK LIGHTING AS THE NORM. Real captures are lit from the FRONT too
+          (room lights, a flash, the photographer's side) — reflections and front-lit marks
+          are part of the ordinary distribution, not a --specular stress test. Adds a soft
+          area light BEHIND the camera (never in frame) pointing at the glass front face, so
+          the white grease-pencil mark and front-surface reflections read naturally. The
+          caller also lifts the DarkWall to a dim reflective interior (wall_gray) in this mode.
+
+      (2) FINITE-DEPTH TEXTURED BACKGROUNDS. A procedurally textured plane at a SAMPLED depth
+          (~10cm / 50cm / 2m; or 'infinity' => HDRI-only) sits behind the glass, sometimes
+          with a nearer 'shelf-edge' bar at a different depth (a depth discontinuity), so the
+          relief refracts a NEAR object with parallax, not only the far HDRI. HDRI stays as the
+          far layer behind it.
+
+    Uses a DEDICATED seed-derived RNG so toggling deploy-scene never perturbs the global
+    `random` stream that texture authoring consumes (same discipline as the --specular RNG).
+    Stashes per-sample params into SCENE_EXTRA for meta.json. Returns nothing."""
+    drng = random.Random(seed * 6151 + 991)
+    extra = {"front_light": None, "background": None}
+
+    # ---- (1) front-side room lighting ----
+    if drng.random() < GT_OPTS["front_light_prob"]:
+        lx = drng.uniform(-0.5, 0.5)
+        lz = drng.uniform(-0.3, 0.6)
+        ly = cam.location.y - drng.uniform(0.05, 0.45)   # BEHIND the camera -> never in frame
+        bpy.ops.object.light_add(type='AREA', location=(lx, ly, lz))
+        light = bpy.context.active_object
+        light.name = "FrontLight"
+        light.data.energy = drng.uniform(6.0, 45.0)
+        light.data.size = drng.uniform(0.25, 1.3)
+        warm = drng.uniform(0.85, 1.0)
+        cool = drng.uniform(0.85, 1.0)
+        light.data.color = (1.0, warm, cool * warm)
+        # aim at the glass origin (default area light emits along -local Z; +90deg x -> +Y)
+        aim = math.atan2(-lx, (0.0 - ly))
+        light.rotation_euler = (math.radians(90) + drng.uniform(-0.25, 0.25), 0.0, aim)
+        extra["front_light"] = {"energy": round(light.data.energy, 2),
+                                 "size": round(light.data.size, 3),
+                                 "loc": [round(lx, 3), round(ly, 3), round(lz, 3)],
+                                 "color": [1.0, round(warm, 3), round(cool * warm, 3)]}
+
+    # ---- (2) finite-depth textured background ----
+    if drng.random() < GT_OPTS["finite_bg_prob"]:
+        depth = drng.choice(FINITE_BG_DEPTHS)
+        if depth is not None:
+            def _add_bg_plane(y_depth, tag):
+                dist = y_depth - cam.location.y                 # camera -> plane
+                half_x = dist * math.tan(cam.data.angle_x / 2.0)
+                half_z = dist * math.tan(cam.data.angle_y / 2.0)
+                sz = 2.2 * max(half_x, half_z)                  # cover frustum + margin
+                bpy.ops.mesh.primitive_plane_add(size=sz, location=(0, y_depth, 0),
+                                                 rotation=(math.radians(90), 0, 0))
+                pl = bpy.context.active_object
+                pl.name = f"FiniteBackground_{tag}"
+                pl.pass_index = 4                               # distinct from glass/occluder/caster
+                pl.data.materials.append(_finite_bg_material(f"FiniteBgMat_{tag}", drng))
+                return pl
+            _add_bg_plane(depth, "main")
+            near = None
+            # depth discontinuity: sometimes a nearer bar (shelf edge / mullion at another depth)
+            if drng.random() < 0.5:
+                near = round(max(0.05, depth * drng.uniform(0.3, 0.7)), 3)
+                dist = near - cam.location.y
+                half_x = dist * math.tan(cam.data.angle_x / 2.0)
+                half_z = dist * math.tan(cam.data.angle_y / 2.0)
+                bpy.ops.mesh.primitive_plane_add(
+                    size=1, location=(drng.uniform(-half_x, half_x), near, drng.uniform(-half_z, half_z)),
+                    rotation=(math.radians(90), 0, 0))
+                bar = bpy.context.active_object
+                bar.name = "FiniteBackground_near"
+                bar.pass_index = 4
+                bar.scale = (half_x * drng.uniform(0.6, 1.6), half_z * drng.uniform(0.15, 0.5), 1.0)
+                bar.data.materials.append(_finite_bg_material("FiniteBgMat_near", drng))
+            extra["background"] = {"depth_m": depth, "near_bar_depth_m": near}
+        else:
+            extra["background"] = {"depth_m": None, "near_bar_depth_m": None}  # HDRI-only
+
+    SCENE_EXTRA.clear()
+    SCENE_EXTRA.update(extra)
+
+
 def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
     _t0_scene = time.perf_counter()
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -1862,6 +2000,13 @@ def setup_scene(hdri_path, has_frame=False, wall_gray=0.0):
         bsdf.inputs["Specular"].default_value = 0.0
     wall.data.materials.append(mat_wall)
 
+    # Report 053: deployment-capture scene realism (front-side lighting + finite-depth
+    # textured background). Non-validate only (hdri_path is None in validate mode), and only
+    # under the --deploy-scene master switch. Stashes params into SCENE_EXTRA for meta.json.
+    SCENE_EXTRA.clear()
+    if hdri_path is not None and GT_OPTS.get("deploy_scene"):
+        add_deploy_lighting_and_background(cam, GT_OPTS.get("_cur_seed", 0))
+
     _record('scene_build', time.perf_counter() - _t0_scene)
     return glass_obj, cam, ev, z_rot, frame_params, camera_jitter
 
@@ -2003,7 +2148,13 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img
     # still makes it brighter, not capped.
     mark_white_emit = nodes.new('ShaderNodeEmission')
     mark_white_emit.inputs['Color'].default_value = (0.85, 0.83, 0.77, 1)
-    mark_white_emit.inputs['Strength'].default_value = 0.6
+    # Report 053: with mixed front/back lighting now the NORM (--deploy-scene adds a real
+    # front area light most samples), the white pigment CATCHES that front light naturally, so
+    # the constant self-emission workaround (strength 0.6 — the comment above admits the legacy
+    # scene had NO front light) drops to a small FALLBACK floor. This keeps white marks legible
+    # on the minority of deploy samples that draw no front light, while letting a real front
+    # light brighten them physically (not a fixed cap). Legacy scenes keep the 0.6 hack.
+    mark_white_emit.inputs['Strength'].default_value = 0.15 if GT_OPTS.get("deploy_scene") else 0.6
     mark_white_add = nodes.new('ShaderNodeAddShader')
     links.new(mark_white_bsdf.outputs['BSDF'], mark_white_add.inputs[0])
     links.new(mark_white_emit.outputs['Emission'], mark_white_add.inputs[1])
@@ -2039,35 +2190,73 @@ def create_glass_material(glass_obj, img_T, img_h, img_mark, img_mark_white, img
     # So we remove Solidify completely.
     return mat
 
-def generate_hand_mask(size=512):
+def _shadow_disk(mask, cy, cx, ry, rx, ang=0.0):
+    """Filled rotated ellipse into `mask` (a coarse silhouette primitive)."""
+    H, W = mask.shape
+    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
+    ca, sa = math.cos(ang), math.sin(ang)
+    u = (xs - cx) * ca + (ys - cy) * sa
+    v = -(xs - cx) * sa + (ys - cy) * ca
+    mask[(u / max(rx, 1e-3)) ** 2 + (v / max(ry, 1e-3)) ** 2 <= 1.0] = 1.0
+
+
+def generate_shadow_mask(size=512, rng=None):
+    """Report 053 SHADOW OVERHAUL. The old generate_hand_mask emitted one of only FOUR
+    hard-coded axis-aligned rectangle sets (a highly recognizable shape grammar the model
+    could memorize). This draws a VARIED caster silhouette from a family — a hand at an
+    arbitrary angle, a forearm, a phone edge, or a soft random blob cluster — entering from
+    a random side at a random position/scale, so cast-shadow SHAPE carries no free label.
+    Returns a soft [0,1] mask (gaussian-feathered), same contract as before."""
+    rng = rng or random
     mask = np.zeros((size, size), dtype=np.float32)
-    edge = random.choice(['top', 'bottom', 'left', 'right'])
-    
-    if edge == 'bottom':
-        mask[470:512, 150:180] = 1.0 # Index
-        mask[450:512, 200:230] = 1.0 # Middle
-        mask[460:512, 250:280] = 1.0 # Ring
-        mask[480:512, 300:330] = 1.0 # Pinky
-    elif edge == 'top':
-        mask[0:42, 150:180] = 1.0
-        mask[0:62, 200:230] = 1.0
-        mask[0:52, 250:280] = 1.0
-        mask[0:32, 300:330] = 1.0
-    elif edge == 'left':
-        mask[150:180, 0:42] = 1.0
-        mask[200:230, 0:62] = 1.0
-        mask[250:280, 0:52] = 1.0
-        mask[300:330, 0:32] = 1.0
-    elif edge == 'right':
-        mask[150:180, 470:512] = 1.0
-        mask[200:230, 450:512] = 1.0
-        mask[250:280, 460:512] = 1.0
-        mask[300:330, 480:512] = 1.0
-        
-    # Blur heavily for soft shadow effect (reduced slightly to preserve thin finger shape)
+    kind = rng.choice(['hand', 'hand', 'forearm', 'phone', 'blobs'])  # hand weighted x2
+    side = rng.choice(['top', 'bottom', 'left', 'right'])
+    ang = rng.uniform(-0.9, 0.9)                       # global tilt of the caster
+    base = rng.uniform(0.05, 0.55)                     # how far along the entry edge
+    reach = rng.uniform(0.35, 0.95) * size             # how deep into the frame it intrudes
+
+    def place(y, x, ry, rx, a=0.0):
+        # map a "canonical bottom-entry" (y from edge, x along edge) into the chosen side
+        if side == 'bottom':
+            cy, cx = size - y, x
+        elif side == 'top':
+            cy, cx = y, x
+        elif side == 'left':
+            cy, cx = x, y
+        else:  # right
+            cy, cx = x, size - y
+        _shadow_disk(mask, cy, cx, ry, rx, a + ang)
+
+    if kind == 'hand':
+        palm_x = base * size + rng.uniform(-0.05, 0.05) * size
+        place(reach * 0.45, palm_x, reach * 0.42, size * 0.14, 0.0)     # palm
+        for k in range(rng.randint(3, 4)):                              # fingers
+            fx = palm_x + (k - 1.5) * size * 0.075 + rng.uniform(-8, 8)
+            flen = reach * rng.uniform(0.65, 1.0)
+            place(flen, fx, size * 0.055, size * 0.028, rng.uniform(-0.25, 0.25))
+    elif kind == 'forearm':
+        place(reach * 0.6, base * size, reach * 0.7, size * rng.uniform(0.11, 0.20),
+              rng.uniform(-0.3, 0.3))
+    elif kind == 'phone':
+        # a straight-edged rectangular slab (phone body / book edge)
+        pw, pl = size * rng.uniform(0.16, 0.30), reach * rng.uniform(0.6, 1.0)
+        for t in np.linspace(0, pl, 40):
+            place(t, base * size, pw * 0.5, pw * 0.5, 0.0)
+    else:  # blobs — irregular soft cluster (a bag, sleeve, random object)
+        for _ in range(rng.randint(2, 5)):
+            place(reach * rng.uniform(0.2, 0.9),
+                  base * size + rng.uniform(-0.12, 0.12) * size,
+                  size * rng.uniform(0.06, 0.16), size * rng.uniform(0.06, 0.16),
+                  rng.uniform(-0.6, 0.6))
+
     from scipy.ndimage import gaussian_filter
-    mask = gaussian_filter(mask, sigma=10.0)
+    mask = gaussian_filter(mask, sigma=rng.uniform(6.0, 14.0))          # varied penumbra
     return np.clip(mask, 0, 1)
+
+
+def generate_hand_mask(size=512):
+    """Back-compat shim: the old name, now a varied-silhouette draw (report 053)."""
+    return generate_shadow_mask(size)
 
 def add_shadow_caster(out_dir):
     # Generate hand mask
@@ -2138,7 +2327,18 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark
     wall = bpy.data.objects.get("DarkWall")
     if wall:
         wall.hide_render = True
-        
+
+    # Report 053: the emission GT render must see ONLY the emitting glass plane. The full-frame
+    # glass plane already occludes everything behind it, but hide the deploy-scene front light
+    # and finite-background planes defensively (same discipline as DarkWall) so no edge/AA leak
+    # can corrupt the pure-material GT. Restored below.
+    _deploy_hidden = []
+    for _o in bpy.data.objects:
+        if _o.name.startswith("FiniteBackground") or _o.name == "FrontLight":
+            if not _o.hide_render:
+                _o.hide_render = True
+                _deploy_hidden.append(_o)
+
     # Create emission material
     mat_gt = bpy.data.materials.new(name="GT_Mat")
     mat_gt.use_nodes = True
@@ -2235,6 +2435,8 @@ def render_ground_truths(glass_obj, sample_dir, img_T, img_h, img_mark, img_mark
         bg_node.inputs['Strength'].default_value = orig_strength
     if wall:
         wall.hide_render = False
+    for _o in _deploy_hidden:        # report 053: restore deploy-scene front light / bg planes
+        _o.hide_render = False
     _record('scene_build', time.perf_counter() - _t1_scene)
 
 def render_sample(out_dir, prefix):
@@ -2496,6 +2698,34 @@ def parse_args():
     parser.add_argument('--no-marks', action='store_true',
                         help="Report 039: suppress grease-pencil marks (texture review "
                              "board / forced-choice test). Default OFF = dataset default.")
+    # Report 053 deployment-capture realism (docs/external/053-dataset-capture-review.md).
+    parser.add_argument('--deploy-scene', action='store_true',
+                        help="Report 053: enable the deployment-capture scene distribution "
+                             "(mixed front/back lighting as the NORM, finite-depth textured "
+                             "backgrounds, varied-silhouette sampled-prevalence shadows, and "
+                             "synthetic user-crop). Sets the sub-flags below to their deploy "
+                             "defaults unless individually overridden. Ignored in --validate.")
+    parser.add_argument('--front-light-prob', type=float, default=None,
+                        help="Report 053: P(a sample gets front-side room illumination + a dim "
+                             "reflective interior). Deploy default 0.7; legacy default 0.0.")
+    parser.add_argument('--finite-bg-prob', type=float, default=None,
+                        help="Report 053: P(a finite-depth textured background at ~10cm/50cm/"
+                             "2m behind the glass; else HDRI-only far layer). Deploy default 0.85.")
+    parser.add_argument('--shadow-prob', type=float, default=None,
+                        help="Report 053: sampled P(a sample has a cast shadow) — replaces the "
+                             "old forced with/without pair for EVERY identity. Deploy default 0.3.")
+    parser.add_argument('--shadow-pairs', action='store_true',
+                        help="Report 053: keep the with/without-shadow PAIR capability (renders "
+                             "both variants) for the shadow-supervision path. Default: single "
+                             "sampled variant per sample (no forced pair).")
+    parser.add_argument('--crop-sim', action='store_true',
+                        help="Report 053: apply a synthetic user-crop (padding/trim error, tilt, "
+                             "scale, optional 4-corner perspective) to the rendered sheet and emit "
+                             "the cropped sheet + local detail patches, GT maps kept registered.")
+    parser.add_argument('--cover-recipes', action='store_true',
+                        help="Report 053: deterministically CYCLE through all recipes across the "
+                             "count (recipe = recipes[i %% len(recipes)]) so a batch covers every "
+                             "recipe explicitly. Replaces the stale `--count == 5` special case.")
     return parser.parse_args(argv)
 
 def main():
@@ -2507,6 +2737,19 @@ def main():
     GT_OPTS["gt_aov"] = args.gt_aov
     GT_OPTS["fixed_ev"] = args.fixed_ev
     GT_OPTS["no_marks"] = args.no_marks
+
+    # Report 053: resolve the deployment-capture scene distribution. --deploy-scene sets the
+    # sub-parameters to their deploy defaults; any explicitly-passed sub-flag overrides. When
+    # OFF, front/finite-bg probabilities are 0 (legacy scene) and shadow_prob is None (legacy
+    # forced with/without pair for every identity — byte-compatible).
+    deploy = args.deploy_scene
+    GT_OPTS["deploy_scene"] = deploy
+    _res = lambda v, dep, leg: (v if v is not None else (dep if deploy else leg))
+    GT_OPTS["front_light_prob"] = _res(args.front_light_prob, 0.7, 0.0)
+    GT_OPTS["finite_bg_prob"] = _res(args.finite_bg_prob, 0.85, 0.0)
+    GT_OPTS["shadow_prob"] = _res(args.shadow_prob, 0.3, None)  # None => legacy forced pair
+    GT_OPTS["shadow_pairs"] = args.shadow_pairs
+    GT_OPTS["crop_sim"] = args.crop_sim or deploy
 
     recipes = ['cathedral-green', 'cathedral-amber', 'dark-opaque', 'streaky-mix', 'wispy-white',
                'dark-deep', 'dark-ruby', 'dark-slate',
@@ -2544,21 +2787,36 @@ def main():
         hdri_path = None if args.validate else resolve_hdri_path(
             args.out, hdri_dir=args.hdri_dir, seed=seed)
 
+        # Report 053: `--cover-recipes` cycles through ALL recipes deterministically so a
+        # batch covers every recipe explicitly (replaces the stale `--count == 5` special
+        # case, which assumed 5 recipes but there are now 17). `--recipe X` still pins one.
         if args.recipe is not None:
             if args.recipe not in recipes:
                 raise ValueError(f"Unknown recipe: {args.recipe}")
             recipe = args.recipe
-        elif args.count == 5:
-            recipe = recipes[i]
+        elif args.cover_recipes:
+            recipe = recipes[i % len(recipes)]
         else:
             recipe = random.choice(recipes)
-            
+
+        GT_OPTS["_cur_seed"] = seed  # report 053: setup_scene's deploy RNG keys on this
+
         for v in range(args.light_variations):
-            has_shadow = True # Always generate pairs (with and without shadow)
             has_frame = random.random() < 0.20  # partial frame-edge occluder trap (report 012)
+            # Report 053 SHADOW OVERHAUL: shadow PRESENCE is now a sampled probability, not a
+            # forced with/without pair for EVERY identity (the review's finding #2). Legacy
+            # behaviour (shadow_prob is None) still forces the pair for byte-compat. `--shadow-
+            # pairs` forces has_shadow for every sample so the shadow-supervision path (pair
+            # diff) has dense coverage when specifically needed. When has_shadow, both the
+            # clean `without_shadow_` (always rendered, GT-aligned) and the `with_shadow_`
+            # twin are produced — so ~shadow_prob of identities carry a supervised shadow.
             if args.validate:
-                has_frame = False # No window mullions blocking transmission during math evaluation
+                has_frame = False  # No window mullions blocking transmission during math eval
                 has_shadow = False # Skip shadow pass entirely during validation
+            elif GT_OPTS["shadow_pairs"] or GT_OPTS["shadow_prob"] is None:
+                has_shadow = True  # forced pair (legacy default, or explicit --shadow-pairs)
+            else:
+                has_shadow = (random.random() < GT_OPTS["shadow_prob"])  # sampled prevalence
             lighting_id = f"light{random.randint(0, 9999):04d}"
 
             # Name directory with seed so identical glass pieces are grouped together, but have different lighting IDs
@@ -2573,10 +2831,14 @@ def main():
             # the same seed produce IDENTICAL scenes except the specular lobe
             # and wall gray (required for the extractor A/B in report 032).
             spec_level, wall_gray = None, 0.0
-            if args.specular:
+            _deploy_specular = GT_OPTS["deploy_scene"] and not args.validate
+            if args.specular or _deploy_specular:
+                # Report 053: in --deploy-scene, the front-surface specular lobe + a dim
+                # reflective interior are part of the DEFAULT distribution (front-lit
+                # reflections are ordinary in a real capture, not a --specular stress test).
                 _spec_rng = random.Random(seed * 7919 + v * 13 + 5)
                 spec_level = _spec_rng.uniform(0.5, 1.0)
-                wall_gray = _spec_rng.uniform(0.02, 0.08)
+                wall_gray = _spec_rng.uniform(0.02, 0.10)
 
             # 1. Setup scene FIRST (clears factory settings)
             if args.validate:
@@ -2608,6 +2870,12 @@ def main():
                 "hdri_ev": ev,
                 "has_frame": has_frame,
                 "frame_occluders": frame_params,
+                # Report 053 deployment-capture scene realism (docs/external/053-...):
+                "deploy_scene": bool(GT_OPTS["deploy_scene"]),
+                "front_light": SCENE_EXTRA.get("front_light"),
+                "background": SCENE_EXTRA.get("background"),
+                # capture_geometry is set by the crop-sim post step below (default 'axis_crop').
+                "capture_geometry": "axis_crop",
                 "camera_pose": {
                     "location": list(cam.location),
                     "rotation": list(cam.rotation_euler),
@@ -2621,7 +2889,8 @@ def main():
                 "seed": seed,
                 "has_shadow": has_shadow,
                 "specular": {
-                    "enabled": bool(args.specular),
+                    "enabled": bool(args.specular or _deploy_specular),
+                    "via_deploy_scene": bool(_deploy_specular and not args.specular),
                     "ior_level": spec_level,
                     "wall_gray": wall_gray,
                 },
