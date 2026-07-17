@@ -255,6 +255,143 @@ def strikes_to_name(display_name):
 
 
 # ==================================================================================
+# STRIKER EXCLUSION (coordinator/CTO pivot 2026-07-16 -- supersedes the "switch the
+# photo to the pale unfired sheet" policy that drove vlm_judge_striker.py)
+# ==================================================================================
+# Unfired striker glass is now FILTERED OUT of the shipped library entirely, rather
+# than shown in its pale unfired state. Rationale (WYSIWYG): striker colors are
+# gold-derived pinks/rubies/purples that only develop once fired to ~1200F+; the
+# ~99% of our users who work cold-process (copper foil / lead came) NEVER reach that
+# temperature, so a striker sheet keeps its dull unfired color forever. Whether we
+# render the fired color (betrays the buyer) or the pale unfired color (advertises a
+# premium-priced sheet as its muted, unrecognizable state), showing a striker at all
+# to a cold-process audience is misleading -- so we exclude it.
+#
+# THE ONE EXCEPTION -- pre-struck sheets stay IN: a sheet that ships already
+# factory-fired has its color locked and is WYSIWYG-safe. The coordinator brief
+# expected Bullseye to mark these with an "S" suffix on the product code (vs "F"
+# fusible) and/or explicit "Struck" wording.
+#
+# VERIFIED, and the S-suffix rule does NOT hold: Bullseye's authoritative coding
+# system (bullseyeglass.com/.../bullseye_glass_coding_system.pdf) defines the
+# trailing letter as a GRADE code -- F "Fusible/Tested Compatible", P "Standard
+# Production", B "Fusible-curious", C "Curious" -- with NO "S" grade and no
+# pre-struck/pre-fired code at all. The entire live `strikers` collection ships in
+# F grade (its own F-grade note even cross-references the striker caveat), and none
+# of the 146 flagged registry rows carry "Struck"/"pre-struck"/"pre-fired" wording.
+# So the only RELIABLE pre-struck signal is whole-word "struck"/"pre-struck"/
+# "pre-fired" in the product name -- NOT the nonexistent S-suffix, and explicitly
+# NOT "striker" (that IS the unfired product). On the current corpus this exception
+# matches zero products (every flagged striker is excluded); it is retained as a
+# defensive forward guard for any future factory-fired SKU. When ambiguous ->
+# EXCLUDE (safe default under WYSIWYG).
+_PRESTRUCK_RE = re.compile(r'\b(?:pre-?struck|pre-?fired|struck)\b', re.IGNORECASE)
+
+
+def is_prestruck(name, description=''):
+    r"""True when a sheet ships already fired (color locked, WYSIWYG-safe) and is
+    therefore kept despite being a striker color. Detected by whole-word
+    'struck'/'pre-struck'/'pre-fired' wording only -- the S-suffix grade code the
+    brief expected does not exist in Bullseye's coding system (see the module
+    comment above). NOTE: \bstruck\b deliberately does NOT match 'striker' (the
+    UNFIRED product), so the two stay distinct."""
+    return bool(_PRESTRUCK_RE.search(f"{name or ''} {description or ''}"))
+
+
+def should_exclude_striker(item):
+    """Shipping filter: a registry row flagged striker:true is excluded from the
+    library UNLESS it is pre-struck. Non-striker rows are never excluded."""
+    if not item.get('striker'):
+        return False
+    return not is_prestruck(item.get('name', ''), item.get('description', ''))
+
+
+def partition_striker_exclusions(registry):
+    """Split an assembled registry into (shipped, excluded_log). Each excluded entry
+    records the id/name/strikes_to and a human-readable WYSIWYG reason -- a
+    documented quarantine, never a silent drop."""
+    shipped, excluded_log = [], []
+    for item in registry:
+        if should_exclude_striker(item):
+            excluded_log.append({
+                "id": item.get('id'),
+                "manufacturer": item.get('manufacturer'),
+                "base_sku": item.get('base_sku'),
+                "name": item.get('name'),
+                "strikes_to": item.get('strikes_to'),
+                "reason": (
+                    "unfired striker: ships pale/unstruck and only reaches its named "
+                    f"color ('{item.get('strikes_to')}') once kiln-fired to ~1200F+; "
+                    "cold-process (foil/came) users never strike it, so any render "
+                    "misrepresents what ships (WYSIWYG). No pre-struck (factory-fired) "
+                    "signal in the name/code."),
+            })
+        else:
+            shipped.append(item)
+    return shipped, excluded_log
+
+
+def write_striker_quarantine(excluded_log, before_count, after_count):
+    """Persist the striker-exclusion quarantine as both machine-readable JSON and a
+    human-readable markdown table (per-manufacturer counts + every excluded SKU with
+    its reason). STRIKER_QUARANTINE_* paths are anchored to the report dir, so they
+    ride along on the branch the lead reviews. Kept-because-pre-struck rows, if any
+    ever exist, stay in the shipped registry and are reported here as a keep-list."""
+    import collections as _collections
+    os.makedirs(REPORT_DIR, exist_ok=True)
+    excluded_log = sorted(excluded_log, key=lambda x: (x.get('manufacturer') or '', x.get('base_sku') or ''))
+    with open(STRIKER_QUARANTINE_JSON, 'w') as f:
+        json.dump({
+            "policy": "exclude-unfired-strikers-2026-07-16",
+            "library_count_before": before_count,
+            "library_count_after": after_count,
+            "excluded_count": len(excluded_log),
+            "excluded": excluded_log,
+        }, f, indent=2)
+
+    by_mfr = _collections.Counter(e.get('manufacturer') for e in excluded_log)
+    lines = [
+        "# Striker exclusion -- quarantine list",
+        "",
+        "Generated by `scripts/build_swatch_library.py` "
+        "(`partition_striker_exclusions()` / `write_striker_quarantine()`).",
+        "",
+        "Policy (coordinator/CTO, 2026-07-16, supersedes the pale-photo switch): "
+        "unfired striker glass is filtered OUT of the shipped library entirely "
+        "(WYSIWYG -- cold-process users never fire it). Pre-struck (factory-fired, "
+        "color-locked) sheets are the one exception and stay IN; none exist in the "
+        "current corpus (see the module comment on the nonexistent 'S'-suffix rule).",
+        "",
+        f"**Library count: {before_count} -> {after_count} "
+        f"({len(excluded_log)} excluded).**",
+        "",
+        "## Excluded per manufacturer",
+        "",
+        "| Manufacturer | Excluded (unfired strikers) |",
+        "|---|---:|",
+    ]
+    for mfr, n in sorted(by_mfr.items()):
+        lines.append(f"| {mfr} | {n} |")
+    lines.append(f"| **Total** | **{len(excluded_log)}** |")
+    lines += [
+        "",
+        "## Excluded SKUs",
+        "",
+        "| id | manufacturer | base_sku | name | strikes_to |",
+        "|---|---|---|---|---|",
+    ]
+    for e in excluded_log:
+        lines.append(
+            f"| {e.get('id')} | {e.get('manufacturer')} | `{e.get('base_sku')}` | "
+            f"{e.get('name')} | {e.get('strikes_to')} |")
+    lines.append("")
+    with open(STRIKER_QUARANTINE_MD, 'w') as f:
+        f.write("\n".join(lines))
+    print(f"Wrote striker quarantine list ({len(excluded_log)} SKUs) to "
+          f"{STRIKER_QUARANTINE_JSON} and {STRIKER_QUARANTINE_MD}.")
+
+
+# ==================================================================================
 # PICKER INTEGRATION (iteration 036) -- glass-library-integration-review.md Addendum 2
 # ==================================================================================
 # Replaces the old `get_best_image_url()` positional heuristic (always `images[0]`)
@@ -1475,11 +1612,21 @@ def main(only_manufacturer=None):
         # splices above may have appended out of order -- restore the sorted invariant
         final_registry.sort(key=lambda x: (x['manufacturer'], x['base_sku']))
 
+    # Striker-exclusion pivot (2026-07-16): quarantine unfired strikers out of the
+    # shipped registry as the very last assembly step, so it catches every source of
+    # rows (freshly-scraped, legacy-quarantine -v2 carry-through, vlm_judge carry-
+    # through, and the scoped-run splice of other manufacturers alike). Documented,
+    # not silent -- the excluded set is written to its own quarantine list.
+    before_exclusion = len(final_registry)
+    final_registry, striker_excluded_log = partition_striker_exclusions(final_registry)
+    write_striker_quarantine(striker_excluded_log, before_exclusion, len(final_registry))
+
     # Save outputs
     with open(REGISTRY_FILE, 'w') as f:
         json.dump(final_registry, f, indent=2)
     print(f"\nSaved {len(final_registry)} deduplicated dynamic swatches to registry {REGISTRY_FILE}")
-    print(f"Full images re-downloaded/changed: {changed_count}. Quarantined (picker): {len(quarantine_log)}. Failed: {failed}.")
+    print(f"Full images re-downloaded/changed: {changed_count}. Quarantined (picker): {len(quarantine_log)}. "
+          f"Excluded (unfired strikers): {len(striker_excluded_log)}. Failed: {failed}.")
 
     generate_verify_html(final_registry)
     generate_tracker_report(len(final_registry), len(final_registry), failed, final_registry)
@@ -1602,6 +1749,12 @@ _SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPORT_DIR = os.path.join(_SCRIPT_DIR, '..', 'docs', 'library-picker-rebuild')
 REPORT_MD = os.path.join(REPORT_DIR, 'report.md')
 CONTACT_SHEET = os.path.join(REPORT_DIR, 'contact_sheet.jpg')
+# Documented quarantine list for the striker-exclusion pivot (see the STRIKER
+# EXCLUSION module comment). Lands in the report dir alongside report.md so the
+# excluded SKUs travel with the branch/PR the lead reviews, not into the
+# gitignored runtime asset tree the registry itself is written to.
+STRIKER_QUARANTINE_MD = os.path.join(REPORT_DIR, 'striker_quarantine.md')
+STRIKER_QUARANTINE_JSON = os.path.join(REPORT_DIR, 'striker_quarantine.json')
 
 
 def _load_thumb(path, size=(150, 150)):
@@ -1853,6 +2006,24 @@ def generate_diff_report(existing_by_id, final_registry, quarantine_log, stabili
     print(f"Generated diff report at {REPORT_MD}" + (f" and contact sheet at {CONTACT_SHEET}" if made_sheet else ""))
 
 
+def apply_striker_exclusion_in_place():
+    """Apply ONLY the striker-exclusion filter to the already-built registry, with no
+    network scraping/scoring. The exclusion is a pure function of fields already
+    present on every row (striker, name), so this reproduces exactly what a full
+    `main()` rebuild would ship for the striker set -- same partition_striker_
+    exclusions()/write_striker_quarantine() code path -- without re-fetching ~3000
+    catalog products. Used to land the pivot on the current committed registry."""
+    with open(REGISTRY_FILE) as f:
+        registry = json.load(f)
+    before = len(registry)
+    shipped, excluded_log = partition_striker_exclusions(registry)
+    write_striker_quarantine(excluded_log, before, len(shipped))
+    with open(REGISTRY_FILE, 'w') as f:
+        json.dump(shipped, f, indent=2)
+    print(f"\nStriker exclusion applied in place: {before} -> {len(shipped)} rows "
+          f"({len(excluded_log)} unfired strikers excluded). Registry: {REGISTRY_FILE}")
+
+
 if __name__ == '__main__':
     import argparse
     _ap = argparse.ArgumentParser(description=__doc__)
@@ -1862,5 +2033,13 @@ if __name__ == '__main__':
                            "registry rows pass through untouched instead of being "
                            "re-scraped. Default: process all manufacturers (original "
                            "behavior).")
+    _ap.add_argument('--exclude-strikers-in-place', action='store_true',
+                      help="Apply ONLY the unfired-striker exclusion filter to the "
+                           "existing registry (no network scrape/score) and write the "
+                           "quarantine list. Reuses the same code path a full rebuild "
+                           "uses for the striker set.")
     _args = _ap.parse_args()
-    main(only_manufacturer=_args.only_manufacturer)
+    if _args.exclude_strikers_in_place:
+        apply_striker_exclusion_in_place()
+    else:
+        main(only_manufacturer=_args.only_manufacturer)

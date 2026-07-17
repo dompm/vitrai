@@ -2,6 +2,18 @@
 row flagged `striker: true` by build_swatch_library.py's striker classifier
 (see its cache_bullseye_strikers()/is_wissmach_striker() docstrings).
 
+SUPERSEDED (coordinator/CTO, 2026-07-16): the policy this script implements --
+"switch a striker's product photo to show its pale, unfired, as-shipped sheet"
+-- was replaced by outright EXCLUSION of unfired strikers from the shipped
+library (WYSIWYG: cold-process users never fire the glass, so no striker photo,
+pale or fired, is honest). The switching this pass performed is now moot: every
+row it would retouch is quarantined out of the registry instead. The exclusion
+lives in build_swatch_library.py (partition_striker_exclusions() /
+should_exclude_striker(), see its STRIKER EXCLUSION module comment); the
+identifications this script's target-selection relied on still drive that
+filter. Kept for provenance of the striker `strikes_to` audit and the judge
+machinery; do NOT run it to mutate the registry under the current policy.
+
 Policy (coordinator, 2026-07-13): striker/striking glass ships in a pale,
 unfired/unstruck state and only develops its full named color once the
 CUSTOMER fires it in a kiln. A product photo showing the vivid, fully
