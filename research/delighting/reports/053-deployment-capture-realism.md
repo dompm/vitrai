@@ -189,16 +189,22 @@ deterministic RNG makes this resume exact). `_farm/farm_summary.json`: shards_ok
 All deploy-scene features are gated by `if args.validate:` (shadow/frame off) and by
 `hdri_path is None` (no finite-bg/front-light in validate) and by `GT_OPTS["deploy_scene"]`
 (white-marker emission stays 0.6). So `--validate` output is unchanged from trunk for a given
-(recipe, seed). Confirmed on the rendered validate recipes — uniform-backlight T-agreement MAE:
+(recipe, seed). **Full 17/17 sweep rendered post-change** (`--seed 1 --count 17
+--cover-recipes --validate`) — uniform-backlight T-agreement MAE, all in the historical pass
+band:
 
-| recipe | MAE | recipe | MAE |
-|---|---|---|---|
-| dark-deep | 0.0021 | dark-opaque | 0.0051 |
-| wispy-white | 0.0072 | streaky-mix | 0.0130 |
-| cathedral-green | 0.0232 | cathedral-amber | 0.0278 |
+| recipe | MAE | recipe | MAE | recipe | MAE |
+|---|---|---|---|---|---|
+| dark-deep | 0.0021 | saturated-opalescent | 0.0031 | dark-textured | 0.0036 |
+| dark-ruby | 0.0044 | dark-opaque | 0.0051 | streaky-fine-texture | 0.0069 |
+| wispy-white | 0.0072 | dark-slate | 0.0096 | streaky-mix | 0.0130 |
+| cathedral-red | 0.0166 | ring-mottle | 0.0172 | cathedral-blue | 0.0172 |
+| cathedral-green | 0.0232 | baroque-rolling-wave | 0.0238 | confetti-shard | 0.0241 |
+| cathedral-amber | 0.0278 | fracture-streamer | 0.0304 | | |
 
-All in the historical pass band. (A full 17/17 sweep is queued as a final step; the six above plus
-the strict gating above establish the validate path is intact.)
+Reproducibility note: the sweep was rendered twice for six recipes (a session stall killed the
+first run mid-way); the overlapping recipes agree to ~1e-5 MAE (e.g. cathedral-green 0.023166 →
+0.023160) — GPU-denoise-level noise only, confirming the validate path is untouched.
 
 ---
 
