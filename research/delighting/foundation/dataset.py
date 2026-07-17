@@ -316,7 +316,12 @@ class GlassDelightDataset:
         # Samples without patches on disk always serve the sheet view.
         self.patch_prob = patch_prob
         self.rng = np.random.default_rng(seed)
-        self._cache = {}   # idx -> downsampled component dict (avoids re-reading 50MB EXRs)
+        # 053b pre-flight fix: the component cache was UNBOUNDED — ~30-40MB of work-res
+        # channels per sample x a 268-468-sample pilot ≈ 10-19GB RAM (swap/OOM mid-run).
+        # Bounded LRU now: oldest entry evicted past `cache_size` (~64 x ~35MB ≈ 2.2GB cap).
+        from collections import OrderedDict
+        self._cache = OrderedDict()   # idx -> downsampled component dict (LRU-bounded)
+        self.cache_size = 64
         self.samples = self._index(roots if isinstance(roots, (list, tuple)) else [roots])
         if not self.samples:
             raise SystemExit(f"no {split} samples under {roots} "
@@ -355,6 +360,7 @@ class GlassDelightDataset:
     def _components(self, idx):
         """Read + downsample every channel once; cache. gt_T defines the grid."""
         if idx in self._cache:
+            self._cache.move_to_end(idx)          # LRU touch (053b)
             return self._cache[idx]
         d = self.samples[idx]["dir"]
         # Report 053b: lazy crop warp — resolve the stored homography once for this sample.
@@ -371,7 +377,7 @@ class GlassDelightDataset:
         sigma_s = _load_gt_sigma_s(d, M)
         photo_wo = _photo_linear(d, "without", M)
         if T is None or h is None or photo_wo is None:
-            self._cache[idx] = None
+            self._cache_put(idx, None)
             return None
         H, W = T.shape[:2]
         has_with = os.path.exists(os.path.join(d, "with_shadow_photo_linear.exr")) or \
@@ -409,8 +415,15 @@ class GlassDelightDataset:
             "has_B": B is not None, "has_veil": veil is not None,
             "has_sigma_s": sigma_s is not None,
         }
-        self._cache[idx] = comp
+        self._cache_put(idx, comp)
         return comp
+
+    def _cache_put(self, idx, val):
+        """LRU insert with eviction (053b): keeps at most `cache_size` component dicts."""
+        self._cache[idx] = val
+        self._cache.move_to_end(idx)
+        while len(self._cache) > self.cache_size:
+            self._cache.popitem(last=False)
 
     def load_full(self, idx, variant=None):
         """Assemble a per-variant record from the cached components."""
@@ -575,6 +588,21 @@ class GlassDelightDataset:
             for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
                 out[k] = rec[k]
             out["view"] = "sheet"
+            # 053b pre-flight fix 4: guarantee EXACT self.crop draws. Under crop_view a
+            # non-square user crop (or a small work grid) can make c < self.crop, and
+            # collate's np.stack crashes on mixed sizes mid-run. Same policy as the patch
+            # path: reflect-pad to self.crop, valid=0 in the pad (no invented loss signal).
+            ch, cw = out["T"].shape[:2]
+            if ch < self.crop or cw < self.crop:
+                py, px = self.crop - ch, self.crop - cw
+                pmode = "reflect" if (py < ch and px < cw) else "edge"  # reflect needs pad<dim
+                for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
+                    out[k] = np.pad(out[k], ((0, py), (0, px), (0, 0)), mode=pmode)
+                out["valid"] = out["valid"].copy()
+                if py:
+                    out["valid"][ch:, :] = 0.0
+                if px:
+                    out["valid"][:, cw:] = 0.0
         if self.augment:
             out["photo"] = self._augment_photo(out["photo"])
             if self.rng.random() < 0.5:
