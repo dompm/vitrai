@@ -61,6 +61,39 @@ The reviewer's training diet is "**both the full cropped sheet and local detail 
   bit-exact on 15 patches (patch gt_T == the recorded window of the lazily-warped sheet);
   78 loader patch draws load at the right shape; split respected on train AND test.
 
+## Pre-flight fixes (lead's foundation/ review — required before any training run)
+
+1. **CRITICAL — the 040 gradient fixes never reached trunk.** `backbone.decode()` still
+   wrapped the VAE in `torch.no_grad()` and `train.py`'s T loss was pixel-space through it —
+   T's supervision was SEVERED (the exact 040 bug, live on trunk; T only moved as a side
+   effect of the aux heads). Ported all three 040 commits onto this branch (drift-aware —
+   the 8-channel σ_s AuxHead and phone-ISP loader are preserved): `a5577a2` (diagnosis),
+   `36bc550` (latent-space T supervision — MSE vs `z_T_hat` with the shadow-upweighting
+   adaptive-pooled to latent res; the durable fix), `f6bd8c1` (`need_T` opt-in decode —
+   decode only on logging steps; conf gets no supervision on skipped steps). Also ported
+   `test_grad_flow.py` (per-head isolation test, extended to 7 heads incl. σ_s) and wired
+   it UNCONDITIONALLY at the top of `train_loop` — not just the Modal entrypoint.
+   **Acceptance evidence**: preflight passes with nonzero grads for EVERY head
+   (T grad_norm 0.60; h 26.2; σ_s 28.2; B 32.7; shadow 47.9; mark 115.2; conf 109.6);
+   **mutation-verified** (detaching z_T_hat in the output makes the test fail naming
+   exactly `['T']`); 20-step tiny smoke on the pilot data shows the T loss MOVING
+   (0.1241 → 0.1003 → 0.1065 — under the bug it was bit-identical for 100+ steps).
+2. **HIGH — unbounded loader cache.** `GlassDelightDataset._cache` grew without bound
+   (~30-40 MB work-res components/sample × a 268-468-sample pilot ≈ 10-19 GB RAM). Now a
+   bounded LRU (`cache_size=64` ≈ 2.2 GB cap, `OrderedDict` with move-to-end/evict-oldest).
+   Verified: 20 loads at cap 8 → cache holds exactly 8.
+3. **MEDIUM — eval never saw a phone-processed input.** `eval_foundation` ran the test set
+   on CLEAN linear renders only — undermining the 053 realism premise — and never measured
+   the held-out `wide_edge` preset. Now every test photo also runs through EACH ISP preset
+   (deterministic per-sample rng); metrics are reported per-preset (`report["per_preset"]`
+   + a table section), the held-out device broken out (✋), and the clean row kept as the
+   headline for continuity with all pre-053b numbers.
+4. **LOW — non-square crop_view draws could crash collate.** The sheet path used
+   `c=min(crop,H,W)`; a user-crop homography can shrink the grid below `crop`, and
+   `np.stack` dies on mixed sizes mid-run. Sheet draws are now exactly `self.crop`
+   (reflect-pad + `valid=0` in the pad — the patch-path policy). Verified: 12/12 draws at
+   512² under crop_view.
+
 ## The scaled run (NOT 1k locally — plainly)
 
 Per the lead's launch plan: with the honest ~80 MB/sample render cost and ≥5 GB headroom
