@@ -114,4 +114,71 @@ After the render: the FIXED `crop_sim.py` over the new samples (photos+patches o
 refresh, and `rclone copy` of the full `pilot_053_out` to
 `gdrive:vitrai-lab-backup/pilot_053_deployment` (lab backup-before-cleanup policy).
 
-<!-- SCALED_RUN_RESULTS: filled after completion -->
+## SCALED_RUN_RESULTS
+
+**Final set: 348 samples (68 original + 280 net new; one disk-guard-interrupted partial
+dir, `wispy-white__seed740__light4661`, deleted — no meta.json, mid-write when the guard
+fired). This is 74% of the planned 468 (348/468) and 87% of the seed-range target (280/324
+new samples from the planned 200 seeds × 2 lightings) — the disk guard did its job:
+it stopped the farm CLEANLY at 09:56 on 2026-07-19 when free space hit 1.8 GB, exactly per
+its design, and no partial/corrupt sample beyond the one deleted above survived. Decision
+(lead, after the multi-day gap): stop here — 348 is a perfectly adequate deployment-pilot
+size; do not resume rendering.**
+
+### Composition
+
+- **17/17 recipes** covered, reasonably balanced (18–24 samples/recipe — the 4 lightest
+  are the four newest report-037 taxa: confetti-shard, fracture-streamer, ring-mottle at
+  18, baroque-rolling-wave at 20 — `--cover-recipes` cycles evenly but the run stopped
+  mid-cycle).
+- **174 unique seeds** (500–739 of the planned 500–799 range) × up to 2 light variations;
+  **23 distinct HDRIs**.
+- **Shadow 31%** (107/348; target 0.3 — on target). **Front light 66%** (230/348; target
+  0.7 — slightly under, sampling noise at this size). Specular + dim interior 100% (deploy
+  default, unconditional).
+- **Background depth mix**: 0.1 m ×84 · 0.5 m ×70 · 2 m ×64 · ∞/HDRI-only ×130 (70 by roll
+  + 60 pre-existing "no-bg-roll" from validate-adjacent early samples).
+- **Capture geometry**: tilt_scale_crop 226 · perspective_rectified 122.
+- **Storage**: mean **60.6 MB/sample**, max 90 MB — comfortably inside the ≤100 MB budget
+  and close to the 053b fix's ~59 MB/sample projection (the lazy-crop fix holds at scale).
+  Total on disk: **20 G** for 348 samples.
+- **Holdout partition** (dataset.py rules, precedence seed→recipe→hdri→geometry): train 84
+  · seed%5 70 · recipe-family 62 · hdri 78 · geometry 54 → **264/348 test (76%)**. Still
+  over-covers held-out families for eyeball purposes, as noted in 053's original pilot
+  stats — same rebalancing note applies at full 20k scale (lower `--perspective-prob`,
+  render more seeds so the fixed-fraction reservations shrink as a share of the whole).
+
+### Per-stage timing (for pricing the future cloud run)
+
+Aggregated from the scaled run's raw `[TIMING]` stage prints (`_farm/shard0_try1/log.txt`,
+9163 stage calls; the farm-level `timings_pid*.json`/`farm_summary.json` never got written
+because the disk guard killed the process before `dump_timings` could run — this is the
+honest raw-log reconstruction, not a rounded summary file):
+
+| stage | total (of 372 main_render calls started) | share | avg/call |
+|---|---|---|---|
+| `gt_render` | 24085s | 68.6% | 8.57s (n=2809 — ~7.5 GT channels rendered per sample) |
+| `main_render` | 10324s | 29.4% | 27.75s |
+| `image_encode_io` | 454s | 1.3% | 0.12s |
+| `texture_authoring` | 243s | 0.7% | 1.05s |
+| `scene_build` | 11s | 0.0% | — |
+| `hdri_load`/`hdri_download` | 0.3s | 0.0% | — |
+
+**Implied per-sample wall cost ≈ 94s** (stage-sum / main_render count), consistent with the
+clean-pace measurement taken mid-run (76–139s/sample, median ~76s — the 94s here includes
+the 372 main_render STARTS vs 281 samples actually COMPLETED, i.e. counts some in-flight
+work at the disk-guard kill). **`gt_render` dominates at 69%** — the AOV/GT-v3 export
+(`--gt-b --gt-aov`) is the single biggest cost lever for the cloud run's per-sample price;
+`--no-tex-dump`/`--exr-codec DWAA` control storage but not render time. Pricing a cloud
+20k run: ~94s × 20000 ≈ 522 GPU-hours at this per-sample rate (single-stream; the farm's
+multi-shard overlap, per `docs/RENDER_AT_SCALE.md`, should cut wall time well below that on
+a multi-GPU node — no multi-shard data collected this run, since disk (not GPU idle time)
+was the binding constraint locally).
+
+### Boards + backup
+
+Boards refreshed over the full 348 (`board_overview.jpg` samples 40 of 348 evenly spread
+across all 17 recipes for legibility; `board_crop_workflow.jpg`/`board_shadows.jpg` keep
+their per-recipe/shadow-only representative caps). `pilot_053_out` (20 G, 348 samples)
+copied to `gdrive:vitrai-lab-backup/pilot_053_deployment` via `rclone copy` before this
+report was finalized (lab backup-before-cleanup-eligible policy).
