@@ -7,12 +7,17 @@ cropped: a few percent of padding/trim error, a small handheld tilt, a scale/zoo
 and (when the app or the user rectifies it) a four-corner perspective correction. A model trained
 only on the perfect framing learns to rely on it.
 
-This pass takes a finished sample dir and applies ONE synthetic user-crop homography, IDENTICALLY,
-to the photo AND every rendered GT channel — so the maps stay pixel-registered to the cropped
-sheet. It emits (1) the full cropped sheet and (2) several local DETAIL PATCHES (the close-up
-crops an app would send for fine texture work), and records the exact 3x3 transform + patch boxes
-into meta.json so any downstream consumer can re-derive the registration or warp a channel this
-pass skipped.
+This pass takes a finished sample dir and applies ONE synthetic user-crop homography. Report
+053b STORAGE FIX: the original 053 pass materialized a cropped duplicate of EVERY GT channel
+into crop/ (~150 MB/sample — tripling the honest ~80 MB/sample render cost and blowing the
+disk budget at scale). GT crops are now LAZY: this pass writes ONLY
+  (1) the cropped PHOTO sheet(s) (crop/*_shadow_photo.png — small, human-viewable, board fuel),
+  (2) the local DETAIL PATCHES (photo + a few GT channels at patch size — small), and
+  (3) the exact 3x3 transform + capture_geometry + patch boxes into meta.json.
+Any consumer that needs a cropped GT channel warps it on the fly from the ORIGINAL file with the
+stored homography (`warp_channel` below; `foundation/dataset.py` does this at load time via
+`crop_view=True`). Equivalence of the lazy warp vs the old materialized crops is asserted by
+`verify_lazy_crop_053b.py` on data that carries both representations.
 
 Determinism: the transform RNG is keyed on the sample's seed (parsed from meta.json), so the crop
 is reproducible and a re-run is idempotent. The `capture_geometry` it stamps into meta.json feeds
@@ -72,6 +77,18 @@ def _interp_for(name):
     return cv2.INTER_NEAREST if any(k in name for k in NEAREST_KEYS) else cv2.INTER_LINEAR
 
 
+def warp_channel(img, M, name="", out_wh=None):
+    """THE single source of truth for the crop warp (report 053b): identical conventions for
+    the materialized photo crop, the patch GT, the lazy loader (dataset.py crop_view), and the
+    equivalence test. LINEAR for continuous channels, NEAREST for label channels (by `name`),
+    BORDER_REPLICATE. `M` is meta['crop_sim']['homography_src_to_crop'] (list or ndarray)."""
+    M = np.asarray(M, dtype=np.float64)
+    H, W = img.shape[:2]
+    out_wh = out_wh or (W, H)
+    return cv2.warpPerspective(img, M, out_wh, flags=_interp_for(name),
+                               borderMode=cv2.BORDER_REPLICATE)
+
+
 def build_crop_homography(H, W, rng, perspective_prob=0.35):
     """Return (M 3x3, geometry_label, params). M maps SOURCE pixel coords -> CROPPED output
     coords (same HxW canvas). Composes a small scale, tilt, and pad/trim translation, plus an
@@ -125,44 +142,39 @@ def apply_crop_to_sample(sample_dir, n_patches=3, patch=320, perspective_prob=0.
     out_dir = os.path.join(sample_dir, "crop")
     os.makedirs(out_dir, exist_ok=True)
 
+    # --- 053b: materialize ONLY the cropped photo sheet(s); GT channels stay lazy ---
+    photo_names = [c for c in ("without_shadow_photo.png", "with_shadow_photo.png")
+                   if os.path.exists(os.path.join(sample_dir, c))]
     warped_paths = []
-    for path in sorted(glob.glob(os.path.join(sample_dir, "*.png")) +
-                       glob.glob(os.path.join(sample_dir, "*.exr"))):
-        name = os.path.splitext(os.path.basename(path))[0]
-        if any(k in name for k in SKIP_KEYS):
+    photo_crops = {}
+    for c in photo_names:
+        img = _read(os.path.join(sample_dir, c))
+        if img is None:
             continue
-        img = _read(path)
-        if img is None:                              # cv2 couldn't decode (e.g. DWAA multilayer)
-            continue
-        w = cv2.warpPerspective(img, M, (W, H), flags=_interp_for(name),
-                                borderMode=cv2.BORDER_REPLICATE)
-        outp = os.path.join(out_dir, os.path.basename(path))
-        cv2.imwrite(outp, w)
-        warped_paths.append(os.path.basename(path))
+        w = warp_channel(img, M, c)
+        cv2.imwrite(os.path.join(out_dir, c), w)
+        photo_crops[c] = w
+        warped_paths.append(c)
 
-    # --- local detail patches (from the cropped photo + core GT), inside the valid interior ---
-    photo_c = None
-    for cand in ("without_shadow_photo.png", "with_shadow_photo.png"):
-        p = os.path.join(out_dir, cand)
-        if os.path.exists(p):
-            photo_c = _read(p)
-            break
+    # --- local detail patches (photo + a few small GT crops, warped IN MEMORY only) ---
     patches = []
-    if photo_c is not None:
+    if photo_crops:
         ph = min(patch, H, W)
         margin = int(0.06 * min(H, W))               # avoid the crop's replicate-border ring
-        patch_channels = [c for c in ("without_shadow_photo.png", "with_shadow_photo.png",
-                                      "gt_T.png", "gt_h.png", "gt_sigma_s.png", "gt_mark_mask.png")
-                          if os.path.exists(os.path.join(out_dir, c))]
+        gt_patch_names = [c for c in ("gt_T.png", "gt_h.png", "gt_sigma_s.png", "gt_mark_mask.png")
+                          if os.path.exists(os.path.join(sample_dir, c))]
+        gt_warped = {}
+        for c in gt_patch_names:                     # warp once per channel, slice per patch
+            img = _read(os.path.join(sample_dir, c))
+            if img is not None:
+                gt_warped[c] = warp_channel(img, M, c)
         pdir = os.path.join(sample_dir, "patches")
         os.makedirs(pdir, exist_ok=True)
         for i in range(n_patches):
             y0 = int(rng.integers(margin, max(margin + 1, H - ph - margin)))
             x0 = int(rng.integers(margin, max(margin + 1, W - ph - margin)))
-            for c in patch_channels:
-                src_img = _read(os.path.join(out_dir, c))
-                crop = src_img[y0:y0 + ph, x0:x0 + ph]
-                cv2.imwrite(os.path.join(pdir, f"patch{i:02d}_{c}"), crop)
+            for c, arr in list(photo_crops.items()) + list(gt_warped.items()):
+                cv2.imwrite(os.path.join(pdir, f"patch{i:02d}_{c}"), arr[y0:y0 + ph, x0:x0 + ph])
             patches.append({"idx": i, "x0": x0, "y0": y0, "size": ph})
 
     # --- record transform + geometry into meta.json (registration is now documented) ---
@@ -172,9 +184,12 @@ def apply_crop_to_sample(sample_dir, n_patches=3, patch=320, perspective_prob=0.
     meta["capture_geometry"] = geometry
     meta["crop_sim"] = {"homography_src_to_crop": M.tolist(), "params": params,
                         "cropped_channels": warped_paths, "patches": patches,
-                        "note": "M maps source-render pixel coords -> cropped-sheet coords; "
-                                "same M applied to every channel (LINEAR continuous / NEAREST "
-                                "labels); multilayer AOVs skipped, warp later with stored M."}
+                        "gt_crops": "lazy",
+                        "note": "053b: M maps source-render pixel coords -> cropped-sheet "
+                                "coords. Only the photo sheet(s) + patches are materialized; "
+                                "warp any GT channel on demand with crop_sim.warp_channel "
+                                "(LINEAR continuous / NEAREST labels, BORDER_REPLICATE) — "
+                                "foundation/dataset.py crop_view=True does this at load time."}
     with open(os.path.join(sample_dir, "meta.json"), "w") as f:
         json.dump(meta, f, indent=2)
     return {"dir": sample_dir, "geometry": geometry, "n_patches": len(patches),

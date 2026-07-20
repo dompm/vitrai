@@ -183,12 +183,26 @@ class FoundationDelighter(nn.Module):
         return z * self.vae_scale
 
     def decode(self, z):
+        # History (report 040, ported to this branch in 053b's pre-flight series): this WAS
+        # the site of the severed-T-gradient bug -- `torch.no_grad()` here not only kept the
+        # (already-frozen) VAE weights fixed, it ALSO cut the gradient path from T's
+        # pixel-space loss back to z_T_hat, so T's own supervision never reached the LoRA
+        # (gate1b: T-only loss bit-for-bit frozen for 100+ steps). Removing the no_grad
+        # fixed the path but cost ~1GB+ of decoder activations at train res. The DURABLE
+        # fix: T is supervised in LATENT space (train.py compute_losses, MSE vs z_T_hat),
+        # so decode() is visualization/eval-only again and correctly stays no_grad.
         with torch.no_grad():
             img = self.vae.decode((z / self.vae_scale).to(self.vae.dtype)).sample
         return (img.float() * 0.5 + 0.5)  # -> [0,1]
 
-    def forward(self, photo01):
-        """photo01: (B,3,H,W) in [0,1] scene-referred-ish. Returns dict of full-res maps."""
+    def forward(self, photo01, need_T=True):
+        """photo01: (B,3,H,W) in [0,1] scene-referred-ish. Returns dict of full-res maps.
+
+        `need_T=False` skips the VAE decode entirely (out["T"] is None) -- T is supervised
+        in latent space (z_T_hat), so decode() is purely a visualization/metric convenience,
+        not on the training path. Report 040: at larger batch sizes the decode's own
+        forward-pass memory could OOM by itself, so callers pass need_T=True only on steps
+        that actually consume out["T"] (periodic pixel metrics/snapshots)."""
         B, _, H, W = photo01.shape
         z_rgb = self.encode(photo01).float()
         extra = max(self.unet_in - z_rgb.shape[1], 0)
@@ -200,14 +214,18 @@ class FoundationDelighter(nn.Module):
         # read the primary intrinsic latent from the first block of the UNet output
         z_T_hat = self.unet(zc, timestep=t, encoder_hidden_states=ehs).sample[:, :self.latent_ch].float()
 
-        T = self.decode(z_T_hat).clamp(0, 1)                      # (B,3,H,W) via frozen VAE
-        if T.shape[-2:] != (H, W):
-            T = F.interpolate(T, size=(H, W), mode="bilinear", align_corners=False)
+        T = None
+        if need_T:
+            T = self.decode(z_T_hat).clamp(0, 1)                  # (B,3,H,W) via frozen VAE
+            if T.shape[-2:] != (H, W):
+                T = F.interpolate(T, size=(H, W), mode="bilinear", align_corners=False)
 
         feat = torch.cat([z_rgb, z_T_hat], dim=1)
         aux = self.aux(feat, (H, W))
         i = 0
-        out = {"T": T}
+        # z_T_hat exposed so the caller can supervise T directly in latent space
+        # (train.py's compute_losses) without a second UNet forward pass.
+        out = {"T": T, "z_T_hat": z_T_hat}
         for name in AUX_CHANNELS:
             d = AUX_DIMS[name]
             ch = aux[:, i:i + d]

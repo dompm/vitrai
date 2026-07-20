@@ -71,7 +71,13 @@ def _grid(cells, ncol):
     return np.concatenate(rows, 0)
 
 
-def board_overview(dirs, out, cell=256, ncol=5):
+def board_overview(dirs, out, cell=256, ncol=5, max_cells=40):
+    # Report 053b (348-sample scaled run): a full board is unreviewable and multi-MB.
+    # Sample a REPRESENTATIVE, deterministic subset spread evenly across the sorted dirs
+    # (which are naturally grouped by recipe/seed) so every recipe still gets coverage.
+    if len(dirs) > max_cells:
+        step = len(dirs) / max_cells
+        dirs = [dirs[int(i * step)] for i in range(max_cells)]
     cells = []
     for d in dirs:
         p = _photo(d)

@@ -229,75 +229,100 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
     model.eval()
 
     ds = GlassDelightDataset(data_roots, split="test", augment=False, input_variant="without")
-    print(f"[eval] {len(ds)} HELD-OUT test samples (seed%5==0 / 800-812) | backbone={backbone}")
-    preds = []
+    print(f"[eval] {len(ds)} HELD-OUT test samples (seed%5==0 / 800-812 / §3b-ext) | backbone={backbone}")
+
+    # 053b pre-flight fix 3: eval used ONLY clean linear renders — never a phone-processed
+    # input (undermining the 053 realism premise) and never the held-out wide_edge preset.
+    # Each test photo now ALSO runs through every ISP preset (deterministic per-sample rng);
+    # metrics are reported per-preset with the held-out preset broken out, plus the clean row
+    # for continuity with all pre-053b numbers.
+    from phone_pipeline import apply_phone_pipeline, PRESET_NAMES
+    from dataset import TEST_ONLY_PRESETS
+    conds = ["clean"] + list(PRESET_NAMES)
+    preds_by = {c: [] for c in conds}
     for i in range(len(ds)):
         rec = ds.load_full(i, variant="without")
         if rec is None:
             continue
-        try:
-            preds.append(predict(model, rec, device, work))
-            print(f"  {preds[-1]['recipe']:22s} seed{preds[-1]['seed']}")
-        except RuntimeError as e:
-            print(f"  [skip {rec['recipe']} seed{rec['seed']}] {str(e)[:80]}")
+        for cond in conds:
+            r2 = dict(rec)
+            if cond != "clean":
+                prng = np.random.default_rng((hash((rec["recipe"], rec["seed"], cond)) & 0x7fffffff))
+                r2["photo"], _ = apply_phone_pipeline(rec["photo"], prng, preset_name=cond)
+            try:
+                preds_by[cond].append(predict(model, r2, device, work))
+            except RuntimeError as e:
+                print(f"  [skip {rec['recipe']} seed{rec['seed']} {cond}] {str(e)[:70]}")
+        print(f"  {rec['recipe']:22s} seed{rec['seed']} x {len(conds)} conditions")
         if device == "mps":
             torch.mps.empty_cache()
 
-    # --- GT accuracy + texture family 2 (per sample) ---
-    T_maes, h_maes, retained, fcs, fine_corr = [], [], [], [], []
-    sig_maes, sig_relight_l1, sig_relight_scale = [], [], []
-    for p in preds:
-        v = p["valid"][..., 0]
-        T_maes.append(float(np.abs(p["T"] - p["gtT"])[v].mean()))
-        h_maes.append(float(np.abs(p["h"] - p["gth"])[v].mean()))
-        tex = etp.evaluate(p["gtT"], p["T"], mask=v)          # ref=authored gt_T, test=pred T
-        retained.append(tex["mgp"]["fine_retained_energy"])
-        fine_corr.append(tex["mgp"]["fine_grad_corr"])
-        if tex["fcs"]["survival"] is not None:
-            fcs.append(tex["fcs"]["survival"])
-        # report 053 / 048-owed: σ_s MAE + structured-checker relight L1 (held-out identities
-        # only). Scored where the model emits σ_s AND the sample carries a supervised gt_σ_s.
-        if p.get("sigma_s") is not None and p.get("has_sigma_s"):
-            sig_maes.append(float(np.abs(p["sigma_s"] - p["gt_sigma_s"])[v].mean()))
-            l1, scale = sigma_s_relight_l1(p["sigma_s"][..., 0], p["gt_sigma_s"][..., 0], v)
-            sig_relight_l1.append(l1)
-            sig_relight_scale.append(scale)
+    def _row(preds):
+        """GT accuracy + texture family 2 + σ_s + family-1 invariance for one condition."""
+        T_maes, h_maes, retained, fcs, fine_corr = [], [], [], [], []
+        sig_maes, sig_relight_l1, sig_relight_scale = [], [], []
+        for p in preds:
+            v = p["valid"][..., 0]
+            T_maes.append(float(np.abs(p["T"] - p["gtT"])[v].mean()))
+            h_maes.append(float(np.abs(p["h"] - p["gth"])[v].mean()))
+            tex = etp.evaluate(p["gtT"], p["T"], mask=v)      # ref=authored gt_T, test=pred T
+            retained.append(tex["mgp"]["fine_retained_energy"])
+            fine_corr.append(tex["mgp"]["fine_grad_corr"])
+            if tex["fcs"]["survival"] is not None:
+                fcs.append(tex["fcs"]["survival"])
+            # report 053 / 048-owed: σ_s MAE + structured-checker relight L1
+            if p.get("sigma_s") is not None and p.get("has_sigma_s"):
+                sig_maes.append(float(np.abs(p["sigma_s"] - p["gt_sigma_s"])[v].mean()))
+                l1, scale = sigma_s_relight_l1(p["sigma_s"][..., 0], p["gt_sigma_s"][..., 0], v)
+                sig_relight_l1.append(l1)
+                sig_relight_scale.append(scale)
+        groups = {}
+        for p in preds:
+            groups.setdefault((p["recipe"], p["seed"]), []).append(p)
+        per_recipe_inv = {}
+        for (recipe, seed), members in groups.items():
+            if len(members) < 2:
+                continue
+            diffs = []
+            for a in range(len(members)):
+                for b in range(a + 1, len(members)):
+                    va = members[a]["valid"][..., 0] & members[b]["valid"][..., 0]
+                    if va.sum() == 0:
+                        continue
+                    diffs.append(float(np.abs(members[a]["T"] - members[b]["T"])[va].mean()))
+            if diffs:
+                per_recipe_inv.setdefault(recipe, []).extend(diffs)
+        recipe_inv = {r: float(np.mean(v)) for r, v in per_recipe_inv.items()}
+        inv_macro = float(np.mean(list(recipe_inv.values()))) if recipe_inv else None
+        return {
+            "invariance_T": inv_macro,
+            "T_mae": float(np.mean(T_maes)) if T_maes else None,
+            "h_mae": float(np.mean(h_maes)) if h_maes else None,
+            "retained_energy": float(np.mean(retained)) if retained else None,
+            "fine_grad_corr": float(np.mean(fine_corr)) if fine_corr else None,
+            "fcs": float(np.mean(fcs)) if fcs else None,
+            "sigma_s_mae": float(np.mean(sig_maes)) if sig_maes else None,
+            "sigma_s_relight_l1": float(np.mean(sig_relight_l1)) if sig_relight_l1 else None,
+            "sigma_s_relight_scale": float(np.mean(sig_relight_scale)) if sig_relight_scale else None,
+            "n_sigma_s": len(sig_maes),
+            "n_cross_lighting_groups": sum(1 for m in groups.values() if len(m) >= 2),
+        }, recipe_inv
 
-    # --- PRIMARY family 1: cross-capture consistency over same-(recipe,seed) groups ---
-    groups = {}
-    for p in preds:
-        groups.setdefault((p["recipe"], p["seed"]), []).append(p)
-    per_recipe_inv = {}
-    for (recipe, seed), members in groups.items():
-        if len(members) < 2:
-            continue
-        diffs = []
-        for a in range(len(members)):
-            for b in range(a + 1, len(members)):
-                va = members[a]["valid"][..., 0] & members[b]["valid"][..., 0]
-                if va.sum() == 0:
-                    continue
-                diffs.append(float(np.abs(members[a]["T"] - members[b]["T"])[va].mean()))
-        if diffs:
-            per_recipe_inv.setdefault(recipe, []).extend(diffs)
-    recipe_inv = {r: float(np.mean(v)) for r, v in per_recipe_inv.items()}
-    inv_macro = float(np.mean(list(recipe_inv.values()))) if recipe_inv else None
+    preds = preds_by["clean"]                 # continuity: headline row & calibration = clean
+    per_preset = {}
+    for cond in conds:
+        row, rinv = _row(preds_by[cond])
+        row["held_out_preset"] = cond in TEST_ONLY_PRESETS
+        per_preset[cond] = row
+        if cond == "clean":
+            recipe_inv = rinv
+            inv_macro = row["invariance_T"]
 
     cal = calibration(preds)
 
-    model_row = {
-        "invariance_T": inv_macro,
-        "T_mae": float(np.mean(T_maes)), "h_mae": float(np.mean(h_maes)),
-        "retained_energy": float(np.mean(retained)), "fine_grad_corr": float(np.mean(fine_corr)),
-        "fcs": float(np.mean(fcs)) if fcs else None,
-        # report 053: σ_s accuracy (MAE like h) + structured-background relight L1 (045/046
-        # methodology). n_sigma_s counts held-out samples with a supervised gt_σ_s.
-        "sigma_s_mae": float(np.mean(sig_maes)) if sig_maes else None,
-        "sigma_s_relight_l1": float(np.mean(sig_relight_l1)) if sig_relight_l1 else None,
-        "sigma_s_relight_scale": float(np.mean(sig_relight_scale)) if sig_relight_scale else None,
-        "n_sigma_s": len(sig_maes),
-        "n_cross_lighting_groups": sum(1 for m in groups.values() if len(m) >= 2),
-    }
+    # headline row = CLEAN condition (continuity with every pre-053b number); the ISP
+    # conditions live in report["per_preset"], the held-out device flagged.
+    model_row = per_preset["clean"]
 
     # --- continuation gate ---
     re = model_row["retained_energy"]
@@ -321,7 +346,10 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
 
     report = {"backbone": backbone, "ckpt": ckpt, "work_res": work,
               "n_test": len(preds), "model": model_row, "calibration": cal,
-              "per_recipe_invariance": recipe_inv, "frozen_reference": FROZEN, "gate": gate}
+              "per_recipe_invariance": recipe_inv, "frozen_reference": FROZEN, "gate": gate,
+              # 053b: same metrics per ISP condition; "clean" == model row; the held-out
+              # device preset (dataset.TEST_ONLY_PRESETS) carries held_out_preset=True.
+              "per_preset": per_preset}
     with open(os.path.join(out_dir, "eval.json"), "w") as f:
         json.dump(report, f, indent=2)
     _write_table(report, os.path.join(out_dir, "baseline_ladder.md"))
@@ -374,6 +402,17 @@ def _write_table(rep, path):
         "checker relit by pred σ_s vs GT σ_s (045/046) |",
         f"| — GT-relight scale (context) | {_fmt(m.get('sigma_s_relight_scale'))} | GT σ_s vs "
         "no-scatter; read L1 against this |",
+        "",
+        "**Per-ISP-preset breakdown (053b — deployment inputs, not just clean renders).**",
+        "'clean' repeats the headline row; the held-out device preset is marked ✋ (never",
+        "seen in training — the preset-generalization axis).",
+        "",
+        "| condition | invariance_T ↓ | T-MAE ↓ | h-MAE ↓ | σ_s-MAE ↓ | retained-energy |",
+        "|---|---|---|---|---|---|",
+        *[f"| {c}{' ✋' if r.get('held_out_preset') else ''} | {_fmt(r['invariance_T'])} | "
+          f"{_fmt(r['T_mae'])} | {_fmt(r['h_mae'])} | {_fmt(r.get('sigma_s_mae'))} | "
+          f"{_fmt(r.get('retained_energy'))} |"
+          for c, r in rep.get("per_preset", {}).items()],
         "",
         "**Family 4 — confidence calibration (§1d).**",
         "",

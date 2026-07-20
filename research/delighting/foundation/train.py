@@ -58,15 +58,28 @@ def collate(dataset, bs, device):
 
 def compute_losses(out, batch, w):
     """OUTPUT_CONTRACT-tier-1 supervised losses. `valid` = sheet minus marks; T is
-    up-weighted inside cast shadow (the region reports 008/010 flag as the hard case)."""
-    valid = batch["valid"]                              # (B,1,H,W)
-    shadow = batch["shadow"]
-    vv = valid.expand_as(out["T"])
-    wmap = valid * (1.0 + 8.0 * shadow)                 # emphasise shadow recovery
-    wmap3 = wmap.expand_as(out["T"])
+    up-weighted inside cast shadow (the region reports 008/010 flag as the hard case).
 
-    # T: L1 in gamma space (perceptual), shadow-weighted
-    l_T = (torch.abs(_gamma(out["T"]) - _gamma(batch["T"])) * wmap3).sum() / wmap3.sum().clamp_min(1)
+    T is supervised in LATENT space (report 040, ported in 053b's pre-flight series): the
+    old pixel-space L1 went through decode(), whose `torch.no_grad()` SEVERED T's gradient
+    to the LoRA entirely (gate1b: T-only loss bit-for-bit frozen 100+ steps) — and removing
+    the no_grad cost ~1GB+ of frozen-VAE decoder activations. MSE against `out["z_T_hat"]`
+    (the UNet's own output) is directly on the trainable path with none of that cost — the
+    standard latent-diffusion training target anyway. `batch["z_T_gt"]` must be precomputed
+    by the caller via `model.encode(batch["T"])` under no_grad (see train_loop). The shadow
+    up-weighting survives by adaptive-pooling the pixel (valid, shadow) map to z resolution."""
+    assert "z_T_hat" in out, "backbone.forward() must expose z_T_hat (latent T)"
+    assert "z_T_gt" in batch, ("caller must set batch['z_T_gt'] = model.encode(batch['T']) "
+                               "under no_grad before compute_losses")
+    valid = batch["valid"]                              # (B,1,H,W), pixel space
+    shadow = batch["shadow"]
+    wmap = valid * (1.0 + 8.0 * shadow)                 # emphasise shadow recovery
+    with torch.no_grad():
+        wmap_lat = F.adaptive_avg_pool2d(wmap, out["z_T_hat"].shape[-2:])
+    wmap_lat = wmap_lat.expand_as(out["z_T_hat"])
+
+    # T: MSE in latent space, shadow-weighted (see docstring)
+    l_T = (((out["z_T_hat"] - batch["z_T_gt"]) ** 2) * wmap_lat).sum() / wmap_lat.sum().clamp_min(1)
     # h
     l_h = (torch.abs(out["h"] - batch["h"]) * valid).sum() / valid.sum().clamp_min(1)
     # sigma_s (report 048): L1 in authored-linear [0,1], valid-masked, ONLY on renders
@@ -85,10 +98,15 @@ def compute_losses(out, batch, w):
     l_mk = (F.binary_cross_entropy_with_logits(out["mark_logit"], batch["mark"], reduction="none") * valid).sum() / valid.sum().clamp_min(1)
     # confidence: predict its OWN T error (EVAL_PROTOCOL §1d). target = exp(-err/tau),
     # high where the model's T is accurate. err detached so conf can't cheat by hurting T.
-    with torch.no_grad():
-        err = torch.abs(out["T"].detach() - batch["T"]).mean(1, keepdim=True)  # sRGB-ish
-        conf_target = torch.exp(-err / 0.05)
-    l_conf = (torch.abs(out["conf"] - conf_target) * valid).sum() / valid.sum().clamp_min(1)
+    # out["T"] is None on need_T=False steps (report 040: decode() is a metric/visualization
+    # convenience, off the training path) — conf simply gets no supervision that step.
+    if out["T"] is not None:
+        with torch.no_grad():
+            err = torch.abs(out["T"].detach() - batch["T"]).mean(1, keepdim=True)  # sRGB-ish
+            conf_target = torch.exp(-err / 0.05)
+        l_conf = (torch.abs(out["conf"] - conf_target) * valid).sum() / valid.sum().clamp_min(1)
+    else:
+        l_conf = torch.zeros((), device=out["z_T_hat"].device, dtype=out["z_T_hat"].dtype)
 
     total = (w["T"] * l_T + w["h"] * l_h + w["sigma_s"] * l_sigma_s + w["B"] * l_B +
              w["shadow"] * l_sh + w["mark"] * l_mk + w["conf"] * l_conf)
@@ -109,6 +127,13 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     weights = weights or {"T": 6.0, "h": 2.0, "sigma_s": 2.0, "B": 2.0,
                           "shadow": 1.0, "mark": 1.0, "conf": 1.0}
 
+    # Report 040 (ported, 053b pre-flight): the gradient-flow preflight runs UNCONDITIONALLY
+    # before any training step, local or cloud — a severed head (the decode()-no_grad bug
+    # class) fails LOUD in under a minute instead of silently wasting the whole run. Uses the
+    # tiny backbone + a synthetic batch, so it costs seconds and needs no data/downloads.
+    from test_grad_flow import preflight_or_raise
+    preflight_or_raise(backbone="tiny", device=device)
+
     ds = GlassDelightDataset(data_roots, split="train", crop=crop, augment=True)
     print(f"[train] {len(ds)} TRAIN identities-crops source | backbone={backbone} device={device}")
     print(f"[train] recipes: {sorted({s['recipe'] for s in ds.samples})}")
@@ -124,8 +149,15 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     log, t0 = [], time.time()
     model.train()
     for step in range(steps):
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         batch = collate(ds, bs, device)
-        out = model(batch["photo"].clamp(0, None))
+        with torch.no_grad():
+            batch["z_T_gt"] = model.encode(batch["T"].clamp(0, 1))
+        # decode() only on steps that log/use pixel-space T (report 040: T trains latent-only;
+        # the decode's own forward memory can OOM a big batch by itself).
+        need_T = (step % log_every == 0) or (step == steps - 1)
+        out = model(batch["photo"].clamp(0, None), need_T=need_T)
         loss, parts = compute_losses(out, batch, weights)
         opt.zero_grad()
         loss.backward()
