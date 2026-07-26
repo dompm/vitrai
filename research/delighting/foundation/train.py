@@ -146,7 +146,7 @@ the saved step; the JSONL log is appended, not truncated.
 def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
                lr=1e-3, lora_rank=8, device=None, fp32=True, cache_only=False,
                log_every=10, save_every=None, weights=None,
-               crop_view=True, patch_prob=0.2, resume=False, argv=""):
+               crop_view=True, patch_prob=0.2, resume=False, argv="", snapshot_every=None):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available()
                         else "cuda" if torch.cuda.is_available() else "cpu")
@@ -201,12 +201,18 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
         print(f"[train] RESUMED from {state_p} at step {start_step}")
 
     def _save(step):
-        """Atomic-ish checkpoint: adapter + optimizer/scheduler state + breadcrumb."""
+        """Atomic-ish checkpoint: adapter + optimizer/scheduler state + breadcrumb.
+        tmp+rename so a kill mid-write cannot leave a truncated adapter behind."""
         model.save_adapter(ckpt + ".tmp")
         os.replace(ckpt + ".tmp", ckpt)
         torch.save({"opt": opt.state_dict(), "sched": sched.state_dict(), "step": step},
                    state_p + ".tmp")
         os.replace(state_p + ".tmp", state_p)
+        # Keep a COARSE ladder of immortal snapshots alongside the rolling adapter: with a
+        # small identity pool a long run can overfit, and the rolling checkpoint alone leaves
+        # no way to score an earlier point without retraining.
+        if snapshot_every and step and step % snapshot_every == 0:
+            model.save_adapter(os.path.join(out_dir, f"adapter_step{step:06d}.pt"))
         _write_resume(out_dir, step, steps, argv, list(data_roots), backbone, crop, bs, lr)
 
     log, t0 = [], time.time()
@@ -276,6 +282,8 @@ def main():
                     help="probability a draw is a native-res detail patch (two-view diet)")
     ap.add_argument("--resume", action="store_true",
                     help="continue from <out>/train_state.pt (adapter + optimizer + step)")
+    ap.add_argument("--snapshot-every", type=int, default=None,
+                    help="also keep an immortal adapter_step<N>.pt at this coarser cadence")
     args = ap.parse_args()
     if args.smoke:
         args.backbone, args.steps, args.crop, args.bs = "tiny", args.steps or 150, 256, 2
@@ -285,7 +293,7 @@ def main():
                fp32=not args.fp16, cache_only=args.cache_only,
                log_every=args.log_every, save_every=args.save_every,
                crop_view=not args.no_crop_view, patch_prob=args.patch_prob,
-               resume=args.resume, argv=argv)
+               resume=args.resume, argv=argv, snapshot_every=args.snapshot_every)
 
 
 if __name__ == "__main__":
