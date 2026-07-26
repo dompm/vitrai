@@ -221,14 +221,19 @@ def calibration(preds, tau=8 / 255.0, nbins=10):
     return {"spearman_conf_negerr": sp, "ece_tau8": float(ece), "n_pixels": int(len(conf))}
 
 
-def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_only=False):
+def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_only=False,
+             crop_view=True):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
     model = FoundationDelighter(backbone=backbone, freeze_backbone=True, cache_only=cache_only).to(device)
     model.load_adapter(ckpt, map_location=device)
     model.eval()
 
-    ds = GlassDelightDataset(data_roots, split="test", augment=False, input_variant="without")
+    # 055: match the TRAINING sheet geometry (train.py defaults crop_view=True). Scoring the
+    # cropped view on a model trained on cropped views keeps the eval on-domain; roots with no
+    # crop_sim meta (old-style batches) load unwarped either way.
+    ds = GlassDelightDataset(data_roots, split="test", augment=False, input_variant="without",
+                             crop_view=crop_view)
     print(f"[eval] {len(ds)} HELD-OUT test samples (seed%5==0 / 800-812 / §3b-ext) | backbone={backbone}")
 
     # 053b pre-flight fix 3: eval used ONLY clean linear renders — never a phone-processed
@@ -441,9 +446,11 @@ def main():
     ap.add_argument("--device", default=None)
     ap.add_argument("--work", type=int, default=512, help="working resolution (max dim)")
     ap.add_argument("--cache-only", action="store_true")
+    ap.add_argument("--no-crop-view", action="store_true",
+                    help="score the FULL uncropped render (pre-053b behaviour)")
     args = ap.parse_args()
     evaluate(args.ckpt, args.backbone, args.data, args.out, device=args.device,
-             work=args.work, cache_only=args.cache_only)
+             work=args.work, cache_only=args.cache_only, crop_view=not args.no_crop_view)
 
 
 if __name__ == "__main__":

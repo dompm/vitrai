@@ -115,9 +115,38 @@ def compute_losses(out, batch, w):
                    "conf": float(l_conf), "total": float(total)}
 
 
+def _write_resume(out_dir, step, steps, argv, roots, backbone, crop, bs, lr):
+    """Breadcrumb next to the adapter (lab rule): a session boundary must never cost more
+    than the steps since the last checkpoint. Rewritten at every save."""
+    txt = f"""# RESUME — 055 train-once pilot
+
+Last checkpoint: **step {step} / {steps}** (written {time.strftime('%Y-%m-%d %H:%M:%S')}).
+
+- adapter:     `{os.path.join(out_dir, 'adapter.pt')}`
+- train state: `{os.path.join(out_dir, 'train_state.pt')}` (optimizer + scheduler + step)
+- loss log:    `{os.path.join(out_dir, 'train_log.jsonl')}` (one JSON object per logged step)
+
+Config: backbone={backbone} crop={crop} bs={bs} lr={lr}
+Data roots:
+{chr(10).join('  - ' + r for r in roots)}
+
+## Resume the run
+
+```
+caffeinate -i {argv} --resume
+```
+
+`--resume` reloads adapter + optimizer + scheduler from `train_state.pt` and continues at
+the saved step; the JSONL log is appended, not truncated.
+"""
+    with open(os.path.join(out_dir, "RESUME.md"), "w") as f:
+        f.write(txt)
+
+
 def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
                lr=1e-3, lora_rank=8, device=None, fp32=True, cache_only=False,
-               log_every=10, save_every=None, weights=None):
+               log_every=10, save_every=None, weights=None,
+               crop_view=True, patch_prob=0.2, resume=False, argv=""):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available()
                         else "cuda" if torch.cuda.is_available() else "cpu")
@@ -134,9 +163,22 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     from test_grad_flow import preflight_or_raise
     preflight_or_raise(backbone="tiny", device=device)
 
-    ds = GlassDelightDataset(data_roots, split="train", crop=crop, augment=True)
+    # 055: the two-view deployment diet is now explicit. `crop_view=True` serves the
+    # user-CROPPED sheet (lazy homography warp, 053b) — without it the "sheet" view is the
+    # full uncropped render, i.e. NOT the deployment geometry the 053 pilot was built to
+    # simulate; `patch_prob` mixes in native-res detail patches. Old-style roots carry no
+    # crop_sim meta and load unwarped, so a mixed-domain root list is safe.
+    ds = GlassDelightDataset(data_roots, split="train", crop=crop, augment=True,
+                             crop_view=crop_view, patch_prob=patch_prob)
     print(f"[train] {len(ds)} TRAIN identities-crops source | backbone={backbone} device={device}")
+    print(f"[train] crop_view={crop_view} patch_prob={patch_prob} crop={crop} bs={bs}")
     print(f"[train] recipes: {sorted({s['recipe'] for s in ds.samples})}")
+    per_root = {}
+    for s in ds.samples:
+        per_root[os.path.dirname(s["dir"].rstrip("/"))] = per_root.get(
+            os.path.dirname(s["dir"].rstrip("/")), 0) + 1
+    for r, n in sorted(per_root.items()):
+        print(f"[train]   domain mix: {n:4d} train samples from {r}")
 
     model = FoundationDelighter(backbone=backbone, dtype=dtype, freeze_backbone=True,
                                 lora_rank=lora_rank, cache_only=cache_only).to(device)
@@ -146,9 +188,30 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
     opt = torch.optim.AdamW(tp, lr=lr, weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, steps)
 
+    ckpt = os.path.join(out_dir, "adapter.pt")
+    state_p = os.path.join(out_dir, "train_state.pt")
+    jsonl_p = os.path.join(out_dir, "train_log.jsonl")
+    start_step = 0
+    if resume and os.path.exists(state_p):
+        st = torch.load(state_p, map_location=device, weights_only=False)
+        model.load_adapter(ckpt, map_location=device)
+        opt.load_state_dict(st["opt"])
+        sched.load_state_dict(st["sched"])
+        start_step = int(st["step"]) + 1
+        print(f"[train] RESUMED from {state_p} at step {start_step}")
+
+    def _save(step):
+        """Atomic-ish checkpoint: adapter + optimizer/scheduler state + breadcrumb."""
+        model.save_adapter(ckpt + ".tmp")
+        os.replace(ckpt + ".tmp", ckpt)
+        torch.save({"opt": opt.state_dict(), "sched": sched.state_dict(), "step": step},
+                   state_p + ".tmp")
+        os.replace(state_p + ".tmp", state_p)
+        _write_resume(out_dir, step, steps, argv, list(data_roots), backbone, crop, bs, lr)
+
     log, t0 = [], time.time()
     model.train()
-    for step in range(steps):
+    for step in range(start_step, steps):
         if torch.backends.mps.is_available():
             torch.mps.empty_cache()
         batch = collate(ds, bs, device)
@@ -167,19 +230,24 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
         if step % log_every == 0 or step == steps - 1:
             parts["step"] = step
             parts["sec"] = round(time.time() - t0, 1)
+            parts["lr"] = float(sched.get_last_lr()[0])
             log.append(parts)
+            # append-as-you-go (055): a killed session must still leave the whole curve on
+            # disk — the end-of-run train_log.json alone loses everything on an interrupt.
+            with open(jsonl_p, "a") as f:
+                f.write(json.dumps(parts) + "\n")
             print(f"  step {step:4d}  total={parts['total']:.4f}  "
                   f"T={parts['T']:.4f} h={parts['h']:.4f} ss={parts['sigma_s']:.4f} "
                   f"B={parts['B']:.4f} "
                   f"sh={parts['shadow']:.4f} mk={parts['mark']:.4f} cf={parts['conf']:.4f}  "
-                  f"{parts['sec']:.0f}s")
+                  f"{parts['sec']:.0f}s", flush=True)
         if save_every and step and step % save_every == 0:
-            model.save_adapter(os.path.join(out_dir, "adapter.pt"))
+            _save(step)
+            print(f"  [ckpt] step {step} -> {ckpt}", flush=True)
 
-    ckpt = os.path.join(out_dir, "adapter.pt")
-    model.save_adapter(ckpt)
+    _save(steps - 1)
     json.dump(log, open(os.path.join(out_dir, "train_log.json"), "w"), indent=2)
-    print(f"[train] saved {ckpt} ({os.path.getsize(ckpt)} bytes) + train_log.json")
+    print(f"[train] saved {ckpt} ({os.path.getsize(ckpt)} bytes) + train_log.json/.jsonl")
     return model, log
 
 
@@ -199,12 +267,25 @@ def main():
     ap.add_argument("--cache-only", action="store_true", help="HF local_files_only (no download)")
     ap.add_argument("--smoke", action="store_true",
                     help="preset: backbone=tiny, 150 steps, 256 crop, bs2 (M4 loop test)")
+    ap.add_argument("--log-every", type=int, default=10)
+    ap.add_argument("--save-every", type=int, default=None,
+                    help="checkpoint (adapter+optimizer+RESUME.md) every N steps")
+    ap.add_argument("--no-crop-view", action="store_true",
+                    help="serve the FULL uncropped render as the sheet view (pre-053b behaviour)")
+    ap.add_argument("--patch-prob", type=float, default=0.2,
+                    help="probability a draw is a native-res detail patch (two-view diet)")
+    ap.add_argument("--resume", action="store_true",
+                    help="continue from <out>/train_state.pt (adapter + optimizer + step)")
     args = ap.parse_args()
     if args.smoke:
         args.backbone, args.steps, args.crop, args.bs = "tiny", args.steps or 150, 256, 2
+    argv = " ".join([sys.executable, os.path.abspath(__file__)] + sys.argv[1:])
     train_loop(args.data, args.out, backbone=args.backbone, steps=args.steps, bs=args.bs,
                crop=args.crop, lr=args.lr, lora_rank=args.lora_rank, device=args.device,
-               fp32=not args.fp16, cache_only=args.cache_only)
+               fp32=not args.fp16, cache_only=args.cache_only,
+               log_every=args.log_every, save_every=args.save_every,
+               crop_view=not args.no_crop_view, patch_prob=args.patch_prob,
+               resume=args.resume, argv=argv)
 
 
 if __name__ == "__main__":
