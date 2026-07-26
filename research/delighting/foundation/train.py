@@ -146,7 +146,8 @@ the saved step; the JSONL log is appended, not truncated.
 def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
                lr=1e-3, lora_rank=8, device=None, fp32=True, cache_only=False,
                log_every=10, save_every=None, weights=None,
-               crop_view=True, patch_prob=0.2, resume=False, argv="", snapshot_every=None):
+               crop_view=True, patch_prob=0.2, resume=False, argv="", snapshot_every=None,
+               mirror_dir=None):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available()
                         else "cuda" if torch.cuda.is_available() else "cpu")
@@ -214,6 +215,22 @@ def train_loop(data_roots, out_dir, backbone="tiny", steps=150, bs=2, crop=256,
         if snapshot_every and step and step % snapshot_every == 0:
             model.save_adapter(os.path.join(out_dir, f"adapter_step{step:06d}.pt"))
         _write_resume(out_dir, step, steps, argv, list(data_roots), backbone, crop, bs, lr)
+        # Durable mirror OUTSIDE the worktree. The 040 adapters were lost to a worktree
+        # cleanup race, so the checkpoint is copied to a plain local directory at EVERY save
+        # — this is the primary hedge and it survives Drive auth being down. Best-effort:
+        # a failed mirror must never take down a 14-hour training run.
+        if mirror_dir:
+            try:
+                os.makedirs(mirror_dir, exist_ok=True)
+                import shutil
+                for f in ("adapter.pt", "train_state.pt", "train_log.jsonl", "RESUME.md"):
+                    src = os.path.join(out_dir, f)
+                    if os.path.exists(src):
+                        shutil.copyfile(src, os.path.join(mirror_dir, f + ".tmp"))
+                        os.replace(os.path.join(mirror_dir, f + ".tmp"),
+                                   os.path.join(mirror_dir, f))
+            except Exception as e:
+                print(f"  [mirror] WARNING copy to {mirror_dir} failed: {e}", flush=True)
 
     log, t0 = [], time.time()
     model.train()
@@ -284,6 +301,8 @@ def main():
                     help="continue from <out>/train_state.pt (adapter + optimizer + step)")
     ap.add_argument("--snapshot-every", type=int, default=None,
                     help="also keep an immortal adapter_step<N>.pt at this coarser cadence")
+    ap.add_argument("--mirror-dir", default=None,
+                    help="mirror every checkpoint to this durable dir OUTSIDE the worktree")
     args = ap.parse_args()
     if args.smoke:
         args.backbone, args.steps, args.crop, args.bs = "tiny", args.steps or 150, 256, 2
@@ -293,7 +312,8 @@ def main():
                fp32=not args.fp16, cache_only=args.cache_only,
                log_every=args.log_every, save_every=args.save_every,
                crop_view=not args.no_crop_view, patch_prob=args.patch_prob,
-               resume=args.resume, argv=argv, snapshot_every=args.snapshot_every)
+               resume=args.resume, argv=argv, snapshot_every=args.snapshot_every,
+               mirror_dir=args.mirror_dir)
 
 
 if __name__ == "__main__":
