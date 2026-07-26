@@ -222,7 +222,7 @@ def calibration(preds, tau=8 / 255.0, nbins=10):
 
 
 def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_only=False,
-             crop_view=True):
+             crop_view=True, limit=None):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
     model = FoundationDelighter(backbone=backbone, freeze_backbone=True, cache_only=cache_only).to(device)
@@ -245,7 +245,8 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
     from dataset import TEST_ONLY_PRESETS
     conds = ["clean"] + list(PRESET_NAMES)
     preds_by = {c: [] for c in conds}
-    for i in range(len(ds)):
+    n_eval = len(ds) if limit is None else min(limit, len(ds))
+    for i in range(n_eval):
         rec = ds.load_full(i, variant="without")
         if rec is None:
             continue
@@ -448,9 +449,12 @@ def main():
     ap.add_argument("--cache-only", action="store_true")
     ap.add_argument("--no-crop-view", action="store_true",
                     help="score the FULL uncropped render (pre-053b behaviour)")
+    ap.add_argument("--limit", type=int, default=None,
+                    help="score only the first N test samples (smoke / budget cap)")
     args = ap.parse_args()
     evaluate(args.ckpt, args.backbone, args.data, args.out, device=args.device,
-             work=args.work, cache_only=args.cache_only, crop_view=not args.no_crop_view)
+             work=args.work, cache_only=args.cache_only, crop_view=not args.no_crop_view,
+             limit=args.limit)
 
 
 if __name__ == "__main__":
