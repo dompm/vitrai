@@ -114,6 +114,7 @@ def main():
         import torch
         from backbone import FoundationDelighter
         import eval_foundation as ef
+        import eval_texture_preservation as etp  # noqa: F401  (clause-2 instrument)
         dev = args.device or ("mps" if torch.backends.mps.is_available() else "cpu")
         model = FoundationDelighter(backbone=args.backbone, freeze_backbone=True,
                                     cache_only=True).to(dev)
@@ -162,7 +163,16 @@ def main():
                 Ta, ha, sa, ca = model_maps(a_lin)
                 Tb, hb, sb, cb = model_maps(b_lin)
                 md = registered_t_agreement(Ta, Tb, valid)
+                # Clause 2 on REAL data. Real photos have no authored gt_T, so the frozen
+                # family-2 instrument is run with the CLASSICAL T as reference and the model's
+                # T as test: it measures how much of the fine structure the classical route
+                # resolves that the model still carries. Read against the same landmarks as
+                # the synthetic table — the 8-sigma blur control collapses retained-energy to
+                # 0.03, so a model drifting toward zero here is flattening real texture.
+                tex = etp.evaluate(ma["T"], Ta, mask=valid)
                 row.update({
+                    "rel_retained_energy_vs_classical": tex["mgp"]["fine_retained_energy"],
+                    "rel_fine_grad_corr_vs_classical": tex["mgp"]["fine_grad_corr"],
                     "model_mae": md["T_agreement_mae_srgb255"],
                     "model_p95": md["T_agreement_p95_srgb255"],
                     "model_T_std": float(np.std(Ta)),
@@ -197,6 +207,12 @@ def main():
                 "model_T_std_mean": float(np.mean([x["model_T_std"] for x in r])),
                 "classical_T_std_mean": float(np.mean([x["classical_T_std"] for x in r])),
                 "model_conf_mean": float(np.mean([x["model_conf_mean"] for x in r])),
+                "rel_retained_energy_vs_classical_mean": float(np.mean(
+                    [x["rel_retained_energy_vs_classical"] for x in r
+                     if x.get("rel_retained_energy_vs_classical") is not None])),
+                "rel_fine_grad_corr_vs_classical_mean": float(np.mean(
+                    [x["rel_fine_grad_corr_vs_classical"] for x in r
+                     if x.get("rel_fine_grad_corr_vs_classical") is not None])),
             })
             # clause 3: does confidence TRACK error? (negative corr conf-vs-error = good)
             if len(r) >= 4:
@@ -225,7 +241,8 @@ def main():
         if "model_mae_mean" in s:
             line += (f" model={s['model_mae_mean']:6.2f}"
                      f" model_better={s['model_better_frac']*100:4.0f}%"
-                     f" spearman(conf,err)={s.get('spearman_conf_vs_error', float('nan')):+.3f}")
+                     f" spearman(conf,err)={s.get('spearman_conf_vs_error', float('nan')):+.3f}"
+                     f" retained_vs_classical={s.get('rel_retained_energy_vs_classical_mean', float('nan')):.3f}")
         print(line)
     print(f"\n[pairs] wrote {args.out}/realpairs_consistency.json")
 
