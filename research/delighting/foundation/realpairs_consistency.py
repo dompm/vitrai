@@ -44,7 +44,7 @@ DELIGHT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 sys.path.insert(0, DELIGHT)
 from extract import srgb_to_lin, extract_maps  # noqa: E402
-from register_pair import orb_register, registered_t_agreement, load_u8  # noqa: E402
+from register_pair import registered_t_agreement, load_u8  # noqa: E402
 
 DATA = "/Users/dominiquepiche-meunier/Documents/vitrai-datasets/realpairs-033-data"
 # The COMMITTED manifest is canonical per docs/REAL_PAIRS_DATASET.md; the restored copy on
@@ -55,6 +55,50 @@ MANIFEST_RESTORED = os.path.join(DATA, "manifest_033_restored.json")
 # docs/REAL_PAIRS_DATASET.md 9.3 screens. `non_transmissive_mirror` / `multi_sheet_listing`
 # products are not single transmissive sheets at all.
 BAD_FLAGS = {"non_transmissive_mirror", "multi_sheet_listing"}
+
+
+def orb_homography(src_u8, ref_u8):
+    """ORB+RANSAC homography src->ref. Same construction as register_pair.orb_register, but
+    returns H so the caller can rescale it to another grid."""
+    g_s = cv2.cvtColor(src_u8, cv2.COLOR_RGB2GRAY)
+    g_r = cv2.cvtColor(ref_u8, cv2.COLOR_RGB2GRAY)
+    orb = cv2.ORB_create(4000)
+    k_s, d_s = orb.detectAndCompute(g_s, None)
+    k_r, d_r = orb.detectAndCompute(g_r, None)
+    if d_s is None or d_r is None:
+        return None, 0
+    bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
+    matches = sorted(bf.match(d_s, d_r), key=lambda m: m.distance)[:400]
+    if len(matches) < 12:
+        return None, len(matches)
+    p_s = np.float32([k_s[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
+    p_r = np.float32([k_r[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+    H, mask = cv2.findHomography(p_s, p_r, cv2.RANSAC, 4.0)
+    if H is None:
+        return None, 0
+    return H, int(mask.sum())
+
+
+def register_at_highres(a_path, b_path, work_size, reg_size):
+    """Fit the homography where ORB actually HAS features (reg_size, e.g. 700 or full res),
+    then rescale it onto the work grid and warp there.
+
+    Motivation: ORB finds far fewer keypoints on a 512-px downsample, and ~1 pair in 3 was
+    being dropped for `inliers < 12` purely as a resolution artifact -- while inference must
+    stay at 512, the resolution whose 64x64 latent the UNet was trained on. Registration
+    quality and inference domain are decoupled: with points scaled by s, x_work = S x_reg,
+    the same map in work coordinates is H_work = S H_reg S^-1 (S = diag(s, s, 1))."""
+    a_hi, b_hi = load_u8(a_path, reg_size), load_u8(b_path, reg_size)
+    H_hi, inl = orb_homography(b_hi, a_hi)
+    a_lo, b_lo = load_u8(a_path, work_size), load_u8(b_path, work_size)
+    if H_hi is None:
+        return a_lo, None, inl
+    s = work_size / float(reg_size)
+    S = np.array([[s, 0, 0], [0, s, 0], [0, 0, 1]], np.float64)
+    H_lo = S @ H_hi @ np.linalg.inv(S)
+    b_reg = cv2.warpPerspective(b_lo, H_lo, (a_lo.shape[1], a_lo.shape[0]),
+                                flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REPLICATE)
+    return a_lo, b_reg, inl
 
 
 def band_agreement(T_a, T_b, valid, sigma=4.0):
@@ -161,6 +205,9 @@ def main():
                          "them) and randomly draw non-clear pairs, seed-fixed, to this total")
     ap.add_argument("--device", default=None)
     ap.add_argument("--pool", default="screened", choices=["screened", "broad"])
+    ap.add_argument("--reg-size", type=int, default=700,
+                    help="resolution at which the ORB homography is FIT (rescaled to --size "
+                         "for warping); decouples registration quality from inference domain")
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
@@ -207,14 +254,14 @@ def main():
                 return a[:lin.shape[0], :lin.shape[1], :c]
             return g("T", 3), g("h", 1), g("sigma_s", 1), g("conf", 1)
 
-    rows = []
+    rows, skipped = [], []
     for i, p in enumerate(pairs):
         try:
-            a_u8 = load_u8(p["a"], args.size)
-            b_u8 = load_u8(p["b"], args.size)
-            b_reg, inl = orb_register(b_u8, a_u8)
+            a_u8, b_reg, inl = register_at_highres(p["a"], p["b"], args.size, args.reg_size)
             if b_reg is None or inl < 12:
-                print(f"  [{i}] {p['product_id']} SKIP registration failed (inliers={inl})")
+                print(f"  [{i}] {p['product_id']} SKIP registration failed at "
+                      f"reg_size={args.reg_size} (inliers={inl}) — genuinely unregistrable")
+                skipped.append({"product_id": p["product_id"], "inliers": int(inl)})
                 continue
             a_lin = srgb_to_lin(a_u8.astype(np.float32) / 255.0)
             b_lin = srgb_to_lin(b_reg.astype(np.float32) / 255.0)
@@ -235,6 +282,16 @@ def main():
                    "classical_T_std": float(np.std(ma["T"]))}
             cb = band_agreement(ma["T"], mb["T"], valid)
             row.update({f"classical_{k}": v for k, v in cb.items()})
+            # FROZEN FLATTEN CONTROL on the SAME pair: the classical T maps put through the
+            # 8-sigma blur that EVAL_PROTOCOL uses as the flattening floor. Scored on the raw
+            # T-agreement metric, it shows in-table that simply destroying texture "improves"
+            # cross-capture consistency -- which is why clause 1 cannot be read alone.
+            fa = cv2.GaussianBlur(ma["T"], (0, 0), sigmaX=8.0, borderType=cv2.BORDER_REPLICATE)
+            fb = cv2.GaussianBlur(mb["T"], (0, 0), sigmaX=8.0, borderType=cv2.BORDER_REPLICATE)
+            fl = registered_t_agreement(fa, fb, valid)
+            row["flatten_control_mae"] = fl["T_agreement_mae_srgb255"]
+            fbnd = band_agreement(fa, fb, valid)
+            row.update({f"flatten_control_{k}": v for k, v in fbnd.items()})
 
             if model is not None:
                 Ta, ha, sa, ca = model_maps(a_lin)
@@ -281,7 +338,13 @@ def main():
              "classical_band_mae_mean": float(np.mean([x["classical_band_mae"] for x in r])),
              "classical_band_energy_mean": float(np.mean([x["classical_band_energy"] for x in r])),
              "classical_band_nmae_mean": float(np.mean(
-                 [x["classical_band_nmae"] for x in r if x.get("classical_band_nmae") is not None]))}
+                 [x["classical_band_nmae"] for x in r if x.get("classical_band_nmae") is not None])),
+             "flatten_control_mae_mean": float(np.mean([x["flatten_control_mae"] for x in r])),
+             "flatten_control_band_energy_mean": float(np.mean(
+                 [x["flatten_control_band_energy"] for x in r])),
+             "flatten_control_band_nmae_mean": float(np.mean(
+                 [x["flatten_control_band_nmae"] for x in r
+                  if x.get("flatten_control_band_nmae") is not None]))}
         if "model_mae" in r[0]:
             d.update({
                 "model_mae_mean": float(np.mean([x["model_mae"] for x in r])),
@@ -320,7 +383,9 @@ def main():
         agg(lambda x: x["opal_caution"], "opal_streaky_caution products"),
     ] if s]
 
-    json.dump({"n_pairs_scored": len(rows), "summary": summary, "rows": rows},
+    json.dump({"n_pairs_scored": len(rows), "n_skipped_unregistrable": len(skipped),
+               "skipped": skipped, "pool": args.pool, "work_size": args.size,
+               "reg_size": args.reg_size, "summary": summary, "rows": rows},
               open(os.path.join(args.out, "realpairs_consistency.json"), "w"), indent=2)
     print("\n=== SUMMARY (T-agreement MAE, sRGB 0-255, lower = more consistent) ===")
     for s in summary:
@@ -335,7 +400,9 @@ def main():
                   f"  |  model mae={s['model_band_mae_mean']:5.2f} "
                   f"energy={s['model_band_energy_mean']:5.2f} nmae={s['model_band_nmae_mean']:.3f}")
         print(line)
-    print(f"\n[pairs] wrote {args.out}/realpairs_consistency.json")
+    print(f"\n[pairs] {len(rows)} scored, {len(skipped)} unregistrable even at "
+          f"reg_size={args.reg_size}")
+    print(f"[pairs] wrote {args.out}/realpairs_consistency.json")
 
 
 if __name__ == "__main__":
