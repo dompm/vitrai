@@ -47,7 +47,44 @@ from extract import srgb_to_lin, extract_maps  # noqa: E402
 from register_pair import orb_register, registered_t_agreement, load_u8  # noqa: E402
 
 DATA = "/Users/dominiquepiche-meunier/Documents/vitrai-datasets/realpairs-033-data"
-MANIFEST = os.path.join(DATA, "manifest_033_restored.json")
+# The COMMITTED manifest is canonical per docs/REAL_PAIRS_DATASET.md; the restored copy on
+# the data disk drifts slightly (209/99 cross-capture vs the committed 213/98).
+MANIFEST_COMMITTED = os.path.join(DELIGHT, "realpairs", "results", "manifest_033.json")
+CONTAMINATION = os.path.join(DELIGHT, "realpairs", "results", "contamination_033.json")
+MANIFEST_RESTORED = os.path.join(DATA, "manifest_033_restored.json")
+# docs/REAL_PAIRS_DATASET.md 9.3 screens. `non_transmissive_mirror` / `multi_sheet_listing`
+# products are not single transmissive sheets at all.
+BAD_FLAGS = {"non_transmissive_mirror", "multi_sheet_listing"}
+
+
+def band_agreement(T_a, T_b, valid, sigma=4.0):
+    """Cross-capture agreement restricted to the TEXTURE BAND, plus the band energy that
+    makes it honest.
+
+    A plain band-limited MAE does NOT stop flattening laundering itself through the metric —
+    it makes it worse: if both captures decode to a flat field, the high-pass residual is ~0
+    in both, so the difference is ~0 and the route scores "perfectly consistent". So we
+    report the disagreement AND the energy, and normalise one by the other:
+
+      band_mae    = mean |HP(sRGB T_a) - HP(sRGB T_b)|            (lower = agrees)
+      band_energy = mean RMS of HP(sRGB T) across the two captures (higher = more texture)
+      band_nmae   = band_mae / band_energy                        (scale-free)
+
+    A flattened map drives numerator and denominator toward zero together, so it cannot buy
+    a good `band_nmae` — it just reveals itself as near-zero `band_energy`. Read the two
+    together; neither alone is sufficient."""
+    from extract import lin_to_srgb
+    a = lin_to_srgb(np.clip(T_a, 0, 1)).astype(np.float32)
+    b = lin_to_srgb(np.clip(T_b, 0, 1)).astype(np.float32)
+    hp_a = a - cv2.GaussianBlur(a, (0, 0), sigmaX=sigma, borderType=cv2.BORDER_REPLICATE)
+    hp_b = b - cv2.GaussianBlur(b, (0, 0), sigmaX=sigma, borderType=cv2.BORDER_REPLICATE)
+    v = valid if valid.ndim == 2 else valid[..., 0]
+    mae = float(np.abs(hp_a - hp_b)[v].mean() * 255.0)
+    e_a = float(np.sqrt((hp_a[v] ** 2).mean()) * 255.0)
+    e_b = float(np.sqrt((hp_b[v] ** 2).mean()) * 255.0)
+    energy = 0.5 * (e_a + e_b)
+    return {"band_mae": mae, "band_energy": energy,
+            "band_nmae": float(mae / energy) if energy > 1e-6 else None}
 
 
 def img_path(pid, key):
@@ -69,8 +106,19 @@ def glass_class_for(product):
     return "wispy"
 
 
-def load_pairs():
-    m = json.load(open(MANIFEST))
+def load_pairs(pool="screened"):
+    """pool='screened' -> the docs/REAL_PAIRS_DATASET.md 9.3 trustworthy-pair predicate
+    (reproduces 145 pairs / 64 products exactly on the committed manifest);
+    pool='broad' -> only kind/registrable/finished-product, the 164/79 sensitivity pool.
+
+    The screens that matter are not the count. Dropping contaminated image keys and
+    non-transmissive/multi-sheet products removes listings that are not a single sheet of
+    glass; and the `residual_mad < 15 AND inliers >= 200` clause removes NEAR-DUPLICATE
+    crops masquerading as cross-capture pairs. Those last ones would inflate the consistency
+    of ANY method -- and inflate it most for whichever method is smoothest -- so leaving them
+    in would bias this exact comparison toward the model."""
+    m = json.load(open(MANIFEST_COMMITTED if pool == "screened" else MANIFEST_RESTORED))
+    C = json.load(open(CONTAMINATION))["products"] if pool == "screened" else {}
     out = []
     for p in m:
         for q in (p.get("pairs") or []):
@@ -78,6 +126,16 @@ def load_pairs():
                 continue
             if q.get("finished_product_flag"):
                 continue
+            if pool == "screened":
+                c = C.get(str(p["product_id"]), {})
+                if q["a"] in set((c.get("images") or {}).keys()) or \
+                   q["b"] in set((c.get("images") or {}).keys()):
+                    continue
+                if BAD_FLAGS & set(c.get("flags") or []):
+                    continue
+                rm, inl = q.get("residual_mad"), (q.get("inliers") or 0)
+                if rm is not None and rm < 15 and inl >= 200:
+                    continue     # near-duplicate crop, not a genuine cross-capture pair
             a, b = img_path(p["product_id"], q["a"]), img_path(p["product_id"], q["b"])
             if os.path.exists(a) and os.path.exists(b):
                 out.append({"product_id": p["product_id"], "brand": p["brand"],
@@ -102,10 +160,11 @@ def main():
                     help="stratified subsample: keep ALL clear-glass pairs (clause 3 needs "
                          "them) and randomly draw non-clear pairs, seed-fixed, to this total")
     ap.add_argument("--device", default=None)
+    ap.add_argument("--pool", default="screened", choices=["screened", "broad"])
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
-    pairs = load_pairs()
+    pairs = load_pairs(args.pool)
     if args.sample:
         # Stratified, seed-fixed. The classical extractor costs ~1-2 min per capture at full
         # size, so the whole 164-pair pool is hours; a stratified subsample keeps the
@@ -174,6 +233,8 @@ def main():
                    "classical_mae": cl["T_agreement_mae_srgb255"],
                    "classical_p95": cl["T_agreement_p95_srgb255"],
                    "classical_T_std": float(np.std(ma["T"]))}
+            cb = band_agreement(ma["T"], mb["T"], valid)
+            row.update({f"classical_{k}": v for k, v in cb.items()})
 
             if model is not None:
                 Ta, ha, sa, ca = model_maps(a_lin)
@@ -185,6 +246,8 @@ def main():
                 # resolves that the model still carries. Read against the same landmarks as
                 # the synthetic table — the 8-sigma blur control collapses retained-energy to
                 # 0.03, so a model drifting toward zero here is flattening real texture.
+                mb_ = band_agreement(Ta, Tb, valid)
+                row.update({f"model_{k}": v for k, v in mb_.items()})
                 tex = etp.evaluate(ma["T"], Ta, mask=valid)
                 row.update({
                     "rel_retained_energy_vs_classical": tex["mgp"]["fine_retained_energy"],
@@ -214,7 +277,11 @@ def main():
         d = {"label": label, "n_pairs": len(r),
              "n_products": len({x["product_id"] for x in r}),
              "classical_mae_mean": float(np.mean([x["classical_mae"] for x in r])),
-             "classical_mae_median": float(np.median([x["classical_mae"] for x in r]))}
+             "classical_mae_median": float(np.median([x["classical_mae"] for x in r])),
+             "classical_band_mae_mean": float(np.mean([x["classical_band_mae"] for x in r])),
+             "classical_band_energy_mean": float(np.mean([x["classical_band_energy"] for x in r])),
+             "classical_band_nmae_mean": float(np.mean(
+                 [x["classical_band_nmae"] for x in r if x.get("classical_band_nmae") is not None]))}
         if "model_mae" in r[0]:
             d.update({
                 "model_mae_mean": float(np.mean([x["model_mae"] for x in r])),
@@ -223,6 +290,10 @@ def main():
                 "model_T_std_mean": float(np.mean([x["model_T_std"] for x in r])),
                 "classical_T_std_mean": float(np.mean([x["classical_T_std"] for x in r])),
                 "model_conf_mean": float(np.mean([x["model_conf_mean"] for x in r])),
+                "model_band_mae_mean": float(np.mean([x["model_band_mae"] for x in r])),
+                "model_band_energy_mean": float(np.mean([x["model_band_energy"] for x in r])),
+                "model_band_nmae_mean": float(np.mean(
+                    [x["model_band_nmae"] for x in r if x.get("model_band_nmae") is not None])),
                 "rel_retained_energy_vs_classical_mean": float(np.mean(
                     [x["rel_retained_energy_vs_classical"] for x in r
                      if x.get("rel_retained_energy_vs_classical") is not None])),
@@ -259,6 +330,10 @@ def main():
                      f" model_better={s['model_better_frac']*100:4.0f}%"
                      f" spearman(conf,err)={s.get('spearman_conf_vs_error', float('nan')):+.3f}"
                      f" retained_vs_classical={s.get('rel_retained_energy_vs_classical_mean', float('nan')):.3f}")
+            print(f"{'':42s}   BAND  classical mae={s['classical_band_mae_mean']:5.2f} "
+                  f"energy={s['classical_band_energy_mean']:5.2f} nmae={s['classical_band_nmae_mean']:.3f}"
+                  f"  |  model mae={s['model_band_mae_mean']:5.2f} "
+                  f"energy={s['model_band_energy_mean']:5.2f} nmae={s['model_band_nmae_mean']:.3f}")
         print(line)
     print(f"\n[pairs] wrote {args.out}/realpairs_consistency.json")
 
