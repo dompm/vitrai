@@ -290,16 +290,130 @@ The classical extractor needs a glass-class prior, mapped from catalog brand/cau
 a documented heuristic, not ground truth, since the catalog carries no class field. **The
 model takes no class input at all**, which is itself part of what is being compared.
 
-TBD — results.
+### Results — 140 pairs scored (of 145; 5 genuinely unregistrable), 64 products
+
+ORB registration is fitted at 700 px, where the features are, and the homography is mapped
+onto the 512 work grid by conjugation (`H_work = S·H_reg·S⁻¹`). Without that, ~1 pair in 3
+failed `inliers < 12` purely as a downsampling artifact. The 5 remaining failures fail at
+full resolution too and are counted, not hidden.
+
+Alongside the two routes, the **frozen 8σ-blur flatten control** is scored on the same pairs
+and the same metric — the classical T maps deliberately destroyed. It is the row that makes
+the table interpretable.
+
+| | classical | **model** | 8σ flatten control |
+|---|---|---|---|
+| raw T-agreement MAE ↓ | 38.05 | **13.50** | 33.77 |
+| fine-band energy (texture present) | 9.36 | **0.37** | 0.66 |
+| band nmae (scale-free disagreement) ↓ | 0.710 | **0.788** | 0.752 |
+| fine retained-energy vs classical | 1.00 | **0.095** | — |
+
+Model beats classical on **85 %** of pairs. Clear-glass subset (28 pairs / 21 products):
+classical 41.67, model **10.38**, control 29.75 — model better on **100 %** — but fine
+retained-energy **0.0094**.
+
+The **broad 161/79 pool reproduces every conclusion** (raw 37.20 / 12.63 / 32.68; band energy
+10.17 / 0.35 / 0.66; retained 0.096; clear-subset retained 0.0092), so none of this turns on
+the choice of screen.
 
 ---
 
 ## 7. The three-clause scale criterion
 
-TBD.
+> "Only scale if it **improves registered consistency** **without flattening texture** and
+> **its confidence reliably identifies clear-glass failures**."
+
+### Clause 1 — registered consistency: **PASS, and genuinely so**
+
+Model 13.50 vs classical 38.05, better on 85 % of pairs. The important control is the third
+column: **simply blurring the classical maps only gets to 33.77**. Destroying texture buys an
+11 % improvement; the model delivers **65 %**. The model's consistency is therefore *not*
+explainable by flattening — the pretrained backbone's prior is doing real work, delivering
+capture-to-capture invariance at low frequency that the classical route does not have. This
+is the pilot's positive finding and the reason the approach deserves fixing rather than
+abandoning.
+
+It is also why the clause cannot be read alone: **the flatten control beats classical on this
+metric too**. A method with no intelligence in it improves "consistency" simply by removing
+what there was to disagree about. The reviewer chained the clauses for exactly this reason.
+
+### Clause 2 — without flattening texture: **FAIL, decisively**
+
+- Fine retained-energy vs classical: **0.095 overall, 0.0094 on clear glass.** The model
+  keeps **9.5 %** of the fine structure the classical route resolves — **0.9 %** on clear
+  glass. Against the EVAL_PROTOCOL landmarks (classical 1.27, 8σ-blur control 0.03) this is
+  the flattening floor, not a healthy band.
+- Fine-band **energy 0.37 vs the blur control's 0.66**: on real photos the model's T carries
+  *less* high-frequency structure than a deliberate 8σ blur of the classical output. On clear
+  glass it is 0.24 vs 1.05 — four times flatter than the control.
+- Normalised, the consistency advantage **inverts**: band nmae 0.788 (model) vs 0.710
+  (classical). In the band where glass texture actually lives, the model is *less* consistent,
+  because it has nothing left to be consistent about.
+
+The §5 panels are the same finding in visible form: relief, marker scribble and swirl
+structure absent from T maps that the classical route renders plainly.
+
+### Clause 3 — confidence identifies clear-glass failures: **FAIL**
+
+Spearman(conf, error) = **−0.069** overall and **−0.131** on clear glass. The sign is right —
+confidence does fall very slightly as error rises — but the magnitude is useless for gating.
+Across the 15 real photos conf spans **0.471–0.552**, a total spread of 0.080, and sits at
+0.543 on the clear-glass pairs where T is at its worst. A downstream consumer cannot separate
+a good extraction from a failed one with this signal.
+
+The cause is mechanical and identified in §3: conf is supervised against its own *decoded*-T
+error, and the decode is `need_T`-gated to logging steps, so **conf trained on ~721 of 18 000
+steps (4 %)** — a 25× weaker signal than every other head.
+
+### Verdict
+
+**One clause passes, two fail.** The criterion is conjunctive, so the gate is not met.
 
 ---
 
-## 8. Recommendation
+## 8. Recommendation: **DO NOT SCALE YET**
 
-TBD.
+Do not commission the cloud render + 20 k training run on this evidence. But the reason is
+specific and the fixes are identified — this is a pilot doing its job, not a dead end.
+
+**What the pilot established.** The invariance prior works: capture-to-capture consistency
+improves far beyond what flattening explains (clause 1 vs its control), with 135 training
+identities on a laptop. That is the expensive question answered positively. What is missing
+is a **texture pathway** and a **usable confidence** — and neither is a data-volume problem,
+which is precisely why more rendering would not have fixed them. Scaling now would buy a
+20 k-sample version of the same flat maps.
+
+### Fix list (enumerated, not implemented)
+
+**(a) Decouple confidence supervision from the logging cadence.** *Cost: a training-loop
+change, no new data, no architecture.* Either supervise conf against the latent-T error every
+step, or run `need_T` on a fixed fraction of steps chosen independently of `log_every`.
+Today the two are the same knob, so raising logging frequency to train conf also multiplies
+decode cost. This is the cheapest item on the list and clause 3 is unreachable without it.
+
+**(b) The structural latent-T ceiling — the real work.** Since report 040, T is supervised as
+a **64×64 latent** and pixel-space T is never in the loss; the decode is a **frozen,
+general-purpose VAE** that was never asked to render glass relief. Fine texture has nothing
+in the objective pulling it back. Three options, increasing in ambition:
+  1. *Small trainable refinement head on decoded T* — a few hundred K params. Cheapest, and
+     testable against this exact pilot.
+  2. *Pixel/patch-space auxiliary T loss on the `need_T` steps* — the two-view diet already
+     serves native-resolution detail patches, so the supervision exists and is unused. Costs
+     decode memory on those steps (see the 490 s bs2 measurement in §1 for how sharply that
+     bites on 16 GB).
+  3. *Design 056 around a **learned decoder head** conditioned on (z_T, ∇height statistics,
+     B-pyramid)* — i.e. accept that the decoder is where relief and texture must live. This
+     is the operator class report 054 showed closed forms cannot reach, and it is the option
+     that actually matches the failure.
+
+**(c) Data hygiene, cheap and worth doing before any 20 k run.** Write GT AOVs as float32, or
+clamp `gt_B` at load. One sample in 135 carried fp16-overflowed `inf` pixels (§3); at 20 k
+scale the same half-float ceiling would silently waste many steps.
+
+### What would change the recommendation
+
+Re-run this same pilot — same 135 identities, same evaluation — after (a) and any one of
+(b). **Scale when fine retained-energy on the real pairs moves off the 0.03–0.10 floor toward
+classical's 1.27 while raw T-agreement stays below the flatten control, and Spearman(conf,
+error) on clear glass reaches a usable magnitude.** The instruments are all built and frozen
+in this branch, so that re-run is a config change and one training day, not a project.
