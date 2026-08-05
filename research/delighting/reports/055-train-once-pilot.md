@@ -245,7 +245,52 @@ and it will not be fixed by more data, which is the central reason §8 lands whe
 
 ## 6. Real cross-capture consistency
 
-TBD — 164 registrable pairs / 79 products.
+### Which pairs — reconciling 164/79 against the reviewer's "145 / 64"
+
+The external review states the corpus holds "145 screened cross-capture pairs across 64
+products". That figure does **not** reproduce from any predicate over the current manifest,
+and it should not: it is a **historical snapshot** quoted in the review of trunk `8c8877a`
+(2026-07-16), and the corpus was re-harvested and restored afterwards. Every natural
+predicate over `manifest_033_restored.json`:
+
+| predicate | pairs | products |
+|---|---|---|
+| `kind == cross_capture` | 209 | 99 |
+| … `& registrable` | 209 | 99 (every cross-capture pair is registrable; min ORB inliers 20) |
+| **… `& not finished_product_flag`** | **164** | **79** ← used here |
+| … `& inliers ≥ 30` | 138 | 69 |
+| … `& not opal_streaky_caution` | 92 | 59 |
+
+`aggregate_033.json` independently records 213 cross-capture / 98 products against my 209 /
+99 — a small drift from the restore, which is itself evidence that these counts move with
+the corpus rather than being a fixed screen. **The pool used here is the 164 / 79 row**:
+registrable cross-capture pairs, excluding `finished_product_flag` (photos of finished lamps
+and panels rather than raw sheets, which are not what the extractor is for). 42 of the 164
+are `clear-textured-glass` — the subset clause 3 is specifically about.
+
+### Method
+
+Both routes are scored on the **identical registration and the identical valid mask**, so
+the comparison isolates the T estimator and nothing else: capture B is ORB-registered onto
+capture A with the frozen 033 `register_pair.orb_register`; the classical route runs
+`extract_maps` on each aligned capture; the model runs a forward on each; both are scored
+with `register_pair.registered_t_agreement` (sRGB MAE / p95). The valid mask is the union of
+marks and speculars from *both* captures, taken from the classical run and reused for the
+model.
+
+Working resolution is **512**, not `register_pair`'s 700 default. Two reasons, one
+principled and one practical: 512 is the resolution the model trained at and the resolution
+`eval_foundation` works at, so the UNet sees the 64×64 latent it was tuned for rather than an
+88×88 one; and at 700 the self-attention cost made the full pool a ~7 h run. Both routes are
+measured at the same size, so the comparison stays internally valid — but note this row is
+therefore **not** byte-comparable to pre-055 classical pair numbers computed at 700.
+
+The classical extractor needs a glass-class prior, mapped from catalog brand/caution flags
+(`clear-textured-glass` → cathedral-clear, `opal_streaky_caution` → opalescent, else wispy) —
+a documented heuristic, not ground truth, since the catalog carries no class field. **The
+model takes no class input at all**, which is itself part of what is being compared.
+
+TBD — results.
 
 ---
 

@@ -98,11 +98,27 @@ def main():
     ap.add_argument("--size", type=int, default=700, help="working res (register_pair default)")
     ap.add_argument("--classical-only", action="store_true")
     ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--sample", type=int, default=None,
+                    help="stratified subsample: keep ALL clear-glass pairs (clause 3 needs "
+                         "them) and randomly draw non-clear pairs, seed-fixed, to this total")
     ap.add_argument("--device", default=None)
     args = ap.parse_args()
     os.makedirs(args.out, exist_ok=True)
 
     pairs = load_pairs()
+    if args.sample:
+        # Stratified, seed-fixed. The classical extractor costs ~1-2 min per capture at full
+        # size, so the whole 164-pair pool is hours; a stratified subsample keeps the
+        # clause-3 clear-glass evidence intact while bounding wall time. Clear pairs are kept
+        # WHOLE because clause 3 is specifically about clear-glass failures.
+        clear = [p for p in pairs if p["is_clear"]]
+        other = [p for p in pairs if not p["is_clear"]]
+        rng = np.random.default_rng(0)
+        k = max(0, args.sample - len(clear))
+        idx = rng.permutation(len(other))[:k]
+        pairs = clear + [other[i] for i in sorted(idx)]
+        print(f"[pairs] stratified subsample: ALL {len(clear)} clear + "
+              f"{len(pairs)-len(clear)} of {len(other)} non-clear")
     if args.limit:
         pairs = pairs[:args.limit]
     print(f"[pairs] {len(pairs)} registrable cross-capture pairs / "
