@@ -179,7 +179,36 @@ samples and each one silently wastes a step.
 
 ## 4. Held-out synthetic evaluation
 
-TBD — per-preset table vs the frozen baseline ladder.
+Per-preset results on the 322-sample held-out synthetic split (final adapter, work 512;
+`results/055/eval/eval.json` + `baseline_ladder.md` carry the full rows incl. the frozen
+classical reference):
+
+| preset | T MAE | h MAE | σ_s MAE | σ_s relight L1 | cross-light invariance_T | retained fine energy |
+|---|---:|---:|---:|---:|---:|---:|
+| clean | 0.1366 | 0.1224 | 0.1218 | 7.83 | 0.0764 | 0.305 |
+| neutral_mid | 0.1359 | 0.1283 | 0.1315 | 8.50 | 0.0739 | 0.300 |
+| bright_window_hdr | 0.1469 | 0.1157 | 0.1217 | 7.84 | 0.0781 | 0.305 |
+| low_light_handheld | 0.1421 | 0.1143 | 0.1187 | 7.66 | 0.0674 | 0.268 |
+| android_punchy | 0.1341 | 0.1247 | 0.1262 | 8.15 | 0.0602 | 0.293 |
+| wide_edge **(held-out device)** | 0.1304 | 0.1260 | 0.1294 | 8.37 | 0.0638 | 0.280 |
+
+Three readings:
+
+1. **Device invariance is a clean WIN — the 053 phone-ISP training worked.** Metrics are
+   flat across every trained preset AND the held-out `wide_edge` device (T MAE 0.1304 —
+   actually the best column). A phone tuning the model never saw costs nothing. This is
+   the per-preset holdout axis measuring exactly what the external review asked it to.
+2. **The texture ceiling shows up on synthetic too**: retained fine energy 0.27–0.31
+   against the ground truth (vs classical's reference row in `baseline_ladder.md`) — the
+   latent-only-T supervision flattens synthetic sheets just as it flattens real ones (§6's
+   0.095 vs classical). Same structural cause, same fix list (§8).
+3. **σ_s carries real but partial signal**: relight L1 ≈ 7.7–8.5 against a GT-relight
+   scale of 17.8 — the predicted scatter reproduces roughly half the structured-light
+   softening effect. First-ever numbers for this channel; no baseline exists to beat, and
+   the σ_s supervision coverage caveat (§1, 62% of train samples) applies.
+
+Frozen-gate context: {"sub_floor_flatten_flag": true, "texture_hallucination_flag": false, "texture_ok": false, "beats_classical_primary": true, "beats_quotient_primary": true, "GO": false, "note": "held-out-identity synthetic; GO requires beating classical AND quotient on invariance_T with fine retained-energy in the healthy band [0.5, 2.5] \u2014 neither flattening nor hallucinating texture"}.
+
 
 ---
 
