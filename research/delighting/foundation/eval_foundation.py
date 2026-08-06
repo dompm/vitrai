@@ -197,6 +197,22 @@ def sigma_s_relight_l1(pred_sigma, gt_sigma, valid):
     return l1, scale
 
 
+def _calibration_from_arrays(conf, err, tau=8 / 255.0, nbins=10):
+    """§1d on already-pooled (conf, err) pixel samples — the streaming form of
+    `calibration()`, which needed every prediction resident at once."""
+    sp = _spearman(conf, -err)
+    acc = (err < tau).astype(np.float64)
+    ece = 0.0
+    for b in range(nbins):
+        lo, hi = b / nbins, (b + 1) / nbins
+        msk = (conf >= lo) & (conf < hi if b < nbins - 1 else conf <= hi)
+        if msk.sum() == 0:
+            continue
+        ece += msk.mean() * abs(acc[msk].mean() - conf[msk].mean())
+    return {"spearman_conf_negerr": float(sp), "ece_tau8": float(ece),
+            "n_pixels": int(len(conf))}
+
+
 def calibration(preds, tau=8 / 255.0, nbins=10):
     """§1d: Spearman(conf, -err) + ECE at τ. Pooled over all test pixels (subsampled)."""
     confs, errs = [], []
@@ -221,83 +237,154 @@ def calibration(preds, tau=8 / 255.0, nbins=10):
     return {"spearman_conf_negerr": sp, "ece_tau8": float(ece), "n_pixels": int(len(conf))}
 
 
-def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_only=False):
+def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_only=False,
+             crop_view=True, limit=None):
     os.makedirs(out_dir, exist_ok=True)
     device = device or ("mps" if torch.backends.mps.is_available() else "cpu")
     model = FoundationDelighter(backbone=backbone, freeze_backbone=True, cache_only=cache_only).to(device)
     model.load_adapter(ckpt, map_location=device)
     model.eval()
 
-    ds = GlassDelightDataset(data_roots, split="test", augment=False, input_variant="without")
-    print(f"[eval] {len(ds)} HELD-OUT test samples (seed%5==0 / 800-812) | backbone={backbone}")
-    preds = []
-    for i in range(len(ds)):
-        rec = ds.load_full(i, variant="without")
-        if rec is None:
-            continue
-        try:
-            preds.append(predict(model, rec, device, work))
-            print(f"  {preds[-1]['recipe']:22s} seed{preds[-1]['seed']}")
-        except RuntimeError as e:
-            print(f"  [skip {rec['recipe']} seed{rec['seed']}] {str(e)[:80]}")
-        if device == "mps":
-            torch.mps.empty_cache()
+    # 055: match the TRAINING sheet geometry (train.py defaults crop_view=True). Scoring the
+    # cropped view on a model trained on cropped views keeps the eval on-domain; roots with no
+    # crop_sim meta (old-style batches) load unwarped either way.
+    ds = GlassDelightDataset(data_roots, split="test", augment=False, input_variant="without",
+                             crop_view=crop_view)
+    print(f"[eval] {len(ds)} HELD-OUT test samples (seed%5==0 / 800-812 / §3b-ext) | backbone={backbone}")
 
-    # --- GT accuracy + texture family 2 (per sample) ---
-    T_maes, h_maes, retained, fcs, fine_corr = [], [], [], [], []
-    sig_maes, sig_relight_l1, sig_relight_scale = [], [], []
-    for p in preds:
-        v = p["valid"][..., 0]
-        T_maes.append(float(np.abs(p["T"] - p["gtT"])[v].mean()))
-        h_maes.append(float(np.abs(p["h"] - p["gth"])[v].mean()))
-        tex = etp.evaluate(p["gtT"], p["T"], mask=v)          # ref=authored gt_T, test=pred T
-        retained.append(tex["mgp"]["fine_retained_energy"])
-        fine_corr.append(tex["mgp"]["fine_grad_corr"])
-        if tex["fcs"]["survival"] is not None:
-            fcs.append(tex["fcs"]["survival"])
-        # report 053 / 048-owed: σ_s MAE + structured-checker relight L1 (held-out identities
-        # only). Scored where the model emits σ_s AND the sample carries a supervised gt_σ_s.
-        if p.get("sigma_s") is not None and p.get("has_sigma_s"):
-            sig_maes.append(float(np.abs(p["sigma_s"] - p["gt_sigma_s"])[v].mean()))
-            l1, scale = sigma_s_relight_l1(p["sigma_s"][..., 0], p["gt_sigma_s"][..., 0], v)
-            sig_relight_l1.append(l1)
-            sig_relight_scale.append(scale)
+    # 053b pre-flight fix 3: eval used ONLY clean linear renders — never a phone-processed
+    # input (undermining the 053 realism premise) and never the held-out wide_edge preset.
+    # Each test photo now ALSO runs through every ISP preset (deterministic per-sample rng);
+    # metrics are reported per-preset with the held-out preset broken out, plus the clean row
+    # for continuity with all pre-053b numbers.
+    from phone_pipeline import apply_phone_pipeline, PRESET_NAMES
+    from dataset import TEST_ONLY_PRESETS
+    conds = ["clean"] + list(PRESET_NAMES)
 
-    # --- PRIMARY family 1: cross-capture consistency over same-(recipe,seed) groups ---
+    # 055 MEMORY FIX. This function used to keep EVERY prediction alive
+    # (`preds_by[cond].append(...)`) and reduce them at the end. That is fine for the 038
+    # smoke set, but at the 053b scale it is 323 samples x 6 conditions x ~12.6 MB of
+    # full-res maps ~= 24 GB, and the run was SIGKILLed by the OS partway through.
+    #
+    # It now STREAMS, grouped by identity. Every per-sample metric reduces to scalars
+    # immediately, and the only metric that genuinely needs two maps at once -- the family-1
+    # cross-lighting invariance, which compares T between captures of the SAME (recipe, seed)
+    # -- is computed inside its own group, so at most one group's predictions are resident.
+    # The reported numbers are unchanged by construction: invariance was always a
+    # within-group pairwise mean, and everything else was always a mean of per-sample values.
     groups = {}
-    for p in preds:
-        groups.setdefault((p["recipe"], p["seed"]), []).append(p)
-    per_recipe_inv = {}
-    for (recipe, seed), members in groups.items():
-        if len(members) < 2:
+    n_eval = len(ds) if limit is None else min(limit, len(ds))
+    for i in range(n_eval):
+        s_ = ds.samples[i]
+        groups.setdefault((s_["recipe"], s_["seed"]), []).append(i)
+    print(f"[eval] {len(groups)} identity groups over {n_eval} samples; "
+          f"{len(conds)} conditions each (streaming, grouped)")
+
+    # accumulators: per condition -> lists of per-sample scalars
+    ACC = {c: {k: [] for k in ("T_mae", "h_mae", "retained", "fine_corr", "fcs",
+                               "sig_mae", "sig_l1", "sig_scale")} for c in conds}
+    INV = {c: {} for c in conds}          # recipe -> [pairwise T diffs]
+    CAL = {"conf": [], "err": []}         # clean condition only (subsampled per sample)
+    rng_cal = np.random.default_rng(0)
+    n_done = 0
+
+    for (recipe, seed), idxs in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1])):
+        recs = []
+        for i in idxs:
+            r = ds.load_full(i, variant="without")
+            if r is not None:
+                recs.append(r)
+        if not recs:
             continue
-        diffs = []
-        for a in range(len(members)):
-            for b in range(a + 1, len(members)):
-                va = members[a]["valid"][..., 0] & members[b]["valid"][..., 0]
-                if va.sum() == 0:
-                    continue
-                diffs.append(float(np.abs(members[a]["T"] - members[b]["T"])[va].mean()))
-        if diffs:
-            per_recipe_inv.setdefault(recipe, []).extend(diffs)
-    recipe_inv = {r: float(np.mean(v)) for r, v in per_recipe_inv.items()}
-    inv_macro = float(np.mean(list(recipe_inv.values()))) if recipe_inv else None
+        for cond in conds:
+            preds = []
+            for rec in recs:
+                r2 = dict(rec)
+                if cond != "clean":
+                    prng = np.random.default_rng(
+                        (hash((rec["recipe"], rec["seed"], cond)) & 0x7fffffff))
+                    r2["photo"], _ = apply_phone_pipeline(rec["photo"], prng, preset_name=cond)
+                try:
+                    preds.append(predict(model, r2, device, work))
+                except RuntimeError as e:
+                    print(f"  [skip {rec['recipe']} seed{rec['seed']} {cond}] {str(e)[:70]}")
+            A = ACC[cond]
+            for pr in preds:
+                v = pr["valid"][..., 0]
+                A["T_mae"].append(float(np.abs(pr["T"] - pr["gtT"])[v].mean()))
+                A["h_mae"].append(float(np.abs(pr["h"] - pr["gth"])[v].mean()))
+                tex = etp.evaluate(pr["gtT"], pr["T"], mask=v)
+                A["retained"].append(tex["mgp"]["fine_retained_energy"])
+                A["fine_corr"].append(tex["mgp"]["fine_grad_corr"])
+                if tex["fcs"]["survival"] is not None:
+                    A["fcs"].append(tex["fcs"]["survival"])
+                if pr.get("sigma_s") is not None and pr.get("has_sigma_s"):
+                    A["sig_mae"].append(float(np.abs(pr["sigma_s"] - pr["gt_sigma_s"])[v].mean()))
+                    l1, sc = sigma_s_relight_l1(pr["sigma_s"][..., 0], pr["gt_sigma_s"][..., 0], v)
+                    A["sig_l1"].append(l1)
+                    A["sig_scale"].append(sc)
+                if cond == "clean":
+                    err = np.abs(pr["T"] - pr["gtT"]).mean(-1)[v]
+                    cf = pr["conf"][..., 0][v]
+                    if len(err) > 2000:
+                        sel = rng_cal.choice(len(err), 2000, replace=False)
+                        err, cf = err[sel], cf[sel]
+                    CAL["err"].append(err.astype(np.float32))
+                    CAL["conf"].append(cf.astype(np.float32))
+            # family-1 invariance: within THIS identity group only
+            for a in range(len(preds)):
+                for b in range(a + 1, len(preds)):
+                    va = preds[a]["valid"][..., 0] & preds[b]["valid"][..., 0]
+                    if va.sum() == 0:
+                        continue
+                    INV[cond].setdefault(recipe, []).append(
+                        float(np.abs(preds[a]["T"] - preds[b]["T"])[va].mean()))
+            del preds
+            if device == "mps":
+                torch.mps.empty_cache()
+        n_done += len(recs)
+        print(f"  [{n_done}/{n_eval}] {recipe:22s} seed{seed} "
+              f"({len(recs)} captures x {len(conds)} conditions)", flush=True)
 
-    cal = calibration(preds)
+    def _row(cond):
+        """Reduce one condition's accumulators (identical statistics to the pre-055
+        list-of-predictions version, just computed streaming)."""
+        A, inv = ACC[cond], INV[cond]
+        recipe_inv = {r: float(np.mean(v)) for r, v in inv.items() if v}
+        inv_macro = float(np.mean(list(recipe_inv.values()))) if recipe_inv else None
+        m = lambda k: float(np.mean(A[k])) if A[k] else None  # noqa: E731
+        return {
+            "invariance_T": inv_macro,
+            "T_mae": m("T_mae"), "h_mae": m("h_mae"),
+            "retained_energy": m("retained"), "fine_grad_corr": m("fine_corr"),
+            "fcs": m("fcs"),
+            "sigma_s_mae": m("sig_mae"),
+            "sigma_s_relight_l1": m("sig_l1"),
+            "sigma_s_relight_scale": m("sig_scale"),
+            "n_sigma_s": len(A["sig_mae"]),
+            "n_samples": len(A["T_mae"]),
+            "n_cross_lighting_groups": sum(len(v) for v in inv.values()),
+        }, recipe_inv
 
-    model_row = {
-        "invariance_T": inv_macro,
-        "T_mae": float(np.mean(T_maes)), "h_mae": float(np.mean(h_maes)),
-        "retained_energy": float(np.mean(retained)), "fine_grad_corr": float(np.mean(fine_corr)),
-        "fcs": float(np.mean(fcs)) if fcs else None,
-        # report 053: σ_s accuracy (MAE like h) + structured-background relight L1 (045/046
-        # methodology). n_sigma_s counts held-out samples with a supervised gt_σ_s.
-        "sigma_s_mae": float(np.mean(sig_maes)) if sig_maes else None,
-        "sigma_s_relight_l1": float(np.mean(sig_relight_l1)) if sig_relight_l1 else None,
-        "sigma_s_relight_scale": float(np.mean(sig_relight_scale)) if sig_relight_scale else None,
-        "n_sigma_s": len(sig_maes),
-        "n_cross_lighting_groups": sum(1 for m in groups.values() if len(m) >= 2),
-    }
+    per_preset = {}
+    for cond in conds:
+        row, rinv = _row(cond)
+        row["held_out_preset"] = cond in TEST_ONLY_PRESETS
+        per_preset[cond] = row
+        if cond == "clean":
+            recipe_inv = rinv
+            inv_macro = row["invariance_T"]
+
+    conf_all = np.concatenate(CAL["conf"]) if CAL["conf"] else np.zeros(1)
+    err_all = np.concatenate(CAL["err"]) if CAL["err"] else np.zeros(1)
+    if len(conf_all) > 200000:
+        sel = np.random.default_rng(0).choice(len(conf_all), 200000, replace=False)
+        conf_all, err_all = conf_all[sel], err_all[sel]
+    cal = _calibration_from_arrays(conf_all, err_all)
+    preds = [None] * per_preset["clean"]["n_samples"]   # only len() is used downstream
+    # headline row = CLEAN condition (continuity with every pre-053b number); the ISP
+    # conditions live in report["per_preset"], the held-out device flagged.
+    model_row = per_preset["clean"]
 
     # --- continuation gate ---
     re = model_row["retained_energy"]
@@ -321,7 +408,10 @@ def evaluate(ckpt, backbone, data_roots, out_dir, device=None, work=512, cache_o
 
     report = {"backbone": backbone, "ckpt": ckpt, "work_res": work,
               "n_test": len(preds), "model": model_row, "calibration": cal,
-              "per_recipe_invariance": recipe_inv, "frozen_reference": FROZEN, "gate": gate}
+              "per_recipe_invariance": recipe_inv, "frozen_reference": FROZEN, "gate": gate,
+              # 053b: same metrics per ISP condition; "clean" == model row; the held-out
+              # device preset (dataset.TEST_ONLY_PRESETS) carries held_out_preset=True.
+              "per_preset": per_preset}
     with open(os.path.join(out_dir, "eval.json"), "w") as f:
         json.dump(report, f, indent=2)
     _write_table(report, os.path.join(out_dir, "baseline_ladder.md"))
@@ -375,6 +465,17 @@ def _write_table(rep, path):
         f"| — GT-relight scale (context) | {_fmt(m.get('sigma_s_relight_scale'))} | GT σ_s vs "
         "no-scatter; read L1 against this |",
         "",
+        "**Per-ISP-preset breakdown (053b — deployment inputs, not just clean renders).**",
+        "'clean' repeats the headline row; the held-out device preset is marked ✋ (never",
+        "seen in training — the preset-generalization axis).",
+        "",
+        "| condition | invariance_T ↓ | T-MAE ↓ | h-MAE ↓ | σ_s-MAE ↓ | retained-energy |",
+        "|---|---|---|---|---|---|",
+        *[f"| {c}{' ✋' if r.get('held_out_preset') else ''} | {_fmt(r['invariance_T'])} | "
+          f"{_fmt(r['T_mae'])} | {_fmt(r['h_mae'])} | {_fmt(r.get('sigma_s_mae'))} | "
+          f"{_fmt(r.get('retained_energy'))} |"
+          for c, r in rep.get("per_preset", {}).items()],
+        "",
         "**Family 4 — confidence calibration (§1d).**",
         "",
         f"- Spearman(conf, −err): {_fmt(rep['calibration']['spearman_conf_negerr'])} (higher = better)",
@@ -402,9 +503,14 @@ def main():
     ap.add_argument("--device", default=None)
     ap.add_argument("--work", type=int, default=512, help="working resolution (max dim)")
     ap.add_argument("--cache-only", action="store_true")
+    ap.add_argument("--no-crop-view", action="store_true",
+                    help="score the FULL uncropped render (pre-053b behaviour)")
+    ap.add_argument("--limit", type=int, default=None,
+                    help="score only the first N test samples (smoke / budget cap)")
     args = ap.parse_args()
     evaluate(args.ckpt, args.backbone, args.data, args.out, device=args.device,
-             work=args.work, cache_only=args.cache_only)
+             work=args.work, cache_only=args.cache_only, crop_view=not args.no_crop_view,
+             limit=args.limit)
 
 
 if __name__ == "__main__":

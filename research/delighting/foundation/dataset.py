@@ -58,6 +58,19 @@ sys.path.insert(0, DELIGHT)
 from extract import srgb_to_lin, lum  # noqa: E402  (frozen colour helpers)
 sys.path.insert(0, HERE)
 from phone_pipeline import PRESET_NAMES, apply_phone_pipeline  # noqa: E402  (report 053)
+from crop_sim import warp_channel  # noqa: E402  (report 053b: THE crop-warp convention)
+
+
+def _maybe_warp(a, M, name):
+    """Report 053b lazy GT crop: apply the stored user-crop homography to a decoded FILE-space
+    array (i.e. BEFORE any nonlinear decode like srgb_to_lin), exactly mirroring what the old
+    materialized crop/ files contained. No-op when M is None. Preserves the trailing channel
+    axis for single-channel arrays (cv2 drops it)."""
+    if M is None or a is None:
+        return a
+    squeeze = a.ndim == 3 and a.shape[2] == 1
+    w = warp_channel(a[..., 0] if squeeze else a, M, name)
+    return w[..., None] if squeeze else w
 
 # report-023 reserved holdout batch (EVAL_PROTOCOL §3b): TEST wholesale.
 HOLDOUT_BATCH = range(800, 813)
@@ -183,42 +196,46 @@ def load_aov_exr(path):
         return None
 
 
-def _photo_linear(sample, variant):
-    """scene-linear photo. variant in {without,with}. Falls back to png->srgb_to_lin."""
+def _photo_linear(sample, variant, M=None):
+    """scene-linear photo. variant in {without,with}. Falls back to png->srgb_to_lin.
+    Report 053b: `M` = user-crop homography; the warp is a LINEAR-space op, so warping the
+    linear EXR photo commutes with the decode; on the png path it is applied to the raw sRGB
+    array BEFORE srgb_to_lin (mirroring crop_sim's file-space warp)."""
     exr = os.path.join(sample, f"{variant}_shadow_photo_linear.exr")
     if os.path.exists(exr):
         a = _imread_exr(exr)
         if a is not None:
-            return a
+            return _maybe_warp(a, M, "photo_linear")
     png = os.path.join(sample, f"{variant}_shadow_photo.png")
     if not os.path.exists(png):
         png = os.path.join(sample, "photo.png")
     if os.path.exists(png):
         a = cv2.imread(png, cv2.IMREAD_COLOR)[..., ::-1].astype(np.float32) / 255.0
-        return srgb_to_lin(a)
+        return srgb_to_lin(_maybe_warp(a, M, "photo"))
     return None
 
 
-def _load_gt_T(sample):
+def _load_gt_T(sample, M=None):
     p = os.path.join(sample, "gt_T.exr")
     if os.path.exists(p):
-        return _imread_exr(p)
+        return _maybe_warp(_imread_exr(p), M, "gt_T")
     p = os.path.join(sample, "gt_T.png")
     if os.path.exists(p):
         a = cv2.imread(p, cv2.IMREAD_UNCHANGED)
         if a is None:
             return None
         a = a[..., ::-1].astype(np.float32)
-        return a / (65535.0 if a.max() > 255 else 255.0)
+        return _maybe_warp(a / (65535.0 if a.max() > 255 else 255.0), M, "gt_T")
     return None
 
 
-def _load_gt_h(sample):
+def _load_gt_h(sample, M=None):
     p = os.path.join(sample, "gt_h.png")
     if os.path.exists(p):
         raw = cv2.imread(p, cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535.0
         if raw.ndim == 3:
             raw = raw[..., 0]
+        raw = _maybe_warp(raw, M, "gt_h")     # 053b: warp in FILE space, before srgb_to_lin
         return srgb_to_lin(raw)[..., None]
     p = os.path.join(sample, "gt_h.exr")
     if os.path.exists(p):
@@ -227,11 +244,12 @@ def _load_gt_h(sample):
             return None
         if a.ndim == 3:
             a = a[..., 0]
+        a = _maybe_warp(a, M, "gt_h")
         return srgb_to_lin(a)[..., None]
     return None
 
 
-def _load_gt_sigma_s(sample):
+def _load_gt_sigma_s(sample, M=None):
     """Report 048: haze-driven subsurface-scatter radius, emitted by the generator as
     gt_sigma_s (report 043 decompose_haze) on the byte-identical encode path as gt_h --
     so it decodes exactly like h (16-bit PNG / EXR, srgb_to_lin to authored-linear).
@@ -241,6 +259,7 @@ def _load_gt_sigma_s(sample):
         raw = cv2.imread(p, cv2.IMREAD_UNCHANGED).astype(np.float32) / 65535.0
         if raw.ndim == 3:
             raw = raw[..., 0]
+        raw = _maybe_warp(raw, M, "gt_sigma_s")   # 053b: file space, before srgb_to_lin
         return srgb_to_lin(raw)[..., None]
     p = os.path.join(sample, "gt_sigma_s.exr")
     if os.path.exists(p):
@@ -249,17 +268,19 @@ def _load_gt_sigma_s(sample):
             return None
         if a.ndim == 3:
             a = a[..., 0]
+        a = _maybe_warp(a, M, "gt_sigma_s")
         return srgb_to_lin(a)[..., None]
     return None
 
 
-def _load_mask(sample, name):
+def _load_mask(sample, name, M=None):
     p = os.path.join(sample, name)
     if not os.path.exists(p):
         return None
     a = cv2.imread(p, cv2.IMREAD_UNCHANGED).astype(np.float32)
     if a.ndim == 3:
         a = a.mean(-1)
+    a = _maybe_warp(a, M, name)                    # 053b: NEAREST via name (gt_mark_* = label)
     return (a / (65535.0 if a.max() > 255 else 255.0))[..., None]
 
 
@@ -270,7 +291,8 @@ class GlassDelightDataset:
     a plain numpy smoke test."""
 
     def __init__(self, roots, split="train", crop=512, work_size=768,
-                 augment=None, input_variant="random", require_B=False, seed=0):
+                 augment=None, input_variant="random", require_B=False, seed=0,
+                 crop_view=False, patch_prob=0.2):
         assert split in ("train", "test", "all")
         self.crop = crop
         self.work_size = work_size
@@ -278,8 +300,28 @@ class GlassDelightDataset:
         self.augment = (split == "train") if augment is None else augment
         self.input_variant = input_variant
         self.require_B = require_B
+        # Report 053b: serve the user-CROPPED sheet view — photo and every GT channel warped
+        # at load time by the sample's stored crop homography (meta.crop_sim, written by
+        # crop_sim.py). GT crops are no longer materialized on disk; the warp here is
+        # convention-identical to the old crop/ files (see crop_sim.warp_channel +
+        # verify_lazy_crop_053b.py). Samples without crop_sim meta load unwarped (old batches).
+        self.crop_view = crop_view
+        # Report 053b addendum (CTO catch): the reviewer's training diet is "the full cropped
+        # sheet AND local detail patches", but the 053 patches were emitted and never consumed.
+        # With probability `patch_prob` a sample_crop draw serves a NATIVE-RESOLUTION detail
+        # patch (photo + registered GT from <sample>/patches/) instead of a crop of the
+        # work_size-downsampled sheet — patches carry the fine texture (seed bubbles, streak
+        # edges -> the σ_s signal) that the 768-px downsample destroys. Patches inherit their
+        # sample's holdout split (drawn from self.samples, which is already split-filtered).
+        # Samples without patches on disk always serve the sheet view.
+        self.patch_prob = patch_prob
         self.rng = np.random.default_rng(seed)
-        self._cache = {}   # idx -> downsampled component dict (avoids re-reading 50MB EXRs)
+        # 053b pre-flight fix: the component cache was UNBOUNDED — ~30-40MB of work-res
+        # channels per sample x a 268-468-sample pilot ≈ 10-19GB RAM (swap/OOM mid-run).
+        # Bounded LRU now: oldest entry evicted past `cache_size` (~64 x ~35MB ≈ 2.2GB cap).
+        from collections import OrderedDict
+        self._cache = OrderedDict()   # idx -> downsampled component dict (LRU-bounded)
+        self.cache_size = 64
         self.samples = self._index(roots if isinstance(roots, (list, tuple)) else [roots])
         if not self.samples:
             raise SystemExit(f"no {split} samples under {roots} "
@@ -318,25 +360,36 @@ class GlassDelightDataset:
     def _components(self, idx):
         """Read + downsample every channel once; cache. gt_T defines the grid."""
         if idx in self._cache:
+            self._cache.move_to_end(idx)          # LRU touch (053b)
             return self._cache[idx]
         d = self.samples[idx]["dir"]
-        T = _load_gt_T(d)
-        h = _load_gt_h(d)
-        sigma_s = _load_gt_sigma_s(d)
-        photo_wo = _photo_linear(d, "without")
+        # Report 053b: lazy crop warp — resolve the stored homography once for this sample.
+        M = None
+        if self.crop_view:
+            try:
+                cs = json.load(open(os.path.join(d, "meta.json"))).get("crop_sim")
+                if cs and cs.get("homography_src_to_crop"):
+                    M = np.asarray(cs["homography_src_to_crop"], dtype=np.float64)
+            except Exception:
+                M = None
+        T = _load_gt_T(d, M)
+        h = _load_gt_h(d, M)
+        sigma_s = _load_gt_sigma_s(d, M)
+        photo_wo = _photo_linear(d, "without", M)
         if T is None or h is None or photo_wo is None:
-            self._cache[idx] = None
+            self._cache_put(idx, None)
             return None
         H, W = T.shape[:2]
         has_with = os.path.exists(os.path.join(d, "with_shadow_photo_linear.exr")) or \
             os.path.exists(os.path.join(d, "with_shadow_photo.png"))
-        photo_w = _photo_linear(d, "with") if has_with else None
-        mark = _load_mask(d, "gt_mark_mask.png")
+        photo_w = _photo_linear(d, "with", M) if has_with else None
+        mark = _load_mask(d, "gt_mark_mask.png", M)
         mark = np.zeros((H, W, 1), np.float32) if mark is None else (mark > 0.5).astype(np.float32)
         Bp = os.path.join(d, "gt_B.exr")
-        B = _imread_exr(Bp) if os.path.exists(Bp) else None
+        B = _maybe_warp(_imread_exr(Bp), M, "gt_B") if os.path.exists(Bp) else None
         Vp = os.path.join(d, "gt_veil.exr")
         veil = load_aov_exr(Vp) if os.path.exists(Vp) else None
+        veil = _maybe_warp(veil, M, "gt_veil") if veil is not None else None
 
         # downsample everything to a common working grid (max dim == work_size)
         ws = self.work_size
@@ -362,8 +415,15 @@ class GlassDelightDataset:
             "has_B": B is not None, "has_veil": veil is not None,
             "has_sigma_s": sigma_s is not None,
         }
-        self._cache[idx] = comp
+        self._cache_put(idx, comp)
         return comp
+
+    def _cache_put(self, idx, val):
+        """LRU insert with eviction (053b): keeps at most `cache_size` component dicts."""
+        self._cache[idx] = val
+        self._cache.move_to_end(idx)
+        while len(self._cache) > self.cache_size:
+            self._cache.popitem(last=False)
 
     def load_full(self, idx, variant=None):
         """Assemble a per-variant record from the cached components."""
@@ -418,24 +478,131 @@ class GlassDelightDataset:
         out, _preset = apply_phone_pipeline(photo, self.rng, allowed_presets=allowed)
         return out
 
+    # ------------------------------------------------- 053b: detail-patch view
+    def _load_patch(self, idx, patch_idx=None):
+        """Load one native-resolution detail patch (photo + REGISTERED GT) emitted by
+        crop_sim.py into <sample>/patches/. Decode conventions mirror the sheet loaders
+        exactly (photo png -> srgb_to_lin; gt_T raw /65535; gt_h/gt_sigma_s /65535 ->
+        srgb_to_lin; mark thresholded). B/veil have no patch files -> zero-filled with
+        has_B/has_veil False (same contract as pre-GT-v3 batches). Returns None if the
+        sample has no patches."""
+        s = self.samples[idx]
+        pdir = os.path.join(s["dir"], "patches")
+        if not os.path.isdir(pdir):
+            return None
+        pids = sorted({os.path.basename(f).split("_")[0] for f in
+                       glob.glob(os.path.join(pdir, "patch*_gt_T.png"))})
+        if not pids:
+            return None
+        pid = pids[int(self.rng.integers(len(pids)))] if patch_idx is None else f"patch{patch_idx:02d}"
+
+        def _rd(name):
+            p = os.path.join(pdir, f"{pid}_{name}")
+            a = cv2.imread(p, cv2.IMREAD_UNCHANGED) if os.path.exists(p) else None
+            return a
+
+        def _photo(name):
+            a = _rd(name)
+            if a is None:
+                return None
+            return srgb_to_lin(a[..., ::-1].astype(np.float32) / 255.0)
+
+        photo_wo = _photo("without_shadow_photo.png")
+        T = _rd("gt_T.png")
+        h = _rd("gt_h.png")
+        if photo_wo is None or T is None or h is None:
+            return None
+        T = T[..., ::-1].astype(np.float32) / (65535.0 if T.max() > 255 else 255.0)
+        h = srgb_to_lin((h if h.ndim == 2 else h[..., 0]).astype(np.float32) / 65535.0)[..., None]
+        sig = _rd("gt_sigma_s.png")
+        has_sigma_s = sig is not None
+        sig = (srgb_to_lin((sig if sig.ndim == 2 else sig[..., 0]).astype(np.float32) / 65535.0)[..., None]
+               if has_sigma_s else np.zeros_like(h))
+        mark = _rd("gt_mark_mask.png")
+        if mark is not None:
+            mark = ((mark if mark.ndim == 2 else mark.mean(-1)).astype(np.float32)
+                    / (65535.0 if mark.max() > 255 else 255.0) > 0.5).astype(np.float32)[..., None]
+        else:
+            mark = np.zeros_like(h)
+
+        photo_w = _photo("with_shadow_photo.png")
+        variant = self.input_variant
+        if variant == "random":
+            variant = "with" if (photo_w is not None and self.rng.random() < 0.5) else "without"
+        if variant == "with" and photo_w is None:
+            variant = "without"
+        photo = photo_w if variant == "with" else photo_wo
+        P = photo.shape[0]
+        shadow = np.zeros((P, P, 1), np.float32)
+        if variant == "with":
+            dY = lum(photo_wo) - lum(photo)
+            shadow = (dY > 0.02).astype(np.float32)[..., None]
+        valid = (1.0 - mark).astype(np.float32)
+        out = {"photo": photo.astype(np.float32), "T": T, "h": h, "sigma_s": sig,
+               "B": np.zeros((P, P, 3), np.float32), "veil": np.zeros((P, P, 3), np.float32),
+               "shadow": shadow, "mark": mark, "valid": valid,
+               "recipe": s["recipe"], "seed": s["seed"], "variant": variant,
+               "has_B": False, "has_veil": False, "has_sigma_s": has_sigma_s,
+               "view": "patch", "patch_id": pid}
+
+        # ---- size adaptation to self.crop (see report 053b: reflect-pad, valid=0 in pad) ----
+        c = self.crop
+        keys = ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid")
+        if P > c:      # patch bigger than the crop window: random-crop down
+            y0 = int(self.rng.integers(0, P - c + 1))
+            x0 = int(self.rng.integers(0, P - c + 1))
+            for k in keys:
+                out[k] = np.ascontiguousarray(out[k][y0:y0 + c, x0:x0 + c])
+        elif P < c:    # patch smaller: reflect-pad (keeps input statistics glass-like,
+            pad = c - P                                     # no invented black borders) and
+            for k in keys:                                  # mask the pad out of every loss
+                out[k] = np.pad(out[k], ((0, pad), (0, pad), (0, 0)), mode="reflect")
+            out["valid"] = out["valid"].copy()
+            out["valid"][P:, :] = 0.0
+            out["valid"][:, P:] = 0.0
+        return out
+
     def sample_crop(self, idx=None):
-        """One augmented training crop (dict of HxWxC numpy). Identity-holdout is
-        already enforced at index time, so any idx here is split-legal."""
+        """One augmented training draw (dict of HxWxC numpy). Identity-holdout is already
+        enforced at index time, so any idx here is split-legal. Report 053b: with probability
+        `patch_prob` (when the sample has crop_sim patches) the draw is a NATIVE-resolution
+        detail patch instead of a window of the work_size-downsampled sheet — the two-view
+        training diet the external review specified (full cropped sheet + local detail)."""
         if idx is None:
             idx = int(self.rng.integers(len(self.samples)))
-        rec = self.load_full(idx)
-        if rec is None:
-            return None
-        H, W = rec["T"].shape[:2]
-        c = min(self.crop, H, W)
-        y0 = int(self.rng.integers(0, H - c + 1))
-        x0 = int(self.rng.integers(0, W - c + 1))
-        sl = (slice(y0, y0 + c), slice(x0, x0 + c))
-        out = {}
-        for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
-            out[k] = np.ascontiguousarray(rec[k][sl])
-        for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
-            out[k] = rec[k]
+        out = None
+        if self.patch_prob > 0 and self.rng.random() < self.patch_prob:
+            out = self._load_patch(idx)              # None if the sample has no patches
+        if out is None:
+            rec = self.load_full(idx)
+            if rec is None:
+                return None
+            H, W = rec["T"].shape[:2]
+            c = min(self.crop, H, W)
+            y0 = int(self.rng.integers(0, H - c + 1))
+            x0 = int(self.rng.integers(0, W - c + 1))
+            sl = (slice(y0, y0 + c), slice(x0, x0 + c))
+            out = {}
+            for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
+                out[k] = np.ascontiguousarray(rec[k][sl])
+            for k in ("recipe", "seed", "variant", "has_B", "has_veil", "has_sigma_s"):
+                out[k] = rec[k]
+            out["view"] = "sheet"
+            # 053b pre-flight fix 4: guarantee EXACT self.crop draws. Under crop_view a
+            # non-square user crop (or a small work grid) can make c < self.crop, and
+            # collate's np.stack crashes on mixed sizes mid-run. Same policy as the patch
+            # path: reflect-pad to self.crop, valid=0 in the pad (no invented loss signal).
+            ch, cw = out["T"].shape[:2]
+            if ch < self.crop or cw < self.crop:
+                py, px = self.crop - ch, self.crop - cw
+                pmode = "reflect" if (py < ch and px < cw) else "edge"  # reflect needs pad<dim
+                for k in ("photo", "T", "h", "sigma_s", "B", "veil", "shadow", "mark", "valid"):
+                    out[k] = np.pad(out[k], ((0, py), (0, px), (0, 0)), mode=pmode)
+                out["valid"] = out["valid"].copy()
+                if py:
+                    out["valid"][ch:, :] = 0.0
+                if px:
+                    out["valid"][:, cw:] = 0.0
         if self.augment:
             out["photo"] = self._augment_photo(out["photo"])
             if self.rng.random() < 0.5:

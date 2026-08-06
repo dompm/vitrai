@@ -165,6 +165,10 @@ with `--deploy-scene --cover-recipes --gt-b --gt-aov --no-tex-dump --exr-codec D
 - **Capture geometry**: tilt_scale_crop 42 · perspective_rectified 26 (each sample also
   emits 3 registered detail patches).
 - **Storage**: ≤80 MB/sample max (production flags) — inside the ≤100 MB budget.
+  **[AMENDED, 053b]** This measured the RENDER only; the 053 `crop_sim` pass additionally
+  materialized ~150 MB/sample of cropped GT duplicates (true pilot cost ~176 MB/sample). Fixed
+  in `reports/053b-crop-storage-fix-scaled-run.md` (lazy GT warps; crops slimmed to
+  ~59 MB/sample all-in). The 053b report supersedes this line.
 - **Holdout partition** (dataset.py rules, precedence seed→recipe→hdri→geometry):
   train 12 · seed%5 14 · recipe-family 10 · hdri 14 · geometry 18 → **56/68 test (82%)**.
   The small pilot deliberately over-covers held-out families so the lead/CTO can eyeball

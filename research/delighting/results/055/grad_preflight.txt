@@ -1,0 +1,20 @@
+=== tiny backbone ===
+[grad-flow] preflight (tiny backbone, synthetic batch)...
+  [grad-flow] head=T        grad_norm=0.600367  OK
+  [grad-flow] head=h        grad_norm=26.156  OK
+  [grad-flow] head=sigma_s  grad_norm=28.1534  OK
+  [grad-flow] head=B        grad_norm=32.6868  OK
+  [grad-flow] head=shadow   grad_norm=47.8571  OK
+  [grad-flow] head=mark     grad_norm=115.178  OK
+  [grad-flow] head=conf     grad_norm=109.649  OK
+[grad-flow] PASS — all 7 heads reach the trainable parameters
+=== marigold-iid (the backbone actually trained) ===
+[grad-flow] preflight (marigold-iid backbone, synthetic batch)...
+  [grad-flow] head=T        grad_norm=78.4448  OK
+  [grad-flow] head=h        grad_norm=29.4304  OK
+  [grad-flow] head=sigma_s  grad_norm=43.0074  OK
+  [grad-flow] head=B        grad_norm=42.6575  OK
+  [grad-flow] head=shadow   grad_norm=85.653  OK
+  [grad-flow] head=mark     grad_norm=276.537  OK
+  [grad-flow] head=conf     grad_norm=103.051  OK
+[grad-flow] PASS — all 7 heads reach the trainable parameters

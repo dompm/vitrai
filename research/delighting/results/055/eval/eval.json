@@ -1,0 +1,174 @@
+{
+  "backbone": "marigold-iid",
+  "ckpt": "results/055/train/adapter.pt",
+  "work_res": 512,
+  "n_test": 322,
+  "model": {
+    "invariance_T": 0.07642368915060581,
+    "T_mae": 0.13659219800130182,
+    "h_mae": 0.12244713890781302,
+    "retained_energy": 0.30454849759154057,
+    "fine_grad_corr": 0.2821380550156971,
+    "fcs": 0.07003770191026826,
+    "sigma_s_mae": 0.12182520041559738,
+    "sigma_s_relight_l1": 7.833204726468597,
+    "sigma_s_relight_scale": 17.773895592785102,
+    "n_sigma_s": 264,
+    "n_samples": 322,
+    "n_cross_lighting_groups": 189,
+    "held_out_preset": false
+  },
+  "calibration": {
+    "spearman_conf_negerr": -0.033889569864559536,
+    "ece_tau8": 0.3251237979236431,
+    "n_pixels": 200000
+  },
+  "per_recipe_invariance": {
+    "baroque-rolling-wave": 0.027229188320537407,
+    "cathedral-amber": 0.0391106949571301,
+    "cathedral-blue": 0.04022399584452311,
+    "cathedral-green": 0.0519282432893912,
+    "cathedral-red": 0.1606952934976547,
+    "confetti-shard": 0.055914440813163914,
+    "dark-deep": 0.04229971533641219,
+    "dark-opaque": 0.06986010673322848,
+    "dark-ruby": 0.17032495435948172,
+    "dark-slate": 0.14359824750572442,
+    "dark-textured": 0.08817857932299375,
+    "fracture-streamer": 0.0438961829058826,
+    "ring-mottle": 0.07704560913973385,
+    "saturated-opalescent": 0.05130448047485617,
+    "streaky-fine-texture": 0.07103395648300648,
+    "streaky-mix": 0.06939297029748559,
+    "wispy-white": 0.09716605627909303
+  },
+  "frozen_reference": {
+    "invariance_T": {
+      "raw": 0.0946,
+      "exposure_norm": null,
+      "quotient": 0.0815,
+      "classical": 0.0932,
+      "glassnet": null
+    },
+    "T_mae": {
+      "raw": null,
+      "quotient": null,
+      "classical": 0.108,
+      "glassnet": null
+    },
+    "h_mae": {
+      "classical": 0.155
+    },
+    "retained_energy": {
+      "classical": 1.27,
+      "quotient": 1.24,
+      "flatten_control": 0.03
+    },
+    "fcs": {
+      "classical": 0.509,
+      "quotient": 0.589,
+      "flatten_control": 0.0
+    }
+  },
+  "gate": {
+    "sub_floor_flatten_flag": true,
+    "texture_hallucination_flag": false,
+    "texture_ok": false,
+    "beats_classical_primary": true,
+    "beats_quotient_primary": true,
+    "GO": false,
+    "note": "held-out-identity synthetic; GO requires beating classical AND quotient on invariance_T with fine retained-energy in the healthy band [0.5, 2.5] \u2014 neither flattening nor hallucinating texture"
+  },
+  "per_preset": {
+    "clean": {
+      "invariance_T": 0.07642368915060581,
+      "T_mae": 0.13659219800130182,
+      "h_mae": 0.12244713890781302,
+      "retained_energy": 0.30454849759154057,
+      "fine_grad_corr": 0.2821380550156971,
+      "fcs": 0.07003770191026826,
+      "sigma_s_mae": 0.12182520041559738,
+      "sigma_s_relight_l1": 7.833204726468597,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": false
+    },
+    "neutral_mid": {
+      "invariance_T": 0.07390455279765602,
+      "T_mae": 0.13590352029846228,
+      "h_mae": 0.12830357001667772,
+      "retained_energy": 0.30025681349049915,
+      "fine_grad_corr": 0.2631741105656979,
+      "fcs": 0.0591404920818327,
+      "sigma_s_mae": 0.13153780879061247,
+      "sigma_s_relight_l1": 8.495478123104098,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": false
+    },
+    "bright_window_hdr": {
+      "invariance_T": 0.07809295959525157,
+      "T_mae": 0.14692393747615332,
+      "h_mae": 0.11567735070198548,
+      "retained_energy": 0.3051653383040956,
+      "fine_grad_corr": 0.27949152023049995,
+      "fcs": 0.038840291547614564,
+      "sigma_s_mae": 0.1216605280289624,
+      "sigma_s_relight_l1": 7.839630691252897,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": false
+    },
+    "low_light_handheld": {
+      "invariance_T": 0.06741615365737132,
+      "T_mae": 0.14209955483270081,
+      "h_mae": 0.11425840673984104,
+      "retained_energy": 0.2679827205583687,
+      "fine_grad_corr": 0.20077187869840085,
+      "fcs": 0.025059561918950236,
+      "sigma_s_mae": 0.11868912756009112,
+      "sigma_s_relight_l1": 7.662330035670707,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": false
+    },
+    "android_punchy": {
+      "invariance_T": 0.0602340825519817,
+      "T_mae": 0.13405667418058706,
+      "h_mae": 0.12474541810575457,
+      "retained_energy": 0.2931156062915707,
+      "fine_grad_corr": 0.2364527240762916,
+      "fcs": 0.034513732142209264,
+      "sigma_s_mae": 0.12616067134535336,
+      "sigma_s_relight_l1": 8.148647113065925,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": false
+    },
+    "wide_edge": {
+      "invariance_T": 0.0637859729245861,
+      "T_mae": 0.13041785358514937,
+      "h_mae": 0.12601929376504142,
+      "retained_energy": 0.2795053462391282,
+      "fine_grad_corr": 0.2272578393974437,
+      "fcs": 0.039370109872004636,
+      "sigma_s_mae": 0.12938908761222565,
+      "sigma_s_relight_l1": 8.365794794981491,
+      "sigma_s_relight_scale": 17.773895592785102,
+      "n_sigma_s": 264,
+      "n_samples": 322,
+      "n_cross_lighting_groups": 189,
+      "held_out_preset": true
+    }
+  }
+}
