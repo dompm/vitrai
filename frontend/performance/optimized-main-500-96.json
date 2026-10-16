@@ -1,0 +1,14 @@
+{
+  "pieces": 500,
+  "vertices": 96,
+  "snap": false,
+  "events": 600,
+  "frameP95": 17.590000000000146,
+  "canvasWorkP95": 0.3400000035762787,
+  "framesOver50ms": 0,
+  "draws": {
+    "glass.4": 300,
+    "pattern.1": 225,
+    "glass.2": 224
+  }
+}
