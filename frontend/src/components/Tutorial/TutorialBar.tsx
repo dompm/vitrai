@@ -7,14 +7,16 @@ interface TutorialBarProps {
   step: StepId;
   onStart: (trackId?: TrackId) => void;
   onSkip: () => void;
-  onAdvance: () => void;
+  onContinue?: () => void;
+  continueLabel?: string;
+  continueDisabled?: boolean;
   onComplete: () => void;
   customTitle?: string;
   customBody?: string;
   activeTrackId?: TrackId | null;
 }
 
-export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, customTitle, customBody, activeTrackId }: TutorialBarProps) {
+export function TutorialBar({ step, onStart, onSkip, onContinue, continueLabel, continueDisabled, onComplete, customTitle, customBody, activeTrackId }: TutorialBarProps) {
   const { t } = useTranslation();
   const [selectedTrack, setSelectedTrack] = useState<TrackId>('vector-drawing');
 
@@ -30,6 +32,7 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
             <button
               type="button"
               className={`tutorial-track-card ${selectedTrack === 'vector-drawing' ? 'active' : ''}`}
+              aria-pressed={selectedTrack === 'vector-drawing'}
               onClick={() => setSelectedTrack('vector-drawing')}
             >
               <div className="tutorial-track-icon"><IconSquare size={24} /></div>
@@ -39,6 +42,7 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
             <button
               type="button"
               className={`tutorial-track-card ${selectedTrack === 'ai-tracing' ? 'active' : ''}`}
+              aria-pressed={selectedTrack === 'ai-tracing'}
               onClick={() => setSelectedTrack('ai-tracing')}
             >
               <div className="tutorial-track-icon"><IconSpark size={24} /></div>
@@ -48,6 +52,7 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
             <button
               type="button"
               className={`tutorial-track-card ${selectedTrack === 'lamp-creator' ? 'active' : ''}`}
+              aria-pressed={selectedTrack === 'lamp-creator'}
               onClick={() => setSelectedTrack('lamp-creator')}
             >
               <div className="tutorial-track-icon"><IconLamp size={24} /></div>
@@ -57,6 +62,7 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
             <button
               type="button"
               className={`tutorial-track-card ${selectedTrack === 'fabrication' ? 'active' : ''}`}
+              aria-pressed={selectedTrack === 'fabrication'}
               onClick={() => setSelectedTrack('fabrication')}
             >
               <div className="tutorial-track-icon"><IconRuler size={24} /></div>
@@ -105,10 +111,10 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
 
   const currentStepIndex = trackAnchoredSteps.indexOf(step) + 1;
   const totalSteps = trackAnchoredSteps.length;
-  const isManualFinalStep = step === 'lamp-preview-3d' || step === 'fab-print-layout';
+  const text = (part: string) => t(`tutorialStep${step}${part}`);
 
   return (
-    <div className="tutorial-bar" role="complementary">
+    <div className="tutorial-bar" role="complementary" aria-label={t('tutorialEyebrow')} data-tutorial-step={step}>
       <div className="tutorial-bar-left">
         <div className="tutorial-progress-dots" aria-label={`Step ${currentStepIndex} of ${totalSteps}`}>
           {trackAnchoredSteps.map((_, i) => (
@@ -119,23 +125,23 @@ export function TutorialBar({ step, onStart, onSkip, onAdvance, onComplete, cust
           ))}
         </div>
         <div className="tutorial-step-label">
-          {t(`tutorialStep${step}Eyebrow` as any, t(`tutorialStep${currentStepIndex}Eyebrow` as any))}
+          {t('tutorialStepCount', { current: currentStepIndex, total: totalSteps })}
         </div>
       </div>
 
       <div className="tutorial-bar-center">
         <span className="tutorial-bar-instruction-title">
-          {customTitle || t(`tutorialStep${step}Title` as any, t(`tutorialStep${currentStepIndex}Title` as any))}:
+          {customTitle || text('Title')}:
         </span>{' '}
         <span className="tutorial-bar-instruction-body">
-          {customBody || t(`tutorialStep${step}Body` as any, t(`tutorialStep${currentStepIndex}Body` as any))}
+          {customBody || text('Body')}
         </span>
       </div>
 
       <div className="tutorial-bar-right">
-        {isManualFinalStep && (
-          <button className="btn-primary btn-sm" onClick={onAdvance}>
-            {t('tutorialCompleteStepButton')}
+        {onContinue && (
+          <button className="btn-primary btn-sm" onClick={onContinue} disabled={continueDisabled}>
+            {continueLabel}
           </button>
         )}
         <button className="btn-ghost btn-sm" onClick={onSkip}>

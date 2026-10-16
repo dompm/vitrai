@@ -1507,9 +1507,6 @@ html, body, #root {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
 /* Tutorial Modals */
@@ -1959,4 +1956,15 @@ html, body, #root {
   line-height: 1.4;
   color: var(--text-soft);
   margin: 0;
+}
+
+/* Keep instructions accessible while profile/print dialogs are open. */
+.tutorial-bar { z-index: 2050; }
+.tutorial-modal-card { max-height: calc(100dvh - 48px); overflow-y: auto; }
+.tutorial-image-error { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 2200; background: var(--paper); padding: 12px 20px; border: 1px solid var(--ruby); border-radius: 8px; }
+@media (max-width: 800px) {
+  .tutorial-bar { flex-wrap: wrap; gap: 10px; padding: 12px; }
+  .tutorial-bar-center { flex-basis: calc(100% - 150px); margin: 0; }
+  .tutorial-bar-right { margin-left: auto; }
+  .tutorial-track-grid { gap: 8px; }
 }

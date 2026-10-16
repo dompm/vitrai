@@ -41,3 +41,15 @@ The app is a static build. Deploy `frontend/dist/` anywhere that supports custom
 cd frontend
 pnpm build
 ```
+
+## Tutorial regression checks
+
+From `frontend`, run `pnpm exec playwright install chromium`, start `pnpm dev` in one
+terminal, and run `pnpm test:tutorial` in another. Set `TUTORIAL_URL` to use a different
+preview address. CI runs these checks on every pull request.
+
+The browser checks follow all four guides through their actual controls. They check
+highlight geometry, an arbitrary drawn shape, lamp symmetry before drawing, Cancel
+versus Save, nesting, printing, reload recovery, and waiting for segmentation.
+SAM is mocked only in this deterministic suite; also run the photo guide with the
+real model before releasing changes to tracing. Geometry tests run with `pnpm test`.

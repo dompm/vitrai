@@ -316,7 +316,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
           </div>
         </div>
 
-        <div className="move-confirm-actions" style={{ marginTop: 8 }}>
+        <div className="move-confirm-actions" style={{ marginTop: 8, position: 'sticky', bottom: -20, background: 'var(--paper)', padding: '12px 0 4px', zIndex: 1 }}>
           <button
             className="btn-ghost"
             onClick={onCancel}
@@ -475,6 +475,7 @@ function ProfileEditor({
   return (
     <>
       <svg
+        data-tutorial-target="lamp-profile-editor"
         ref={svgRef}
         width={W}
         height={H}

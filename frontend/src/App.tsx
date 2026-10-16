@@ -357,7 +357,6 @@ export function App() {
   const [tutorialStep, setTutorialStep] = useState<StepId | null>(null);
   const [tutorialActiveTrackId, setTutorialActiveTrackId] = useState<TrackId | null>(null);
   const [tutorialPieceId, setTutorialPieceId] = useState<string | null>(null);
-  const [isPacking, setIsPacking] = useState(false);
   const [patternTool, setPatternTool] = useState<ToolId>('select');
   const [sheetTool, setSheetTool] = useState<ToolId>('select');
   const [patternRefineMode, setPatternRefineMode] = useState<'add' | 'remove' | null>(null);
@@ -379,9 +378,18 @@ export function App() {
       if (saved) {
         const parsed = JSON.parse(saved) as PersistedTutorialState;
         if (!parsed.completed && parsed.step) {
-          setTutorialStep(parsed.step);
-          setTutorialActiveTrackId(parsed.activeTrackId ?? null);
-          setTutorialPieceId(parsed.pieceId);
+          preTutorialProjectRef.current = parsed.previousProjectName ?? null;
+          const track = parsed.activeTrackId;
+          if (track && TRACK_STEPS[track]?.includes(parsed.step) && project.name === 'Tutorial') {
+            setTutorialStep(parsed.step === 'lamp-edit-profile' ? 'lamp-profile-intro' : parsed.step);
+            setTutorialActiveTrackId(track);
+            setTutorialPieceId(parsed.pieceId);
+            if (track === 'lamp-creator' && ['lamp-choose-pen', 'lamp-draw-facet', 'lamp-preview-3d'].includes(parsed.step)) {
+              setIsSymmetryEnabled(true);
+            }
+          } else {
+            setTutorialStep('welcome');
+          }
         }
       } else {
         const hasWork = project.pieces.length > 0 || (project.patternScale && project.patternScale.pxPerUnit > 0);
@@ -397,11 +405,21 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoaded]);
 
+  useEffect(() => {
+    if (tutorialStep && tutorialStep !== 'welcome' && project.name !== 'Tutorial') {
+      setTutorialStep(null);
+      setTutorialActiveTrackId(null);
+      setTutorialPieceId(null);
+    }
+  }, [project.name, tutorialStep]);
+
   const startTutorialTour = async (trackId?: TrackId) => {
-    preTutorialProjectRef.current = project.name;
+    if (project.name !== 'Tutorial') preTutorialProjectRef.current = project.name;
     setPatternTool('select');
     setSheetTool('select');
     setIsSymmetryEnabled(false);
+    setPatternRefineMode(null);
+    setLampProfileDialog(null);
     if (!trackId) {
       setTutorialStep('welcome');
       setTutorialActiveTrackId(null);
@@ -412,7 +430,10 @@ export function App() {
 
     // Setup initial project state based on trackId
     if (trackId === 'ai-tracing') {
-      await loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial' });
+      await loadProjectData({ ...DEFAULT_PROJECT, name: 'Tutorial', sheets: DEFAULT_PROJECT.sheets.map(sheet => ({
+        ...sheet,
+        scale: sheet.scale ?? { pxPerUnit: (2058.347 - 764.712) / 12, unit: 'in', line: { x1: 764.712, y1: 768, x2: 2058.347, y2: 768 } },
+      })) });
       setTutorialStep('calibrate-pattern');
     } else if (trackId === 'vector-drawing') {
       // Blank canvas project
@@ -435,7 +456,9 @@ export function App() {
             label: 'Default Glass (Green)',
             imageUrl: '/assets/glass/green.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
-            scale: null,
+            scale: { pxPerUnit: 800 / 12, unit: 'in', line: { x1: 0, y1: 400, x2: 800, y2: 400 } },
+            naturalWidth: 800,
+            naturalHeight: 800,
             swatch: '#a5d6a7'
           },
           {
@@ -443,7 +466,9 @@ export function App() {
             label: 'Cobalt Blue',
             imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
-            scale: null,
+            scale: { pxPerUnit: 800 / 12, unit: 'in', line: { x1: 0, y1: 400, x2: 800, y2: 400 } },
+            naturalWidth: 800,
+            naturalHeight: 800,
             swatch: '#1e88e5'
           }
         ]
@@ -480,7 +505,9 @@ export function App() {
             label: 'Cobalt Blue Glass Sheet',
             imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
-            scale: null,
+            scale: { pxPerUnit: 800 / 12, unit: 'in', line: { x1: 0, y1: 400, x2: 800, y2: 400 } },
+            naturalWidth: 800,
+            naturalHeight: 800,
             swatch: '#1e88e5'
           }
         ]
@@ -496,7 +523,7 @@ export function App() {
         patternHeight: 1000,
         patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
         patternScale: {
-          pxPerUnit: 10,
+          pxPerUnit: 100,
           unit: 'in',
           line: { x1: 0, y1: 0, x2: 100, y2: 0 }
         },
@@ -506,21 +533,21 @@ export function App() {
             label: 'Petal',
             polygon: [[80, 80], [145, 55], [205, 95], [175, 190], [105, 205], [65, 145]],
             glassSheetId: 'sheet-1',
-            transform: { x: 500, y: 180, rotation: 0.35, scale: 1 }
+            transform: { x: 500, y: 180, rotation: 0.35, scale: 2 / 3 }
           },
           {
             id: 'p2',
             label: 'Leaf',
             polygon: [[260, 80], [350, 115], [390, 205], [315, 235], [245, 175]],
             glassSheetId: 'sheet-1',
-            transform: { x: 180, y: 430, rotation: -0.5, scale: 1 }
+            transform: { x: 180, y: 430, rotation: -0.5, scale: 2 / 3 }
           },
           {
             id: 'p3',
             label: 'Corner',
             polygon: [[430, 80], [560, 80], [560, 135], [500, 135], [500, 230], [430, 230]],
             glassSheetId: 'sheet-1',
-            transform: { x: 600, y: 430, rotation: 0.2, scale: 1 }
+            transform: { x: 600, y: 430, rotation: 0.2, scale: 2 / 3 }
           }
         ],
         sheets: [
@@ -530,10 +557,12 @@ export function App() {
             imageUrl: '/assets/glass/blue.jpg',
             crop: { top: 0, left: 0, bottom: 0, right: 0 },
             scale: {
-              pxPerUnit: 10,
+              pxPerUnit: 800 / 12,
               unit: 'in',
-              line: { x1: 0, y1: 0, x2: 100, y2: 0 }
+              line: { x1: 0, y1: 400, x2: 800, y2: 400 }
             },
+            naturalWidth: 800,
+            naturalHeight: 800,
             swatch: '#1e88e5'
           }
         ]
@@ -554,6 +583,11 @@ export function App() {
   };
 
   const skipTutorial = async () => {
+    setLampProfileDialog(null);
+    setPatternRefineMode(null);
+    setPatternTool('select');
+    setSheetTool('select');
+    setIsSymmetryEnabled(false);
     setTutorialStep(null);
     setTutorialActiveTrackId(null);
     setTutorialPieceId(null);
@@ -596,25 +630,21 @@ export function App() {
       : null;
 
     setTutorialStep(nextStep);
-    const state: PersistedTutorialState = {
-      step: nextStep,
-      activeTrackId: nextStep === null ? null : tutorialActiveTrackId,
-      completed: nextStep === null,
-      pieceId: nextStep === null ? null : tutorialPieceId,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   };
 
-  const handleSetTrackedPiece = (id: string) => {
-    setTutorialPieceId(id);
+  const handleSetTrackedPiece = (id: string) => setTutorialPieceId(id);
+
+  useEffect(() => {
+    if (!tutorialLoadedRef.current) return;
     const state: PersistedTutorialState = {
       step: tutorialStep,
       activeTrackId: tutorialActiveTrackId,
-      completed: false,
-      pieceId: id,
+      completed: tutorialStep === null,
+      pieceId: tutorialPieceId,
+      previousProjectName: preTutorialProjectRef.current,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  };
+  }, [tutorialStep, tutorialActiveTrackId, tutorialPieceId]);
 
 
 
@@ -1435,6 +1465,7 @@ export function App() {
             )}
           </div>
           <ResultPanel
+            key={tutorialActiveTrackId ?? 'project'}
             project={project}
             selectedPieceIds={selectedPieceIds}
             pendingPieceIds={pendingPieceIds}
@@ -1559,6 +1590,7 @@ export function App() {
 
         {activeSheet ? (
           <SheetPanel
+            key={tutorialActiveTrackId ?? 'project'}
             sheet={activeSheet}
             pieces={piecesOnActiveSheet}
             selectedPieceIds={selectedPieceIds}
@@ -1575,7 +1607,7 @@ export function App() {
             activeTool={sheetTool}
             onChangeActiveTool={setSheetTool}
             isTutorial={project.name === 'Tutorial'}
-            onPackingChange={setIsPacking}
+            onPackingComplete={() => { if (tutorialStep === 'fab-smart-pack') advanceTutorial(); }}
           />
         ) : (
           <div className="canvas-well" style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
@@ -1781,7 +1813,8 @@ export function App() {
         downloadProgress={downloadProgress}
         isLampProfileOpen={lampProfileDialog !== null}
         isSymmetryEnabled={isSymmetryEnabled}
-        isPacking={isPacking}
+        pendingPieceIds={pendingPieceIds}
+        onExitRefine={() => setPatternRefineMode(null)}
       />
   </div>
   );

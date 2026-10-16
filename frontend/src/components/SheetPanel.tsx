@@ -298,12 +298,12 @@ interface SheetPanelProps {
   onChangeActiveTool: (tool: ToolId) => void;
   showEmptyHint?: boolean;
   isTutorial?: boolean;
-  onPackingChange?: (isPacking: boolean) => void;
+  onPackingComplete?: () => void;
 }
 
 export function SheetPanel({
   sheet, pieces, selectedPieceIds, onSelectPiece, onTransformChange, onTransformsChange, onCropChange, onScaleChange, onImageLoad,
-  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false, onPackingChange,
+  showEmptyHint = false, activeTool, onChangeActiveTool, isTutorial = false, onPackingComplete,
 }: SheetPanelProps) {
   const { t } = useTranslation();
   // activeTool is now passed as a prop from the parent App component
@@ -731,7 +731,6 @@ export function SheetPanel({
     if (pieces.length === 0 || isPacking) return;
     setIsPackPopoverOpen(false);
     setIsPacking(true);
-    onPackingChange?.(true);
     // Clear selection so handles don't follow jumping pieces
     onSelectPiece(null);
 
@@ -749,12 +748,13 @@ export function SheetPanel({
       // leaves them out, so tell the user rather than silently dropping them.
       if (skippedPieceIds.length > 0) {
         alert(t('smartPackSkipped', { count: skippedPieceIds.length }));
+      } else {
+        onPackingComplete?.();
       }
     } catch (err) {
       console.error('[SheetPanel] smart pack failed', err);
     } finally {
       setIsPacking(false);
-      onPackingChange?.(false);
     }
   }
 
@@ -816,6 +816,7 @@ export function SheetPanel({
                 </label>
                 <button
                   type="button"
+                  data-tutorial-target="start-packing"
                   onClick={handleSmartPack}
                   disabled={isPacking || pieces.length === 0}
                   style={{

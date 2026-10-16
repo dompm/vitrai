@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
-import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText, Arrow } from 'react-konva';
+import { Stage, Layer, Image as KonvaImage, Line, Group, Rect, Circle, Text as KonvaText } from 'react-konva';
 import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
@@ -1894,6 +1894,7 @@ export function ResultPanel({
                   <span className="solder-popover-val">{(project.solderWidthMM ?? 4.5).toFixed(1)} mm</span>
                 </div>
                 <input
+                  data-tutorial-target="solder-slider"
                   type="range"
                   min="1.0"
                   max="10.0"
@@ -2415,7 +2416,7 @@ export function ResultPanel({
                     />
                   )}
                   {tutorialStep === 'vector-draw-shape' && (
-                    <>
+                    <Group listening={false}>
                       <Line
                         points={[300, 300, 700, 300, 500, 700, 300, 300]}
                         stroke="#fbbf24"
@@ -2431,29 +2432,18 @@ export function ResultPanel({
                       
                       <Circle x={500} y={700} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
                       <KonvaText x={496} y={694} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
-                    </>
+                    </Group>
                   )}
-                  {tutorialStep === 'vector-curve-edge' && (
-                    <>
-                      <Line
-                        points={[300, 300, 300, 500, 500, 700]}
-                        stroke="#fbbf24"
-                        strokeWidth={2 / es}
-                        dash={[6 / es, 4 / es]}
-                        tension={0.5}
-                        listening={false}
-                      />
-                      <Arrow
-                        points={[400, 500, 320, 500]}
-                        stroke="#10b981"
-                        strokeWidth={3 / es}
-                        fill="#10b981"
-                        pointerLength={10 / es}
-                        pointerWidth={10 / es}
-                        listening={false}
-                      />
-                    </>
-                  )}
+                  {tutorialStep === 'lamp-draw-facet' && unrolledLamp?.mode === 'faceted' && (() => {
+                    const strip = unrolledLamp.strips[0];
+                    const tier = strip?.tiers[0];
+                    if (!tier) return null;
+                    const half = Math.min(tier.topChord, tier.botChord) * 0.3;
+                    const top = tier.topY + (tier.botY - tier.topY) * 0.2;
+                    const bottom = tier.topY + (tier.botY - tier.topY) * 0.8;
+                    return <Line points={[strip.centerX - half, top, strip.centerX + half, top, strip.centerX, bottom, strip.centerX - half, top]}
+                      stroke={CANVAS.amber} strokeWidth={2 / es} dash={[6 / es, 4 / es]} listening={false} />;
+                  })()}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
                     <Rect
                       x={924.124254866509}
@@ -2615,7 +2605,7 @@ export function ResultPanel({
                               key={`mid-${idx}`}
                               x={hx}
                               y={hy}
-                              radius={5 / es}
+                              radius={(tutorialStep === 'vector-curve-edge' ? 7 : 5) / es}
                               fill={CANVAS.amber}
                               stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
