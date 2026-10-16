@@ -11,6 +11,7 @@ interface Props {
   onCancel: () => void;
   onConfirm: (config: Partial<LampConfig>) => void;
   onUpdatePatternScale?: (scale: import('../types').Scale) => void;
+  hasTutorialBar?: boolean;
 }
 
 type Preset = 'cylinder' | 'cone' | 'dome' | 'pyramid' | 'tulip';
@@ -64,7 +65,7 @@ const PRESETS: Record<Preset, { facetCount: number; profilePoints: LampProfilePo
   },
 };
 
-export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm, onUpdatePatternScale }: Props) {
+export function LampProfileDialog({ project, initialConfig, isFirstTime, onCancel, onConfirm, onUpdatePatternScale, hasTutorialBar }: Props) {
   const { t } = useTranslation();
   const [facetCount, setFacetCount] = useState(initialConfig.facetCount);
   const [smooth, setSmooth] = useState<boolean>(!!initialConfig.smooth);
@@ -187,10 +188,20 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
   const scale = project.patternScale || { pxPerUnit: 100, unit: 'in' as const };
 
   return (
-    <div className="move-confirm-backdrop" onClick={onCancel}>
+    <div
+      className="move-confirm-backdrop"
+      style={{ paddingBottom: hasTutorialBar ? 120 : 0, boxSizing: 'border-box' }}
+      onClick={onCancel}
+    >
       <div
         className="move-confirm-dialog"
-        style={{ width: 640, maxWidth: '94%', maxHeight: '92vh', overflowY: 'auto' }}
+        style={{
+          width: 640,
+          maxWidth: '94%',
+          maxHeight: hasTutorialBar ? 'calc(100vh - 150px)' : '92vh',
+          overflowY: 'auto',
+          paddingBottom: 20,
+        }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
@@ -305,7 +316,7 @@ export function LampProfileDialog({ project, initialConfig, isFirstTime, onCance
           </div>
         </div>
 
-        <div className="move-confirm-actions" style={{ marginTop: 8 }}>
+        <div className="move-confirm-actions" style={{ marginTop: 8, position: 'sticky', bottom: -20, background: 'var(--paper)', padding: '12px 0 4px', zIndex: 1 }}>
           <button
             className="btn-ghost"
             onClick={onCancel}
@@ -464,6 +475,7 @@ function ProfileEditor({
   return (
     <>
       <svg
+        data-tutorial-target="lamp-profile-editor"
         ref={svgRef}
         width={W}
         height={H}

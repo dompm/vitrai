@@ -23,3 +23,10 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      - run: pnpm test
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Exercise tutorial workflows in Chromium
+        run: |
+          pnpm dev --host 127.0.0.1 > /tmp/vitrai-vite.log 2>&1 &
+          curl --retry 15 --retry-connrefused --retry-delay 1 --fail http://127.0.0.1:5173/ > /dev/null
+          pnpm test:tutorial
