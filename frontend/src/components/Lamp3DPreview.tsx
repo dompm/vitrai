@@ -4,9 +4,11 @@ import * as THREE from 'three';
 import type { Project, LampConfig, GlassSheet } from '../types';
 import { computeUnrolledLamp, patternToSurface } from '../utils/lampGeometry';
 import { computeCentroid, flattenCurves } from '../utils/geometry';
+import { PieceTransformPreviewStore, usePieceTransformPreviewVersion } from '../editor/interaction/pieceTransformPreviewStore';
 
 interface Props {
   project: Project;
+  pieceTransformPreviewStore?: PieceTransformPreviewStore;
   selectedPieceIds: string[];
   onSelectPiece: (id: string | null) => void;
   onUpdateLampConfig: (config: Partial<LampConfig>) => void;
@@ -77,10 +79,13 @@ function disposeGroupChildren(group: THREE.Group) {
   }
 }
 
-export function Lamp3DPreview({ project }: Props) {
+export function Lamp3DPreview({ project, pieceTransformPreviewStore: providedPreviewStore }: Props) {
   const { t } = useTranslation();
+  const [fallbackPreviewStore] = useState(() => new PieceTransformPreviewStore());
+  const pieceTransformPreviewStore = providedPreviewStore ?? fallbackPreviewStore;
   const config = project.lampConfig ?? DEFAULT_CONFIG;
   const unrolledLamp = useMemo(() => computeUnrolledLamp(config), [config]);
+  const previewVersion = usePieceTransformPreviewVersion(pieceTransformPreviewStore);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -321,7 +326,7 @@ export function Lamp3DPreview({ project }: Props) {
       // Must match the centroid the sheet renderer/packing use (curve-flattened
       // outline), otherwise curved pieces sample a shifted glass region.
       const centroid2D = computeCentroid(flat);
-      const { x: tx, y: ty, rotation, scale } = piece.transform;
+      const { x: tx, y: ty, rotation, scale } = pieceTransformPreviewStore.get(piece.id) ?? piece.transform;
       const cosR = Math.cos(rotation);
       const sinR = Math.sin(rotation);
       const sheetW = sheet.naturalWidth ?? 800;
@@ -446,7 +451,7 @@ export function Lamp3DPreview({ project }: Props) {
     }
 
     requestRender();
-  }, [config, project.pieces, project.sheets, unrolledLamp]);
+  }, [config, project.pieces, project.sheets, unrolledLamp, pieceTransformPreviewStore, previewVersion]);
 
   // ── Camera from yaw / pitch + auto-frame ─────────────────────────────
   useEffect(() => {
