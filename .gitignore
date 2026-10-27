@@ -25,3 +25,5 @@ data/
 
 # TypeScript incremental build state
 *.tsbuildinfo
+
+frontend/dist-performance/

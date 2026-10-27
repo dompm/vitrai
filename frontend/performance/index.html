@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vitrai performance validation</title>
+  </head>
+  <body style="margin: 0">
+    <div
+      id="bench"
+      style="
+        position: fixed;
+        z-index: 10000;
+        right: 8px;
+        bottom: 40px;
+        background: white;
+        color: black;
+        padding: 12px;
+        max-width: 400px;
+      "
+    >
+      <button id="run">Measure drag</button
+      ><button id="behavior">Check behavior</button>
+      <pre
+        id="results"
+        style="max-height: 320px; overflow: auto; font-size: 11px"
+      >
+Ready</pre
+      >
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/performance/main.tsx"></script>
+  </body>
+</html>
