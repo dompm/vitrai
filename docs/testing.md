@@ -51,3 +51,13 @@ TUTORIAL_URL="https://your-preview.pages.dev" pnpm test:tutorial
 ```
 
 > **Note:** The smoke test deterministically mocks the SAM2 ONNX runtime backend to avoid downloading the ~100MB model in CI. When modifying AI tracing, also manually verify tracing with real inference.
+
+## Regenerating README Screenshots
+
+After UI changes, regenerate the `docs/assets/readme-*.png` screenshots with:
+
+```bash
+cd frontend
+pnpm screenshots:readme
+```
+

@@ -1,46 +1,37 @@
-# Vitrai
+<div align="center">
+  <img src="frontend/public/vitrai_logo.svg" alt="Vitrai" width="64" />
+  <h1>Vitrai</h1>
+  <p>Stained glass pattern drafting, glass sheet layout, and 3D lampshade design in the browser.</p>
+  <p><a href="https://vitrai.dominiquepiche.com"><strong>vitrai.dominiquepiche.com</strong></a></p>
+</div>
 
-A browser-based CAD and virtual composition studio for stained glass artists.
+![Vitrai workspace](docs/assets/readme-hero.png)
 
-**Live Studio: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
+## Overview
 
-Stained glass is an unforgiving craft: once an expensive sheet of variegated art glass is cut, there is no undo button. Vitrai bridges digital vector design and physical fabrication—turning the stressful guesswork of pattern scaling, texture placement, and 3D assembly into digital confidence.
+Vitrai is a CAD and material-planning tool for stained glass work. It pairs a 2D pattern editor with calibrated photos of real glass sheets so you can draft pieces, preview how directional grain and color streaks line up across a panel or 3D lampshade, and print 1:1 cutting templates.
 
----
+Everything runs locally in the browser—photos and projects stay on your device in the Origin Private File System (OPFS), and image segmentation runs client-side via WebGPU/WebAssembly.
 
-## What you can do
+## Capabilities
 
-### ✏️ Draft & Trace
-- **Vector CAD:** Draw panels from scratch on a clean canvas with the Pen tool, snap to 45° angles, and drag segments into smooth Bézier curves.
-- **Photo Tracing:** Import photos of existing patterns or sketches. Outline pieces instantly with on-device AI (SAM2) or trace manually over the image.
-- **Dimensional Calibration:** Set physical measurements (inches or centimeters) using a reference ruler so your project is locked to real-world scale.
+### Pattern drafting and photo tracing
 
-### 🎨 Material Auditioning
-- **Real Glass Inventory:** Add photos of your actual glass sheets and calibrate their physical dimensions.
-- **Texture Flow:** Drag, rotate, and position pieces over glass sheets to align grain, wisps, and variegation before making a single cut.
-- **Live Colorway Preview:** See your design come to life with authentic textures and light transmission.
+Draw patterns from scratch with vertex snapping, angle constraints, and curved segments, or import a reference photo and extract piece outlines using on-device SAM2 segmentation alongside manual pen tracing. A reference ruler calibrates the pattern to physical dimensions in inches or centimeters.
 
-### 🏮 3D Lampshade Studio
-- **Parametric Silhouette:** Drag profile handles to shape lampshades from geometric cones to classic flared forms.
-- **Automatic Unrolling:** Vitrai calculates and unrolls faceted tiers into flat pattern pieces automatically.
-- **Concurrent Symmetry:** Work on one facet while Vitrai replicates matching pieces around the shade in real time.
-- **Interactive 3D Assembly:** Spin, inspect, and preview the finished lamp rendered with physical glass materials.
+![Tracing and vector editing](docs/assets/readme-tracing.png)
 
-### 📐 Fabrication Prep
-- **Smart Pack & Nesting:** Automatically nest pattern pieces onto glass sheets with configurable cutting margins to minimize expensive scrap.
-- **Solder & Came Lines:** Preview how your finished piece will look with adjustable solder bead and lead came widths.
-- **1:1 Scale Multi-Page Printing:** Export printable pattern sheets tiled across standard printer pages (Letter/A4) at exact 1:1 physical dimensions.
+### 3D lampshade unrolling
 
----
+Define a lampshade silhouette from control points to unroll faceted tiers into flat templates. With symmetry enabled, pieces drawn on one facet replicate around the shade and update the 3D preview in real time.
 
-## Local & Private by Design
+![3D lampshade design](docs/assets/readme-lamp.png)
 
-- **Runs 100% Client-Side:** No artwork or photos are ever uploaded to a server.
-- **On-Device AI:** SAM2 inference runs entirely in your browser via WebAssembly and WebGPU (ONNX Runtime Web).
-- **No Accounts Required:** Open the studio and start creating immediately.
-- **Offline Persistence:** Work is automatically saved in your browser's Origin Private File System (OPFS).
+### Glass nesting and 1:1 printing
 
----
+Import photos of your glass stock, set their physical scale, and position pieces over specific areas of the sheet. The packing tool nests pieces within a sheet's boundaries with a configurable cutting allowance. Adjust solder or came line thickness to check joint spacing, then print tiled 1:1 pages with registration marks.
+
+![Sheet nesting and fabrication](docs/assets/readme-fabrication.png)
 
 ## Development
 
@@ -50,6 +41,4 @@ pnpm install
 pnpm dev
 ```
 
-Open `http://localhost:5173/` in your browser.
-
-To run the unit test suite or the Playwright browser regression checks, see [docs/testing.md](docs/testing.md).
+See [`docs/testing.md`](docs/testing.md) for unit and browser regression test commands.

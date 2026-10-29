@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:tutorial": "node scripts/tutorial-smoke.mjs",
-    "test:interaction": "vitest run src/editor/__tests__"
+    "test:interaction": "vitest run src/editor/__tests__",
+    "screenshots:readme": "node scripts/generate-readme-screenshots.mjs"
   },
   "dependencies": {
     "i18next": "^26.0.10",
