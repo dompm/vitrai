@@ -109,9 +109,16 @@ try {
     const { computeUnrolledLamp } = await import('/src/utils/lampGeometry.ts');
     const layout = computeUnrolledLamp({ facetCount: 6, profilePoints: [{ r: 50, y: 0 }, { r: 100, y: 80 }, { r: 100, y: 140 }], activeTierIndex: 0 });
     const strip = layout.strips[0], tier = strip.tiers[0];
-    const half = Math.min(tier.topChord, tier.botChord) * .3;
-    const top = tier.topY + (tier.botY - tier.topY) * .2;
-    return { width: layout.width, height: layout.height, points: [[strip.centerX - half, top], [strip.centerX + half, top], [strip.centerX, tier.topY + (tier.botY - tier.topY) * .8]] };
+    return {
+      width: layout.width,
+      height: layout.height,
+      points: [
+        [strip.centerX - tier.topChord / 2, tier.topY],
+        [strip.centerX + tier.topChord / 2, tier.topY],
+        [strip.centerX + tier.botChord / 2, tier.botY],
+        [strip.centerX - tier.botChord / 2, tier.botY],
+      ],
+    };
   });
   await draw(lamp, shape.points, shape.width, shape.height);
   await step(lamp, 'lamp-preview-3d');
@@ -157,6 +164,9 @@ try {
   await tracing.evaluate(() => window.__finishTutorialSegmentation());
   await step(tracing, 'refine-first-piece');
   await tracing.getByRole('button', { name: 'Looks good — continue', exact: true }).click();
+  await step(tracing, 'trace-hand-pen');
+  await tool(tracing, 'pen');
+  await draw(tracing, [[2000, 1320], [2750, 1750], [2460, 2180], [1800, 1820]], 3072, 4080);
   await step(tracing, 'assign-first-glass');
   await tracing.locator('[data-tutorial-target="piece-glass-select"]').selectOption('sheet-2');
   await step(tracing, 'position-first-texture');

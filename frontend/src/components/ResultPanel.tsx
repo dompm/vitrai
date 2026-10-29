@@ -2643,12 +2643,56 @@ export function ResultPanel({
                     const strip = unrolledLamp.strips[0];
                     const tier = strip?.tiers[0];
                     if (!tier) return null;
-                    const half = Math.min(tier.topChord, tier.botChord) * 0.3;
-                    const top = tier.topY + (tier.botY - tier.topY) * 0.2;
-                    const bottom = tier.topY + (tier.botY - tier.topY) * 0.8;
-                    return <Line points={[strip.centerX - half, top, strip.centerX + half, top, strip.centerX, bottom, strip.centerX - half, top]}
-                      stroke={CANVAS.amber} strokeWidth={2 / es} dash={[6 / es, 4 / es]} listening={false} />;
+                    const p1 = [strip.centerX - tier.topChord / 2, tier.topY];
+                    const p2 = [strip.centerX + tier.topChord / 2, tier.topY];
+                    const p3 = [strip.centerX + tier.botChord / 2, tier.botY];
+                    const p4 = [strip.centerX - tier.botChord / 2, tier.botY];
+                    const pts = [p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1], p1[0], p1[1]];
+                    return (
+                      <Group listening={false}>
+                        <Line
+                          points={pts}
+                          stroke="#fbbf24"
+                          strokeWidth={2 / es}
+                          dash={[6 / es, 4 / es]}
+                          listening={false}
+                        />
+                        <Circle x={p1[0]} y={p1[1]} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p1[0] - 4 / es} y={p1[1] - 6 / es} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p2[0]} y={p2[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p2[0] - 4 / es} y={p2[1] - 6 / es} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p3[0]} y={p3[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p3[0] - 4 / es} y={p3[1] - 6 / es} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p4[0]} y={p4[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p4[0] - 4 / es} y={p4[1] - 6 / es} text="4" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      </Group>
+                    );
                   })()}
+                  {tutorialStep === 'trace-hand-pen' && (
+                    <Group listening={false}>
+                      <Line
+                        points={[2000, 1320, 2750, 1750, 2460, 2180, 1800, 1820, 2000, 1320]}
+                        stroke="#fbbf24"
+                        strokeWidth={4 / es}
+                        dash={[12 / es, 8 / es]}
+                        listening={false}
+                      />
+                      <Circle x={2000} y={1320} radius={18 / es} fill="#10b981" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2000 - 8 / es} y={1320 - 11 / es} text="1" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={2750} y={1750} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2750 - 8 / es} y={1750 - 11 / es} text="2" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={2460} y={2180} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2460 - 8 / es} y={2180 - 11 / es} text="3" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={1800} y={1820} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={1800 - 8 / es} y={1820 - 11 / es} text="4" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+                    </Group>
+                  )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
                     <Rect
                       x={924.124254866509}

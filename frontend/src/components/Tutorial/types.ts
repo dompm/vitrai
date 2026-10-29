@@ -6,6 +6,7 @@ export type StepId =
   | 'calibrate-pattern'
   | 'cut-first-piece'
   | 'refine-first-piece'
+  | 'trace-hand-pen'
   | 'assign-first-glass'
   | 'position-first-texture'
   // vector-drawing steps
@@ -34,6 +35,7 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
     'calibrate-pattern',
     'cut-first-piece',
     'refine-first-piece',
+    'trace-hand-pen',
     'assign-first-glass',
     'position-first-texture',
     'done',
@@ -84,6 +86,7 @@ export const ANCHORED_STEPS: StepId[] = [
   'calibrate-pattern',
   'cut-first-piece',
   'refine-first-piece',
+  'trace-hand-pen',
   'assign-first-glass',
   'position-first-texture',
   'vector-blank-canvas',
@@ -118,6 +121,11 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
   'refine-first-piece': {
     id: 'refine-first-piece',
     spotlightTarget: '[data-tutorial-target="piece-refine-buttons"]',
+    panel: 'pattern',
+  },
+  'trace-hand-pen': {
+    id: 'trace-hand-pen',
+    spotlightTarget: '[data-tutorial-panel="pattern"] [data-tool-id="pen"]',
     panel: 'pattern',
   },
   'assign-first-glass': {

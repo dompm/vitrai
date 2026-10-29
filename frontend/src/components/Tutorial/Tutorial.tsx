@@ -97,6 +97,12 @@ export function Tutorial({
       case 'refine-first-piece':
         if (!piece) onSetStep('cut-first-piece');
         break;
+      case 'trace-hand-pen':
+        if (project.pieces.length >= 2) {
+          if (piece) onSelectPiece(piece.id);
+          onAdvance();
+        }
+        break;
       case 'vector-blank-canvas':
       case 'lamp-choose-pen':
         if (patternTool === 'pen') onAdvance();
@@ -165,6 +171,10 @@ export function Tutorial({
     continueLabel = t('tutorialLooksGoodButton');
     continueDisabled = !piece || !!isEncoding || pendingPieceIds.has(piece.id);
   }
+  if (step === 'trace-hand-pen') {
+    target = patternTool === 'pen' ? patternCanvas : '[data-tutorial-panel="pattern"] [data-tool-id="pen"]';
+    continueLabel = t('tutorialContinue');
+  }
   if (step === 'vector-curve-edge') {
     if (patternTool !== 'select') target = '[data-tutorial-panel="pattern"] [data-tool-id="select"]';
     continueLabel = piece?.curvePoints?.length ? t('tutorialContinue') : t('tutorialSkipCurve');
@@ -197,6 +207,9 @@ export function Tutorial({
       return;
     }
     onExitRefine();
+    if (step === 'trace-hand-pen' && piece) {
+      onSelectPiece(piece.id);
+    }
     onAdvance();
   };
   const loading = step === 'cut-first-piece' && !!isEncoding && !dismissedLoading;

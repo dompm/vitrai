@@ -1,12 +1,48 @@
 # Vitrai
 
-A Stained Glass CAD & Virtual Composition Studio — plan, draft, and assemble your designs with real-world glass textures at exact 1:1 scale entirely in the browser.
+A browser-based CAD and virtual composition studio for stained glass artists.
 
-**App: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
+**Live Studio: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
 
-Runs entirely in the browser (no backend). SAM2 inference runs on-device via WebAssembly/WebGPU (ONNX Runtime Web).
+Stained glass is an unforgiving craft: once an expensive sheet of variegated art glass is cut, there is no undo button. Vitrai bridges digital vector design and physical fabrication—turning the stressful guesswork of pattern scaling, texture placement, and 3D assembly into digital confidence.
 
-## Getting started
+---
+
+## What you can do
+
+### ✏️ Draft & Trace
+- **Vector CAD:** Draw panels from scratch on a clean canvas with the Pen tool, snap to 45° angles, and drag segments into smooth Bézier curves.
+- **Photo Tracing:** Import photos of existing patterns or sketches. Outline pieces instantly with on-device AI (SAM2) or trace manually over the image.
+- **Dimensional Calibration:** Set physical measurements (inches or centimeters) using a reference ruler so your project is locked to real-world scale.
+
+### 🎨 Material Auditioning
+- **Real Glass Inventory:** Add photos of your actual glass sheets and calibrate their physical dimensions.
+- **Texture Flow:** Drag, rotate, and position pieces over glass sheets to align grain, wisps, and variegation before making a single cut.
+- **Live Colorway Preview:** See your design come to life with authentic textures and light transmission.
+
+### 🏮 3D Lampshade Studio
+- **Parametric Silhouette:** Drag profile handles to shape lampshades from geometric cones to classic flared forms.
+- **Automatic Unrolling:** Vitrai calculates and unrolls faceted tiers into flat pattern pieces automatically.
+- **Concurrent Symmetry:** Work on one facet while Vitrai replicates matching pieces around the shade in real time.
+- **Interactive 3D Assembly:** Spin, inspect, and preview the finished lamp rendered with physical glass materials.
+
+### 📐 Fabrication Prep
+- **Smart Pack & Nesting:** Automatically nest pattern pieces onto glass sheets with configurable cutting margins to minimize expensive scrap.
+- **Solder & Came Lines:** Preview how your finished piece will look with adjustable solder bead and lead came widths.
+- **1:1 Scale Multi-Page Printing:** Export printable pattern sheets tiled across standard printer pages (Letter/A4) at exact 1:1 physical dimensions.
+
+---
+
+## Local & Private by Design
+
+- **Runs 100% Client-Side:** No artwork or photos are ever uploaded to a server.
+- **On-Device AI:** SAM2 inference runs entirely in your browser via WebAssembly and WebGPU (ONNX Runtime Web).
+- **No Accounts Required:** Open the studio and start creating immediately.
+- **Offline Persistence:** Work is automatically saved in your browser's Origin Private File System (OPFS).
+
+---
+
+## Development
 
 ```bash
 cd frontend
@@ -14,42 +50,6 @@ pnpm install
 pnpm dev
 ```
 
-Then open `http://localhost:5173/`.
+Open `http://localhost:5173/` in your browser.
 
-## Core Features
-
-- **AI Segmenter (SAM2)** — Draw bounding boxes or click prompt points to auto-segment a pattern photo into smooth vector pieces.
-- **Vector CAD Canvas** — Draft custom stained glass panels from scratch. Place vertices, snap lines to 45° angles, and drag straight lines into bezier curves.
-- **3D Lamp Assembly** — Construct complex rotational assemblies. Define lampshade silhouettes, assign symmetry properties, and interactively preview how your flat pieces wrap around a 3D mold.
-- **Glass Sheet Nesting** — Import photos of your real glass sheets, set their scales, and map textures to pieces. Use **Smart Pack** to automatically nest pieces on sheets with cutting gap tolerances.
-- **True Scale Printing** — Calibrate real-world size dimensions on any pattern. Export multi-page PDFs at exact 1:1 physical size.
-- **OPFS Persistence** — Locally autosaves work offline in the browser's origin private file system.
-
-## Tech Stack
-
-- React + TypeScript + Vite + Konva.js
-- `onnxruntime-web` (WebAssembly & WebGPU) for SAM2 AI inference
-- Three.js for 3D Lamp projection
-- OPFS for local project persistence
-- Cloudflare Pages for hosting (COOP/COEP headers required for SharedArrayBuffer)
-
-## Deployment
-
-The app is a static build. Deploy `frontend/dist/` anywhere that supports custom response headers. The `frontend/public/_headers` file configures COOP/COEP for Cloudflare Pages.
-
-```bash
-cd frontend
-pnpm build
-```
-
-## Tutorial regression checks
-
-From `frontend`, run `pnpm exec playwright install chromium`, start `pnpm dev` in one
-terminal, and run `pnpm test:tutorial` in another. Set `TUTORIAL_URL` to use a different
-preview address. CI runs these checks on every pull request.
-
-The browser checks follow all four guides through their actual controls. They check
-highlight geometry, an arbitrary drawn shape, lamp symmetry before drawing, Cancel
-versus Save, nesting, printing, reload recovery, and waiting for segmentation.
-SAM is mocked only in this deterministic suite; also run the photo guide with the
-real model before releasing changes to tracing. Geometry tests run with `pnpm test`.
+To run the unit test suite or the Playwright browser regression checks, see [docs/testing.md](docs/testing.md).
