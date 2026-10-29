@@ -1,4 +1,6 @@
-import { forwardRef, memo, useState, useEffect, useRef, useMemo, useImperativeHandle } from 'react';
+import { PieceViewportLayers } from './canvas/PieceViewportLayers';
+import { PieceImageCache } from '../editor/interaction/pieceImageCache';
+import { forwardRef, memo, useState, useEffect, useRef, useMemo, useImperativeHandle, useCallback, useSyncExternalStore } from 'react';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -69,6 +71,7 @@ function DragHandle({ onDrag, pointerEvents = 'auto' }: { onDrag: (delta: { x: n
 
 
 interface PieceOverlayProps {
+  imageCache: PieceImageCache;
   piece: Piece;
   geometry: PieceGeometry;
   glassImageUrl: string;
@@ -82,8 +85,11 @@ interface PieceOverlayProps {
   previewStore: PieceTransformPreviewStore;
 }
 
-const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore }: PieceOverlayProps) {
-  const [glassImg] = useImage(glassImageUrl);
+const PieceOverlay = memo(function PieceOverlay({ piece, imageCache, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore }: PieceOverlayProps) {
+  const glassImg = useSyncExternalStore(
+    useCallback(listener => imageCache.subscribe(glassImageUrl, listener), [imageCache, glassImageUrl]),
+    useCallback(() => imageCache.get(glassImageUrl), [imageCache, glassImageUrl]),
+  );
   const [pulseHi, setPulseHi] = useState(false);
   useEffect(() => {
     if (!isPending) { setPulseHi(false); return; }
@@ -94,6 +100,7 @@ const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl
   const { flatPoints: flatPts, centroid, bounds, clipFunc: clipPolygon } = geometry;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
+  useEffect(() => () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }, []);
 
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
@@ -116,13 +123,13 @@ const PieceOverlay = memo(function PieceOverlay({ piece, geometry, glassImageUrl
   }
 
   return (
-    <Group
+    <Group name="pattern-piece" id={piece.id}
       onClick={handleClick} onTap={handleClick} opacity={opacity}
       onPointerDown={handlePointerDown} onPointerMove={cancelLongPress} onPointerUp={cancelLongPress}
     >
       <Line points={flatPts} closed fill="rgba(0,0,0,0)" />
       <Group clipFunc={clipPolygon}>
-        <Group
+        <Group name="pattern-texture"
           x={centroid.x} y={centroid.y}
           rotation={(-rotation * 180) / Math.PI}
           scaleX={1 / scale} scaleY={1 / scale}
@@ -1468,6 +1475,8 @@ export function ResultPanel({
   }, [tutorialStep, project.pieces.length]);
   
   const [patternImg, patternImgStatus] = useImage(project.patternImageUrl);
+  const imageCache = useMemo(() => new PieceImageCache(), []);
+  useEffect(() => imageCache.retain(new Set(project.sheets.map(sheet => sheet.imageUrl))), [imageCache, project.sheets]);
   const sheetMap = useMemo(
     () => Object.fromEntries(project.sheets.map(s => [s.id, s])),
     [project.sheets],
@@ -2274,8 +2283,7 @@ export function ResultPanel({
                   )}
                 </ViewportGroup>
               </Layer>
-              <Layer>
-                <ViewportGroup store={vp.store}
+              <PieceViewportLayers store={vp.store} activeId={selectedPieceIds.length === 1 ? selectedPieceIds[0] : undefined} disabled={Boolean(debugMask && activeTool === 'box')}
                   {...(activeTool === 'crop' ? {} : {
                     clipX: project.patternCrop.left,
                     clipY: project.patternCrop.top,
@@ -2308,13 +2316,7 @@ export function ResultPanel({
                       opacity={0.5}
                     />
                   )}
-                  {activeTool !== 'inspect' && [...project.pieces]
-                    .sort((a, b) => {
-                      const aTop = Number(selectedPieceIdSet.has(a.id) || pendingPieceIds.has(a.id));
-                      const bTop = Number(selectedPieceIdSet.has(b.id) || pendingPieceIds.has(b.id));
-                      return aTop - bTop;
-                    })
-                    .map(piece => {
+                  {activeTool !== 'inspect' && project.pieces.map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIdSet.has(piece.id);
                     // Corner drag: override polygon directly (activeDragPolygon)
@@ -2324,6 +2326,7 @@ export function ResultPanel({
                     const geometry = getPieceGeometry(basePolygon, baseCurves);
                     return (
                       <PieceOverlay
+                        imageCache={imageCache}
                         key={piece.id}
                         piece={piece}
                         geometry={geometry}
@@ -2347,8 +2350,7 @@ export function ResultPanel({
                       globalCompositeOperation="difference"
                     />
                   )}
-                </ViewportGroup>
-              </Layer>
+              </PieceViewportLayers>
               <Layer>
                 <ViewportSubscriber store={vp.store}>{(viewport) => { const es = viewport.effectiveScale; return <ViewportGroup store={vp.store}
                   {...(activeTool === 'crop' ? {} : {
@@ -2733,6 +2735,26 @@ export function ResultPanel({
                     }
                     return null;
                   })()}
+                  {activeTool !== 'inspect' && project.pieces.map(piece => {
+                    const isSelected = selectedPieceIdSet.has(piece.id);
+                    const isPending = pendingPieceIds.has(piece.id);
+                    if (!isSelected && !isPending) return null;
+                    const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
+                    const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
+                    const geometry = getPieceGeometry(basePolygon, baseCurves);
+                    return (
+                      <Line
+                        key={`selected-outline-${piece.id}`}
+                        points={geometry.flatPoints}
+                        stroke={isPending ? CANVAS.patternPending : CANVAS.amber}
+                        strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
+                        lineJoin="round"
+                        lineCap="round"
+                        closed
+                        listening={false}
+                      />
+                    );
+                  })}
                   {project.pieces.map(piece => {
                     if (!selectedPieceIdSet.has(piece.id) || !piece.promptPoints) return null;
                     return piece.promptPoints.map((pt, i) => (
