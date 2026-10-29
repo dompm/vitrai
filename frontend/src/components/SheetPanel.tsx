@@ -945,7 +945,9 @@ export function SheetPanel({
           </Layer>
           <Layer>
             <ViewportGroup store={vp.store}>
-              {pieces.map(piece => (
+              {[...pieces]
+                .sort((a, b) => Number(selectedPieceIdSet.has(a.id)) - Number(selectedPieceIdSet.has(b.id)))
+                .map(piece => (
                 <PieceOutline
                   key={piece.id + '-stroke'}
                   piece={piece}

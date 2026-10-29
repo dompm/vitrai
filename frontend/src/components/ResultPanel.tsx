@@ -2308,7 +2308,13 @@ export function ResultPanel({
                       opacity={0.5}
                     />
                   )}
-                  {activeTool !== 'inspect' && project.pieces.map(piece => {
+                  {activeTool !== 'inspect' && [...project.pieces]
+                    .sort((a, b) => {
+                      const aTop = Number(selectedPieceIdSet.has(a.id) || pendingPieceIds.has(a.id));
+                      const bTop = Number(selectedPieceIdSet.has(b.id) || pendingPieceIds.has(b.id));
+                      return aTop - bTop;
+                    })
+                    .map(piece => {
                     const sheet = sheetMap[piece.glassSheetId];
                     const isSelected = selectedPieceIdSet.has(piece.id);
                     // Corner drag: override polygon directly (activeDragPolygon)
