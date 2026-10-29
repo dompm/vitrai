@@ -437,7 +437,7 @@ async function main() {
             const newPoly = poly.map(([px, py]) => replicatePointToFacet(px, py, 0, j, unrolled, N));
             const col = j % 3;
             const row = Math.floor(j / 3);
-            const transform = { x: 220 + col * 180, y: 250 + row * 200, rotation: 0, scale: 0.7 };
+            const transform = { x: 150 + col * 250, y: 260 + row * 280, rotation: 0, scale: 1.65 };
 
             pieces.push({
               id: `lamp-t${tierIdx}-f${j}`,
@@ -461,7 +461,7 @@ async function main() {
           patternWidth: unrolled.width,
           patternHeight: unrolled.height,
           patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
-          patternScale: { pxPerUnit: 10, unit: 'in', line: { x1: 0, y1: 0, x2: 100, y2: 0 } },
+          patternScale: { pxPerUnit: 40, unit: 'in', line: { x1: 0, y1: 0, x2: 100, y2: 0 } },
           pieces,
           sheets: [
             {
