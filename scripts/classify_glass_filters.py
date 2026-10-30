@@ -4,7 +4,7 @@ from pathlib import Path
 from PIL import Image
 from collections import Counter
 ROOT=Path(__file__).resolve().parent.parent
-REVIEWED=json.loads((ROOT/'research/catalog_ordering_20261029/reviewed_trade_colors.json').read_text())
+REVIEWED=json.loads((ROOT/'scripts/data/reviewed_trade_colors.json').read_text())
 P=ROOT/'frontend/public/assets/glass_swatch_registry.json';rows=json.loads(P.read_text())
 terms={
 'Red':r'red|scarlet|ruby|cranberry|cherry|wine|carmine|garnet',
@@ -46,5 +46,4 @@ for r in rows:
  if r['id'] in REVIEWED:appearance=REVIEWED[r['id']]['appearance']
  r['facets']={'version':1,'colors':colors,'appearance':appearance,'surface':surface,'color_basis':source}
 P.write_text(json.dumps(rows,indent=2)+'\n')
-out=ROOT/'research/catalog_ordering_20261029';(out/'filter_classification.json').write_text(json.dumps([{'id':r['id'],'name':r['name'],**r['facets']} for r in rows],indent=2)+'\n')
 for field in ['appearance','surface','color_basis']:print(field,Counter(r['facets'][field] for r in rows))

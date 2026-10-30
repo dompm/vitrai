@@ -6,8 +6,7 @@ from pathlib import Path
 from collections import Counter
 ROOT=Path(__file__).resolve().parent.parent
 FILE=ROOT/'frontend/public/assets/glass_swatch_registry.json'
-OUT=ROOT/'research/catalog_ordering_20261029'
-rows=json.loads(FILE.read_text()); audit=[]
+rows=json.loads(FILE.read_text())
 for r in rows:
  n=r['name'].lower();cat=r['category'];m=r['manufacturer']
  if re.search(r'iridescen|\birid\b|luminescen|dichro|prismatic|accordion|reeded|herringbone|\bcube\b|\baetre?x?\b|\bflute|radium',n):
@@ -34,9 +33,6 @@ for r in rows:
   for key,words in [('Blue',r'blue|aqua|teal|turquoise|cyan'),('Green',r'green|emerald|lime|viridian|shamrock'),('Purple',r'purple|violet|lavender|grape|lilac|mauve'),('Red',r'red|scarlet|ruby'),('Pink',r'pink|rose'),('Orange',r'orange|tangerine'),('Yellow',r'yellow|gold|marigold|dandelion'),('Brown',r'amber|brown|bronze|khaki'),('Clear',r'clear'),('Monochrome',r'white|black|gray|grey|ivory')]:
    if re.search(words,n):color=key;break
  r['browse']={'version':1,'group':group,'style':style,'color':color,'family':m+':'+family,'reason':reason}
- audit.append({'id':r['id'],'name':r['name'],'color':r['color_family'],**r['browse']})
-OUT.mkdir(exist_ok=True)
-(OUT/'classification.json').write_text(json.dumps(audit,indent=2)+'\n')
 FILE.write_text(json.dumps(rows,indent=2)+'\n')
 print(Counter(r['browse']['group'] for r in rows))
 for g in ['everyday','character','specialty']:
