@@ -605,8 +605,52 @@ async function main() {
       await context.close();
     }
 
+    // ------------------------------------------------------------------------
+    // SCREENSHOT 5: docs/assets/readme-glass-library.png
+    // ------------------------------------------------------------------------
+    console.log('\n--- Generating Screenshot 5: readme-glass-library.png ---');
+    {
+      const context = await browser.newContext({
+        viewport: { width: 1440, height: 900 },
+        deviceScaleFactor: 2,
+        locale: 'en-US',
+      });
+      const page = await context.newPage();
+      await page.goto(TARGET_URL);
+
+      const libProject = createHeroWindowProject(4.5);
+      await loadProjectIntoPage(page, libProject);
+
+      // Open the + menu in the Glass tab bar and click "Browse Glass Library…"
+      const addSheetBtn = page.locator('.sheet-tab', { hasText: /^\+$/ }).first();
+      await addSheetBtn.click();
+      await page.getByRole('button', { name: /Browse Glass Library/i }).click();
+
+      await page.locator('.glass-library-dialog').waitFor({ state: 'visible' });
+      await page.locator('.glass-library-card').first().waitFor({ state: 'visible' });
+
+      // Blur search input so focus outline doesn't distract in screenshot
+      await page.evaluate(() => {
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
+        }
+      });
+
+      // Wait for visible swatch thumbnails to load
+      await page.waitForFunction(() => {
+        const imgs = Array.from(document.querySelectorAll('.glass-library-card-thumb')).slice(0, 12);
+        return imgs.length >= 8 && imgs.every(img => img.complete && img.naturalWidth > 0);
+      }, { timeout: 15000 });
+      await new Promise(r => setTimeout(r, 300));
+
+      const libPath = path.join(OUTPUT_DIR, 'readme-glass-library.png');
+      await page.screenshot({ path: libPath, fullPage: false });
+      console.log(`Saved ${libPath} (${fs.statSync(libPath).size} bytes)`);
+      await context.close();
+    }
+
     await browser.close();
-    console.log('\nSUCCESS! All 4 screenshots generated.');
+    console.log('\nSUCCESS! All 5 screenshots generated.');
   } finally {
     cleanupServer();
   }

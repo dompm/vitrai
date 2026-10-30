@@ -27,9 +27,15 @@ Define a lampshade silhouette from control points to unroll faceted tiers into f
 
 ![3D lampshade design](docs/assets/readme-lamp.png)
 
+### Curated glass swatch library
+
+Browse over 1,200 calibrated stained glass sheets from Bullseye, Oceanside, Wissmach, and Youghiogheny, filtered by color family, streaky or mottled appearance, surface texture, and SKU. Adding a swatch brings it into your project pre-calibrated to its physical dimensions.
+
+![Stained glass swatch library](docs/assets/readme-glass-library.png)
+
 ### Glass nesting and 1:1 printing
 
-Import photos of your glass stock, set their physical scale, and position pieces over specific areas of the sheet. The packing tool nests pieces within a sheet's boundaries with a configurable cutting allowance. Adjust solder or came line thickness to check joint spacing, then print tiled 1:1 pages with registration marks.
+Import photos of your own glass stock or pick from the swatch catalog, and position pieces over specific areas of the sheet to align directional grain and color streaks. The packing tool nests pieces within a sheet's boundaries with a configurable cutting allowance. Adjust solder or came line thickness to check joint spacing, then print tiled 1:1 pages with registration marks.
 
 ![Sheet nesting and fabrication](docs/assets/readme-fabrication.png)
 
