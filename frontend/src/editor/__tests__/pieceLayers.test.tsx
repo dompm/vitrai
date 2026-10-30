@@ -4,14 +4,12 @@ vi.mock("react-konva", () => ({
   Layer: ({ children }: { children: React.ReactNode }) => (
     <section>{children}</section>
   ),
-}));
-vi.mock("../viewport/viewportStore", () => ({
-  ViewportGroup: ({ children }: { children: React.ReactNode }) => (
+  Group: ({ children }: { children: React.ReactNode }) => (
     <div>{children}</div>
   ),
 }));
 import { PieceViewportLayers } from "../../components/canvas/PieceViewportLayers";
-import type { ViewportStore } from "../viewport/viewportStore";
+import { ViewportStore } from "../viewport/viewportStore";
 import { partitionPieces } from "../geometry/partitionPieces";
 function Piece({ piece }: { piece: { id: string } }) {
   return <span>{piece.id}</span>;
@@ -29,11 +27,12 @@ describe("selected-piece drawing ranges", () => {
     }
   });
   it("isolates the selected piece without moving neighbors above or below it", () => {
+    const store = new ViewportStore();
     const nodes = ["a", "b", "c"].map((id) => (
       <Piece key={id} piece={{ id }} />
     ));
     const tree = create(
-      <PieceViewportLayers store={{} as ViewportStore} activeId="b">
+      <PieceViewportLayers store={store} activeId="b">
         {nodes}
       </PieceViewportLayers>,
     );
@@ -45,7 +44,7 @@ describe("selected-piece drawing ranges", () => {
         ),
     ).toEqual([["a"], ["b"], ["c"]]);
     tree.update(
-      <PieceViewportLayers store={{} as ViewportStore} activeId="b" disabled>
+      <PieceViewportLayers store={store} activeId="b" disabled>
         {nodes}
       </PieceViewportLayers>,
     );
@@ -53,12 +52,13 @@ describe("selected-piece drawing ranges", () => {
     tree.unmount();
   });
   it("keeps handles after active content and screen overlays on the final drawing surface", () => {
+    const store = new ViewportStore();
     const nodes = ["a", "b", "c"].map((id) => (
       <Piece key={id} piece={{ id }} />
     ));
     const tree = create(
       <PieceViewportLayers
-        store={{} as ViewportStore}
+        store={store}
         activeId="b"
         followingWithActive
         overlay={<p>guides</p>}
