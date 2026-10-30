@@ -11,8 +11,6 @@
     "test": "vitest run",
     "test:tutorial": "node scripts/tutorial-smoke.mjs",
     "test:interaction": "vitest run src/editor/__tests__",
-    "perf:build": "vite build --mode performance",
-    "perf:preview": "vite preview --outDir dist-performance --port 4280",
     "screenshots:readme": "node scripts/generate-readme-screenshots.mjs"
   },
   "dependencies": {

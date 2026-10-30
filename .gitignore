@@ -26,8 +26,6 @@ data/
 # TypeScript incremental build state
 *.tsbuildinfo
 
-frontend/dist-performance/
-
 /.env.r2.local
 frontend/.env.local
 frontend/public/assets/catalog_images/
