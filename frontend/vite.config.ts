@@ -1,16 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig(({ mode }) => ({
-  ...(mode === "performance"
-    ? {
-        build: {
-          target: "esnext",
-          outDir: "dist-performance",
-          rollupOptions: { input: "performance/index.html" },
-        },
-      }
-    : {}),
+export default defineConfig({
   plugins: [react()],
   server: {
     headers: {
@@ -18,4 +9,4 @@ export default defineConfig(({ mode }) => ({
       "Cross-Origin-Embedder-Policy": "require-corp",
     },
   },
-}));
+});
