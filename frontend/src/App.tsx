@@ -4,6 +4,7 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { GlassLibraryDialog } from './components/GlassLibraryDialog';
 import { AddSheetMenu } from './components/AddSheetMenu';
 
 import { Lamp3DPreview } from './components/Lamp3DPreview';
@@ -509,6 +510,7 @@ export function App() {
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
   const [, setFocusedPanelIdx] = useState<number | null>(null);
@@ -1584,7 +1586,15 @@ export function App() {
           currentProjectName={project.name}
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
+          onOpenLibrary={() => setShowGlassLibrary(true)}
           onClose={() => setAddSheetMenu(null)}
+        />
+      )}
+
+      {showGlassLibrary && (
+        <GlassLibraryDialog
+          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
+          onClose={() => setShowGlassLibrary(false)}
         />
       )}
 

@@ -27,6 +27,8 @@ export class PieceImageCache {
         resource.ready = true;
         resource.listeners.forEach((listener) => listener());
       };
+      // Hosted glass must stay canvas-readable under the app's COEP policy.
+      image.crossOrigin = 'anonymous';
       image.src = url;
     }
     return entry;

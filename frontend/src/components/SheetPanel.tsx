@@ -338,7 +338,7 @@ export function SheetPanel({
     draggedId: string;
     transforms: Map<string, TextureTransform>;
   } | null>(null);
-  const [sheetImg] = useImage(sheet.imageUrl);
+  const [sheetImg] = useImage(sheet.imageUrl, 'anonymous');
   const sheetW = sheetImg?.width ?? 800;
   const sheetH = sheetImg?.height ?? 600;
   useEffect(() => {
