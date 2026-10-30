@@ -286,43 +286,133 @@ export function snapPolygonToNeighbors(
     return { pt: [bestX, bestY] as [number, number], nbIdx: bestNb, edgeIdx: bestEdge };
   });
 
-  // 3. Bridge single-vertex gaps and lock seam-end corners along a shared seam:
-  // - If both i-1 and i+1 snapped to the same neighbor, bridge vertex i onto that neighbor (up to 1.6 * radius).
-  // - If an adjacent vertex snapped to a neighbor and vertex i is within 1.8 * radius of a corner vertex of that
-  //   same neighbor, snap vertex i to that neighbor corner so seam ends meet cleanly at 3-way solder joints.
+  // 3. Hysteresis seam tracking, multi-vertex gap bridging, and seam-end corner locking:
+  // In real stained glass photos, dark solder lines vary in width (e.g. 12–24 px) and widen at 3-way
+  // joints. Once part of a seam snaps to a neighbor within `radius`, extend the snap along the same
+  // neighbor up to `1.65 * radius`, bridge multi-vertex gaps up to `1.95 * radius`, and prune isolated
+  // 1-vertex grazing snaps.
   const n = snappedMeta.length;
-  const bridgeR2 = (radius * 1.6) * (radius * 1.6);
-  const cornerEndR2 = (radius * 1.8) * (radius * 1.8);
+  const projectOntoNeighbor = (pt: [number, number], nbIdx: number, maxR2: number) => {
+    const nb = neighbors[nbIdx];
+    const [px, py] = pt;
+    let bestD2 = maxR2;
+    let bestX = px, bestY = py;
+    let bestEdge = -1;
+    for (let j = 0; j < nb.length; j++) {
+      const [ax, ay] = nb[j];
+      const [bx, by] = nb[(j + 1) % nb.length];
+      const dx = bx - ax, dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      const t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+      let cx = ax + t * dx, cy = ay + t * dy;
+      const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+      if (d2 < bestD2) {
+        if ((cx - ax) * (cx - ax) + (cy - ay) * (cy - ay) <= endpointPullR2) {
+          cx = ax; cy = ay;
+        } else if ((cx - bx) * (cx - bx) + (cy - by) * (cy - by) <= endpointPullR2) {
+          cx = bx; cy = by;
+        }
+        bestD2 = d2;
+        bestX = cx;
+        bestY = cy;
+        bestEdge = j;
+      }
+    }
+    return bestEdge >= 0 ? { pt: [bestX, bestY] as [number, number], nbIdx, edgeIdx: bestEdge, d2: bestD2 } : null;
+  };
+
+  // 3a. Hysteresis extension along already-snapped neighbors
+  const hystR2 = (radius * 1.65) * (radius * 1.65);
+  for (let pass = 0; pass < 3; pass++) {
+    for (let i = 0; i < n; i++) {
+      if (snappedMeta[i].nbIdx >= 0) continue;
+      const prev = snappedMeta[(i - 1 + n) % n];
+      const next = snappedMeta[(i + 1) % n];
+      const candNb = prev.nbIdx >= 0 ? prev.nbIdx : next.nbIdx;
+      if (candNb < 0) continue;
+      const hit = projectOntoNeighbor(polygon[i], candNb, hystR2);
+      if (hit) {
+        snappedMeta[i] = { pt: hit.pt, nbIdx: hit.nbIdx, edgeIdx: hit.edgeIdx };
+      }
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      if (snappedMeta[i].nbIdx >= 0) continue;
+      const prev = snappedMeta[(i - 1 + n) % n];
+      const next = snappedMeta[(i + 1) % n];
+      const candNb = next.nbIdx >= 0 ? next.nbIdx : prev.nbIdx;
+      if (candNb < 0) continue;
+      const hit = projectOntoNeighbor(polygon[i], candNb, hystR2);
+      if (hit) {
+        snappedMeta[i] = { pt: hit.pt, nbIdx: hit.nbIdx, edgeIdx: hit.edgeIdx };
+      }
+    }
+  }
+
+  // 3b. Bridge multi-vertex gaps between two snapped runs on the same neighbor
+  const bridgeR2 = (radius * 1.95) * (radius * 1.95);
+  const maxGap = Math.max(6, Math.min(24, Math.floor(n * 0.28)));
+  for (let i = 0; i < n; i++) {
+    const startNb = snappedMeta[i].nbIdx;
+    if (startNb < 0) continue;
+    if (snappedMeta[(i + 1) % n].nbIdx === startNb) continue;
+    let gapLen = 0;
+    let endIdx = -1;
+    for (let g = 1; g <= maxGap; g++) {
+      const idx = (i + g) % n;
+      if (snappedMeta[idx].nbIdx === startNb) {
+        endIdx = idx;
+        break;
+      }
+      if (snappedMeta[idx].nbIdx >= 0 && snappedMeta[idx].nbIdx !== startNb) {
+        break;
+      }
+      gapLen++;
+    }
+    if (endIdx >= 0 && gapLen >= 1) {
+      const bridged: { idx: number; pt: [number, number]; edgeIdx: number }[] = [];
+      let allOk = true;
+      for (let g = 1; g <= gapLen; g++) {
+        const idx = (i + g) % n;
+        const hit = projectOntoNeighbor(polygon[idx], startNb, bridgeR2);
+        if (!hit) {
+          allOk = false;
+          break;
+        }
+        bridged.push({ idx, pt: hit.pt, edgeIdx: hit.edgeIdx });
+      }
+      if (allOk) {
+        for (const b of bridged) {
+          snappedMeta[b.idx] = { pt: b.pt, nbIdx: startNb, edgeIdx: b.edgeIdx };
+        }
+      }
+    }
+  }
+
+  // 3c. Prune isolated 1-vertex grazing snaps unless very close to a neighbor vertex
+  const grazeKeepR2 = (radius * 0.65) * (radius * 0.65);
+  if (n >= 8) {
+    for (let i = 0; i < n; i++) {
+      const cur = snappedMeta[i];
+      if (cur.nbIdx < 0) continue;
+      const prev = snappedMeta[(i - 1 + n) % n];
+      const next = snappedMeta[(i + 1) % n];
+      if (prev.nbIdx !== cur.nbIdx && next.nbIdx !== cur.nbIdx) {
+        const orig = polygon[i];
+        const d2 = (orig[0] - cur.pt[0]) ** 2 + (orig[1] - cur.pt[1]) ** 2;
+        if (d2 > grazeKeepR2) {
+          snappedMeta[i] = { pt: orig, nbIdx: -1, edgeIdx: -1 };
+        }
+      }
+    }
+  }
+
+  // 3d. Lock seam-end vertices onto nearby neighbor corners so 3-way solder joints meet cleanly
+  const cornerEndR2 = (radius * 1.85) * (radius * 1.85);
   for (let i = 0; i < n; i++) {
     if (snappedMeta[i].nbIdx >= 0) continue;
     const prev = snappedMeta[(i - 1 + n) % n];
     const next = snappedMeta[(i + 1) % n];
     const [px, py] = snappedMeta[i].pt;
-    if (prev.nbIdx >= 0 && prev.nbIdx === next.nbIdx) {
-      const nb = neighbors[prev.nbIdx];
-      let bestD2 = bridgeR2;
-      let bestX = px, bestY = py;
-      let snapped = false;
-      for (let j = 0; j < nb.length; j++) {
-        const [ax, ay] = nb[j];
-        const [bx, by] = nb[(j + 1) % nb.length];
-        const dx = bx - ax, dy = by - ay;
-        const len2 = dx * dx + dy * dy;
-        const t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
-        const cx = ax + t * dx, cy = ay + t * dy;
-        const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
-        if (d2 < bestD2) {
-          bestD2 = d2;
-          bestX = cx;
-          bestY = cy;
-          snapped = true;
-        }
-      }
-      if (snapped) {
-        snappedMeta[i] = { pt: [bestX, bestY], nbIdx: prev.nbIdx, edgeIdx: prev.edgeIdx };
-        continue;
-      }
-    }
     for (const adj of [prev, next]) {
       if (adj.nbIdx < 0) continue;
       const nb = neighbors[adj.nbIdx];
@@ -411,8 +501,8 @@ export function snapPolygonToNeighbors(
           const runPoly = rotated.slice(idx, endRun + 1).map(m => m.pt);
           const runLength = pathLen(runPoly);
           const candLength = pathLen(candidate);
-          const allClose = candLength <= Math.max(runLength * 1.35, radius * 2) &&
-            candidate.every(cp => pointToNeighborsDistance(cp, [runPoly]) <= radius * 1.6);
+          const allClose = candLength <= Math.max(runLength * 1.45, radius * 2.5) &&
+            candidate.every(cp => pointToNeighborsDistance(cp, [runPoly]) <= radius * 2.0);
           if (allClose) {
             alignedPts.push(...candidate);
             idx = endRun + 1;
@@ -507,11 +597,49 @@ function intersectLines(a1: Point, a2: Point, b1: Point, b2: Point): Point | nul
   return [a1[0] + t * dax, a1[1] + t * day];
 }
 
+function buildArcLengthTable(pts: Point[]): number[] {
+  const s: number[] = [0];
+  for (let i = 0; i < pts.length; i++) {
+    const next = pts[(i + 1) % pts.length];
+    s.push(s[i] + Math.hypot(next[0] - pts[i][0], next[1] - pts[i][1]));
+  }
+  return s;
+}
+
+function sampleClosedLoopAtS(pts: Point[], sTable: number[], targetS: number): Point {
+  const totalLen = sTable[sTable.length - 1];
+  if (totalLen <= 1e-6 || pts.length === 0) return pts[0] ?? [0, 0];
+  const s = ((targetS % totalLen) + totalLen) % totalLen;
+  let lo = 0;
+  let hi = pts.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (sTable[mid + 1] < s) lo = mid + 1;
+    else if (sTable[mid] > s) hi = mid - 1;
+    else {
+      lo = mid;
+      break;
+    }
+  }
+  const idx = Math.max(0, Math.min(pts.length - 1, lo));
+  const segLen = sTable[idx + 1] - sTable[idx];
+  const t = segLen > 1e-9 ? (s - sTable[idx]) / segLen : 0;
+  const p0 = pts[idx];
+  const p1 = pts[(idx + 1) % pts.length];
+  return [p0[0] + (p1[0] - p0[0]) * t, p0[1] + (p1[1] - p0[1]) * t];
+}
+
+function circularArcDistance(s1: number, s2: number, totalLen: number): number {
+  const diff = Math.abs(s1 - s2) % totalLen;
+  return Math.min(diff, totalLen - diff);
+}
+
 /**
  * Clean up SAM2 marching-squares / RDP artifacts before curve fitting:
  * 1. Prune near-collinear jitter vertices on free edges so straight sides become clean segments.
  * 2. Consolidate short 2–4 vertex corner chamfers/bevels (where SAM2 rounds a 90° corner
- *    into multiple ~25°–38° steps) back into a single crisp corner apex.
+ *    into multiple ~25°–38° steps) back into a single crisp corner apex when flanked by
+ *    genuinely straight edges.
  */
 function consolidateBeveledCornersAndJitter(
   initialPts: Point[],
@@ -525,7 +653,7 @@ function consolidateBeveledCornersAndJitter(
   const isLocked = (pt: Point) =>
     neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol;
 
-  // Pass 1: Remove only strictly collinear micro-jitter (dev <= 0.8px) without
+  // Pass 1: Remove strictly collinear micro-jitter (dev <= 0.85px) without
   // daisy-chaining across gentle curves, preserving contour samples for Bezier fitting.
   if (pts.length > 4) {
     const nextPts: Point[] = [];
@@ -540,7 +668,7 @@ function consolidateBeveledCornersAndJitter(
       const next = pts[(i + 1) % m];
       const turn = turningAngleRad(prev, cur, next);
       const dev = pointLineDistance(cur, prev, next);
-      if (turn < (3 * Math.PI) / 180 && dev <= 0.8) {
+      if (turn < (4 * Math.PI) / 180 && dev <= 0.85) {
         continue;
       }
       nextPts.push(cur);
@@ -550,9 +678,12 @@ function consolidateBeveledCornersAndJitter(
     }
   }
 
-  if (pts.length <= 4) return pts;
+  // Only run discrete 2–4 vertex bevel cluster consolidation on coarse polygons (e.g. <= 28 vertices).
+  // On dense SAM2 contours, Step 2 of fitSmoothPieceCurves restores rounded corners over the
+  // multi-scale [wNear, wOuter] arc-length window without creating local segment-intersection spikes.
+  if (pts.length <= 4 || pts.length > 28) return pts;
 
-  // Pass 2: Collapse localized 2–4 vertex corner chamfers flanked by longer edges.
+  // Pass 2: Collapse localized 2–4 vertex corner chamfers flanked by straight edges.
   // Rotate pts so that the longest edge is the wrap-around segment (m - 1) -> 0,
   // guaranteeing no corner bevel cluster straddles index 0.
   let longestIdx = 0;
@@ -571,9 +702,9 @@ function consolidateBeveledCornersAndJitter(
   }
 
   const perim = polygonPerimeter(pts);
-  const maxBevelSegLen = Math.max(12, Math.min(28, perim * 0.045));
-  const maxBevelClusterLen = Math.max(24, Math.min(48, perim * 0.08));
-  const minBevelVertexTurn = (12 * Math.PI) / 180;
+  const maxBevelSegLen = Math.max(10, Math.min(24, perim * 0.04));
+  const maxBevelClusterLen = Math.max(20, Math.min(42, perim * 0.075));
+  const minBevelVertexTurn = (14 * Math.PI) / 180;
 
   const m = pts.length;
   const signedTurns = pts.map((cur, i) =>
@@ -651,15 +782,17 @@ function consolidateBeveledCornersAndJitter(
         ? Math.acos(Math.max(-1, Math.min(1, (inVec[0] * outVec[0] + inVec[1] * outVec[1]) / (inLen * outLen))))
         : 0;
 
+    // Require the flanking edges to be meaningfully longer than the bevel facets
+    // so short steps along a dense curved contour are never mistaken for a beveled corner.
+    const minFlankLen = Math.max(14, avgBevelLen * 1.35);
     const flankedByLongerSides =
       bevelSumLen <= maxBevelClusterLen &&
-      Math.max(inSegLen, outSegLen) >= avgBevelLen * 1.6 &&
-      Math.min(inSegLen, outSegLen) >= avgBevelLen * 1.15;
+      Math.max(inSegLen, outSegLen) >= Math.max(18, avgBevelLen * 1.75) &&
+      Math.min(inSegLen, outSegLen) >= minFlankLen;
 
-    if (netTurn >= cornerAngleRad && flankedByLongerSides) {
+    if (netTurn >= cornerAngleRad && netTurn <= (145 * Math.PI) / 180 && flankedByLongerSides) {
       const lockedInCluster = cluster.filter(idx => isLocked(pts[idx]));
       if (lockedInCluster.length > 1) {
-        // Keep locked seam vertices untouched
         consolidated.push(pts[i]);
         continue;
       }
@@ -668,19 +801,17 @@ function consolidateBeveledCornersAndJitter(
       if (lockedInCluster.length === 1) {
         apex = pts[lockedInCluster[0]];
       } else {
-        // Intersect the incoming edge ray (pBefore -> pFirst) with outgoing edge ray (pAfter -> pLast)
         const hit = intersectLines(pBefore, pFirst, pLast, pAfter);
         if (hit) {
           const forwardIn = (hit[0] - pBefore[0]) * inVec[0] + (hit[1] - pBefore[1]) * inVec[1] > 0;
           const backwardOut = (pAfter[0] - hit[0]) * outVec[0] + (pAfter[1] - hit[1]) * outVec[1] > 0;
           const midCluster: Point = [(pFirst[0] + pLast[0]) / 2, (pFirst[1] + pLast[1]) / 2];
           const hitDist = Math.hypot(hit[0] - midCluster[0], hit[1] - midCluster[1]);
-          if (forwardIn && backwardOut && hitDist <= Math.max(maxBevelSegLen * 1.6, bevelSumLen * 1.5)) {
+          if (forwardIn && backwardOut && hitDist <= Math.min(12, bevelSumLen * 0.75)) {
             apex = hit;
           }
         }
         if (!apex) {
-          // Fallback: pick the cluster vertex farthest from the chord pBefore -> pAfter
           let bestIdx = cluster[0];
           let bestDist = -1;
           for (const idx of cluster) {
@@ -832,6 +963,133 @@ function computeChainCubicFitError(chain: Point[]): { maxErr: number; worstIdx: 
 }
 
 /**
+ * Remove narrow-neck contour blisters, specular solder-line blebs, and self-pinching hooks
+ * where the contour turns away from an edge and reverses back over a short chord (high
+ * excess winding `sum(|turn|) - |sum(turn)|`), while leaving monotonic corners (where
+ * `sum(|turn|) === |sum(turn)|`) and neighbor-locked seam vertices untouched.
+ */
+function pruneContourHooksAndBlisters(
+  points: Point[],
+  neighbors: Point[][],
+  seamTol: number,
+): Point[] {
+  let cur = points.slice();
+  const isLocked = (pt: Point) =>
+    neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol * 1.25;
+
+  for (let pass = 0; pass < 6; pass++) {
+    const n = cur.length;
+    if (n < 7) break;
+    const s = buildArcLengthTable(cur);
+    const L = s[n];
+    const maxArc = Math.min(54, L * 0.095);
+    const turns = cur.map((c, i) =>
+      signedTurningAngleRad(cur[(i - 1 + n) % n], c, cur[(i + 1) % n]),
+    );
+    const locked = cur.map(isLocked);
+
+    let bestStart = -1;
+    let bestEnd = -1;
+    let bestScore = 0;
+
+    for (let i = 0; i < n; i++) {
+      let absSum = Math.abs(turns[i]);
+      let netSum = turns[i];
+      let hasLockedInterior = false;
+      for (let step = 1; step < Math.min(n - 3, 28); step++) {
+        const j = (i + step) % n;
+        const prevJ = (j - 1 + n) % n;
+        if (step > 1 && locked[prevJ]) {
+          hasLockedInterior = true;
+          break;
+        }
+        if (step === 1 && (locked[i] || locked[j])) {
+          continue;
+        }
+        if (step > 2) {
+          absSum += Math.abs(turns[prevJ]);
+          netSum += turns[prevJ];
+        }
+        const totalAbs = absSum + Math.abs(turns[j]);
+        const totalNet = Math.abs(netSum + turns[j]);
+        const excess = totalAbs - totalNet;
+        const arc = j > i ? s[j] - s[i] : L - s[i] + s[j];
+        if (arc > maxArc) break;
+
+        const chord = Math.hypot(cur[j][0] - cur[i][0], cur[j][1] - cur[i][1]);
+        if (chord > Math.min(28, arc * 0.94)) continue;
+
+        let maxSagitta = 0;
+        if (step === 1) {
+          const pBefore = cur[(i - 1 + n) % n];
+          const pAfter = cur[(j + 1) % n];
+          maxSagitta = Math.max(
+            pointLineDistance(cur[i], pBefore, pAfter),
+            pointLineDistance(cur[j], pBefore, pAfter),
+          );
+        } else {
+          let k = (i + 1) % n;
+          while (k !== j) {
+            const d = pointLineDistance(cur[k], cur[i], cur[j]);
+            if (d > maxSagitta) maxSagitta = d;
+            k = (k + 1) % n;
+          }
+        }
+        const sagittaLimit = chord <= 12 && arc >= chord * 2.5 ? 16.5 : 7.5;
+        if (maxSagitta > sagittaLimit) continue;
+
+        const pBefore = cur[(i - 1 + n) % n];
+        const pAfter = cur[(j + 1) % n];
+        const newTurnI = step === 1
+          ? Math.abs(signedTurningAngleRad(pBefore, [(cur[i][0] + cur[j][0]) / 2, (cur[i][1] + cur[j][1]) / 2], pAfter))
+          : Math.abs(signedTurningAngleRad(pBefore, cur[i], cur[j]));
+        const newTurnJ = step === 1
+          ? 0
+          : Math.abs(signedTurningAngleRad(cur[i], cur[j], pAfter));
+        const newTotalAbs = newTurnI + newTurnJ;
+
+        if (
+          !hasLockedInterior &&
+          excess >= (65 * Math.PI) / 180 &&
+          newTotalAbs < totalAbs * 0.55
+        ) {
+          const score = excess / Math.max(2, chord);
+          if (score > bestScore) {
+            bestScore = score;
+            bestStart = i;
+            bestEnd = j;
+          }
+        }
+      }
+    }
+
+    if (bestStart >= 0 && bestEnd >= 0) {
+      const next: Point[] = [];
+      const isStep1 = (bestStart + 1) % n === bestEnd;
+      let k = bestEnd;
+      while (k !== bestStart) {
+        if (!isStep1 || k !== bestEnd) {
+          next.push(cur[k]);
+        } else {
+          next.push([
+            (cur[bestStart][0] + cur[bestEnd][0]) / 2,
+            (cur[bestStart][1] + cur[bestEnd][1]) / 2,
+          ]);
+        }
+        k = (k + 1) % n;
+      }
+      if (!isStep1) {
+        next.push(cur[bestStart]);
+      }
+      cur = next;
+    } else {
+      break;
+    }
+  }
+  return cur;
+}
+
+/**
  * Convert a faceted polygon (e.g. from SAM2 segmentation or manual drawing) into
  * structural anchor vertices + fitted cubic Bézier curves (`curvePoints`), while
  * keeping any edge that lies along a neighbor polygon locked flush to the seam.
@@ -854,9 +1112,12 @@ export function fitSmoothPieceCurves(
   const maxTurnPerSpanRad = ((options.maxTurnPerSpanDeg ?? 85) * Math.PI) / 180;
   const seamTol = options.seamTolerancePx ?? 2.5;
 
-  const pts = options.preserveBevels
+  const deblistered = options.preserveBevels
     ? deduped
-    : consolidateBeveledCornersAndJitter(deduped, neighbors, seamTol, cornerAngleRad);
+    : pruneContourHooksAndBlisters(deduped, neighbors, seamTol);
+  const pts = options.preserveBevels
+    ? deblistered
+    : consolidateBeveledCornersAndJitter(deblistered, neighbors, seamTol, cornerAngleRad);
   const n = pts.length;
   if (n < 3) {
     return { polygon: deduped, curvePoints: [], anchorTypes: deduped.map(() => 'corner') };
@@ -868,27 +1129,131 @@ export function fitSmoothPieceCurves(
     const next = pts[(i + 1) % n];
     if (!vertexLocked[i] || !vertexLocked[(i + 1) % n]) return false;
     const mid: Point = [(pt[0] + next[0]) / 2, (pt[1] + next[1]) / 2];
-    return pointToNeighborsDistance(mid, neighbors) <= seamTol * 1.25;
+    return pointToNeighborsDistance(mid, neighbors) <= seamTol * 1.35;
   });
 
-  // 2. Compute turning angles and mark structural corner anchors
+  // 2. Compute multi-scale arc-length turning angles and flanking arm tangents
+  //    to separate true structural corners from smooth curvature and contour ripples.
+  const sTable = buildArcLengthTable(pts);
+  const totalPerim = sTable[sTable.length - 1];
+  const wNear = Math.max(8, Math.min(16, totalPerim * 0.02));
+  const wInner = wNear * 0.5;
+  const wOuter = Math.max(20, Math.min(44, totalPerim * 0.055));
+
+  const vecAngle = (ux: number, uy: number, vx: number, vy: number): number => {
+    const l1 = Math.hypot(ux, uy);
+    const l2 = Math.hypot(vx, vy);
+    if (l1 < 1e-6 || l2 < 1e-6) return 0;
+    return Math.acos(Math.max(-1, Math.min(1, (ux * vx + uy * vy) / (l1 * l2))));
+  };
+
   const turnAngles = pts.map((cur, i) =>
     turningAngleRad(pts[(i - 1 + n) % n], cur, pts[(i + 1) % n]),
   );
+  const signedStepTurns = pts.map((cur, i) =>
+    signedTurningAngleRad(pts[(i - 1 + n) % n], cur, pts[(i + 1) % n]),
+  );
+  const nearTurns = new Array<number>(n).fill(0);
+  const armTurns = new Array<number>(n).fill(0);
+  const cornerScore = new Array<number>(n).fill(0);
+
+  for (let i = 0; i < n; i++) {
+    const si = sTable[i];
+    const p0 = pts[i];
+    const pIn1 = sampleClosedLoopAtS(pts, sTable, si - wNear);
+    const pOut1 = sampleClosedLoopAtS(pts, sTable, si + wNear);
+    const pInInner = sampleClosedLoopAtS(pts, sTable, si - wInner);
+    const pInOuter = sampleClosedLoopAtS(pts, sTable, si - wOuter);
+    const pOutInner = sampleClosedLoopAtS(pts, sTable, si + wInner);
+    const pOutOuter = sampleClosedLoopAtS(pts, sTable, si + wOuter);
+
+    const tNear = turningAngleRad(pIn1, p0, pOut1);
+    const tMacro = turningAngleRad(pInOuter, p0, pOutOuter);
+    const tArms = vecAngle(
+      pInInner[0] - pInOuter[0],
+      pInInner[1] - pInOuter[1],
+      pOutOuter[0] - pOutInner[0],
+      pOutOuter[1] - pOutInner[1],
+    );
+    const hNear = pointLineDistance(p0, pIn1, pOut1);
+    const hOuter = pointLineDistance(p0, pInOuter, pOutOuter);
+
+    nearTurns[i] = tNear;
+    armTurns[i] = tArms;
+
+    // On low-vertex polygons (e.g. a 4-gon or 8-gon), direct vertex turn is authoritative;
+    // on dense contours, require local turn, permanent flanking-arm tangent change, and
+    // triangle height that scales up with window size (hOuter > hNear).
+    const isLocalizedCorner =
+      n <= 8
+        ? turnAngles[i] >= cornerAngleRad
+        : tNear >= cornerAngleRad * 0.8 &&
+          tMacro >= cornerAngleRad * 0.85 &&
+          tArms >= cornerAngleRad * 0.85 &&
+          hOuter >= Math.max(3.5, hNear * 1.35);
+
+    if (isLocalizedCorner) {
+      cornerScore[i] = tNear + 0.6 * tArms + 0.4 * tMacro;
+    }
+  }
 
   const anchorKind = new Array<'none' | 'corner' | 'smooth'>(n).fill('none');
+  const nmsRadius = wOuter * 0.72;
   for (let i = 0; i < n; i++) {
     const prevEdgeLocked = edgeLocked[(i - 1 + n) % n];
     const nextEdgeLocked = edgeLocked[i];
 
-    // Transition between a shared seam and a free edge is a corner anchor if it turns away (>= 10°)
-    if (prevEdgeLocked !== nextEdgeLocked && turnAngles[i] >= (10 * Math.PI) / 180) {
+    // Every transition between a shared neighbor seam and a free edge must be an anchor
+    // so locked seam spans are isolated from free spans.
+    if (prevEdgeLocked !== nextEdgeLocked) {
       anchorKind[i] = 'corner';
       continue;
     }
-    // Sharp turns (e.g., leaf tips, Y/T-junctions, panel corners) are structural corners
-    if (turnAngles[i] >= cornerAngleRad) {
+
+    if (cornerScore[i] <= 0) continue;
+
+    // Non-maximum suppression along arc length so a rounded corner produces a single anchor
+    let isLocalMax = true;
+    if (n > 8) {
+      for (let j = 0; j < n; j++) {
+        if (j === i || cornerScore[j] <= 0) continue;
+        if (circularArcDistance(sTable[i], sTable[j], totalPerim) <= nmsRadius) {
+          if (cornerScore[j] > cornerScore[i] || (cornerScore[j] === cornerScore[i] && j < i)) {
+            isLocalMax = false;
+            break;
+          }
+        }
+      }
+    }
+    if (isLocalMax) {
       anchorKind[i] = 'corner';
+      // If SAM2's Gaussian kernel slightly rounded a sharp corner on a free edge,
+      // restore the true geometric corner apex by intersecting its flanking arm rays.
+      if (!options.preserveBevels && n > 12 && !vertexLocked[i] && armTurns[i] >= cornerAngleRad && armTurns[i] <= (135 * Math.PI) / 180) {
+        const si = sTable[i];
+        const pInOuter = sampleClosedLoopAtS(pts, sTable, si - wOuter);
+        const pInInner = sampleClosedLoopAtS(pts, sTable, si - wInner);
+        const pOutInner = sampleClosedLoopAtS(pts, sTable, si + wInner);
+        const pOutOuter = sampleClosedLoopAtS(pts, sTable, si + wOuter);
+        const hit = intersectLines(pInOuter, pInInner, pOutInner, pOutOuter);
+        if (hit) {
+          const inVx = pInInner[0] - pInOuter[0];
+          const inVy = pInInner[1] - pInOuter[1];
+          const outVx = pOutOuter[0] - pOutInner[0];
+          const outVy = pOutOuter[1] - pOutInner[1];
+          const forwardIn = (hit[0] - pInInner[0]) * inVx + (hit[1] - pInInner[1]) * inVy >= -1;
+          const backwardOut = (pOutInner[0] - hit[0]) * outVx + (pOutInner[1] - hit[1]) * outVy >= -1;
+          const hitDist = Math.hypot(hit[0] - pts[i][0], hit[1] - pts[i][1]);
+          if (
+            forwardIn &&
+            backwardOut &&
+            hitDist <= Math.min(8.5, wNear * 0.65) &&
+            (neighbors.length === 0 || pointToNeighborsDistance(hit, neighbors) > seamTol)
+          ) {
+            pts[i] = hit;
+          }
+        }
+      }
     }
   }
 
@@ -918,8 +1283,9 @@ export function fitSmoothPieceCurves(
     if (farIdx !== first) anchorKind[farIdx] = 'smooth';
   }
 
-  // 3. Subdivide any free chain between anchors whose cumulative turn exceeds maxTurnPerSpanRad
+  // 3. Subdivide any chain between anchors whose net turn exceeds maxTurnPerSpanRad
   //    or whose least-squares cubic Bézier residual error exceeds the contour tolerance.
+  //    True corners were already identified in Step 2, so curve subdivision points are 'smooth'.
   const collectAnchorIndices = () =>
     anchorKind.reduce((acc, k, idx) => (k !== 'none' ? [...acc, idx] : acc), [] as number[]);
 
@@ -937,28 +1303,31 @@ export function fitSmoothPieceCurves(
       }
       chainIndices.push(endIdx);
 
-      if (chainIndices.length <= 3) continue;
+      if (chainIndices.length <= 4) continue;
       const isChainLocked = chainIndices.slice(0, -1).every(idx => edgeLocked[idx]);
-      if (isChainLocked) continue;
 
-      let totalTurn = 0;
+      let netSignedTurn = 0;
       for (let k = 1; k < chainIndices.length - 1; k++) {
-        totalTurn += turnAngles[chainIndices[k]];
+        netSignedTurn += signedStepTurns[chainIndices[k]];
       }
+      const totalTurn = Math.abs(netSignedTurn);
 
       const chainPts = chainIndices.map(idx => pts[idx]);
       const pStart = chainPts[0];
       const pEnd = chainPts[chainPts.length - 1];
       const chord = Math.hypot(pEnd[0] - pStart[0], pEnd[1] - pStart[1]);
       const { maxErr, worstIdx } = computeChainCubicFitError(chainPts);
-      const errLimit = Math.max(4.0, chord * 0.015);
+      const errLimit = isChainLocked ? 1.5 : Math.max(2.8, Math.min(5.0, chord * 0.014));
 
       if (maxErr > errLimit || totalTurn > maxTurnPerSpanRad) {
+        const clampedWorst = Math.max(2, Math.min(chainIndices.length - 3, worstIdx));
         const splitIdx = maxErr > errLimit
-          ? chainIndices[worstIdx]
+          ? chainIndices[clampedWorst]
           : chainIndices[Math.floor(chainIndices.length / 2)];
-        anchorKind[splitIdx] = turnAngles[splitIdx] >= (22 * Math.PI) / 180 ? 'corner' : 'smooth';
-        added = true;
+        if (anchorKind[splitIdx] === 'none') {
+          anchorKind[splitIdx] = 'smooth';
+          added = true;
+        }
       }
     }
     if (!added) break;
@@ -1060,13 +1429,20 @@ export function fitSmoothPieceCurves(
           maxMidDev = Math.max(maxMidDev, dev);
         }
       }
-      const bothCorners = newAnchorTypes[i] === 'corner' && newAnchorTypes[(i + 1) % m] === 'corner';
-      if (bothCorners) {
-        if (maxDev <= Math.max(2.5, chordLen * 0.028) || maxMidDev <= Math.max(2.2, chordLen * 0.022)) {
+      if (ch.locked) {
+        if (maxDev <= 0.8) continue;
+      } else {
+        const bothCorners = newAnchorTypes[i] === 'corner' && newAnchorTypes[(i + 1) % m] === 'corner';
+        if (bothCorners) {
+          if (
+            maxDev <= Math.max(2.3, Math.min(3.8, chordLen * 0.02)) ||
+            maxMidDev <= Math.max(2.0, Math.min(3.4, chordLen * 0.016))
+          ) {
+            continue;
+          }
+        } else if (maxDev <= Math.max(1.6, Math.min(2.8, chordLen * 0.012))) {
           continue;
         }
-      } else if (maxDev <= Math.max(1.8, chordLen * 0.015)) {
-        continue;
       }
 
       const [ctrl1, ctrl2] = fitCubicBezierToChain(ch.points);
@@ -1091,11 +1467,12 @@ export function fitSmoothPieceCurves(
     }
   }
 
-  // 5. Enforce G1 tangent collinearity across every 'smooth' anchor using the solved cubic handles
+  // 5. Enforce G1 tangent collinearity across every free 'smooth' anchor using the solved cubic handles
   for (let a = 0; a < m; a++) {
     if (newAnchorTypes[a] !== 'smooth') continue;
     const prevEdgeIdx = (a - 1 + m) % m;
     const nextEdgeIdx = a;
+    if (chains[prevEdgeIdx]?.locked || chains[nextEdgeIdx]?.locked) continue;
     const cpPrev = curvePoints.find(c => c.edgeIdx === prevEdgeIdx);
     const cpNext = curvePoints.find(c => c.edgeIdx === nextEdgeIdx);
     if (!cpPrev || !cpNext) continue;

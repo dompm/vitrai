@@ -262,4 +262,59 @@ describe('seam snapping and curve fitting for fabrication', () => {
       expect(y).toBeGreaterThanOrEqual(chordY - 1.0);
     }
   });
+
+  it('bridges multi-vertex solder-width variations along a shared seam in snapPolygonToNeighbors', () => {
+    const neighbor: [number, number][] = [
+      [0, 0],
+      [100, 0],
+      [100, 30],
+      [100, 60],
+      [100, 90],
+      [100, 120],
+      [0, 120],
+    ];
+    // Piece to the right of x=100 where ends of the seam are 11px away (within radius=14)
+    // and 3 interior vertices bulge out to 19–22px where the solder line widened.
+    const piece: [number, number][] = [
+      [111, 5],
+      [119, 32],
+      [122, 60],
+      [118, 88],
+      [112, 115],
+      [200, 115],
+      [200, 5],
+    ];
+    const snapped = snapPolygonToNeighbors(piece, [neighbor], 14);
+    const leftSeamPts = snapped.filter(([x]) => x < 150);
+    expect(leftSeamPts.length).toBeGreaterThanOrEqual(3);
+    for (const [x] of leftSeamPts) {
+      expect(Math.abs(x - 100)).toBeLessThan(0.5);
+    }
+  });
+
+  it('prunes solder-line contour blisters without turning curve subdivisions into sharp corners', () => {
+    // Smooth crescent leaf with two sharp tips at (0, 100) and (200, 100) plus a 6px Z-jog blister on the top arc
+    const pts: [number, number][] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = 200 * t;
+      const y = 100 - 70 * Math.sin(Math.PI * t);
+      pts.push([x, y]);
+      if (i === 10) {
+        // Inject a narrow 6px blister detour
+        pts.push([x + 2, y - 6], [x + 5, y - 5], [x + 3, y]);
+      }
+    }
+    for (let i = 19; i >= 1; i--) {
+      const t = i / 20;
+      const x = 200 * t;
+      const y = 100 + 35 * Math.sin(Math.PI * t);
+      pts.push([x, y]);
+    }
+
+    const fitted = fitSmoothPieceCurves(pts, [], { cornerAngleDeg: 40 });
+    const cornerCount = fitted.anchorTypes.filter(t => t === 'corner').length;
+    expect(cornerCount).toBe(2);
+    expect(fitted.curvePoints.length).toBeGreaterThanOrEqual(2);
+  });
 });

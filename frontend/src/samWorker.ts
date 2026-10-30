@@ -1,6 +1,11 @@
 import * as ort from "onnxruntime-web/webgpu";
 import type { Crop } from './types';
-import { maskToPolygon as extractMaskPolygon, smoothMaskLogits } from './utils/maskContour';
+import {
+  clampMaskLogitsToBox,
+  maskToPolygon as extractMaskPolygon,
+  selectBestSamMask,
+  smoothMaskLogits,
+} from './utils/maskContour';
 import { isValidRefinedPolygon, proposeStainedGlassCells, type ProposedGlassCell } from './utils/autoSegment';
 // Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
 // bundle). Vite emits the file as a same-origin asset, so segmentation no
@@ -35,7 +40,7 @@ const STD  = [0.229, 0.224, 0.225];
 const MASK_THRESHOLD = 0;
 // Keep smoothing stable in model-input coordinates even if a model variant
 // returns a decoder mask other than the usual 256×256.
-const MASK_SMOOTHING_SIGMA_INPUT_PX = 6;
+const MASK_SMOOTHING_SIGMA_INPUT_PX = 2.5;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -632,14 +637,35 @@ async function segment(
     const numMasks = dims[dims.length - 3] ?? 1;
     const planeSize = H * W;
 
-    let bestIdx = 0;
-    if (numMasks > 1 && iouTensor) {
-      const iou = Array.from(iouTensor.data as Float32Array);
-      bestIdx = iou.indexOf(Math.max(...iou));
+    const iouScores = iouTensor ? Array.from(iouTensor.data as Float32Array) : [];
+    const allLogits: Float32Array[] = [];
+    for (let m = 0; m < numMasks; m++) {
+      allLogits.push((masksTensor.data as Float32Array).slice(m * planeSize, (m + 1) * planeSize));
     }
 
-    const maskData = (masksTensor.data as Float32Array)
-      .slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
+    const bestIdx = selectBestSamMask(allLogits, iouScores, W, H, {
+      box,
+      inputSize: INPUT_SIZE,
+      scale,
+      padX,
+      padY,
+      threshold: MASK_THRESHOLD,
+    });
+
+    const rawChosen = allLogits[bestIdx];
+    const hasOutsidePositivePoints = Boolean(
+      box && points && points.some(([px, py, l]) => l === 1 && (px < box[0] || px > box[2] || py < box[1] || py > box[3])),
+    );
+    const maskData = box && !hasOutsidePositivePoints
+      ? clampMaskLogitsToBox(rawChosen, W, H, box, {
+          inputSize: INPUT_SIZE,
+          scale,
+          padX,
+          padY,
+          marginOrigPx: 3,
+          threshold: MASK_THRESHOLD,
+        })
+      : rawChosen;
 
     const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
     const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
@@ -648,6 +674,8 @@ async function segment(
     const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
       inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
       threshold: MASK_THRESHOLD,
+      simplifyRatio: 0.001,
+      minSimplifyPx: 0.65,
     });
 
     // Debug overlay: paint upsampled mask as a semi-transparent bitmap.
