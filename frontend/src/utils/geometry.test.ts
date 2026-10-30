@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arePolygonsEqual,
   curveToCubicControls,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
+  fitSmoothPieceCurves,
   flattenCurves,
+  insetPolygon,
   isCubicCurvePoint,
   makeCubicCurvePoint,
+  pieceToSvgPath,
   quadraticToCubicControls,
+  smoothPieceGeometry,
+  snapPolygonToNeighbors,
   splitCubicBezier,
   subtractPolygons,
 } from './geometry';
@@ -62,5 +68,253 @@ describe('curve compatibility', () => {
 
     expect(clipped.length).toBeGreaterThanOrEqual(3);
     expect(clipped.every(([x]) => x >= 99.9)).toBe(true);
+  });
+
+  it('preserves exact vertex order when touching a neighbor along a shared edge', () => {
+    const neighbor: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const touching: [number, number][] = [[100, 10], [200, 10], [200, 90], [100, 90]];
+    const clipped = subtractPolygons(touching, [neighbor]);
+    expect(arePolygonsEqual(touching, clipped, 0.1)).toBe(true);
+  });
+});
+
+describe('seam snapping and curve fitting for fabrication', () => {
+  it('snaps directly to neighbor corners at T-junctions and bridges single-vertex seam gaps', () => {
+    const neighbor: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    // Piece shares x=100 edge with neighbor: top vertex near [100, 0], middle vertex slightly pulled back at x=91, bottom vertex near [100, 100]
+    const raw: [number, number][] = [[103, 2], [200, 0], [200, 100], [102, 98], [91, 50]];
+    const snapped = snapPolygonToNeighbors(raw, [neighbor], 8);
+
+    // Top and bottom corners snap directly to [100, 0] and [100, 100], and the mid-seam gap at x=91 is closed onto x=100
+    expect(snapped).toContainEqual([100, 0]);
+    expect(snapped).toContainEqual([100, 100]);
+    expect(snapped.every(([x]) => x >= 100)).toBe(true);
+  });
+
+  it('converts a faceted leaf contour into smooth cubic Béziers while keeping sharp tips and shared seams locked', () => {
+    const neighbor: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    // Leaf sharing the vertical seam from (100, 20) to (100, 80) and arching out to a sharp tip at (220, 50)
+    const upperArc: [number, number][] = [
+      [100, 20],
+      [125, 8],
+      [155, 4],
+      [185, 14],
+      [220, 50], // sharp tip
+      [185, 86],
+      [155, 96],
+      [125, 92],
+      [100, 80],
+    ];
+    const fitted = fitSmoothPieceCurves(upperArc, [neighbor], { seamTolerancePx: 2.5 });
+
+    // Should simplify the 9 faceted points into structural anchors with cubic curves on the two free arcs
+    expect(fitted.polygon.length).toBeLessThan(upperArc.length);
+    expect(fitted.curvePoints.length).toBeGreaterThanOrEqual(2);
+    // Sharp tip at [220, 50] and seam endpoints [100, 20], [100, 80] are preserved as corner anchors
+    expect(fitted.polygon).toContainEqual([220, 50]);
+    expect(fitted.polygon).toContainEqual([100, 20]);
+    expect(fitted.polygon).toContainEqual([100, 80]);
+
+    // The locked seam edge from [100, 80] -> [100, 20] must remain a straight un-curved segment
+    const seamStartIdx = fitted.polygon.findIndex(p => p[0] === 100 && p[1] === 80);
+    expect(seamStartIdx).toBeGreaterThanOrEqual(0);
+    expect(fitted.curvePoints.some(cp => cp.edgeIdx === seamStartIdx)).toBe(false);
+  });
+
+  it('smoothPieceGeometry rounds moderate kinks while pinning neighbor-shared seams', () => {
+    const neighbor: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const kinked: [number, number][] = [
+      [100, 20],
+      [150, 5],
+      [200, 50],
+      [150, 95],
+      [100, 80],
+    ];
+    const smoothed = smoothPieceGeometry(kinked, [], [neighbor], 2.5);
+    expect(smoothed.polygon).toContainEqual([100, 20]);
+    expect(smoothed.polygon).toContainEqual([100, 80]);
+    expect(smoothed.curvePoints.length).toBeGreaterThan(0);
+  });
+
+  it('insets a polygon inward by exact physical allowance for foil/came pattern shears', () => {
+    const square: [number, number][] = [[0, 0], [100, 0], [100, 80], [0, 80]];
+    const inset = insetPolygon(square, 2.5);
+    expect(inset).toHaveLength(4);
+    expect(inset[0][0]).toBeCloseTo(2.5, 4);
+    expect(inset[0][1]).toBeCloseTo(2.5, 4);
+    expect(inset[2][0]).toBeCloseTo(97.5, 4);
+    expect(inset[2][1]).toBeCloseTo(77.5, 4);
+  });
+
+  it('serializes curved pieces to native SVG cubic Bézier path commands', () => {
+    const poly: [number, number][] = [[0, 0], [100, 0], [50, 80]];
+    const curves = [makeCubicCurvePoint(0, [30, -20], [70, -20])];
+    const d = pieceToSvgPath(poly, curves);
+    expect(d).toContain('M 0 0');
+    expect(d).toContain('C 30 -20, 70 -20, 100 0');
+    expect(d).toContain('L 50 80');
+    expect(d.endsWith('Z')).toBe(true);
+  });
+
+  it('reconstructs all 4 crisp corners and keeps straight sides straight on a SAM2-beveled rectangle', () => {
+    // A 120x80 rectangle [0..120, 0..80] where SAM2 rounded all 4 90° corners into 3-vertex
+    // chamfers (~30° turn at each individual vertex, so every single vertex turn is < 40°)
+    // and added slight ~1.5px wobble along the straight sides.
+    const samBeveledRect: [number, number][] = [
+      [14, 0],
+      [60, 1.2],   // slight top-edge wobble
+      [106, 0],    // top-right bevel start (~30°)
+      [115, 5],    // top-right bevel mid (~30°)
+      [120, 14],   // top-right bevel end (~30°)
+      [119, 42],   // slight right-edge wobble
+      [120, 66],   // bottom-right bevel start (~30°)
+      [115, 75],   // bottom-right bevel mid (~30°)
+      [106, 80],   // bottom-right bevel end (~30°)
+      [62, 78.8],  // slight bottom-edge wobble
+      [14, 80],    // bottom-left bevel start (~30°)
+      [5, 75],     // bottom-left bevel mid (~30°)
+      [0, 66],     // bottom-left bevel end (~30°)
+      [1.1, 40],   // slight left-edge wobble
+      [0, 14],     // top-left bevel start (~30°)
+      [5, 5],      // top-left bevel mid (~30°)
+    ];
+
+    const fitted = fitSmoothPieceCurves(samBeveledRect, [], { cornerAngleDeg: 40 });
+
+    // Must preserve all 4 corners as a 4-vertex rectangle with zero curved edges
+    expect(fitted.polygon).toHaveLength(4);
+    expect(fitted.curvePoints).toHaveLength(0);
+    expect(fitted.anchorTypes).toEqual(['corner', 'corner', 'corner', 'corner']);
+
+    // Check that each of the 4 true rectangle corners (0,0), (120,0), (120,80), (0,80) is reconstructed
+    const expectedCorners: [number, number][] = [[0, 0], [120, 0], [120, 80], [0, 80]];
+    for (const [ex, ey] of expectedCorners) {
+      const match = fitted.polygon.some(([px, py]) => Math.hypot(px - ex, py - ey) < 2.5);
+      expect(match).toBe(true);
+    }
+  });
+
+  it('preserves all 4 corners and straight sides on a narrow border rectangle adjacent to a neighbor pane', () => {
+    const topLeftNeighbor: [number, number][] = [[0, 0], [70, 0], [70, 60], [0, 60]];
+    // Adjacent horizontal border pane [70..200, 0..60] whose left edge shares x=70 with topLeftNeighbor
+    // and whose right corners at (200,0) and (200,60) were beveled by SAM2 into <38° steps
+    const rawAdjacentBorderPane: [number, number][] = [
+      [70, 0],
+      [135, 1.0],
+      [186, 0],
+      [195, 5],
+      [200, 14],
+      [200, 46],
+      [195, 55],
+      [186, 60],
+      [130, 59.1],
+      [70, 60],
+    ];
+
+    const fitted = fitSmoothPieceCurves(rawAdjacentBorderPane, [topLeftNeighbor], { cornerAngleDeg: 40 });
+    expect(fitted.polygon).toHaveLength(4);
+    expect(fitted.curvePoints).toHaveLength(0);
+    expect(fitted.polygon).toContainEqual([70, 0]);
+    expect(fitted.polygon).toContainEqual([70, 60]);
+    expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 0) < 2.5)).toBe(true);
+    expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 60) < 2.5)).toBe(true);
+  });
+
+  it('hugs a concave edge without bowing outward when a SAM2 corner bevel reverses the endpoint step', () => {
+    // Reproduces the orange body piece (piece 1): top-right edge from top apex (200, 50)
+    // to right corner (450, 220) is concave (bows inward/downward below the chord),
+    // except the final short SAM2 corner-rounding step from (442, 210) to (450, 220)
+    // which slopes more steeply downward than the chord.
+    const topApex: [number, number] = [200, 50];
+    const rightCorner: [number, number] = [450, 220];
+    const concaveEdgePts: [number, number][] = [
+      topApex,
+      [240, 92],
+      [290, 134],
+      [345, 168],
+      [400, 195],
+      [442, 210], // short corner-rounding bevel step before rightCorner
+      rightCorner,
+    ];
+    const orangeBodyPoly: [number, number][] = [
+      ...concaveEdgePts,
+      [410, 340],
+      [320, 410],
+      [200, 420],
+      [110, 350],
+      [80, 240],
+      [130, 95],
+    ];
+
+    const fitted = fitSmoothPieceCurves(orangeBodyPoly, [], { cornerAngleDeg: 40 });
+    const dense = flattenCurves(fitted.polygon, fitted.curvePoints, 0.5);
+
+    // Every sampled point along the top-right span (x in [210, 440], y < 230) must stay
+    // on the concave (inward/below-chord) side of the line from topApex to rightCorner,
+    // and within 3.5px of the original concave polyline.
+    const topRightSamples = dense.filter(([x, y]) => x >= 210 && x <= 440 && y <= 225);
+    expect(topRightSamples.length).toBeGreaterThan(5);
+
+    for (const [x, y] of topRightSamples) {
+      const t = (x - topApex[0]) / (rightCorner[0] - topApex[0]);
+      const chordY = topApex[1] + t * (rightCorner[1] - topApex[1]);
+      // In screen coordinates (+y down), inward/concave is y >= chordY (never bowing above chord into leaf 2)
+      expect(y).toBeGreaterThanOrEqual(chordY - 1.0);
+    }
+  });
+
+  it('bridges multi-vertex solder-width variations along a shared seam in snapPolygonToNeighbors', () => {
+    const neighbor: [number, number][] = [
+      [0, 0],
+      [100, 0],
+      [100, 30],
+      [100, 60],
+      [100, 90],
+      [100, 120],
+      [0, 120],
+    ];
+    // Piece to the right of x=100 where ends of the seam are 11px away (within radius=14)
+    // and 3 interior vertices bulge out to 19–22px where the solder line widened.
+    const piece: [number, number][] = [
+      [111, 5],
+      [119, 32],
+      [122, 60],
+      [118, 88],
+      [112, 115],
+      [200, 115],
+      [200, 5],
+    ];
+    const snapped = snapPolygonToNeighbors(piece, [neighbor], 14);
+    const leftSeamPts = snapped.filter(([x]) => x < 150);
+    expect(leftSeamPts.length).toBeGreaterThanOrEqual(3);
+    for (const [x] of leftSeamPts) {
+      expect(Math.abs(x - 100)).toBeLessThan(0.5);
+    }
+  });
+
+  it('prunes solder-line contour blisters without turning curve subdivisions into sharp corners', () => {
+    // Smooth crescent leaf with two sharp tips at (0, 100) and (200, 100) plus a 6px Z-jog blister on the top arc
+    const pts: [number, number][] = [];
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = 200 * t;
+      const y = 100 - 70 * Math.sin(Math.PI * t);
+      pts.push([x, y]);
+      if (i === 10) {
+        // Inject a narrow 6px blister detour
+        pts.push([x + 2, y - 6], [x + 5, y - 5], [x + 3, y]);
+      }
+    }
+    for (let i = 19; i >= 1; i--) {
+      const t = i / 20;
+      const x = 200 * t;
+      const y = 100 + 35 * Math.sin(Math.PI * t);
+      pts.push([x, y]);
+    }
+
+    const fitted = fitSmoothPieceCurves(pts, [], { cornerAngleDeg: 40 });
+    const cornerCount = fitted.anchorTypes.filter(t => t === 'corner').length;
+    expect(cornerCount).toBe(2);
+    expect(fitted.curvePoints.length).toBeGreaterThanOrEqual(2);
   });
 });
