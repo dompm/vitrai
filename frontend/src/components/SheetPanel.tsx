@@ -1,6 +1,7 @@
 import { PieceViewportLayers } from './canvas/PieceViewportLayers';
 import { useEvent } from '../hooks/useEvent';
 import { memo, useState, useRef, useMemo, useEffect } from 'react';
+import type Konva from 'konva';
 
 const IS_TOUCH = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
 import { useTranslation } from 'react-i18next';
@@ -150,6 +151,7 @@ interface PieceOutlineProps {
   fillOnly?: boolean;
   strokeOnly?: boolean;
   handleOnly?: boolean;
+  canDrag?: boolean;
   listening?: boolean;
   snapPieces?: Piece[];
   snapBounds?: AxisAlignedBounds;
@@ -158,8 +160,10 @@ interface PieceOutlineProps {
 
 const PieceOutline = memo(function PieceOutline({
   piece, isSelected, viewportStore, onSelect, previewStore, onPreviewTransform, onRotateStart,
-  fillOnly, strokeOnly, handleOnly, listening = true, snapPieces = [], snapBounds, onSnapChange,
+  fillOnly, strokeOnly, handleOnly, canDrag = true, listening = true, snapPieces = [], snapBounds, onSnapChange,
 }: PieceOutlineProps) {
+  const groupRef = useRef<Konva.Group>(null);
+  const dragAbortedRef = useRef(false);
   const effectiveScale = useViewportEffectiveScale(viewportStore);
   const renderedTransform = usePieceTransformPreview(previewStore, piece.id) ?? piece.transform;
   const { x, y, rotation, scale } = renderedTransform;
@@ -183,6 +187,33 @@ const PieceOutline = memo(function PieceOutline({
   const longPressFired = useRef(false);
   useEffect(() => () => { if (longPressTimer.current) clearTimeout(longPressTimer.current); }, []);
 
+  useEffect(() => {
+    const node = groupRef.current;
+    const content = node?.getStage()?.content;
+    if (!node || !content || !isSelected || !strokeOnly || handleOnly) return;
+    const abortDrag = () => {
+      if (!node.isDragging()) return;
+      dragAbortedRef.current = true;
+      node.stopDrag();
+      node.position({ x: piece.transform.x, y: piece.transform.y });
+      onSnapChange?.({ x: null, y: null });
+      previewStore.clear(piece.id);
+    };
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length >= 2) abortDrag();
+    };
+    content.addEventListener('wheel', abortDrag, { passive: true, capture: true });
+    content.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    content.addEventListener('pointercancel', abortDrag, true);
+    content.addEventListener('touchcancel', abortDrag, true);
+    return () => {
+      content.removeEventListener('wheel', abortDrag, true);
+      content.removeEventListener('touchstart', onTouchStart, true);
+      content.removeEventListener('pointercancel', abortDrag, true);
+      content.removeEventListener('touchcancel', abortDrag, true);
+    };
+  }, [isSelected, strokeOnly, handleOnly, piece.id, piece.transform.x, piece.transform.y, previewStore, onSnapChange]);
+
   function handleClick(e: KonvaEventObject<MouseEvent>) {
     e.cancelBubble = true;
     if (longPressFired.current) { longPressFired.current = false; return; }
@@ -204,6 +235,7 @@ const PieceOutline = memo(function PieceOutline({
   }
 
   function handleDragStart(e: KonvaEventObject<DragEvent>) {
+    dragAbortedRef.current = false;
     if (dragStartedFromHandle.current) {
       dragStartedFromHandle.current = false;
       e.target.stopDrag();
@@ -211,6 +243,7 @@ const PieceOutline = memo(function PieceOutline({
   }
 
   function handleDragMove(e: KonvaEventObject<DragEvent>) {
+    if (dragAbortedRef.current) return;
     const bypassSnapping = e.evt.ctrlKey;
     const snapped = !bypassSnapping && snapBounds
       ? snapPiecePosition(
@@ -230,6 +263,10 @@ const PieceOutline = memo(function PieceOutline({
   }
 
   function handleDragEnd(e: KonvaEventObject<DragEvent>) {
+    if (dragAbortedRef.current) {
+      dragAbortedRef.current = false;
+      return;
+    }
     onSnapChange?.({ x: null, y: null });
     const current = previewStore.get(piece.id) ?? renderedTransform;
     onPreviewTransform?.(piece.id, { ...current, x: e.target.x(), y: e.target.y() }, true);
@@ -245,11 +282,11 @@ const PieceOutline = memo(function PieceOutline({
   }
 
   return (
-    <Group name={fillOnly ? "sheet-fill" : handleOnly ? "sheet-handle" : "sheet-outline"} id={piece.id}
+    <Group ref={groupRef} name={fillOnly ? "sheet-fill" : handleOnly ? "sheet-handle" : "sheet-outline"} id={piece.id}
       x={x} y={y}
       rotation={(rotation * 180) / Math.PI}
       scaleX={scale} scaleY={scale}
-      draggable={isSelected && strokeOnly && !handleOnly}
+      draggable={isSelected && strokeOnly && !handleOnly && canDrag}
       onClick={handleOnly ? undefined : handleClick}
       onTap={handleOnly ? undefined : handleClick}
       onPointerDown={handleOnly ? undefined : handlePointerDown}
@@ -1014,6 +1051,7 @@ export function SheetPanel({
                   viewportStore={vp.store}
                   previewStore={pieceTransformPreviewStore}
                   strokeOnly
+                  canDrag={activeTool === 'select' && !isSpaceDown && !rotatingPieceId}
                   onSelect={selectPieceById}
                   onPreviewTransform={previewPieceById}
                   snapPieces={pieces}
