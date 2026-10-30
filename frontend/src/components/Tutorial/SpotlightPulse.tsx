@@ -13,12 +13,30 @@ interface SpotlightPulseProps {
   withBackdrop?: boolean;
 }
 
-function readAnchor(selector: string): Anchor | null {
-  const el = document.querySelector(selector);
-  if (!el) return null;
-  const rect = el.getBoundingClientRect();
-  if (rect.width === 0 && rect.height === 0) return null;
-  return { x: rect.left, y: rect.top, width: rect.width, height: rect.height };
+// A comma-separated selector is a priority list (popover control before its
+// launcher), not document order. Ignore hidden responsive copies and clip the
+// ring to the same scroll containers as the real control.
+export function readAnchor(selector: string): Anchor | null {
+  for (const candidate of selector.split(',')) {
+    for (const el of document.querySelectorAll(candidate.trim())) {
+      const rect = el.getBoundingClientRect();
+      if (!rect.width || !rect.height || getComputedStyle(el).visibility === 'hidden') continue;
+      let left = Math.max(0, rect.left), top = Math.max(0, rect.top);
+      let right = Math.min(window.innerWidth, rect.right), bottom = Math.min(window.innerHeight, rect.bottom);
+      for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+        const style = getComputedStyle(parent);
+        const bounds = parent.getBoundingClientRect();
+        if (/(auto|scroll|hidden|clip)/.test(style.overflowX)) {
+          left = Math.max(left, bounds.left); right = Math.min(right, bounds.right);
+        }
+        if (/(auto|scroll|hidden|clip)/.test(style.overflowY)) {
+          top = Math.max(top, bounds.top); bottom = Math.min(bottom, bounds.bottom);
+        }
+      }
+      if (right > left && bottom > top) return { x: left, y: top, width: right - left, height: bottom - top };
+    }
+  }
+  return null;
 }
 
 export function SpotlightPulse({ selector, withBackdrop = false }: SpotlightPulseProps) {
@@ -75,6 +93,8 @@ export function SpotlightPulse({ selector, withBackdrop = false }: SpotlightPuls
       )}
       <div
         className="tutorial-spotlight-pulse"
+        aria-hidden="true"
+        data-tutorial-spotlight={selector}
         style={{
           position: 'fixed',
           ...commonRect,

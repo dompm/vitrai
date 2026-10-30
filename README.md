@@ -1,12 +1,39 @@
-# Vitrai
+<div align="center">
+  <img src="frontend/public/vitrai_logo.svg" alt="Vitrai" width="64" />
+  <h1>Vitrai</h1>
+  <p>Stained glass pattern drafting, glass sheet layout, and 3D lampshade design in the browser.</p>
+  <p><a href="https://vitrai.dominiquepiche.com"><strong>vitrai.dominiquepiche.com</strong></a></p>
+</div>
 
-A stained-glass planning web app — segment pattern pieces from a photo using SAM2, then map real glass sheet textures onto each piece.
+![Vitrai workspace](docs/assets/readme-hero.png)
 
-**App: [vitrai.dominiquepiche.com](https://vitrai.dominiquepiche.com/)**
+## Overview
 
-Editing and SAM2 inference run entirely in the browser via WebGPU (ONNX Runtime Web). The built-in glass library reads public images from R2 through a Pages Function; user projects stay on-device.
+Vitrai is a CAD and material-planning tool for stained glass work. It pairs a 2D pattern editor with calibrated photos of real glass sheets so you can draft pieces, preview how directional grain and color streaks line up across a panel or 3D lampshade, and print 1:1 cutting templates.
 
-## Getting started
+Everything runs locally in the browser—user projects stay on your device in the Origin Private File System (OPFS), SAM2 image segmentation runs client-side via WebGPU/WebAssembly, and the built-in glass library streams public sheet textures from Cloudflare R2.
+
+## Capabilities
+
+### Pattern drafting and photo tracing
+
+Draw patterns from scratch with vertex snapping, angle constraints, and curved segments, or import a reference photo and extract piece outlines using on-device SAM2 segmentation alongside manual pen tracing. A reference ruler calibrates the pattern to physical dimensions in inches or centimeters.
+
+![Tracing and vector editing](docs/assets/readme-tracing.png)
+
+### 3D lampshade unrolling
+
+Define a lampshade silhouette from control points to unroll faceted tiers into flat templates. With symmetry enabled, pieces drawn on one facet replicate around the shade and update the 3D preview in real time.
+
+![3D lampshade design](docs/assets/readme-lamp.png)
+
+### Glass nesting and 1:1 printing
+
+Import photos of your glass stock, set their physical scale, and position pieces over specific areas of the sheet. The packing tool nests pieces within a sheet's boundaries with a configurable cutting allowance. Adjust solder or came line thickness to check joint spacing, then print tiled 1:1 pages with registration marks.
+
+![Sheet nesting and fabrication](docs/assets/readme-fabrication.png)
+
+## Development
 
 ```bash
 cd frontend
@@ -14,31 +41,8 @@ pnpm install
 pnpm dev
 ```
 
-Then open `http://localhost:5173/`.
-
-## Features
-
-- **Segment pieces** — draw a bounding box or click prompt points; SAM2 produces a smooth polygon
-- **Detect all** — auto-segment all pieces in the pattern at once
-- **Glass sheets** — upload photos of your real glass; drag/rotate/scale the texture within each piece
-- **Scale calibration** — set a real-world measurement on the pattern and each glass sheet for accurate sizing
-- **Crop** — trim pattern or sheet edges
-- **Export** — save the project as JSON; import it back later
-
-## Tech
-
-- React + TypeScript + Vite
-- `onnxruntime-web` (WebGPU) for SAM2 inference
-- OPFS for local project persistence
-- Cloudflare Pages for hosting (COOP/COEP headers required for SharedArrayBuffer)
+See [`docs/testing.md`](docs/testing.md) for unit and browser regression test commands.
 
 ## Deployment
 
-Cloudflare Pages builds from the `frontend` root with output directory `dist`. The `public/_headers` file configures COOP/COEP; `functions/glass/[[path]].js` serves the approved glass images from an R2 binding named `GLASS_BUCKET`. Bind it to the `vitrai-glass` bucket in both Production and Preview, then redeploy. No R2 API keys belong in the frontend.
-
-Production uses `/glass/releases/8ad3855dc24cbcfc`; local Vite development uses the public R2 development URL from `frontend/.env`. The committed registry is the approved catalog, not a generator output to rebuild from vendor websites. When publishing new image bytes, use a new immutable release prefix and update the production URL and Function's allowed prefix together. `_routes.json` limits Function invocations to `/glass/*` so editor assets remain static requests.
-
-```bash
-cd frontend
-pnpm build
-```
+Cloudflare Pages builds from `frontend` (`dist` output). `public/_headers` configures COOP/COEP for `SharedArrayBuffer`, and `functions/glass/[[path]].js` serves the curated glass catalog from the `GLASS_BUCKET` (`vitrai-glass`) R2 binding in Production and Preview (`_routes.json` scopes Function invocations to `/glass/*`). Production serves an immutable release prefix (`/glass/releases/...`); when publishing new glass bytes, update the production URL and the Function's allowed prefix together.

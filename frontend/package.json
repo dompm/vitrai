@@ -9,9 +9,11 @@
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:tutorial": "node scripts/tutorial-smoke.mjs",
     "test:interaction": "vitest run src/editor/__tests__",
     "perf:build": "vite build --mode performance",
-    "perf:preview": "vite preview --outDir dist-performance --port 4280"
+    "perf:preview": "vite preview --outDir dist-performance --port 4280",
+    "screenshots:readme": "node scripts/generate-readme-screenshots.mjs"
   },
   "dependencies": {
     "i18next": "^26.0.10",
@@ -35,6 +37,7 @@
     "@types/three": "^0.184.1",
     "@vitejs/plugin-react": "^4.3.1",
     "miniflare": "4.20260730.0",
+    "playwright": "1.62.1",
     "react-test-renderer": "18.3.1",
     "typescript": "^5.5.3",
     "vite": "^5.4.2",

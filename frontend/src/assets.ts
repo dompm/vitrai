@@ -6,8 +6,8 @@ import type { Scale } from './types';
  * don't rename it without updating that check.
  */
 export const TUTORIAL_GLASS_ASSETS = [
-  { url: '/assets/green.png', label: 'Green' },
-  { url: '/assets/orange.png', label: 'Orange' },
+  { url: '/assets/green.jpg', label: 'Green' },
+  { url: '/assets/orange.jpg', label: 'Orange' },
 ] as const;
 
 /**

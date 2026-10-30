@@ -1503,8 +1503,7 @@ export function ResultPanel({
 
   useEffect(() => {
     const isFirstPending = tutorialStep === 'cut-first-piece' && project.pieces.length === 0;
-    const isSecondPending = tutorialStep === 'cut-second-piece' && project.pieces.length <= 1;
-    if (!isFirstPending && !isSecondPending) return;
+    if (!isFirstPending) return;
     let animId: number;
     const tick = () => {
       setDashOffset(prev => (prev + 1.5) % 40);
@@ -1514,7 +1513,7 @@ export function ResultPanel({
     return () => cancelAnimationFrame(animId);
   }, [tutorialStep, project.pieces.length]);
   
-  const [patternImg] = useImage(project.patternImageUrl);
+  const [patternImg, patternImgStatus] = useImage(project.patternImageUrl);
   const imageCache = useMemo(() => new PieceImageCache(), []);
   useEffect(() => imageCache.retain(new Set(project.sheets.map(sheet => sheet.imageUrl))), [imageCache, project.sheets]);
   const sheetMap = useMemo(
@@ -2061,6 +2060,7 @@ export function ResultPanel({
             className={`tool-btn solder-tool-btn ${isSolderPopoverOpen ? 'active' : ''}`}
             onClick={() => setIsSolderPopoverOpen(o => !o)}
             aria-label={t('solderThicknessTooltip')}
+            data-tutorial-target="solder-settings"
           >
             {/* Custom line thickness stack icon */}
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -2090,6 +2090,7 @@ export function ResultPanel({
                   <span className="solder-popover-val">{(project.solderWidthMM ?? 4.5).toFixed(1)} mm</span>
                 </div>
                 <input
+                  data-tutorial-target="solder-slider"
                   type="range"
                   min="1.0"
                   max="10.0"
@@ -2137,6 +2138,7 @@ export function ResultPanel({
                 className={`tool-btn ${isSymmetryEnabled ? 'active' : ''}`}
                 onClick={() => onToggleSymmetry(!isSymmetryEnabled)}
                 aria-label={t('lampSymmetryTooltip')}
+                data-tutorial-target="lamp-symmetry-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="3" x2="12" y2="21" strokeDasharray="3 2" />
@@ -2161,6 +2163,7 @@ export function ResultPanel({
                 className="tool-btn"
                 onClick={onOpenLampProfile}
                 aria-label={t('lampProfileButtonTooltip')}
+                data-tutorial-target="lamp-profile-button"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                   <ellipse cx="12" cy="5" rx="6" ry="2" />
@@ -2184,6 +2187,12 @@ export function ResultPanel({
         className="canvas-well"
         style={{ flex: 1, overflow: 'hidden', cursor: containerCursor, position: 'relative', display: 'flex', flexDirection: 'column', touchAction: 'none' }}
       >
+        {project.patternImageUrl && patternImgStatus === 'loading' && (
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'rgba(20, 18, 14, 0.45)', zIndex: 10, gap: '12px' }}>
+            <div className="spinner-tiny" style={{ width: 32, height: 32 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-bright)' }}>{t('loadingImage')}</span>
+          </div>
+        )}
         {!project.patternImageUrl && !project.patternScale ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-soft)', padding: 40, textAlign: 'center' }}>
             <div style={{ maxWidth: 800 }}>
@@ -2673,26 +2682,85 @@ export function ResultPanel({
                       listening={false}
                     />
                   )}
+                  {tutorialStep === 'vector-draw-shape' && (
+                    <Group listening={false}>
+                      <Line
+                        points={[300, 300, 700, 300, 500, 700, 300, 300]}
+                        stroke="#fbbf24"
+                        strokeWidth={2 / es}
+                        dash={[6 / es, 4 / es]}
+                        listening={false}
+                      />
+                      <Circle x={300} y={300} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={296} y={294} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={700} y={300} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={696} y={294} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      
+                      <Circle x={500} y={700} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                      <KonvaText x={496} y={694} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                    </Group>
+                  )}
+                  {tutorialStep === 'lamp-draw-facet' && unrolledLamp?.mode === 'faceted' && (() => {
+                    const strip = unrolledLamp.strips[0];
+                    const tier = strip?.tiers[0];
+                    if (!tier) return null;
+                    const p1 = [strip.centerX - tier.topChord / 2, tier.topY];
+                    const p2 = [strip.centerX + tier.topChord / 2, tier.topY];
+                    const p3 = [strip.centerX + tier.botChord / 2, tier.botY];
+                    const p4 = [strip.centerX - tier.botChord / 2, tier.botY];
+                    const pts = [p1[0], p1[1], p2[0], p2[1], p3[0], p3[1], p4[0], p4[1], p1[0], p1[1]];
+                    return (
+                      <Group listening={false}>
+                        <Line
+                          points={pts}
+                          stroke="#fbbf24"
+                          strokeWidth={2 / es}
+                          dash={[6 / es, 4 / es]}
+                          listening={false}
+                        />
+                        <Circle x={p1[0]} y={p1[1]} radius={10 / es} fill="#10b981" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p1[0] - 4 / es} y={p1[1] - 6 / es} text="1" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p2[0]} y={p2[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p2[0] - 4 / es} y={p2[1] - 6 / es} text="2" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p3[0]} y={p3[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p3[0] - 4 / es} y={p3[1] - 6 / es} text="3" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                        
+                        <Circle x={p4[0]} y={p4[1]} radius={10 / es} fill="#fbbf24" stroke="#fff" strokeWidth={1.5 / es} />
+                        <KonvaText x={p4[0] - 4 / es} y={p4[1] - 6 / es} text="4" fontSize={13 / es} fill="#fff" fontStyle="bold" />
+                      </Group>
+                    );
+                  })()}
+                  {tutorialStep === 'trace-hand-pen' && (
+                    <Group listening={false}>
+                      <Line
+                        points={[2000, 1320, 2750, 1750, 2460, 2180, 1800, 1820, 2000, 1320]}
+                        stroke="#fbbf24"
+                        strokeWidth={4 / es}
+                        dash={[12 / es, 8 / es]}
+                        listening={false}
+                      />
+                      <Circle x={2000} y={1320} radius={18 / es} fill="#10b981" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2000 - 8 / es} y={1320 - 11 / es} text="1" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={2750} y={1750} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2750 - 8 / es} y={1750 - 11 / es} text="2" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={2460} y={2180} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={2460 - 8 / es} y={2180 - 11 / es} text="3" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+
+                      <Circle x={1800} y={1820} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
+                      <KonvaText x={1800 - 8 / es} y={1820 - 11 / es} text="4" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+                    </Group>
+                  )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (
                     <Rect
                       x={924.124254866509}
                       y={1487.1442620225096}
                       width={2505.188986758742 - 924.124254866509}
                       height={2998.9258239124047 - 1487.1442620225096}
-                      stroke={CANVAS.selection}
-                      strokeWidth={3 / es}
-                      dash={[10 / es, 6 / es]}
-                      dashOffset={dashOffset}
-                      fill="rgba(196, 136, 32, 0.06)"
-                      listening={false}
-                    />
-                  )}
-                  {tutorialStep === 'cut-second-piece' && project.pieces.length <= 1 && (
-                    <Rect
-                      x={364.7371555449281}
-                      y={1249.5130966562972}
-                      width={1264.3137687154938 - 364.7371555449281}
-                      height={2725.2637575643917 - 1249.5130966562972}
                       stroke={CANVAS.selection}
                       strokeWidth={3 / es}
                       dash={[10 / es, 6 / es]}
@@ -2720,6 +2788,53 @@ export function ResultPanel({
                     }
                     return null;
                   })()}
+                  {activeTool !== 'inspect' && project.pieces.map(piece => {
+                    const isSelected = selectedPieceIdSet.has(piece.id);
+                    const isPending = pendingPieceIds.has(piece.id);
+                    if (!isSelected && !isPending) return null;
+                    const basePolygon = (isSelected && activeDragPolygon) ? activeDragPolygon : piece.polygon;
+                    const baseCurves = (isSelected && activeDragCurvePoints) ? activeDragCurvePoints : piece.curvePoints;
+                    const geometry = getPieceGeometry(basePolygon, baseCurves);
+                    return (
+                      <Group key={`selected-outline-${piece.id}`} listening={false}>
+                        {isPending && (
+                          <Line
+                            points={geometry.flatPoints}
+                            stroke={CANVAS.patternPending}
+                            strokeWidth={solderWidth}
+                            lineJoin="round"
+                            lineCap="round"
+                            closed
+                            listening={false}
+                          />
+                        )}
+                        {isSelected && (
+                          <>
+                            <Line
+                              points={geometry.flatPoints}
+                              stroke={CANVAS.selectionHalo}
+                              strokeWidth={4.5 / es}
+                              lineJoin="miter"
+                              miterLimit={2}
+                              closed
+                              perfectDrawEnabled={false}
+                              listening={false}
+                            />
+                            <Line
+                              points={geometry.flatPoints}
+                              stroke={CANVAS.selection}
+                              strokeWidth={1.8 / es}
+                              lineJoin="miter"
+                              miterLimit={2}
+                              closed
+                              perfectDrawEnabled={false}
+                              listening={false}
+                            />
+                          </>
+                        )}
+                      </Group>
+                    );
+                  })}
                   {project.pieces.map(piece => {
                     if (!selectedPieceIdSet.has(piece.id) || !piece.promptPoints) return null;
                     return piece.promptPoints.map((pt, i) => (
@@ -2875,7 +2990,7 @@ export function ResultPanel({
                               key={`mid-${idx}`}
                               x={hx}
                               y={hy}
-                              radius={3.5 / es}
+                              radius={(tutorialStep === 'vector-curve-edge' ? 7 : 3.5) / es}
                               fill={CANVAS.amber}
                               stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
