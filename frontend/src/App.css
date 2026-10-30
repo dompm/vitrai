@@ -14,10 +14,6 @@
   --cream:           var(--canvas-bg);
   --cream-soft:      var(--chrome-700);
 
-  /* 3D Viewport Backdrop — warm dark studio charcoal with soft backlit vignette */
-  --canvas-3d-center: #2c2926;
-  --canvas-3d-edge:   #181614;
-
   /* Text — warm espresso charcoal & stone for crisp legibility */
   --text-bright:  #1c1917;
   --text-soft:    #57534e;
@@ -1146,16 +1142,6 @@ html, body, #root {
   background-color: var(--canvas-bg);
   background-image: var(--canvas-dot-grid);
   background-size: 20px 20px;
-}
-
-/* 3D Viewport — dedicated darker neutral backdrop with soft vignette for backlit 3D glass */
-.canvas-well-3d,
-.viewport-3d,
-.lamp-3d-viewport,
-.lamp-preview-container .canvas-well,
-[data-viewport="3d"] {
-  background: radial-gradient(ellipse at 50% 45%, var(--canvas-3d-center) 0%, var(--canvas-3d-edge) 85%) !important;
-  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55) !important;
 }
 
 .viewport-controls {

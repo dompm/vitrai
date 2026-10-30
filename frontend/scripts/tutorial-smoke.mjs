@@ -3,9 +3,17 @@
 import assert from 'node:assert/strict';
 import { chromium } from 'playwright';
 
-const browser = await chromium.launch({ headless: true, args: ['--enable-unsafe-swiftshader'],
+const launchOpts = {
+  headless: true,
+  args: ['--enable-unsafe-swiftshader'],
   ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
-});
+};
+let browser;
+try {
+  browser = await chromium.launch(launchOpts);
+} catch {
+  browser = await chromium.launch({ ...launchOpts, channel: 'chrome' });
+}
 const url = process.env.TUTORIAL_URL || 'http://127.0.0.1:5173';
 const contexts = [];
 const errors = [];
