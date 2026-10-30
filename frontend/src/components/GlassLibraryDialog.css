@@ -319,3 +319,23 @@
 
 
 .glass-library-card-scale { white-space: nowrap; }
+
+.glass-library-footer {
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1px solid var(--hairline-2);
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.glass-library-footer a {
+  color: var(--amber-ink);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.glass-library-footer a:hover {
+  text-decoration: underline;
+}
