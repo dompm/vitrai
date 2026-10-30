@@ -3,7 +3,7 @@ export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
 import {
-  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconRuler, IconEye, IconPolygon,
+  IconSelect, IconHand, IconBox, IconWand, IconCrop, IconCanvas, IconRuler, IconEye, IconPolygon,
 } from './icons';
 
 interface ToolTooltipData {
@@ -33,6 +33,7 @@ interface ToolbarProps {
 export const SelectIcon = () => <IconSelect />;
 export const HandIcon = () => <IconHand />;
 export const CropIcon = () => <IconCrop />;
+export const CanvasIcon = () => <IconCanvas />;
 export const BoxIcon = () => <IconBox />;
 export const MeasureIcon = () => <IconRuler />;
 export const ViewIcon = () => <IconEye />;
@@ -78,10 +79,10 @@ export function Toolbar({ tools, activeTool, onSelectTool, children }: ToolbarPr
                   <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {typeof tool.loading === 'number' ? (
                       <svg width="20" height="20" viewBox="0 0 16 16" style={{ transform: 'rotate(-90deg)' }}>
-                        <circle cx="8" cy="8" r="7" stroke="rgba(192, 138, 31, 0.15)" strokeWidth="1.5" fill="none" />
+                        <circle cx="8" cy="8" r="7" stroke="rgba(196, 136, 32, 0.2)" strokeWidth="1.5" fill="none" />
                         <circle
                           cx="8" cy="8" r="7"
-                          stroke="var(--amber)"
+                          stroke="#C48820"
                           strokeWidth="1.5"
                           fill="none"
                           strokeDasharray={2 * Math.PI * 7}

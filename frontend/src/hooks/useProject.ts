@@ -500,17 +500,43 @@ export function useProject() {
     }));
   }, [updateProject]);
 
-  const updatePatternCrop = useCallback((crop: Partial<Crop>) => {
-    updateProject(prev => ({ ...prev, patternCrop: { ...prev.patternCrop, ...crop } }));
+  const updatePatternCrop = useCallback((crop: Partial<Crop>, skipHistory = false) => {
+    const key = '__pattern_crop__';
+    const apply = (prev: Project): Project => ({ ...prev, patternCrop: { ...prev.patternCrop, ...crop } });
+    if (skipHistory) {
+      updateProject(prev => {
+        if (!transformGestureStartRef.current.has(key)) {
+          transformGestureStartRef.current.set(key, prev);
+        }
+        return apply(prev);
+      }, true);
+      return;
+    }
+    const gestureStart = transformGestureStartRef.current.get(key);
+    transformGestureStartRef.current.delete(key);
+    updateProject(apply, false, gestureStart);
   }, [updateProject]);
 
-  const updateSheetCrop = useCallback((sheetId: string, crop: Partial<Crop>) => {
-    updateProject(prev => ({
+  const updateSheetCrop = useCallback((sheetId: string, crop: Partial<Crop>, skipHistory = false) => {
+    const key = `__sheet_crop_${sheetId}__`;
+    const apply = (prev: Project): Project => ({
       ...prev,
       sheets: prev.sheets.map(s =>
         s.id === sheetId ? { ...s, crop: { ...s.crop, ...crop } } : s
       ),
-    }));
+    });
+    if (skipHistory) {
+      updateProject(prev => {
+        if (!transformGestureStartRef.current.has(key)) {
+          transformGestureStartRef.current.set(key, prev);
+        }
+        return apply(prev);
+      }, true);
+      return;
+    }
+    const gestureStart = transformGestureStartRef.current.get(key);
+    transformGestureStartRef.current.delete(key);
+    updateProject(apply, false, gestureStart);
   }, [updateProject]);
 
   const selectPiece = useCallback((id: string | null, multi = false) => {
@@ -1041,6 +1067,31 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const updatePatternDimensions = useCallback((width: number, height: number) => {
+    updateProject(prev => {
+      const w = Math.max(50, Math.round(width));
+      const h = Math.max(50, Math.round(height));
+      if (!prev.patternImageUrl && prev.patternCrop.left === 0 && prev.patternCrop.top === 0) {
+        return {
+          ...prev,
+          patternWidth: w,
+          patternHeight: h,
+          patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+        };
+      }
+      const deltaW = prev.patternWidth - prev.patternCrop.left - w;
+      const deltaH = prev.patternHeight - prev.patternCrop.top - h;
+      return {
+        ...prev,
+        patternCrop: {
+          ...prev.patternCrop,
+          right: Math.round(deltaW),
+          bottom: Math.round(deltaH),
+        },
+      };
+    });
+  }, [updateProject]);
+
   const updateSolderWidthMM = useCallback((width: number) => {
     updateProject(prev => ({ ...prev, solderWidthMM: width }));
   }, [updateProject]);
@@ -1279,6 +1330,7 @@ export function useProject() {
     retrySave,
     loadProjectData,
     updatePatternImage,
+    updatePatternDimensions,
     startBlankCanvas,
     startLampMode,
     addSheetFromImage,
