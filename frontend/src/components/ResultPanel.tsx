@@ -217,7 +217,13 @@ interface ResultPanelProps {
   onSmoothPiece: (id: string) => void;
   onSmoothPieces: (ids: string[]) => void;
   onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
-  onUpdatePiecePolygonAndCurves: (id: string, polygon: [number, number][], curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
+  onUpdatePiecePolygonAndCurves: (
+    id: string,
+    polygon: [number, number][],
+    curvePoints: CurvePoint[],
+    anchorTypes?: ('corner' | 'smooth')[],
+    coupledMove?: { origin: [number, number]; target: [number, number] },
+  ) => void;
   onUpdatePrompt: (pieceId: string, point: { x: number; y: number; label: 1 | 0 }) => void;
   onAutoSegment?: () => void;
   isAutoSegmenting?: boolean;
@@ -2944,7 +2950,13 @@ export function ResultPanel({
                                 const newCurves = translateCurvesWithAnchor(
                                   dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
                                 );
-                                onUpdatePiecePolygonAndCurves(selectedId, newPolygon, newCurves);
+                                onUpdatePiecePolygonAndCurves(
+                                  selectedId,
+                                  newPolygon,
+                                  newCurves,
+                                  undefined,
+                                  !e.evt.altKey ? { origin, target: resolved } : undefined,
+                                );
                                 setDraggedCorner(null);
                                 setDragStartPolygon(null);
                                 setActiveDragPolygon(null);

@@ -214,13 +214,44 @@ export function snapPolygonToNeighbors(
   neighbors: [number, number][][],
   radius: number,
 ): [number, number][] {
-  if (neighbors.length === 0 || polygon.length < 3) return polygon;
+  if (neighbors.length === 0 || polygon.length < 3 || radius <= 0) return polygon;
   const r2 = radius * radius;
+  const vertexSnapR2 = (radius * 1.25) * (radius * 1.25);
+  const endpointPullR2 = (radius * 0.45) * (radius * 0.45);
 
-  return polygon.map(([px, py]) => {
+  const snappedMeta = polygon.map(([px, py]) => {
+    // 1. Prefer snapping directly to a neighbor vertex when close so T-junctions
+    // and shared corners lock to the exact same point instead of leaving wedge gaps.
+    let bestVertexD2 = vertexSnapR2;
+    let bestVx = px, bestVy = py;
+    let matchedNbIdx = -1;
+    let matchedEdgeIdx = -1;
+
+    for (let nIdx = 0; nIdx < neighbors.length; nIdx++) {
+      const nb = neighbors[nIdx];
+      for (let i = 0; i < nb.length; i++) {
+        const [vx, vy] = nb[i];
+        const d2 = (px - vx) * (px - vx) + (py - vy) * (py - vy);
+        if (d2 < bestVertexD2) {
+          bestVertexD2 = d2;
+          bestVx = vx;
+          bestVy = vy;
+          matchedNbIdx = nIdx;
+          matchedEdgeIdx = i;
+        }
+      }
+    }
+    if (matchedNbIdx >= 0 && bestVertexD2 <= r2) {
+      return { pt: [bestVx, bestVy] as [number, number], nbIdx: matchedNbIdx, edgeIdx: matchedEdgeIdx };
+    }
+
+    // 2. Otherwise project onto the closest neighbor segment within radius.
     let bestD2 = r2;
     let bestX = px, bestY = py;
-    for (const nb of neighbors) {
+    let bestNb = -1;
+    let bestEdge = -1;
+    for (let nIdx = 0; nIdx < neighbors.length; nIdx++) {
+      const nb = neighbors[nIdx];
       for (let i = 0; i < nb.length; i++) {
         const [ax, ay] = nb[i];
         const [bx, by] = nb[(i + 1) % nb.length];
@@ -231,14 +262,721 @@ export function snapPolygonToNeighbors(
           t = ((px - ax) * dx + (py - ay) * dy) / len2;
           if (t < 0) t = 0; else if (t > 1) t = 1;
         }
-        const cx = ax + t * dx, cy = ay + t * dy;
+        let cx = ax + t * dx, cy = ay + t * dy;
         const ex = px - cx, ey = py - cy;
         const d2 = ex * ex + ey * ey;
-        if (d2 < bestD2) { bestD2 = d2; bestX = cx; bestY = cy; }
+        if (d2 < bestD2) {
+          // Pull projections that land very close to a segment endpoint onto the endpoint
+          if ((cx - ax) * (cx - ax) + (cy - ay) * (cy - ay) <= endpointPullR2) {
+            cx = ax; cy = ay;
+          } else if ((cx - bx) * (cx - bx) + (cy - by) * (cy - by) <= endpointPullR2) {
+            cx = bx; cy = by;
+          }
+          bestD2 = d2;
+          bestX = cx;
+          bestY = cy;
+          bestNb = nIdx;
+          bestEdge = i;
+        }
       }
     }
-    return [bestX, bestY] as [number, number];
+    if (bestNb < 0 && matchedNbIdx >= 0) {
+      return { pt: [bestVx, bestVy] as [number, number], nbIdx: matchedNbIdx, edgeIdx: matchedEdgeIdx };
+    }
+    return { pt: [bestX, bestY] as [number, number], nbIdx: bestNb, edgeIdx: bestEdge };
   });
+
+  // 3. Bridge single-vertex gaps and lock seam-end corners along a shared seam:
+  // - If both i-1 and i+1 snapped to the same neighbor, bridge vertex i onto that neighbor (up to 1.6 * radius).
+  // - If an adjacent vertex snapped to a neighbor and vertex i is within 1.8 * radius of a corner vertex of that
+  //   same neighbor, snap vertex i to that neighbor corner so seam ends meet cleanly at 3-way solder joints.
+  const n = snappedMeta.length;
+  const bridgeR2 = (radius * 1.6) * (radius * 1.6);
+  const cornerEndR2 = (radius * 1.8) * (radius * 1.8);
+  for (let i = 0; i < n; i++) {
+    if (snappedMeta[i].nbIdx >= 0) continue;
+    const prev = snappedMeta[(i - 1 + n) % n];
+    const next = snappedMeta[(i + 1) % n];
+    const [px, py] = snappedMeta[i].pt;
+    if (prev.nbIdx >= 0 && prev.nbIdx === next.nbIdx) {
+      const nb = neighbors[prev.nbIdx];
+      let bestD2 = bridgeR2;
+      let bestX = px, bestY = py;
+      let snapped = false;
+      for (let j = 0; j < nb.length; j++) {
+        const [ax, ay] = nb[j];
+        const [bx, by] = nb[(j + 1) % nb.length];
+        const dx = bx - ax, dy = by - ay;
+        const len2 = dx * dx + dy * dy;
+        const t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+        const cx = ax + t * dx, cy = ay + t * dy;
+        const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+        if (d2 < bestD2) {
+          bestD2 = d2;
+          bestX = cx;
+          bestY = cy;
+          snapped = true;
+        }
+      }
+      if (snapped) {
+        snappedMeta[i] = { pt: [bestX, bestY], nbIdx: prev.nbIdx, edgeIdx: prev.edgeIdx };
+        continue;
+      }
+    }
+    for (const adj of [prev, next]) {
+      if (adj.nbIdx < 0) continue;
+      const nb = neighbors[adj.nbIdx];
+      let bestCornerD2 = cornerEndR2;
+      let bestCornerPt: [number, number] | null = null;
+      let bestCornerIdx = -1;
+      for (let j = 0; j < nb.length; j++) {
+        const [vx, vy] = nb[j];
+        const d2 = (px - vx) * (px - vx) + (py - vy) * (py - vy);
+        const adjD2 = (adj.pt[0] - vx) * (adj.pt[0] - vx) + (adj.pt[1] - vy) * (adj.pt[1] - vy);
+        if (d2 < bestCornerD2 && d2 < adjD2) {
+          bestCornerD2 = d2;
+          bestCornerPt = [vx, vy];
+          bestCornerIdx = j;
+        }
+      }
+      if (bestCornerPt) {
+        snappedMeta[i] = { pt: bestCornerPt, nbIdx: adj.nbIdx, edgeIdx: bestCornerIdx };
+        break;
+      }
+    }
+  }
+
+  // 4. Conform contiguous snapped runs to the neighbor's intermediate contour so
+  // both sides of a shared curved or multi-segment seam follow the exact same path.
+  const closestNbVertexIdx = (pt: [number, number], nb: [number, number][]): number => {
+    let bestIdx = 0;
+    let bestD2 = Infinity;
+    for (let i = 0; i < nb.length; i++) {
+      const d2 = (pt[0] - nb[i][0]) ** 2 + (pt[1] - nb[i][1]) ** 2;
+      if (d2 < bestD2) {
+        bestD2 = d2;
+        bestIdx = i;
+      }
+    }
+    return bestIdx;
+  };
+
+  if (snappedMeta.some(m => m.nbIdx < 0)) {
+    const firstUnsnapped = snappedMeta.findIndex(m => m.nbIdx < 0);
+    const rotated = [
+      ...snappedMeta.slice(firstUnsnapped),
+      ...snappedMeta.slice(0, firstUnsnapped),
+    ];
+    const alignedPts: [number, number][] = [];
+    let idx = 0;
+    while (idx < rotated.length) {
+      const nbIdx = rotated[idx].nbIdx;
+      if (nbIdx < 0) {
+        alignedPts.push(rotated[idx].pt);
+        idx++;
+        continue;
+      }
+      let endRun = idx;
+      while (endRun + 1 < rotated.length && rotated[endRun + 1].nbIdx === nbIdx) {
+        endRun++;
+      }
+      const runLen = endRun - idx + 1;
+      const nb = neighbors[nbIdx];
+      if (runLen >= 2 && nb.length >= 3) {
+        const startPt = rotated[idx].pt;
+        const endPt = rotated[endRun].pt;
+        const startV = closestNbVertexIdx(startPt, nb);
+        const endV = closestNbVertexIdx(endPt, nb);
+        if (startV !== endV) {
+          const buildNbChain = (step: 1 | -1) => {
+            const chain: [number, number][] = [startPt];
+            let cur = (startV + step + nb.length) % nb.length;
+            while (cur !== endV && chain.length <= nb.length) {
+              chain.push(nb[cur]);
+              cur = (cur + step + nb.length) % nb.length;
+            }
+            chain.push(endPt);
+            return chain;
+          };
+          const pathLen = (pts: [number, number][]) => {
+            let l = 0;
+            for (let k = 0; k < pts.length - 1; k++) {
+              l += Math.hypot(pts[k + 1][0] - pts[k][0], pts[k + 1][1] - pts[k][1]);
+            }
+            return l;
+          };
+          const fwd = buildNbChain(1);
+          const bwd = buildNbChain(-1);
+          const candidate = pathLen(fwd) <= pathLen(bwd) ? fwd : bwd;
+          const runPoly = rotated.slice(idx, endRun + 1).map(m => m.pt);
+          const runLength = pathLen(runPoly);
+          const candLength = pathLen(candidate);
+          const allClose = candLength <= Math.max(runLength * 1.35, radius * 2) &&
+            candidate.every(cp => pointToNeighborsDistance(cp, [runPoly]) <= radius * 1.6);
+          if (allClose) {
+            alignedPts.push(...candidate);
+            idx = endRun + 1;
+            continue;
+          }
+        }
+      }
+      for (let k = idx; k <= endRun; k++) {
+        alignedPts.push(rotated[k].pt);
+      }
+      idx = endRun + 1;
+    }
+    return dedupeConsecutivePoints(alignedPts, 0.5);
+  }
+
+  return dedupeConsecutivePoints(snappedMeta.map(m => m.pt), 0.5);
+}
+
+function dedupeConsecutivePoints(points: Point[], minDist = 0.5): Point[] {
+  if (points.length <= 3) return points;
+  const minDist2 = minDist * minDist;
+  const out: Point[] = [];
+  for (let i = 0; i < points.length; i++) {
+    const prev = out.length > 0 ? out[out.length - 1] : points[points.length - 1];
+    const cur = points[i];
+    if ((cur[0] - prev[0]) * (cur[0] - prev[0]) + (cur[1] - prev[1]) * (cur[1] - prev[1]) >= minDist2) {
+      out.push(cur);
+    }
+  }
+  return out.length >= 3 ? out : points;
+}
+
+function pointToNeighborsDistance(pt: Point, neighbors: Point[][]): number {
+  let minD2 = Infinity;
+  const [px, py] = pt;
+  for (const nb of neighbors) {
+    for (let i = 0; i < nb.length; i++) {
+      const [ax, ay] = nb[i];
+      const [bx, by] = nb[(i + 1) % nb.length];
+      const dx = bx - ax, dy = by - ay;
+      const len2 = dx * dx + dy * dy;
+      const t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2)) : 0;
+      const cx = ax + t * dx, cy = ay + t * dy;
+      const d2 = (px - cx) * (px - cx) + (py - cy) * (py - cy);
+      if (d2 < minD2) minD2 = d2;
+    }
+  }
+  return Math.sqrt(minD2);
+}
+
+function turningAngleRad(prev: Point, cur: Point, next: Point): number {
+  const ux = cur[0] - prev[0], uy = cur[1] - prev[1];
+  const vx = next[0] - cur[0], vy = next[1] - cur[1];
+  const uLen = Math.hypot(ux, uy);
+  const vLen = Math.hypot(vx, vy);
+  if (uLen < 1e-6 || vLen < 1e-6) return 0;
+  const dot = Math.max(-1, Math.min(1, (ux * vx + uy * vy) / (uLen * vLen)));
+  return Math.acos(dot);
+}
+
+function normalizeVec(dx: number, dy: number): Point {
+  const len = Math.hypot(dx, dy);
+  return len > 1e-9 ? [dx / len, dy / len] : [1, 0];
+}
+
+/**
+ * Fit a cubic Bézier to an ordered chain of points [p_0, ..., p_m] (m >= 2)
+ * using chord-length parameterization and endpoint tangent directions tHat1, tHat2
+ * (Schneider's Graphics Gems algorithm, with safe handle-length clamping).
+ */
+function fitCubicBezierToChain(
+  chain: Point[],
+  tHat1: Point,
+  tHat2: Point,
+): [Point, Point] {
+  const p0 = chain[0];
+  const p3 = chain[chain.length - 1];
+  const chord = Math.hypot(p3[0] - p0[0], p3[1] - p0[1]);
+  if (chord < 1e-6 || chain.length < 2) {
+    return [
+      [p0[0] + (p3[0] - p0[0]) / 3, p0[1] + (p3[1] - p0[1]) / 3],
+      [p0[0] + (2 * (p3[0] - p0[0])) / 3, p0[1] + (2 * (p3[1] - p0[1])) / 3],
+    ];
+  }
+
+  const u: number[] = [0];
+  for (let i = 1; i < chain.length; i++) {
+    u.push(u[i - 1] + Math.hypot(chain[i][0] - chain[i - 1][0], chain[i][1] - chain[i - 1][1]));
+  }
+  const totalLen = u[u.length - 1];
+  if (totalLen < 1e-6) {
+    return [
+      [p0[0] + tHat1[0] * (chord / 3), p0[1] + tHat1[1] * (chord / 3)],
+      [p3[0] + tHat2[0] * (chord / 3), p3[1] + tHat2[1] * (chord / 3)],
+    ];
+  }
+  for (let i = 1; i < u.length; i++) u[i] /= totalLen;
+
+  let c00 = 0, c01 = 0, c11 = 0;
+  let x0 = 0, x1 = 0;
+
+  for (let i = 1; i < chain.length - 1; i++) {
+    const ti = u[i];
+    const mt = 1 - ti;
+    const b0 = mt * mt * mt;
+    const b1 = 3 * mt * mt * ti;
+    const b2 = 3 * mt * ti * ti;
+    const b3 = ti * ti * ti;
+
+    const a1x = tHat1[0] * b1, a1y = tHat1[1] * b1;
+    const a2x = tHat2[0] * b2, a2y = tHat2[1] * b2;
+
+    c00 += a1x * a1x + a1y * a1y;
+    c01 += a1x * a2x + a1y * a2y;
+    c11 += a2x * a2x + a2y * a2y;
+
+    const tmpx = chain[i][0] - (p0[0] * (b0 + b1) + p3[0] * (b2 + b3));
+    const tmpy = chain[i][1] - (p0[1] * (b0 + b1) + p3[1] * (b2 + b3));
+
+    x0 += a1x * tmpx + a1y * tmpy;
+    x1 += a2x * tmpx + a2y * tmpy;
+  }
+
+  const detC0C1 = c00 * c11 - c01 * c01;
+  const detC0X = c00 * x1 - c01 * x0;
+  const detXC1 = x0 * c11 - x1 * c01;
+
+  let alphaL = Math.abs(detC0C1) > 1e-6 ? detXC1 / detC0C1 : 0;
+  let alphaR = Math.abs(detC0C1) > 1e-6 ? detC0X / detC0C1 : 0;
+
+  // When chain has only 1 interior point (length === 3) or ill-conditioned tangents,
+  // solve directly or clamp to sensible fraction of arc length so curves never loop.
+  const minAlpha = totalLen * 0.15;
+  const maxAlpha = totalLen * 0.65;
+  if (chain.length === 3) {
+    const p1 = chain[1];
+    const t = Math.max(0.2, Math.min(0.8, u[1]));
+    const mt = 1 - t;
+    const denom = 2 * mt * t;
+    const qCtrl: Point = [
+      (p1[0] - mt * mt * p0[0] - t * t * p3[0]) / denom,
+      (p1[1] - mt * mt * p0[1] - t * t * p3[1]) / denom,
+    ];
+    return quadraticToCubicControls(p0, qCtrl, p3);
+  }
+
+  if (!Number.isFinite(alphaL) || alphaL < minAlpha) alphaL = totalLen / 3;
+  if (!Number.isFinite(alphaR) || alphaR < minAlpha) alphaR = totalLen / 3;
+  alphaL = Math.min(maxAlpha, Math.max(minAlpha, alphaL));
+  alphaR = Math.min(maxAlpha, Math.max(minAlpha, alphaR));
+
+  return [
+    [p0[0] + tHat1[0] * alphaL, p0[1] + tHat1[1] * alphaL],
+    [p3[0] + tHat2[0] * alphaR, p3[1] + tHat2[1] * alphaR],
+  ];
+}
+
+/**
+ * Convert a faceted polygon (e.g. from SAM2 segmentation or manual drawing) into
+ * structural anchor vertices + fitted cubic Bézier curves (`curvePoints`), while
+ * keeping any edge that lies along a neighbor polygon locked flush to the seam.
+ */
+export function fitSmoothPieceCurves(
+  rawPolygon: Point[],
+  neighbors: Point[][] = [],
+  options: { cornerAngleDeg?: number; maxTurnPerSpanDeg?: number; seamTolerancePx?: number } = {},
+): {
+  polygon: Point[];
+  curvePoints: CurvePoint[];
+  anchorTypes: ('corner' | 'smooth')[];
+} {
+  const pts = dedupeConsecutivePoints(rawPolygon, 0.75);
+  const n = pts.length;
+  if (n < 3) {
+    return { polygon: rawPolygon, curvePoints: [], anchorTypes: rawPolygon.map(() => 'corner') };
+  }
+
+  const cornerAngleRad = ((options.cornerAngleDeg ?? 42) * Math.PI) / 180;
+  const maxTurnPerSpanRad = ((options.maxTurnPerSpanDeg ?? 85) * Math.PI) / 180;
+  const seamTol = options.seamTolerancePx ?? 2.5;
+
+  // 1. Identify vertices & edges that lie on a neighbor boundary
+  const vertexLocked = pts.map(pt => neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol);
+  const edgeLocked = pts.map((pt, i) => {
+    const next = pts[(i + 1) % n];
+    if (!vertexLocked[i] || !vertexLocked[(i + 1) % n]) return false;
+    const mid: Point = [(pt[0] + next[0]) / 2, (pt[1] + next[1]) / 2];
+    return pointToNeighborsDistance(mid, neighbors) <= seamTol * 1.25;
+  });
+
+  // 2. Compute turning angles and mark structural corner anchors
+  const turnAngles = pts.map((cur, i) =>
+    turningAngleRad(pts[(i - 1 + n) % n], cur, pts[(i + 1) % n]),
+  );
+
+  const anchorKind = new Array<'none' | 'corner' | 'smooth'>(n).fill('none');
+  for (let i = 0; i < n; i++) {
+    const prevEdgeLocked = edgeLocked[(i - 1 + n) % n];
+    const nextEdgeLocked = edgeLocked[i];
+
+    // Transition between a shared seam and a free edge is a corner anchor if it turns away (>= 10°)
+    if (prevEdgeLocked !== nextEdgeLocked && turnAngles[i] >= (10 * Math.PI) / 180) {
+      anchorKind[i] = 'corner';
+      continue;
+    }
+    // Sharp turns (e.g., leaf tips, Y/T-junctions, panel corners) are structural corners
+    if (turnAngles[i] >= cornerAngleRad) {
+      anchorKind[i] = 'corner';
+    }
+  }
+
+  // Ensure at least 2 anchors exist (e.g. on a smooth oval with no sharp corners)
+  const existingAnchors = anchorKind.reduce((acc, k, idx) => (k !== 'none' ? [...acc, idx] : acc), [] as number[]);
+  if (existingAnchors.length === 0) {
+    let minIdx = 0;
+    for (let i = 1; i < n; i++) {
+      if (pts[i][0] < pts[minIdx][0]) minIdx = i;
+    }
+    let farIdx = minIdx;
+    let maxD2 = -1;
+    for (let i = 0; i < n; i++) {
+      const d2 = (pts[i][0] - pts[minIdx][0]) ** 2 + (pts[i][1] - pts[minIdx][1]) ** 2;
+      if (d2 > maxD2) { maxD2 = d2; farIdx = i; }
+    }
+    anchorKind[minIdx] = 'smooth';
+    if (farIdx !== minIdx) anchorKind[farIdx] = 'smooth';
+  } else if (existingAnchors.length === 1) {
+    const first = existingAnchors[0];
+    let farIdx = first;
+    let maxD2 = -1;
+    for (let i = 0; i < n; i++) {
+      const d2 = (pts[i][0] - pts[first][0]) ** 2 + (pts[i][1] - pts[first][1]) ** 2;
+      if (d2 > maxD2) { maxD2 = d2; farIdx = i; }
+    }
+    if (farIdx !== first) anchorKind[farIdx] = 'smooth';
+  }
+
+  // 3. Subdivide any free chain between anchors whose cumulative turn exceeds maxTurnPerSpanRad
+  const collectAnchorIndices = () =>
+    anchorKind.reduce((acc, k, idx) => (k !== 'none' ? [...acc, idx] : acc), [] as number[]);
+
+  let anchorIndices = collectAnchorIndices();
+  for (let pass = 0; pass < 3; pass++) {
+    let added = false;
+    for (let a = 0; a < anchorIndices.length; a++) {
+      const startIdx = anchorIndices[a];
+      const endIdx = anchorIndices[(a + 1) % anchorIndices.length];
+      const chainIndices: number[] = [startIdx];
+      let curr = (startIdx + 1) % n;
+      while (curr !== endIdx) {
+        chainIndices.push(curr);
+        curr = (curr + 1) % n;
+      }
+      chainIndices.push(endIdx);
+
+      if (chainIndices.length <= 3) continue;
+      const isChainLocked = chainIndices.slice(0, -1).every(idx => edgeLocked[idx]);
+      if (isChainLocked) continue;
+
+      let totalTurn = 0;
+      for (let k = 1; k < chainIndices.length - 1; k++) {
+        totalTurn += turnAngles[chainIndices[k]];
+      }
+      if (totalTurn > maxTurnPerSpanRad) {
+        const midIdx = chainIndices[Math.floor(chainIndices.length / 2)];
+        anchorKind[midIdx] = 'smooth';
+        added = true;
+      }
+    }
+    if (!added) break;
+    anchorIndices = collectAnchorIndices();
+  }
+
+  if (anchorIndices.length < 2) {
+    return { polygon: pts, curvePoints: [], anchorTypes: pts.map(() => 'corner') };
+  }
+
+  // 4. Build chains between consecutive anchors and fit cubic Béziers to curved spans
+  const newPolygon: Point[] = [];
+  const newAnchorTypes: ('corner' | 'smooth')[] = [];
+  const chains: { indices: number[]; points: Point[]; locked: boolean }[] = [];
+
+  for (let a = 0; a < anchorIndices.length; a++) {
+    const startIdx = anchorIndices[a];
+    const endIdx = anchorIndices[(a + 1) % anchorIndices.length];
+    const indices: number[] = [startIdx];
+    let curr = (startIdx + 1) % n;
+    while (curr !== endIdx) {
+      indices.push(curr);
+      curr = (curr + 1) % n;
+    }
+    indices.push(endIdx);
+
+    const points = indices.map(i => pts[i]);
+    const locked = indices.slice(0, -1).every(i => edgeLocked[i]);
+    newPolygon.push(pts[startIdx]);
+    newAnchorTypes.push(anchorKind[startIdx] === 'smooth' ? 'smooth' : 'corner');
+    chains.push({ indices, points, locked });
+  }
+
+  // If the resulting simplified polygon has only 2 anchors (e.g. a 2-tip leaf),
+  // insert midpoint smooth anchors on each arc if needed so `polygon` has >= 3 vertices
+  // for standard polygon area/clipping routines while remaining completely smooth.
+  if (newPolygon.length === 2) {
+    const expandedPoly: Point[] = [];
+    const expandedTypes: ('corner' | 'smooth')[] = [];
+    const expandedChains: typeof chains = [];
+    for (let c = 0; c < chains.length; c++) {
+      const ch = chains[c];
+      expandedPoly.push(newPolygon[c]);
+      expandedTypes.push(newAnchorTypes[c]);
+      if (ch.points.length >= 3) {
+        const mid = Math.floor(ch.points.length / 2);
+        expandedPoly.push(ch.points[mid]);
+        expandedTypes.push('smooth');
+        expandedChains.push({
+          indices: ch.indices.slice(0, mid + 1),
+          points: ch.points.slice(0, mid + 1),
+          locked: ch.locked,
+        });
+        expandedChains.push({
+          indices: ch.indices.slice(mid),
+          points: ch.points.slice(mid),
+          locked: ch.locked,
+        });
+      } else {
+        expandedChains.push(ch);
+      }
+    }
+    if (expandedPoly.length >= 3) {
+      newPolygon.splice(0, newPolygon.length, ...expandedPoly);
+      newAnchorTypes.splice(0, newAnchorTypes.length, ...expandedTypes);
+      chains.splice(0, chains.length, ...expandedChains);
+    }
+  }
+
+  if (newPolygon.length < 3) {
+    return { polygon: pts, curvePoints: [], anchorTypes: pts.map(() => 'corner') };
+  }
+
+  const m = newPolygon.length;
+  const curvePoints: CurvePoint[] = [];
+
+  for (let i = 0; i < m; i++) {
+    const ch = chains[i];
+    if (ch.locked && ch.points.length <= 2) continue;
+
+    const pStart = ch.points[0];
+    const pEnd = ch.points[ch.points.length - 1];
+    const chordLen = Math.hypot(pEnd[0] - pStart[0], pEnd[1] - pStart[1]);
+    if (chordLen < 2) continue;
+
+    if (ch.points.length >= 3) {
+      // Check max deviation from the straight chord
+      let maxDev = 0;
+      for (let k = 1; k < ch.points.length - 1; k++) {
+        maxDev = Math.max(maxDev, pointLineDistance(ch.points[k], pStart, pEnd));
+      }
+      // Keep genuinely straight edges straight
+      if (maxDev <= Math.max(1.2, chordLen * 0.008)) continue;
+
+      const prevChain = chains[(i - 1 + m) % m];
+      const nextChain = chains[(i + 1) % m];
+
+      const tHat1 = newAnchorTypes[i] === 'smooth'
+        ? normalizeVec(
+            ch.points[1][0] - prevChain.points[prevChain.points.length - 2][0],
+            ch.points[1][1] - prevChain.points[prevChain.points.length - 2][1],
+          )
+        : normalizeVec(ch.points[1][0] - pStart[0], ch.points[1][1] - pStart[1]);
+
+      const nextType = newAnchorTypes[(i + 1) % m];
+      const tHat2 = nextType === 'smooth'
+        ? normalizeVec(
+            ch.points[ch.points.length - 2][0] - nextChain.points[1][0],
+            ch.points[ch.points.length - 2][1] - nextChain.points[1][1],
+          )
+        : normalizeVec(
+            ch.points[ch.points.length - 2][0] - pEnd[0],
+            ch.points[ch.points.length - 2][1] - pEnd[1],
+          );
+
+      const [ctrl1, ctrl2] = fitCubicBezierToChain(ch.points, tHat1, tHat2);
+      curvePoints.push(makeCubicCurvePoint(i, ctrl1, ctrl2));
+    } else if (newAnchorTypes[i] === 'smooth' || newAnchorTypes[(i + 1) % m] === 'smooth') {
+      // Single-segment span adjacent to a smooth anchor: compute Catmull-Rom cubic controls
+      const prevPt = newPolygon[(i - 1 + m) % m];
+      const nextPt = newPolygon[(i + 2) % m];
+      const tHat1 = newAnchorTypes[i] === 'smooth'
+        ? normalizeVec(pEnd[0] - prevPt[0], pEnd[1] - prevPt[1])
+        : normalizeVec(pEnd[0] - pStart[0], pEnd[1] - pStart[1]);
+      const tHat2 = newAnchorTypes[(i + 1) % m] === 'smooth'
+        ? normalizeVec(pStart[0] - nextPt[0], pStart[1] - nextPt[1])
+        : normalizeVec(pStart[0] - pEnd[0], pStart[1] - pEnd[1]);
+      curvePoints.push(
+        makeCubicCurvePoint(
+          i,
+          [pStart[0] + tHat1[0] * (chordLen / 3), pStart[1] + tHat1[1] * (chordLen / 3)],
+          [pEnd[0] + tHat2[0] * (chordLen / 3), pEnd[1] + tHat2[1] * (chordLen / 3)],
+        ),
+      );
+    }
+  }
+
+  return { polygon: newPolygon, curvePoints, anchorTypes: newAnchorTypes };
+}
+
+/**
+ * Smooth a piece's boundary while keeping neighbor-shared seams locked and sharp
+ * structural tips intact, returning simplified anchors + fitted cubic Bézier curves.
+ */
+export function smoothPieceGeometry(
+  polygon: Point[],
+  curvePoints: CurvePoint[] = [],
+  neighbors: Point[][] = [],
+  seamTolerancePx = 2.5,
+): {
+  polygon: Point[];
+  curvePoints: CurvePoint[];
+  anchorTypes: ('corner' | 'smooth')[];
+} {
+  if (curvePoints.length === 0 && polygon.length >= 6) {
+    const fitted = fitSmoothPieceCurves(polygon, neighbors, {
+      cornerAngleDeg: 40,
+      seamTolerancePx,
+    });
+    if (fitted.curvePoints.length > 0) {
+      return fitted;
+    }
+  }
+
+  const dense = dedupeConsecutivePoints(flattenCurves(polygon, curvePoints, 0.5), 0.5);
+  const n = dense.length;
+  if (n < 3) {
+    return { polygon, curvePoints, anchorTypes: polygon.map(() => 'corner') };
+  }
+
+  const sharpTipRad = (78 * Math.PI) / 180;
+  const locked = dense.map(pt => neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTolerancePx);
+  const turns = dense.map((cur, i) =>
+    turningAngleRad(dense[(i - 1 + n) % n], cur, dense[(i + 1) % n]),
+  );
+
+  // If every unlocked vertex is a sharp corner (e.g. a manual 4-gon), allow smoothing free corners
+  const hasModerateUnlocked = dense.some((_, i) => !locked[i] && turns[i] < sharpTipRad);
+
+  const chaikinPass = (pts: Point[]): Point[] => {
+    const m = pts.length;
+    const ptLocked = pts.map(pt => neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTolerancePx);
+    const ptTurns = pts.map((cur, i) =>
+      turningAngleRad(pts[(i - 1 + m) % m], cur, pts[(i + 1) % m]),
+    );
+    const out: Point[] = [];
+    for (let i = 0; i < m; i++) {
+      const curr = pts[i];
+      const prev = pts[(i - 1 + m) % m];
+      const next = pts[(i + 1) % m];
+      const preserveSharp = hasModerateUnlocked && ptTurns[i] >= sharpTipRad;
+      if (ptLocked[i] || preserveSharp) {
+        out.push(curr);
+      } else {
+        out.push([0.25 * prev[0] + 0.75 * curr[0], 0.25 * prev[1] + 0.75 * curr[1]]);
+        out.push([0.75 * curr[0] + 0.25 * next[0], 0.75 * curr[1] + 0.25 * next[1]]);
+      }
+    }
+    return dedupeConsecutivePoints(out, 0.5);
+  };
+
+  const smoothedDense = chaikinPass(chaikinPass(dense));
+  return fitSmoothPieceCurves(smoothedDense, neighbors, {
+    cornerAngleDeg: 58,
+    seamTolerancePx,
+  });
+}
+
+/**
+ * Inset a closed polygon inward by `insetPx` pixels (miter-bevel offset) to
+ * account for copper foil or lead came heart thickness when printing cut templates.
+ */
+export function insetPolygon(polygon: Point[], insetPx: number): Point[] {
+  if (insetPx <= 0 || polygon.length < 3) return polygon;
+  const pts = dedupeConsecutivePoints(polygon, 0.25);
+  const n = pts.length;
+  if (n < 3) return polygon;
+
+  // Determine signed area so inward normal points into the polygon interior
+  let signed = 0;
+  for (let i = 0; i < n; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[(i + 1) % n];
+    signed += x1 * y2 - x2 * y1;
+  }
+  const origArea = Math.abs(signed) / 2;
+  if (origArea < 1) return polygon;
+  const orient = signed >= 0 ? 1 : -1;
+
+  // Inward unit normal for each directed edge i -> i+1
+  const normals: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const [x1, y1] = pts[i];
+    const [x2, y2] = pts[(i + 1) % n];
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-6) {
+      normals.push([0, 0]);
+    } else {
+      normals.push([(-orient * dy) / len, (orient * dx) / len]);
+    }
+  }
+
+  const miterLimit = 2.2;
+  const offsetPts: Point[] = [];
+  for (let i = 0; i < n; i++) {
+    const nPrev = normals[(i - 1 + n) % n];
+    const nCurr = normals[i];
+    const bx = nPrev[0] + nCurr[0];
+    const by = nPrev[1] + nCurr[1];
+    const bLen = Math.hypot(bx, by);
+    if (bLen < 1e-6) {
+      offsetPts.push([pts[i][0] + nCurr[0] * insetPx, pts[i][1] + nCurr[1] * insetPx]);
+      continue;
+    }
+    const ux = bx / bLen, uy = by / bLen;
+    const cosHalf = ux * nCurr[0] + uy * nCurr[1];
+    const miterScale = cosHalf > 1e-3 ? Math.min(miterLimit, 1 / cosHalf) : miterLimit;
+    offsetPts.push([
+      pts[i][0] + ux * insetPx * miterScale,
+      pts[i][1] + uy * insetPx * miterScale,
+    ]);
+  }
+
+  const newArea = computePolygonArea(offsetPts);
+  // Guard against degenerate inversion on tiny sliver pieces
+  if (newArea < origArea * 0.05 || newArea > origArea) {
+    const c = computeCentroid(pts);
+    return pts.map(([x, y]) => [c.x + (x - c.x) * 0.9, c.y + (y - c.y) * 0.9]);
+  }
+  return offsetPts;
+}
+
+/**
+ * Convert a piece's polygon and optional `curvePoints` into an exact SVG `<path d="...">`
+ * string using native cubic Bézier (`C`) commands for curved edges.
+ */
+export function pieceToSvgPath(polygon: Point[], curvePoints?: CurvePoint[]): string {
+  if (polygon.length === 0) return '';
+  const n = polygon.length;
+  const curveMap = new Map((curvePoints ?? []).map(cp => [cp.edgeIdx, cp]));
+  const fmt = (v: number) => Math.round(v * 100) / 100;
+  const parts: string[] = [`M ${fmt(polygon[0][0])} ${fmt(polygon[0][1])}`];
+
+  for (let i = 0; i < n; i++) {
+    const start = polygon[i];
+    const end = polygon[(i + 1) % n];
+    const curve = curveMap.get(i);
+    if (curve) {
+      const [c1, c2] = curveToCubicControls(start, end, curve);
+      parts.push(`C ${fmt(c1[0])} ${fmt(c1[1])}, ${fmt(c2[0])} ${fmt(c2[1])}, ${fmt(end[0])} ${fmt(end[1])}`);
+    } else {
+      parts.push(`L ${fmt(end[0])} ${fmt(end[1])}`);
+    }
+  }
+  parts.push('Z');
+  return parts.join(' ');
 }
 
 export function subtractPolygons(subject: [number, number][], clipPolygons: [number, number][][]): [number, number][] {
@@ -285,7 +1023,7 @@ export function subtractPolygons(subject: [number, number][], clipPolygons: [num
     const subjectArea = computePolygonArea(subject);
     if (
       diff.length === 1 && diff[0].length === 1 &&
-      Math.abs(maxArea - subjectArea) <= subjectArea * 1e-9
+      Math.abs(maxArea - subjectArea) <= Math.max(0.5, subjectArea * 1e-4)
     ) {
       return subject;
     }
@@ -434,4 +1172,28 @@ export function findMatchedGroundTruth(
     }
   }
   return null;
+}
+
+export function translateCurvesWithAnchor(
+  curves: CurvePoint[],
+  vertexIdx: number,
+  vertexCount: number,
+  delta: [number, number],
+): CurvePoint[] {
+  const previousEdge = (vertexIdx - 1 + vertexCount) % vertexCount;
+  return curves.map(curve => {
+    if (isCubicCurvePoint(curve)) {
+      if (curve.edgeIdx === vertexIdx) {
+        return { ...curve, ctrl: [curve.ctrl[0] + delta[0], curve.ctrl[1] + delta[1]] };
+      }
+      if (curve.edgeIdx === previousEdge) {
+        return { ...curve, ctrl2: [curve.ctrl2[0] + delta[0], curve.ctrl2[1] + delta[1]] };
+      }
+      return curve;
+    }
+    if (curve.edgeIdx === vertexIdx || curve.edgeIdx === previousEdge) {
+      return { ...curve, ctrl: [curve.ctrl[0] + delta[0] / 2, curve.ctrl[1] + delta[1] / 2] };
+    }
+    return curve;
+  });
 }

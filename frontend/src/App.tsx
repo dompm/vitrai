@@ -10,7 +10,18 @@ import { AddSheetMenu } from './components/AddSheetMenu';
 import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
-import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
+import {
+  subtractPolygons,
+  computeCentroid,
+  snapPolygonToNeighbors,
+  flattenCurves,
+  arePolygonsEqual,
+  fitSmoothPieceCurves,
+  smoothPieceGeometry,
+  insetPolygon,
+  pieceToSvgPath,
+  translateCurvesWithAnchor,
+} from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint, Scale, Project } from './types';
@@ -43,7 +54,7 @@ interface SheetTabProps {
   onNewSheetFromImage: () => void;
 }
 
-const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
+const getSnapRadius = (width: number) => Math.max(10, Math.round(width * 0.015));
 
 function SheetTab({
   sheet, isActive, isEmpty, canDelete, pieceCount, pieceCountBySheet, allSheets,
@@ -425,7 +436,6 @@ export function App() {
     addManualPiece,
     updateSheetDimensions,
     batchAddPieces,
-    updatePiecePolygon,
     updatePieceCurves,
     updatePiecePolygonAndCurves,
     addPiecePromptPoint,
@@ -908,10 +918,17 @@ export function App() {
       const latest = projectRef.current;
       const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
+      const snapRadius = getSnapRadius(latest.patternWidth);
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, snapRadius);
       const clipped = subtractPolygons(snapped, neighborPolygons);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
-      if (clipped.length >= 3) updatePiecePolygon(pieceId, clipped, true);
+      if (clipped.length >= 3) {
+        const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+          cornerAngleDeg: 40,
+          seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+        });
+        updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+      }
     } catch (e) {
       console.error("SAM segment failed:", e);
     } finally {
@@ -964,11 +981,18 @@ export function App() {
       const latest = projectRef.current;
       const others = latest.pieces.filter(p => p.id !== pieceId);
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
-      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(latest.patternWidth));
+      const snapRadius = getSnapRadius(latest.patternWidth);
+      const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, snapRadius);
       const clipped = subtractPolygons(snapped, neighborPolygons);
-      // Clear curvePoints: SAM2 changes vertex topology, old ctrl indices are stale.
+      // Re-fit smooth curves on the refined contour while keeping shared seams locked.
       // skipHistory: collapse with the parent addPiecePromptPoint action so one Cmd+Z reverts both.
-      if (clipped.length >= 3) { updatePiecePolygonAndCurves(pieceId, clipped, [], true); }
+      if (clipped.length >= 3) {
+        const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+          cornerAngleDeg: 40,
+          seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+        });
+        updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+      }
     } catch (e) {
       console.error(e);
     } finally {
@@ -977,18 +1001,44 @@ export function App() {
   }
 
   function handleSmoothPiece(pieceId: string) {
-    const piece = project.pieces.find(p => p.id === pieceId);
-    if (!piece) return;
-    updatePiecePolygonAndCurves(pieceId, smoothPolygon(piece.polygon), []);
+    handleSmoothPieces([pieceId]);
   }
 
   function handleSmoothPieces(pieceIds: string[]) {
-    // skipHistory = true for all but the last to avoid pushing many history entries
-    pieceIds.forEach((id, idx) => {
-      const piece = project.pieces.find(p => p.id === id);
-      if (piece) {
-        updatePiecePolygonAndCurves(id, smoothPolygon(piece.polygon), [], idx < pieceIds.length - 1);
+    const snapRadius = getSnapRadius(projectRef.current.patternWidth);
+    const seamTol = Math.max(2.5, snapRadius * 0.25);
+    // Pass 1: Snap & clip target pieces against neighbors so both sides of every joint meet flush
+    pieceIds.forEach(id => {
+      const latest = projectRef.current;
+      const piece = latest.pieces.find(p => p.id === id);
+      if (!piece) return;
+      const neighborPolygons = latest.pieces
+        .filter(p => p.id !== id)
+        .map(p => flattenCurves(p.polygon, p.curvePoints));
+      const dense = flattenCurves(piece.polygon, piece.curvePoints, 0.5);
+      const snapped = snapPolygonToNeighbors(dense, neighborPolygons, snapRadius);
+      const clipped = subtractPolygons(snapped, neighborPolygons);
+      if (clipped.length >= 3) {
+        updatePiecePolygonAndCurves(id, clipped, [], true);
       }
+    });
+
+    // Pass 2: Fit smooth cubic Béziers while keeping all snapped neighbor seams locked
+    pieceIds.forEach((id, idx) => {
+      const latest = projectRef.current;
+      const piece = latest.pieces.find(p => p.id === id);
+      if (!piece) return;
+      const neighborPolygons = latest.pieces
+        .filter(p => p.id !== id)
+        .map(p => flattenCurves(p.polygon, p.curvePoints));
+      const smoothed = smoothPieceGeometry(piece.polygon, [], neighborPolygons, seamTol);
+      updatePiecePolygonAndCurves(
+        id,
+        smoothed.polygon,
+        smoothed.curvePoints,
+        idx < pieceIds.length - 1,
+        smoothed.anchorTypes,
+      );
     });
   }
 
@@ -997,9 +1047,10 @@ export function App() {
     polygon: [number, number][],
     curvePoints: CurvePoint[],
     anchorTypes?: ('corner' | 'smooth')[],
+    overrideNeighbors?: [number, number][][],
   ) {
     const latest = projectRef.current;
-    const neighborPolygons = latest.pieces
+    const neighborPolygons = overrideNeighbors ?? latest.pieces
       .filter(piece => piece.id !== pieceId)
       .map(piece => flattenCurves(piece.polygon, piece.curvePoints));
     const displayPolygon = flattenCurves(polygon, curvePoints);
@@ -1033,9 +1084,60 @@ export function App() {
     polygon: [number, number][],
     curvePoints: CurvePoint[],
     anchorTypes?: ('corner' | 'smooth')[],
+    coupledMove?: { origin: [number, number]; target: [number, number] },
   ) {
-    const constrained = constrainEditedPieceGeometry(pieceId, polygon, curvePoints, anchorTypes);
+    const latest = projectRef.current;
+    const coupledUpdates: { id: string; polygon: [number, number][]; curvePoints: CurvePoint[]; anchorTypes?: ('corner' | 'smooth')[] }[] = [];
+
+    if (coupledMove) {
+      const [ox, oy] = coupledMove.origin;
+      const [tx, ty] = coupledMove.target;
+      const delta: [number, number] = [tx - ox, ty - oy];
+      if (Math.hypot(delta[0], delta[1]) > 1e-3) {
+        for (const other of latest.pieces) {
+          if (other.id === pieceId) continue;
+          const vIdx = other.polygon.findIndex(([vx, vy]) => Math.hypot(vx - ox, vy - oy) <= 2.5);
+          if (vIdx >= 0) {
+            const nextPoly = [...other.polygon];
+            nextPoly[vIdx] = [tx, ty];
+            const nextCurves = translateCurvesWithAnchor(
+              other.curvePoints ?? [],
+              vIdx,
+              other.polygon.length,
+              delta,
+            );
+            coupledUpdates.push({
+              id: other.id,
+              polygon: nextPoly,
+              curvePoints: nextCurves,
+              anchorTypes: other.anchorTypes,
+            });
+          }
+        }
+      }
+    }
+
+    const updatedNeighborPolygons = latest.pieces
+      .filter(p => p.id !== pieceId)
+      .map(p => {
+        const coupled = coupledUpdates.find(u => u.id === p.id);
+        return coupled
+          ? flattenCurves(coupled.polygon, coupled.curvePoints)
+          : flattenCurves(p.polygon, p.curvePoints);
+      });
+
+    const constrained = constrainEditedPieceGeometry(
+      pieceId,
+      polygon,
+      curvePoints,
+      anchorTypes,
+      updatedNeighborPolygons,
+    );
     if (!constrained) return;
+
+    for (const u of coupledUpdates) {
+      updatePiecePolygonAndCurves(u.id, u.polygon, u.curvePoints, true, u.anchorTypes);
+    }
     updatePiecePolygonAndCurves(
       pieceId,
       constrained.polygon,
@@ -1184,9 +1286,64 @@ export function App() {
     if (!patternScale || patternScale.pxPerUnit === 0) return;
     if (pieces.length === 0) return;
 
+    const pxPerUnit = patternScale.pxPerUnit;
+    const unit = patternScale.unit;
+
+    // Convert scale to px/mm for physical joint-allowance & page-size math
+    let pxPerMm: number;
+    if (unit === 'mm') pxPerMm = pxPerUnit;
+    else if (unit === 'cm') pxPerMm = pxPerUnit / 10;
+    else pxPerMm = pxPerUnit / 25.4;
+
+    const snapRadius = getSnapRadius(project.patternWidth);
+    const seamTol = Math.max(2.5, snapRadius * 0.25);
+
+    // Build sequential seam-healed & curve-fitted geometry so even legacy/un-curved
+    // projects print with flush solder joints and smooth cubic Bézier contours.
+    const workingPieces = pieces.map(p => ({
+      ...p,
+      polygon: [...p.polygon],
+      curvePoints: p.curvePoints ? [...p.curvePoints] : [],
+    }));
+
+    // Sequentially smooth & snap each piece against already-smoothed preceding pieces
+    // so every shared solder seam has a single canonical smooth curve on both sides.
+    for (let i = 0; i < workingPieces.length; i++) {
+      const target = workingPieces[i];
+      if (target.curvePoints && target.curvePoints.length > 0) continue;
+      const precedingPolys = workingPieces
+        .slice(0, i)
+        .map(p => flattenCurves(p.polygon, p.curvePoints, 0.25));
+      const snapped = snapPolygonToNeighbors(target.polygon, precedingPolys, snapRadius);
+      const clipped = subtractPolygons(snapped, precedingPolys);
+      const basePoly = clipped.length >= 3 ? clipped : target.polygon;
+      const fitted = smoothPieceGeometry(basePoly, [], precedingPolys, seamTol);
+      workingPieces[i] = {
+        ...target,
+        polygon: fitted.polygon,
+        curvePoints: fitted.curvePoints,
+      };
+    }
+
+    const buildInsetSvgPath = (
+      poly: [number, number][],
+      curves: CurvePoint[],
+      insetMm: number,
+    ): string => {
+      if (insetMm <= 0) {
+        return pieceToSvgPath(poly, curves);
+      }
+      const dense = flattenCurves(poly, curves, 0.15);
+      const insetPts = insetPolygon(dense, insetMm * pxPerMm);
+      return pieceToSvgPath(insetPts, []);
+    };
+
+    const solderWidthMm = project.solderWidthMM ?? 4.5;
+    const solderInsetMm = Number((solderWidthMm / 2).toFixed(2));
+
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    pieces.forEach(piece => {
-      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
+    workingPieces.forEach(piece => {
+      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints, 0.25);
       displayPoly.forEach(pt => {
         if (pt[0] < minX) minX = pt[0];
         if (pt[1] < minY) minY = pt[1];
@@ -1195,146 +1352,443 @@ export function App() {
       });
     });
 
-    const margin = patternScale.pxPerUnit * 0.5;
-    minX -= margin;
-    minY -= margin;
-    maxX += margin;
-    maxY += margin;
+    // Reserve bottom margin for the 1:1 physical verification scale bar
+    const marginPx = Math.max(pxPerMm * 12, pxPerUnit * 0.45);
+    const bottomRulerReservePx = pxPerMm * 18;
+    minX -= marginPx;
+    minY -= marginPx;
+    maxX += marginPx;
+    maxY += marginPx + bottomRulerReservePx;
 
     const printWidth = maxX - minX;
     const printHeight = maxY - minY;
 
-    const pxPerUnit = patternScale.pxPerUnit;
-    const unit = patternScale.unit;
+    const sheetIndexMap = new Map<string, number>();
+    project.sheets.forEach((s, idx) => sheetIndexMap.set(s.id, idx + 1));
 
-    // Convert scale to px/mm for page-size calculations
-    let pxPerMm: number;
-    if (unit === 'mm') pxPerMm = pxPerUnit;
-    else if (unit === 'cm') pxPerMm = pxPerUnit / 10;
-    else pxPerMm = pxPerUnit / 25.4;
-
-    // A4 portrait (mm) — used as the tile size when tiling is needed
-    const PAGE_W_MM = 210;
-    const PAGE_H_MM = 297;
-    const pageWPx = PAGE_W_MM * pxPerMm;
-    const pageHPx = PAGE_H_MM * pxPerMm;
-
-    // 10 mm overlap between adjacent tiles — covers typical printer hardware margins
-    const OVERLAP_MM = 10;
-    const overlapPx = OVERLAP_MM * pxPerMm;
-    const stepXPx = pageWPx - overlapPx;
-    const stepYPx = pageHPx - overlapPx;
-
-    const cols = Math.max(1, Math.ceil(printWidth / stepXPx));
-    const rows = Math.max(1, Math.ceil(printHeight / stepYPx));
-    const totalPages = rows * cols;
-    const needsTiling = totalPages > 1;
-
-    const strokeWidth = pxPerUnit * 0.05;
-    const fontSize = pxPerUnit * 0.5;
-    const cutLineW = Math.max(strokeWidth * 0.4, pxPerMm * 0.25);
-    const dash = overlapPx * 0.12;
-    const crossSize = overlapPx * 0.22;
-
-    const commonStyles = `
-      .po { fill: none; stroke: #000; stroke-width: ${strokeWidth}px; }
-      .pl { font-family: sans-serif; font-size: ${fontSize}px; fill: red; text-anchor: middle; dominant-baseline: middle; font-weight: bold; }
-      .cl { fill: none; stroke: #aaa; stroke-width: ${cutLineW}px; stroke-dasharray: ${dash},${dash * 0.5}; }
-      .am { stroke: #555; stroke-width: ${cutLineW}px; }
-      .pg { font-family: sans-serif; font-size: ${fontSize * 0.45}px; fill: #aaa; }
-    `;
-
-    const imageTag = `<image href="${project.patternImageUrl}" x="0" y="0" width="${project.patternWidth}" height="${project.patternHeight}" opacity="0.4" />`;
-
-    const polygonsContent = pieces.map((piece, index) => {
-      const displayPoly = flattenCurves(piece.polygon, piece.curvePoints);
-      const pts = displayPoly.map(p => `${p[0]},${p[1]}`).join(' ');
-      const c = computeCentroid(displayPoly);
-      return `<polygon points="${pts}" class="po" /><text x="${c.x}" y="${c.y}" class="pl">${index + 1}</text>`;
-    }).join('');
-
-    const pages: string[] = [];
-
-    if (!needsTiling) {
-      const pwPhysical = printWidth / pxPerUnit;
-      const phPhysical = printHeight / pxPerUnit;
-      pages.push(
-        `<svg width="${pwPhysical}${unit}" height="${phPhysical}${unit}" viewBox="${minX} ${minY} ${printWidth} ${printHeight}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-        `<style>${commonStyles}</style>${imageTag}${polygonsContent}</svg>`
-      );
-    } else {
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const tileMinX = minX + col * stepXPx;
-          const tileMinY = minY + row * stepYPx;
-          const pageNum = row * cols + col + 1;
-
-          let annotations = '';
-
-          // Dashed cut line at right overlap boundary
-          if (col < cols - 1) {
-            const cx = tileMinX + stepXPx;
-            annotations += `<line x1="${cx}" y1="${tileMinY}" x2="${cx}" y2="${tileMinY + pageHPx}" class="cl" />`;
-          }
-
-          // Dashed cut line at bottom overlap boundary
-          if (row < rows - 1) {
-            const cy = tileMinY + stepYPx;
-            annotations += `<line x1="${tileMinX}" y1="${cy}" x2="${tileMinX + pageWPx}" y2="${cy}" class="cl" />`;
-          }
-
-          // Crosshair at interior tile corners (where both cut lines meet)
-          if (col < cols - 1 && row < rows - 1) {
-            const cx = tileMinX + stepXPx;
-            const cy = tileMinY + stepYPx;
-            annotations +=
-              `<line x1="${cx - crossSize}" y1="${cy}" x2="${cx + crossSize}" y2="${cy}" class="am" />` +
-              `<line x1="${cx}" y1="${cy - crossSize}" x2="${cx}" y2="${cy + crossSize}" class="am" />`;
-          }
-
-          // Page number in bottom-right corner
-          const lx = tileMinX + pageWPx - fontSize * 0.3;
-          const ly = tileMinY + pageHPx - fontSize * 0.3;
-          annotations += `<text x="${lx}" y="${ly}" class="pg" text-anchor="end">${pageNum}/${totalPages} (${col + 1},${row + 1})</text>`;
-
-          pages.push(
-            `<svg width="${PAGE_W_MM}mm" height="${PAGE_H_MM}mm" viewBox="${tileMinX} ${tileMinY} ${pageWPx} ${pageHPx}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">` +
-            `<style>${commonStyles}</style>${imageTag}${polygonsContent}${annotations}</svg>`
-          );
-        }
+    const serializedPieces = pieces.map((rawPiece, idx) => {
+      const fairPiece = workingPieces[idx];
+      const fairDense = flattenCurves(fairPiece.polygon, fairPiece.curvePoints, 0.25);
+      const centroid = computeCentroid(fairDense);
+      let bMinX = Infinity, bMinY = Infinity, bMaxX = -Infinity, bMaxY = -Infinity;
+      for (const [px, py] of fairDense) {
+        if (px < bMinX) bMinX = px;
+        if (py < bMinY) bMinY = py;
+        if (px > bMaxX) bMaxX = px;
+        if (py > bMaxY) bMaxY = py;
       }
-    }
+      const minSpan = Math.min(bMaxX - bMinX, bMaxY - bMinY);
+      const grainAngleDeg = Number(((-(rawPiece.transform?.rotation ?? 0) * 180) / Math.PI).toFixed(1));
+      const sheetNum = sheetIndexMap.get(rawPiece.glassSheetId) ?? 1;
+
+      return {
+        num: idx + 1,
+        sheetNum,
+        cx: Number(centroid.x.toFixed(2)),
+        cy: Number(centroid.y.toFixed(2)),
+        minSpan: Number(minSpan.toFixed(1)),
+        grainAngleDeg,
+        fair: {
+          d0: buildInsetSvgPath(fairPiece.polygon, fairPiece.curvePoints ?? [], 0),
+          dFoil: buildInsetSvgPath(fairPiece.polygon, fairPiece.curvePoints ?? [], 0.5),
+          dCame: buildInsetSvgPath(fairPiece.polygon, fairPiece.curvePoints ?? [], 1.0),
+          dSolder: buildInsetSvgPath(fairPiece.polygon, fairPiece.curvePoints ?? [], solderInsetMm),
+        },
+        raw: {
+          d0: buildInsetSvgPath(rawPiece.polygon, rawPiece.curvePoints ?? [], 0),
+          dFoil: buildInsetSvgPath(rawPiece.polygon, rawPiece.curvePoints ?? [], 0.5),
+          dCame: buildInsetSvgPath(rawPiece.polygon, rawPiece.curvePoints ?? [], 1.0),
+          dSolder: buildInsetSvgPath(rawPiece.polygon, rawPiece.curvePoints ?? [], solderInsetMm),
+        },
+      };
+    });
 
     const printWin = window.open('', '_blank');
     if (!printWin) return;
 
-    const pagesHtml = pages.map(svg => `<div class="page">${svg}</div>`).join('\n');
-    const pageRule = needsTiling
-      ? `@page { margin: 0; size: ${PAGE_W_MM}mm ${PAGE_H_MM}mm; }`
-      : `@page { margin: 0; }`;
+    const payloadJson = JSON.stringify({
+      projectName: project.name || 'Vitrai Pattern',
+      patternImageUrl: project.patternImageUrl || '',
+      patternWidth: project.patternWidth,
+      patternHeight: project.patternHeight,
+      minX,
+      minY,
+      printWidth,
+      printHeight,
+      pxPerUnit,
+      unit,
+      pxPerMm,
+      solderWidthMm,
+      solderInsetMm,
+      sheetCount: project.sheets.length,
+      pieces: serializedPieces,
+    });
 
-    printWin.document.write(`
-      <html>
-        <head>
-          <title>Print Pattern - Vitrai</title>
-          <style>
-            body { margin: 0; padding: 0; background: white; }
-            .page { display: flex; justify-content: center; }
-            .page + .page { page-break-before: always; break-before: page; }
-            @media print {
-              ${pageRule}
-              body { margin: 0; }
+    printWin.document.write(`<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Print Pattern (1:1) — ${project.name || 'Vitrai'}</title>
+    <style>
+      :root {
+        --bg-stone: #f3efe8;
+        --paper: #fcfaf6;
+        --ink: #1e1b18;
+        --ink-muted: #655e55;
+        --brass: #9f6f28;
+        --brass-hover: #875c1d;
+        --hairline: #ddd5c7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0;
+        background: var(--bg-stone);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      }
+      .studio-bar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px 20px;
+        padding: 12px 20px;
+        background: var(--paper);
+        border-bottom: 1px solid var(--hairline);
+        box-shadow: 0 2px 10px rgba(30, 27, 24, 0.06);
+      }
+      .studio-brand {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+      }
+      .studio-title {
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .studio-subtitle {
+        font-size: 12px;
+        color: var(--ink-muted);
+      }
+      .studio-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px 16px;
+        font-size: 12.5px;
+      }
+      .ctrl-group {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .ctrl-label {
+        font-weight: 600;
+        color: var(--ink-muted);
+        text-transform: uppercase;
+        font-size: 10.5px;
+        letter-spacing: 0.05em;
+      }
+      select {
+        padding: 5px 8px;
+        border: 1px solid var(--hairline);
+        border-radius: 5px;
+        background: #fff;
+        color: var(--ink);
+        font-size: 12.5px;
+        font-weight: 500;
+      }
+      label.chk {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        cursor: pointer;
+        user-select: none;
+        color: var(--ink);
+      }
+      .btn-print {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        background: var(--brass);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-print:hover {
+        background: var(--brass-hover);
+      }
+      .workspace {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: 28px 20px 48px;
+      }
+      .page {
+        background: #ffffff;
+        box-shadow: 0 4px 20px rgba(30, 27, 24, 0.10);
+        border: 1px solid #e2dcd0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      @media screen {
+        .page.single-sheet svg {
+          max-width: calc(100vw - 64px);
+          max-height: calc(100vh - 140px);
+          width: auto;
+          height: auto;
+        }
+      }
+      .page + .page {
+        page-break-before: always;
+        break-before: page;
+      }
+      @media print {
+        .studio-bar { display: none !important; }
+        body { background: #ffffff; }
+        .workspace { padding: 0; gap: 0; }
+        .page { box-shadow: none; border: none; }
+      }
+    </style>
+    <style id="dynamic-page-style"></style>
+  </head>
+  <body>
+    <header class="studio-bar">
+      <div class="studio-brand">
+        <span class="studio-title">Vitrai 1:1 Fabrication Pattern</span>
+        <span class="studio-subtitle" id="summary-meta"></span>
+      </div>
+      <div class="studio-controls">
+        <div class="ctrl-group">
+          <span class="ctrl-label">Allowance</span>
+          <select id="sel-allowance">
+            <option value="foil" selected>Copper Foil — 1.0 mm gap (0.5 mm inset)</option>
+            <option value="came">Lead Came — 2.0 mm heart (1.0 mm inset)</option>
+            <option value="solder">Solder Width — ${solderWidthMm.toFixed(1)} mm (${solderInsetMm.toFixed(2)} mm inset)</option>
+            <option value="zero">Centerline Only — 0 mm inset</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <span class="ctrl-label">Paper</span>
+          <select id="sel-paper">
+            <option value="single" selected>Single Sheet (1:1 Full Size)</option>
+            <option value="letter">Letter Tiles (8.5 × 11 in)</option>
+            <option value="a4">A4 Tiles (210 × 297 mm)</option>
+          </select>
+        </div>
+        <label class="chk" title="Fit smooth cubic Bézier curves to faceted contours and lock shared solder seams">
+          <input type="checkbox" id="chk-smooth" checked />
+          Smooth contours
+        </label>
+        <label class="chk" title="Show dashed solder joint centerlines between inset piece cut lines">
+          <input type="checkbox" id="chk-centerlines" checked />
+          Joint centerlines
+        </label>
+        <label class="chk" title="Show glass grain / texture orientation arrow from piece placement on glass sheet">
+          <input type="checkbox" id="chk-grain" checked />
+          Grain arrows
+        </label>
+        <label class="chk" title="Show reference pattern photo at 22% opacity">
+          <input type="checkbox" id="chk-photo" />
+          Reference photo
+        </label>
+        <button class="btn-print" id="btn-trigger-print" type="button">
+          Print / Save PDF
+        </button>
+      </div>
+    </header>
+    <main class="workspace" id="pages-root"></main>
+    <script>
+      const DATA = ${payloadJson};
+
+      function renderPages() {
+        const allowance = document.getElementById('sel-allowance').value;
+        const paper = document.getElementById('sel-paper').value;
+        const useSmooth = document.getElementById('chk-smooth').checked;
+        const showCenterlines = document.getElementById('chk-centerlines').checked;
+        const showGrain = document.getElementById('chk-grain').checked;
+        const showPhoto = document.getElementById('chk-photo').checked;
+
+        const pxPerMm = DATA.pxPerMm;
+        const cutStrokeW = Math.max(0.45 * pxPerMm, 1.1);
+        const centerStrokeW = Math.max(0.24 * pxPerMm, 0.7);
+        const centerDash = (1.6 * pxPerMm).toFixed(2) + ',' + (1.3 * pxPerMm).toFixed(2);
+        const fontSize = Math.max(3.6 * pxPerMm, Math.min(6.5 * pxPerMm, DATA.printWidth * 0.042));
+        const subFontSize = fontSize * 0.56;
+
+        const wMm = (DATA.printWidth - 2 * Math.max(pxPerMm * 12, DATA.pxPerUnit * 0.45)) / pxPerMm;
+        const hMm = (DATA.printHeight - 2 * Math.max(pxPerMm * 12, DATA.pxPerUnit * 0.45) - pxPerMm * 18) / pxPerMm;
+        const allowanceLabel = allowance === 'foil'
+          ? '0.5 mm foil inset (1.0 mm gap)'
+          : allowance === 'came'
+            ? '1.0 mm came inset (2.0 mm heart)'
+            : allowance === 'solder'
+              ? DATA.solderInsetMm + ' mm inset (' + DATA.solderWidthMm + ' mm gap)'
+              : '0 mm inset (exact centerline)';
+
+        document.getElementById('summary-meta').textContent =
+          DATA.pieces.length + ' pieces · ' + (wMm / 10).toFixed(1) + ' × ' + (hMm / 10).toFixed(1) + ' cm · ' + allowanceLabel;
+
+        const commonStyles = \`
+          .cut-path { fill: rgba(255,255,255,0.01); stroke: #111111; stroke-width: \${cutStrokeW.toFixed(2)}px; stroke-linejoin: round; stroke-linecap: round; }
+          .center-path { fill: none; stroke: #8c8275; stroke-width: \${centerStrokeW.toFixed(2)}px; stroke-dasharray: \${centerDash}; stroke-linejoin: round; }
+          .num-halo { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: \${fontSize.toFixed(2)}px; font-weight: 700; fill: none; stroke: #ffffff; stroke-width: \${(fontSize * 0.24).toFixed(2)}px; stroke-linejoin: round; text-anchor: middle; dominant-baseline: central; }
+          .num-txt { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: \${fontSize.toFixed(2)}px; font-weight: 700; fill: #181512; text-anchor: middle; dominant-baseline: central; }
+          .grain-line { stroke: #7a5219; stroke-width: \${Math.max(0.28 * pxPerMm, 0.85).toFixed(2)}px; stroke-linecap: round; fill: none; }
+          .scale-bar { stroke: #181512; stroke-width: \${Math.max(0.35 * pxPerMm, 1.0).toFixed(2)}px; fill: none; }
+          .scale-txt { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: \${(2.8 * pxPerMm).toFixed(2)}px; font-weight: 600; fill: #3d3730; }
+          .tile-cut { fill: none; stroke: #999; stroke-width: \${centerStrokeW.toFixed(2)}px; stroke-dasharray: \${(3 * pxPerMm).toFixed(1)},\${(2 * pxPerMm).toFixed(1)}; }
+          .tile-mark { stroke: #444; stroke-width: \${centerStrokeW.toFixed(2)}px; }
+          .tile-pg { font-family: sans-serif; font-size: \${(3.0 * pxPerMm).toFixed(2)}px; fill: #666; }
+        \`;
+
+        const imageTag = (showPhoto && DATA.patternImageUrl)
+          ? \`<image href="\${DATA.patternImageUrl}" x="0" y="0" width="\${DATA.patternWidth}" height="\${DATA.patternHeight}" opacity="0.22" />\`
+          : '';
+
+        // 1. Dashed assembly centerlines (drawn underneath cut lines when allowance > 0)
+        let centerlinesSvg = '';
+        if (showCenterlines && allowance !== 'zero') {
+          centerlinesSvg = DATA.pieces.map(p => {
+            const geom = useSmooth ? p.fair : p.raw;
+            return \`<path d="\${geom.d0}" class="center-path" />\`;
+          }).join('');
+        }
+
+        // 2. Solid inward-offset glass cut lines + piece numbers + grain direction arrows
+        const piecesSvg = DATA.pieces.map(p => {
+          const geom = useSmooth ? p.fair : p.raw;
+          const dCut = allowance === 'foil'
+            ? geom.dFoil
+            : allowance === 'came'
+              ? geom.dCame
+              : allowance === 'solder'
+                ? geom.dSolder
+                : geom.d0;
+
+          const labelY = showGrain ? p.cy - fontSize * 0.22 : p.cy;
+          let grainSvg = '';
+          if (showGrain && p.minSpan > fontSize * 1.4) {
+            const halfLen = Math.min(fontSize * 0.72, p.minSpan * 0.22);
+            const head = halfLen * 0.34;
+            const gy = p.cy + fontSize * 0.56;
+            grainSvg =
+              \`<g transform="translate(\${p.cx},\${gy}) rotate(\${p.grainAngleDeg})">\` +
+              \`<line x1="\${(-halfLen).toFixed(2)}" y1="0" x2="\${halfLen.toFixed(2)}" y2="0" class="grain-line" />\` +
+              \`<polyline points="\${(halfLen - head).toFixed(2)},\${(-head * 0.65).toFixed(2)} \${halfLen.toFixed(2)},0 \${(halfLen - head).toFixed(2)},\${(head * 0.65).toFixed(2)}" class="grain-line" />\` +
+              \`<polyline points="\${(-halfLen + head).toFixed(2)},\${(-head * 0.65).toFixed(2)} \${(-halfLen).toFixed(2)},0 \${(-halfLen + head).toFixed(2)},\${(head * 0.65).toFixed(2)}" class="grain-line" />\` +
+              \`</g>\`;
+          }
+
+          return (
+            \`<path d="\${dCut}" class="cut-path" />\` +
+            grainSvg +
+            \`<text x="\${p.cx}" y="\${labelY.toFixed(2)}" class="num-halo">\${p.num}</text>\` +
+            \`<text x="\${p.cx}" y="\${labelY.toFixed(2)}" class="num-txt">\${p.num}</text>\`
+          );
+        }).join('');
+
+        // 3. 1:1 Scale verification ruler bar in bottom margin
+        const barLenMm = DATA.unit === 'in' ? 50.8 : 50;
+        const barLabel = DATA.unit === 'in' ? '2.00 in (50.8 mm) — 1:1 Scale Check' : '50 mm (5.0 cm) — 1:1 Scale Check';
+        const barLenPx = barLenMm * pxPerMm;
+        const barX = DATA.minX + 10 * pxPerMm;
+        const barY = DATA.minY + DATA.printHeight - 7 * pxPerMm;
+        const tickH = 2.2 * pxPerMm;
+        const scaleBarSvg =
+          \`<g>\` +
+          \`<line x1="\${barX.toFixed(2)}" y1="\${barY.toFixed(2)}" x2="\${(barX + barLenPx).toFixed(2)}" y2="\${barY.toFixed(2)}" class="scale-bar" />\` +
+          \`<line x1="\${barX.toFixed(2)}" y1="\${(barY - tickH).toFixed(2)}" x2="\${barX.toFixed(2)}" y2="\${(barY + tickH).toFixed(2)}" class="scale-bar" />\` +
+          \`<line x1="\${(barX + barLenPx / 2).toFixed(2)}" y1="\${(barY - tickH * 0.7).toFixed(2)}" x2="\${(barX + barLenPx / 2).toFixed(2)}" y2="\${(barY + tickH * 0.7).toFixed(2)}" class="scale-bar" />\` +
+          \`<line x1="\${(barX + barLenPx).toFixed(2)}" y1="\${(barY - tickH).toFixed(2)}" x2="\${(barX + barLenPx).toFixed(2)}" y2="\${(barY + tickH).toFixed(2)}" class="scale-bar" />\` +
+          \`<text x="\${(barX + barLenPx + 3.5 * pxPerMm).toFixed(2)}" y="\${(barY + 0.9 * pxPerMm).toFixed(2)}" class="scale-txt">\${barLabel} · \${allowanceLabel}</text>\` +
+          \`</g>\`;
+
+        const pages = [];
+        const pageStyleEl = document.getElementById('dynamic-page-style');
+
+        if (paper === 'single') {
+          const pwPhysical = (DATA.printWidth / DATA.pxPerUnit).toFixed(3);
+          const phPhysical = (DATA.printHeight / DATA.pxPerUnit).toFixed(3);
+          pageStyleEl.textContent = '@media print { @page { margin: 0; } }';
+          pages.push(
+            \`<svg width="\${pwPhysical}\${DATA.unit}" height="\${phPhysical}\${DATA.unit}" viewBox="\${DATA.minX} \${DATA.minY} \${DATA.printWidth} \${DATA.printHeight}" xmlns="http://www.w3.org/2000/svg">\` +
+            \`<style>\${commonStyles}</style>\${imageTag}\${centerlinesSvg}\${piecesSvg}\${scaleBarSvg}</svg>\`
+          );
+        } else {
+          const pageWMm = paper === 'letter' ? 215.9 : 210;
+          const pageHMm = paper === 'letter' ? 279.4 : 297;
+          const overlapMm = 10;
+          const pageWPx = pageWMm * pxPerMm;
+          const pageHPx = pageHMm * pxPerMm;
+          const overlapPx = overlapMm * pxPerMm;
+          const stepXPx = pageWPx - overlapPx;
+          const stepYPx = pageHPx - overlapPx;
+          const cols = Math.max(1, Math.ceil(DATA.printWidth / stepXPx));
+          const rows = Math.max(1, Math.ceil(DATA.printHeight / stepYPx));
+          const totalPages = rows * cols;
+          const crossSize = overlapPx * 0.22;
+
+          pageStyleEl.textContent = \`@media print { @page { margin: 0; size: \${pageWMm}mm \${pageHMm}mm; } }\`;
+
+          for (let row = 0; row < rows; row++) {
+            for (let col = 0; col < cols; col++) {
+              const tileMinX = DATA.minX + col * stepXPx;
+              const tileMinY = DATA.minY + row * stepYPx;
+              const pageNum = row * cols + col + 1;
+              let annotations = '';
+              if (col < cols - 1) {
+                const cx = tileMinX + stepXPx;
+                annotations += \`<line x1="\${cx}" y1="\${tileMinY}" x2="\${cx}" y2="\${tileMinY + pageHPx}" class="tile-cut" />\`;
+              }
+              if (row < rows - 1) {
+                const cy = tileMinY + stepYPx;
+                annotations += \`<line x1="\${tileMinX}" y1="\${cy}" x2="\${tileMinX + pageWPx}" y2="\${cy}" class="tile-cut" />\`;
+              }
+              if (col < cols - 1 && row < rows - 1) {
+                const cx = tileMinX + stepXPx;
+                const cy = tileMinY + stepYPx;
+                annotations +=
+                  \`<line x1="\${cx - crossSize}" y1="\${cy}" x2="\${cx + crossSize}" y2="\${cy}" class="tile-mark" />\` +
+                  \`<line x1="\${cx}" y1="\${cy - crossSize}" x2="\${cx}" y2="\${cy + crossSize}" class="tile-mark" />\`;
+              }
+              const lx = tileMinX + pageWPx - 5 * pxPerMm;
+              const ly = tileMinY + pageHPx - 5 * pxPerMm;
+              annotations += \`<text x="\${lx}" y="\${ly}" class="tile-pg" text-anchor="end">Page \${pageNum}/\${totalPages} (R\${row + 1}·C\${col + 1})</text>\`;
+
+              pages.push(
+                \`<svg width="\${pageWMm}mm" height="\${pageHMm}mm" viewBox="\${tileMinX} \${tileMinY} \${pageWPx} \${pageHPx}" xmlns="http://www.w3.org/2000/svg">\` +
+                \`<style>\${commonStyles}</style>\${imageTag}\${centerlinesSvg}\${piecesSvg}\${scaleBarSvg}\${annotations}</svg>\`
+              );
             }
-          </style>
-        </head>
-        <body>
-          ${pagesHtml}
-          <script>
-            window.onload = () => { window.print(); };
-          </script>
-        </body>
-      </html>
-    `);
+          }
+        }
+
+        const pageClass = paper === 'single' ? 'page single-sheet' : 'page';
+        document.getElementById('pages-root').innerHTML = pages.map(svg => \`<div class="\${pageClass}">\${svg}</div>\`).join('\\n');
+      }
+
+      ['sel-allowance', 'sel-paper', 'chk-smooth', 'chk-centerlines', 'chk-grain', 'chk-photo'].forEach(id => {
+        document.getElementById(id).addEventListener('change', renderPages);
+      });
+      document.getElementById('btn-trigger-print').addEventListener('click', () => window.print());
+
+      renderPages();
+    </script>
+  </body>
+</html>`);
     printWin.document.close();
   };
 
