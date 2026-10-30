@@ -219,4 +219,47 @@ describe('seam snapping and curve fitting for fabrication', () => {
     expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 0) < 2.5)).toBe(true);
     expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 60) < 2.5)).toBe(true);
   });
+
+  it('hugs a concave edge without bowing outward when a SAM2 corner bevel reverses the endpoint step', () => {
+    // Reproduces the orange body piece (piece 1): top-right edge from top apex (200, 50)
+    // to right corner (450, 220) is concave (bows inward/downward below the chord),
+    // except the final short SAM2 corner-rounding step from (442, 210) to (450, 220)
+    // which slopes more steeply downward than the chord.
+    const topApex: [number, number] = [200, 50];
+    const rightCorner: [number, number] = [450, 220];
+    const concaveEdgePts: [number, number][] = [
+      topApex,
+      [240, 92],
+      [290, 134],
+      [345, 168],
+      [400, 195],
+      [442, 210], // short corner-rounding bevel step before rightCorner
+      rightCorner,
+    ];
+    const orangeBodyPoly: [number, number][] = [
+      ...concaveEdgePts,
+      [410, 340],
+      [320, 410],
+      [200, 420],
+      [110, 350],
+      [80, 240],
+      [130, 95],
+    ];
+
+    const fitted = fitSmoothPieceCurves(orangeBodyPoly, [], { cornerAngleDeg: 40 });
+    const dense = flattenCurves(fitted.polygon, fitted.curvePoints, 0.5);
+
+    // Every sampled point along the top-right span (x in [210, 440], y < 230) must stay
+    // on the concave (inward/below-chord) side of the line from topApex to rightCorner,
+    // and within 3.5px of the original concave polyline.
+    const topRightSamples = dense.filter(([x, y]) => x >= 210 && x <= 440 && y <= 225);
+    expect(topRightSamples.length).toBeGreaterThan(5);
+
+    for (const [x, y] of topRightSamples) {
+      const t = (x - topApex[0]) / (rightCorner[0] - topApex[0]);
+      const chordY = topApex[1] + t * (rightCorner[1] - topApex[1]);
+      // In screen coordinates (+y down), inward/concave is y >= chordY (never bowing above chord into leaf 2)
+      expect(y).toBeGreaterThanOrEqual(chordY - 1.0);
+    }
+  });
 });
