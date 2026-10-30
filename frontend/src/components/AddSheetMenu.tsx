@@ -10,10 +10,11 @@ interface AddSheetMenuProps {
   onPickUrl: (url: string, label: string, scale?: Scale | null) => void;
   onUpload: (file: File) => void;
   onClose: () => void;
+  onOpenLibrary: () => void;
 }
 
 export function AddSheetMenu({
-  anchor, currentProjectName, onPickUrl, onUpload, onClose,
+  anchor, currentProjectName, onPickUrl, onUpload, onClose, onOpenLibrary,
 }: AddSheetMenuProps) {
   const { t } = useTranslation();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -61,6 +62,9 @@ export function AddSheetMenu({
       style={{ left: anchor.left, top: anchor.top }}
       onMouseDown={e => e.stopPropagation()}
     >
+      <button className="add-sheet-menu-item" onClick={() => { onClose(); onOpenLibrary(); }}>
+        <span className="add-sheet-menu-label">Browse Glass Library…</span>
+      </button>
       <button
         className="add-sheet-menu-item add-sheet-menu-upload"
         onClick={() => fileInputRef.current?.click()}
@@ -87,7 +91,7 @@ export function AddSheetMenu({
               onClick={() => { onPickUrl(s.url, s.label); onClose(); }}
               title={t('addSheetFromProject', { project: s.projectName })}
             >
-              <img className="add-sheet-menu-thumb" src={s.url} alt="" />
+              <img className="add-sheet-menu-thumb" crossOrigin="anonymous" src={s.url} alt="" />
               <span className="add-sheet-menu-label">{s.label}</span>
               {s.projectName !== 'default' && (
                 <span className="add-sheet-menu-source">{s.projectName}</span>

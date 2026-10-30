@@ -4,6 +4,7 @@ import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
 import { MoveConfirmDialog } from './components/MoveConfirmDialog';
 import { ShortcutsOverlay } from './components/ShortcutsOverlay';
+import { GlassLibraryDialog } from './components/GlassLibraryDialog';
 import { AddSheetMenu } from './components/AddSheetMenu';
 
 import { Lamp3DPreview } from './components/Lamp3DPreview';
@@ -12,7 +13,7 @@ import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { getSamBackend } from './samBackend';
-import type { BoundingBox, GlassSheet, CurvePoint, Scale } from './types';
+import type { BoundingBox, GlassSheet, CurvePoint, Scale, Project } from './types';
 import {
   IconUndo, IconRedo, IconGlobe, IconUpload, IconDownload, IconPrinter, IconSpark,
 } from './components/icons';
@@ -288,6 +289,109 @@ function PenStatusDisplay({ store, active, scale }: { store: PenStatusStore; act
   </>;
 }
 
+function PatternDimensionsEditor({ project, onUpdateDimensions }: { project: Project; onUpdateDimensions: (width: number, height: number) => void }) {
+  const [editing, setEditing] = useState(false);
+  const scale = project.patternScale;
+  const hasScale = Boolean(scale && scale.pxPerUnit > 0);
+  const unit = hasScale ? scale!.unit : 'px';
+
+  const activeWidthPx = Math.max(1, project.patternWidth - project.patternCrop.left - project.patternCrop.right);
+  const activeHeightPx = Math.max(1, project.patternHeight - project.patternCrop.top - project.patternCrop.bottom);
+
+  const displayW = hasScale ? Number((activeWidthPx / scale!.pxPerUnit).toFixed(1)) : Math.round(activeWidthPx);
+  const displayH = hasScale ? Number((activeHeightPx / scale!.pxPerUnit).toFixed(1)) : Math.round(activeHeightPx);
+
+  const [draftW, setDraftW] = useState(String(displayW));
+  const [draftH, setDraftH] = useState(String(displayH));
+
+  useEffect(() => {
+    if (!editing) {
+      setDraftW(String(displayW));
+      setDraftH(String(displayH));
+    }
+  }, [displayW, displayH, editing]);
+
+  const commit = () => {
+    const wVal = parseFloat(draftW);
+    const hVal = parseFloat(draftH);
+    if (!isNaN(wVal) && !isNaN(hVal) && wVal > 0 && hVal > 0) {
+      const finalW = hasScale ? wVal * scale!.pxPerUnit : wVal;
+      const finalH = hasScale ? hVal * scale!.pxPerUnit : hVal;
+      onUpdateDimensions(finalW, finalH);
+    } else {
+      setDraftW(String(displayW));
+      setDraftH(String(displayH));
+    }
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: '#ffffff', border: '1px solid var(--hairline-2)', borderRadius: 4, padding: '1px 5px', fontSize: 11 }}>
+        <input
+          type="number"
+          step={hasScale ? '0.1' : '1'}
+          value={draftW}
+          onChange={e => setDraftW(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
+          autoFocus
+          style={{ width: 44, border: 'none', background: 'transparent', textAlign: 'right', fontSize: 11, padding: 0, outline: 'none', color: 'inherit' }}
+        />
+        <span style={{ color: 'var(--text-dim)' }}>×</span>
+        <input
+          type="number"
+          step={hasScale ? '0.1' : '1'}
+          value={draftH}
+          onChange={e => setDraftH(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false); }}
+          style={{ width: 44, border: 'none', background: 'transparent', textAlign: 'left', fontSize: 11, padding: 0, outline: 'none', color: 'inherit' }}
+        />
+        <span style={{ color: 'var(--text-dim)', fontSize: 10 }}>{unit}</span>
+        <button
+          onClick={commit}
+          style={{ border: 'none', background: '#292524', color: '#ffffff', borderRadius: 3, padding: '1px 5px', fontSize: 10, cursor: 'pointer', marginLeft: 2 }}
+        >
+          ✓
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      title="Click to resize canvas / artboard"
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 3,
+        background: 'transparent',
+        border: '1px solid transparent',
+        borderRadius: 4,
+        padding: '1px 5px',
+        color: 'var(--text-dim)',
+        fontSize: 11,
+        fontFamily: 'inherit',
+        cursor: 'pointer',
+        transition: 'background 0.1s, border-color 0.1s',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = 'var(--chrome-700)';
+        e.currentTarget.style.borderColor = 'var(--hairline)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = 'transparent';
+        e.currentTarget.style.borderColor = 'transparent';
+      }}
+    >
+      <span>{displayW} × {displayH} {unit}</span>
+      <svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ opacity: 0.6 }}>
+        <path d="M11 2l3 3-9 9H2v-3l9-9z" />
+      </svg>
+    </button>
+  );
+}
+
 export function App() {
   const { t, i18n } = useTranslation();
   const [pieceTransformPreviewStore] = useState(() => new PieceTransformPreviewStore());
@@ -335,6 +439,7 @@ export function App() {
     canRedo,
     loadProjectData,
     updatePatternImage,
+    updatePatternDimensions,
     startBlankCanvas,
     startLampMode,
     addSheetFromImage,
@@ -692,6 +797,7 @@ export function App() {
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
   const [, setFocusedPanelIdx] = useState<number | null>(null);
@@ -1465,13 +1571,12 @@ export function App() {
         {/* ── Left: pattern view ── */}
         <div className="panel panel-left">
           <div className="panel-header">
-            <div className="panel-title">
+            <div className="panel-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span className="panel-title-eyebrow">{t('pattern')}</span>
-              {project.patternImageUrl && (
-                <span className="panel-title-subtitle">
-                  {t('patternDimensions', { w: project.patternWidth, h: project.patternHeight })}
-                </span>
-              )}
+              <PatternDimensionsEditor
+                project={project}
+                onUpdateDimensions={updatePatternDimensions}
+              />
             </div>
             {project.patternImageUrl && (
               <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
@@ -1616,7 +1721,7 @@ export function App() {
             onSelectPiece={selectPiece}
             onTransformChange={updatePieceTransform}
             onCommitTransforms={commitPieceTransforms}
-            onCropChange={c => updateSheetCrop(activeSheetId, c)}
+            onCropChange={(c, skipHistory) => updateSheetCrop(activeSheetId, c, skipHistory)}
             onScaleChange={s => updateSheetScale(activeSheetId, s)}
             onImageLoad={(w, h) => updateSheetDimensions(activeSheetId, w, h)}
             showEmptyHint={
@@ -1771,7 +1876,15 @@ export function App() {
           currentProjectName={project.name}
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
+          onOpenLibrary={() => setShowGlassLibrary(true)}
           onClose={() => setAddSheetMenu(null)}
+        />
+      )}
+
+      {showGlassLibrary && (
+        <GlassLibraryDialog
+          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
+          onClose={() => setShowGlassLibrary(false)}
         />
       )}
 

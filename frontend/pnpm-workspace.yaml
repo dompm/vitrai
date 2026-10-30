@@ -3,3 +3,4 @@ allowBuilds:
   onnxruntime-node: false
   protobufjs: true
   sharp: false
+  workerd: true

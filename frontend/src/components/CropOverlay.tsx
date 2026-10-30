@@ -1,17 +1,19 @@
-import { Group, Rect, Line } from 'react-konva';
+import { Group, Rect, Line, Text as KonvaText } from 'react-konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
-import type { Crop } from '../types';
+import type { Crop, Scale } from '../types';
 
 interface Props {
   imageWidth: number;
   imageHeight: number;
   crop: Crop;
   effectiveScale: number;
-  onCropChange: (c: Partial<Crop>) => void;
+  onCropChange: (c: Partial<Crop>, skipHistory?: boolean) => void;
+  hasImage?: boolean;
+  scale?: Scale | null;
 }
 
 const DIM = 'rgba(0,0,0,0.42)';
-const STROKE = '#c08a1f';
+const STROKE = '#C48820';
 const EDGE_HIT = 28;   // edge hit zone in display px
 const ARM = 22;        // corner L-handle arm length in display px
 const ARM_W = 4;       // corner arm thickness in display px
@@ -25,10 +27,11 @@ interface CornerHandleProps {
   flipY: boolean;
   cursor: string;
   onDragMove: (e: KonvaEventObject<DragEvent>) => void;
+  onDragEnd: (e: KonvaEventObject<DragEvent>) => void;
   onCursorChange: (e: KonvaEventObject<MouseEvent>, cursor: string) => void;
 }
 
-function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChange }: CornerHandleProps) {
+function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onDragEnd, onCursorChange }: CornerHandleProps) {
   const arm = ARM / es;
   const w = ARM_W / es;
   const pad = CORNER_HIT / es;
@@ -40,6 +43,7 @@ function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChan
       x={x} y={y}
       draggable
       onDragMove={onDragMove}
+      onDragEnd={onDragEnd}
       onMouseEnter={e => onCursorChange(e, cursor)}
       onMouseLeave={e => onCursorChange(e, 'default')}
     >
@@ -79,11 +83,11 @@ function CornerHandle({ x, y, es, flipX, flipY, cursor, onDragMove, onCursorChan
   );
 }
 
-export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScale: es, onCropChange }: Props) {
+export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScale: es, onCropChange, hasImage = true, scale }: Props) {
   const ix = crop.left;
   const iy = crop.top;
-  const iw = W - crop.left - crop.right;
-  const ih = H - crop.top - crop.bottom;
+  const iw = Math.max(20, W - crop.left - crop.right);
+  const ih = Math.max(20, H - crop.top - crop.bottom);
 
   // Dim bands only cover positive insets (area inside the image but outside
   // the crop rect). Negative crop values extend the canvas past the image and
@@ -93,6 +97,16 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
   const middleY = insetTop;
   const middleH = Math.max(0, H - insetTop - insetBottom);
 
+  const hasScale = Boolean(scale && scale.pxPerUnit > 0);
+  const dimText = hasScale
+    ? `${(iw / scale!.pxPerUnit).toFixed(1)} × ${(ih / scale!.pxPerUnit).toFixed(1)} ${scale!.unit}`
+    : `${Math.round(iw)} × ${Math.round(ih)} px`;
+  const pillFontSize = 11 / es;
+  const pillW = Math.max(82, dimText.length * 6.5 + 16) / es;
+  const pillH = 22 / es;
+  const pillX = ix + iw / 2 - pillW / 2;
+  const pillY = iy + ih + 10 / es;
+
   function setCursor(e: KonvaEventObject<MouseEvent>, cursor: string) {
     const c = e.target.getStage()?.container();
     if (c) c.style.cursor = cursor;
@@ -100,69 +114,89 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
 
   return (
     <Group>
-      {/* Dim bands — only positive insets, no negatives */}
-      {crop.top > 0 && (
+      {/* Dim bands — only positive insets over an existing image */}
+      {hasImage && crop.top > 0 && (
         <Rect x={0} y={0} width={W} height={crop.top} fill={DIM} listening={false} />
       )}
-      {crop.bottom > 0 && (
+      {hasImage && crop.bottom > 0 && (
         <Rect x={0} y={H - crop.bottom} width={W} height={crop.bottom} fill={DIM} listening={false} />
       )}
-      {crop.left > 0 && (
+      {hasImage && crop.left > 0 && (
         <Rect x={0} y={middleY} width={crop.left} height={middleH} fill={DIM} listening={false} />
       )}
-      {crop.right > 0 && (
+      {hasImage && crop.right > 0 && (
         <Rect x={W - crop.right} y={middleY} width={crop.right} height={middleH} fill={DIM} listening={false} />
       )}
 
-      {/* Edge handles */}
+      {/* Edge handles — span the active crop bounds [ix..ix+iw, iy..iy+ih] */}
       <Line
-        x={0} y={crop.top}
-        points={[0, 0, W, 0]}
+        x={ix} y={crop.top}
+        points={[0, 0, iw, 0]}
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
           const y = Math.min(H - crop.bottom - 20, e.target.y());
-          e.target.x(0); e.target.y(y);
-          onCropChange({ top: Math.round(y) });
+          e.target.x(ix); e.target.y(y);
+          onCropChange({ top: Math.round(y) }, true);
+        }}
+        onDragEnd={e => {
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
+          e.target.x(ix); e.target.y(y);
+          onCropChange({ top: Math.round(y) }, false);
         }}
         onMouseEnter={e => setCursor(e, 'ns-resize')}
         onMouseLeave={e => setCursor(e, 'default')}
       />
       <Line
-        x={0} y={H - crop.bottom}
-        points={[0, 0, W, 0]}
+        x={ix} y={H - crop.bottom}
+        points={[0, 0, iw, 0]}
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
           const y = Math.max(crop.top + 20, e.target.y());
-          e.target.x(0); e.target.y(y);
-          onCropChange({ bottom: Math.round(H - y) });
+          e.target.x(ix); e.target.y(y);
+          onCropChange({ bottom: Math.round(H - y) }, true);
+        }}
+        onDragEnd={e => {
+          const y = Math.max(crop.top + 20, e.target.y());
+          e.target.x(ix); e.target.y(y);
+          onCropChange({ bottom: Math.round(H - y) }, false);
         }}
         onMouseEnter={e => setCursor(e, 'ns-resize')}
         onMouseLeave={e => setCursor(e, 'default')}
       />
       <Line
-        x={crop.left} y={0}
-        points={[0, 0, 0, H]}
+        x={crop.left} y={iy}
+        points={[0, 0, 0, ih]}
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
           const x = Math.min(W - crop.right - 20, e.target.x());
-          e.target.x(x); e.target.y(0);
-          onCropChange({ left: Math.round(x) });
+          e.target.x(x); e.target.y(iy);
+          onCropChange({ left: Math.round(x) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.min(W - crop.right - 20, e.target.x());
+          e.target.x(x); e.target.y(iy);
+          onCropChange({ left: Math.round(x) }, false);
         }}
         onMouseEnter={e => setCursor(e, 'ew-resize')}
         onMouseLeave={e => setCursor(e, 'default')}
       />
       <Line
-        x={W - crop.right} y={0}
-        points={[0, 0, 0, H]}
+        x={W - crop.right} y={iy}
+        points={[0, 0, 0, ih]}
         stroke={STROKE} strokeWidth={2 / es} hitStrokeWidth={EDGE_HIT / es}
         draggable
         onDragMove={e => {
           const x = Math.max(crop.left + 20, e.target.x());
-          e.target.x(x); e.target.y(0);
-          onCropChange({ right: Math.round(W - x) });
+          e.target.x(x); e.target.y(iy);
+          onCropChange({ right: Math.round(W - x) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.max(crop.left + 20, e.target.x());
+          e.target.x(x); e.target.y(iy);
+          onCropChange({ right: Math.round(W - x) }, false);
         }}
         onMouseEnter={e => setCursor(e, 'ew-resize')}
         onMouseLeave={e => setCursor(e, 'default')}
@@ -176,7 +210,13 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
           const x = Math.min(W - crop.right - 20, e.target.x());
           const y = Math.min(H - crop.bottom - 20, e.target.y());
           e.target.x(x); e.target.y(y);
-          onCropChange({ left: Math.round(x), top: Math.round(y) });
+          onCropChange({ left: Math.round(x), top: Math.round(y) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.min(W - crop.right - 20, e.target.x());
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
+          e.target.x(x); e.target.y(y);
+          onCropChange({ left: Math.round(x), top: Math.round(y) }, false);
         }}
       />
       <CornerHandle
@@ -186,7 +226,13 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
           const x = Math.max(crop.left + 20, e.target.x());
           const y = Math.min(H - crop.bottom - 20, e.target.y());
           e.target.x(x); e.target.y(y);
-          onCropChange({ right: Math.round(W - x), top: Math.round(y) });
+          onCropChange({ right: Math.round(W - x), top: Math.round(y) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.max(crop.left + 20, e.target.x());
+          const y = Math.min(H - crop.bottom - 20, e.target.y());
+          e.target.x(x); e.target.y(y);
+          onCropChange({ right: Math.round(W - x), top: Math.round(y) }, false);
         }}
       />
       <CornerHandle
@@ -196,7 +242,13 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
           const x = Math.min(W - crop.right - 20, e.target.x());
           const y = Math.max(crop.top + 20, e.target.y());
           e.target.x(x); e.target.y(y);
-          onCropChange({ left: Math.round(x), bottom: Math.round(H - y) });
+          onCropChange({ left: Math.round(x), bottom: Math.round(H - y) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.min(W - crop.right - 20, e.target.x());
+          const y = Math.max(crop.top + 20, e.target.y());
+          e.target.x(x); e.target.y(y);
+          onCropChange({ left: Math.round(x), bottom: Math.round(H - y) }, false);
         }}
       />
       <CornerHandle
@@ -206,9 +258,36 @@ export function CropOverlay({ imageWidth: W, imageHeight: H, crop, effectiveScal
           const x = Math.max(crop.left + 20, e.target.x());
           const y = Math.max(crop.top + 20, e.target.y());
           e.target.x(x); e.target.y(y);
-          onCropChange({ right: Math.round(W - x), bottom: Math.round(H - y) });
+          onCropChange({ right: Math.round(W - x), bottom: Math.round(H - y) }, true);
+        }}
+        onDragEnd={e => {
+          const x = Math.max(crop.left + 20, e.target.x());
+          const y = Math.max(crop.top + 20, e.target.y());
+          e.target.x(x); e.target.y(y);
+          onCropChange({ right: Math.round(W - x), bottom: Math.round(H - y) }, false);
         }}
       />
+
+      {/* Live CAD dimension readout pill centered below the active frame */}
+      <Group x={pillX} y={pillY} listening={false}>
+        <Rect
+          width={pillW}
+          height={pillH}
+          fill="#292524"
+          cornerRadius={4 / es}
+        />
+        <KonvaText
+          width={pillW}
+          height={pillH}
+          text={dimText}
+          fontSize={pillFontSize}
+          fontFamily='"Inter Tight", system-ui, -apple-system, sans-serif'
+          fontStyle="600"
+          fill="#ffffff"
+          align="center"
+          verticalAlign="middle"
+        />
+      </Group>
     </Group>
   );
 }

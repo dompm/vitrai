@@ -11,7 +11,7 @@
 
 Vitrai is a CAD and material-planning tool for stained glass work. It pairs a 2D pattern editor with calibrated photos of real glass sheets so you can draft pieces, preview how directional grain and color streaks line up across a panel or 3D lampshade, and print 1:1 cutting templates.
 
-Everything runs locally in the browser—photos and projects stay on your device in the Origin Private File System (OPFS), and image segmentation runs client-side via WebGPU/WebAssembly.
+Everything runs locally in the browser—user projects stay on your device in the Origin Private File System (OPFS), SAM2 image segmentation runs client-side via WebGPU/WebAssembly, and the built-in glass library streams public sheet textures from Cloudflare R2.
 
 ## Capabilities
 
@@ -42,3 +42,7 @@ pnpm dev
 ```
 
 See [`docs/testing.md`](docs/testing.md) for unit and browser regression test commands.
+
+## Deployment
+
+Cloudflare Pages builds from `frontend` (`dist` output). `public/_headers` configures COOP/COEP for `SharedArrayBuffer`, and `functions/glass/[[path]].js` serves the curated glass catalog from the `GLASS_BUCKET` (`vitrai-glass`) R2 binding in Production and Preview (`_routes.json` scopes Function invocations to `/glass/*`). Production serves an immutable release prefix (`/glass/releases/...`); when publishing new glass bytes, update the production URL and the Function's allowed prefix together.
