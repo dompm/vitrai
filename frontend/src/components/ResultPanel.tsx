@@ -216,6 +216,8 @@ interface ResultPanelProps {
   onDeletePieces: (ids: string[]) => void;
   onSmoothPiece: (id: string) => void;
   onSmoothPieces: (ids: string[]) => void;
+  onStraightenPiece?: (id: string) => void;
+  onStraightenPieces?: (ids: string[]) => void;
   onUpdatePieceCurves: (id: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
   onUpdatePiecePolygonAndCurves: (
     id: string,
@@ -935,6 +937,7 @@ export function ResultPanel({
   pieceTransformPreviewStore, project, selectedPieceIds, pendingPieceIds, onSelectPiece, onSelectPieces, onPatternCropChange, onPatternScaleChange, onAddPiece,
   onAddManualPiece,
   onUpdatePieceLabel, onUpdatePieceSheet, onUpdatePiecesSheet, onAddSheetAndAssignPiece, onAddSheetAndAssignPieces, onDeletePiece, onDeletePieces, onSmoothPiece, onSmoothPieces,
+  onStraightenPiece, onStraightenPieces,
   onUpdatePieceCurves, onUpdatePiecePolygonAndCurves, onUpdatePrompt,
   onAutoSegment, isAutoSegmenting, isEncoding, downloadProgress, onUploadPattern, onStartBlankCanvas, onStartLampMode, debugMask, activeTool, onChangeActiveTool,
   tutorialStep, refineMode, onRefineModeChange, penStatusStore,
@@ -1642,6 +1645,16 @@ export function ResultPanel({
       const anchor = activePenAnchorsRef.current[index];
       if (!anchor) return;
       const handlePoint = toImageCoords(ptr, vp.pan, vp.effectiveScale);
+      const rawScreenDist = Math.hypot(handlePoint.x - anchor.point[0], handlePoint.y - anchor.point[1]) * vp.effectiveScale;
+      if (rawScreenDist < 6) {
+        if (anchor.in || anchor.out || anchor.smooth) {
+          setActivePenAnchors(prev => prev.map((item, itemIndex) => itemIndex === index ? {
+            point: item.point,
+            smooth: false,
+          } : item));
+        }
+        return;
+      }
       let handle: [number, number] = [handlePoint.x, handlePoint.y];
       if (e.evt.shiftKey) handle = constrainToAngle(handle, anchor.point);
       const dx = handle[0] - anchor.point[0];
@@ -2853,7 +2866,7 @@ export function ResultPanel({
                       />
                     ));
                   })}
-                  {(selectedPieceIds.length > 1 || (activeTool !== 'select' && selectedPieceIds.length === 1)) && (
+                  {(selectedPieceIds.length > 1 || (activeTool !== 'select' && !(activeTool === 'box' && !refineMode) && selectedPieceIds.length === 1)) && (
                     <Group listening={false}>
                       {selectedPieceIds.map(pid => {
                         const piece = project.pieces.find(p => p.id === pid);
@@ -2878,7 +2891,7 @@ export function ResultPanel({
                       })}
                     </Group>
                   )}
-                  {activeTool === 'select' && selectedPieceIds.length === 1 && (() => {
+                  {(activeTool === 'select' || (activeTool === 'box' && !refineMode)) && selectedPieceIds.length === 1 && (() => {
                     const selectedId = selectedPieceIds[0];
                     const piece = project.pieces.find(p => p.id === selectedId);
                     if (!piece) return null;
@@ -2915,6 +2928,7 @@ export function ResultPanel({
                               strokeWidth={1.5 / es}
                               hitStrokeWidth={10 / es}
                               draggable
+                              onPointerDown={(e) => { e.cancelBubble = true; }}
                               onDragStart={() => {
                                 setDraggedCorner({ pieceId: selectedId, idx });
                                 setDragStartPolygon(piece.polygon);
@@ -2974,8 +2988,23 @@ export function ResultPanel({
                                 const anchorTypes = piece.anchorTypes?.length === referencePolygon.length
                                   ? [...piece.anchorTypes]
                                   : referencePolygon.map(() => 'corner' as const);
-                                anchorTypes[idx] = anchorTypes[idx] === 'smooth' ? 'corner' : 'smooth';
-                                onUpdatePieceCurves(selectedId, piece.curvePoints ?? [], anchorTypes);
+                                const prevEdge = (idx - 1 + len) % len;
+                                const curCurves = piece.curvePoints ?? [];
+                                const hasAdjacentCurve = curCurves.some(cp => cp.edgeIdx === idx || cp.edgeIdx === prevEdge);
+                                if (anchorTypes[idx] === 'smooth') {
+                                  anchorTypes[idx] = 'corner';
+                                  onUpdatePieceCurves(selectedId, curCurves, anchorTypes);
+                                } else if (hasAdjacentCurve) {
+                                  anchorTypes[idx] = 'corner';
+                                  onUpdatePieceCurves(
+                                    selectedId,
+                                    curCurves.filter(cp => cp.edgeIdx !== idx && cp.edgeIdx !== prevEdge),
+                                    anchorTypes,
+                                  );
+                                } else {
+                                  anchorTypes[idx] = 'smooth';
+                                  onUpdatePieceCurves(selectedId, curCurves, anchorTypes);
+                                }
                               }}
                             />
                           );
@@ -3008,6 +3037,7 @@ export function ResultPanel({
                               strokeWidth={1.5 / es}
                               hitStrokeWidth={10 / es}
                               draggable
+                              onPointerDown={(e) => { e.cancelBubble = true; }}
                               onDragStart={() => {
                                 setDraggedMidpoint({ pieceId: selectedId, edgeIdx: idx });
                                 dragStartCurvePointsRef.current = piece.curvePoints ?? [];
@@ -3080,6 +3110,11 @@ export function ResultPanel({
                                 stroke={CANVAS.amber}
                                 strokeWidth={1.5 / es}
                                 draggable
+                                onPointerDown={(e) => { e.cancelBubble = true; }}
+                                onDblClick={() => {
+                                  const updated = (piece.curvePoints ?? []).filter(cp => cp.edgeIdx !== edgeIdx);
+                                  onUpdatePieceCurves(selectedId, updated, piece.anchorTypes);
+                                }}
                                 onDragStart={() => {
                                   dragStartCurvePointsRef.current = activeDragCurvePoints ?? piece.curvePoints ?? [];
                                   setActiveDragCurvePoints(dragStartCurvePointsRef.current);
@@ -3124,6 +3159,7 @@ export function ResultPanel({
                                 radius={3 / es}
                                 fill={CANVAS.amber}
                                 opacity={0.55}
+                                onPointerDown={(e) => { e.cancelBubble = true; }}
                                 onDblClick={() => {
                                   const inserted = insertAnchorOnEdge(
                                     piece.polygon, piece.curvePoints ?? [], edgeIdx,
@@ -3244,6 +3280,16 @@ export function ResultPanel({
                         if (isMultiple) onSmoothPieces(selectedPieceIds);
                         else onSmoothPiece(piece.id);
                       }}
+                      onStraighten={
+                        (isMultiple
+                          ? project.pieces.some(p => selectedPieceIdSet.has(p.id) && (p.curvePoints?.length ?? 0) > 0)
+                          : (piece.curvePoints?.length ?? 0) > 0) && (onStraightenPiece || onStraightenPieces)
+                          ? () => {
+                            if (isMultiple) onStraightenPieces?.(selectedPieceIds);
+                            else onStraightenPiece?.(piece.id);
+                          }
+                          : undefined
+                      }
                       refineMode={refineMode}
                       onRefineModeChange={onRefineModeChange}
                       isPending={selectedPieceIds.some(id => pendingPieceIds.has(id))}

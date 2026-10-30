@@ -155,4 +155,68 @@ describe('seam snapping and curve fitting for fabrication', () => {
     expect(d).toContain('L 50 80');
     expect(d.endsWith('Z')).toBe(true);
   });
+
+  it('reconstructs all 4 crisp corners and keeps straight sides straight on a SAM2-beveled rectangle', () => {
+    // A 120x80 rectangle [0..120, 0..80] where SAM2 rounded all 4 90° corners into 3-vertex
+    // chamfers (~30° turn at each individual vertex, so every single vertex turn is < 40°)
+    // and added slight ~1.5px wobble along the straight sides.
+    const samBeveledRect: [number, number][] = [
+      [14, 0],
+      [60, 1.2],   // slight top-edge wobble
+      [106, 0],    // top-right bevel start (~30°)
+      [115, 5],    // top-right bevel mid (~30°)
+      [120, 14],   // top-right bevel end (~30°)
+      [119, 42],   // slight right-edge wobble
+      [120, 66],   // bottom-right bevel start (~30°)
+      [115, 75],   // bottom-right bevel mid (~30°)
+      [106, 80],   // bottom-right bevel end (~30°)
+      [62, 78.8],  // slight bottom-edge wobble
+      [14, 80],    // bottom-left bevel start (~30°)
+      [5, 75],     // bottom-left bevel mid (~30°)
+      [0, 66],     // bottom-left bevel end (~30°)
+      [1.1, 40],   // slight left-edge wobble
+      [0, 14],     // top-left bevel start (~30°)
+      [5, 5],      // top-left bevel mid (~30°)
+    ];
+
+    const fitted = fitSmoothPieceCurves(samBeveledRect, [], { cornerAngleDeg: 40 });
+
+    // Must preserve all 4 corners as a 4-vertex rectangle with zero curved edges
+    expect(fitted.polygon).toHaveLength(4);
+    expect(fitted.curvePoints).toHaveLength(0);
+    expect(fitted.anchorTypes).toEqual(['corner', 'corner', 'corner', 'corner']);
+
+    // Check that each of the 4 true rectangle corners (0,0), (120,0), (120,80), (0,80) is reconstructed
+    const expectedCorners: [number, number][] = [[0, 0], [120, 0], [120, 80], [0, 80]];
+    for (const [ex, ey] of expectedCorners) {
+      const match = fitted.polygon.some(([px, py]) => Math.hypot(px - ex, py - ey) < 2.5);
+      expect(match).toBe(true);
+    }
+  });
+
+  it('preserves all 4 corners and straight sides on a narrow border rectangle adjacent to a neighbor pane', () => {
+    const topLeftNeighbor: [number, number][] = [[0, 0], [70, 0], [70, 60], [0, 60]];
+    // Adjacent horizontal border pane [70..200, 0..60] whose left edge shares x=70 with topLeftNeighbor
+    // and whose right corners at (200,0) and (200,60) were beveled by SAM2 into <38° steps
+    const rawAdjacentBorderPane: [number, number][] = [
+      [70, 0],
+      [135, 1.0],
+      [186, 0],
+      [195, 5],
+      [200, 14],
+      [200, 46],
+      [195, 55],
+      [186, 60],
+      [130, 59.1],
+      [70, 60],
+    ];
+
+    const fitted = fitSmoothPieceCurves(rawAdjacentBorderPane, [topLeftNeighbor], { cornerAngleDeg: 40 });
+    expect(fitted.polygon).toHaveLength(4);
+    expect(fitted.curvePoints).toHaveLength(0);
+    expect(fitted.polygon).toContainEqual([70, 0]);
+    expect(fitted.polygon).toContainEqual([70, 60]);
+    expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 0) < 2.5)).toBe(true);
+    expect(fitted.polygon.some(([px, py]) => Math.hypot(px - 200, py - 60) < 2.5)).toBe(true);
+  });
 });

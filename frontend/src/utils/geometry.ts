@@ -473,9 +473,236 @@ function turningAngleRad(prev: Point, cur: Point, next: Point): number {
   return Math.acos(dot);
 }
 
+function signedTurningAngleRad(prev: Point, cur: Point, next: Point): number {
+  const ux = cur[0] - prev[0], uy = cur[1] - prev[1];
+  const vx = next[0] - cur[0], vy = next[1] - cur[1];
+  const uLen = Math.hypot(ux, uy);
+  const vLen = Math.hypot(vx, vy);
+  if (uLen < 1e-6 || vLen < 1e-6) return 0;
+  const cross = ux * vy - uy * vx;
+  const dot = ux * vx + uy * vy;
+  return Math.atan2(cross, dot);
+}
+
 function normalizeVec(dx: number, dy: number): Point {
   const len = Math.hypot(dx, dy);
   return len > 1e-9 ? [dx / len, dy / len] : [1, 0];
+}
+
+function polygonPerimeter(pts: Point[]): number {
+  let sum = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const next = pts[(i + 1) % pts.length];
+    sum += Math.hypot(next[0] - pts[i][0], next[1] - pts[i][1]);
+  }
+  return sum;
+}
+
+function intersectLines(a1: Point, a2: Point, b1: Point, b2: Point): Point | null {
+  const dax = a2[0] - a1[0], day = a2[1] - a1[1];
+  const dbx = b2[0] - b1[0], dby = b2[1] - b1[1];
+  const denom = dax * dby - day * dbx;
+  if (Math.abs(denom) < 1e-9) return null;
+  const t = ((b1[0] - a1[0]) * dby - (b1[1] - a1[1]) * dbx) / denom;
+  return [a1[0] + t * dax, a1[1] + t * day];
+}
+
+/**
+ * Clean up SAM2 marching-squares / RDP artifacts before curve fitting:
+ * 1. Prune near-collinear jitter vertices on free edges so straight sides become clean segments.
+ * 2. Consolidate short 2–4 vertex corner chamfers/bevels (where SAM2 rounds a 90° corner
+ *    into multiple ~25°–38° steps) back into a single crisp corner apex.
+ */
+function consolidateBeveledCornersAndJitter(
+  initialPts: Point[],
+  neighbors: Point[][],
+  seamTol: number,
+  cornerAngleRad: number,
+): Point[] {
+  let pts = [...initialPts];
+  if (pts.length <= 3) return pts;
+
+  const isLocked = (pt: Point) =>
+    neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol;
+
+  // Pass 1: Prune near-collinear wobble vertices along straight sides
+  for (let pass = 0; pass < 3 && pts.length > 3; pass++) {
+    let changed = false;
+    const nextPts: Point[] = [];
+    const m = pts.length;
+    for (let i = 0; i < m; i++) {
+      const cur = pts[i];
+      if (m - (pts.length - nextPts.length) <= 3 || isLocked(cur)) {
+        nextPts.push(cur);
+        continue;
+      }
+      const prev = nextPts.length > 0 ? nextPts[nextPts.length - 1] : pts[(i - 1 + m) % m];
+      const next = pts[(i + 1) % m];
+      const turn = turningAngleRad(prev, cur, next);
+      const chord = Math.hypot(next[0] - prev[0], next[1] - prev[1]);
+      const dev = pointLineDistance(cur, prev, next);
+      if (turn < (9 * Math.PI) / 180 && dev <= Math.max(2.0, chord * 0.025)) {
+        changed = true;
+        continue;
+      }
+      nextPts.push(cur);
+    }
+    pts = nextPts;
+    if (!changed) break;
+  }
+
+  if (pts.length <= 4) return pts;
+
+  // Pass 2: Collapse localized 2–4 vertex corner chamfers flanked by longer edges.
+  // Rotate pts so that the longest edge is the wrap-around segment (m - 1) -> 0,
+  // guaranteeing no corner bevel cluster straddles index 0.
+  let longestIdx = 0;
+  let longestLen = -1;
+  for (let i = 0; i < pts.length; i++) {
+    const next = pts[(i + 1) % pts.length];
+    const len = Math.hypot(next[0] - pts[i][0], next[1] - pts[i][1]);
+    if (len > longestLen) {
+      longestLen = len;
+      longestIdx = i;
+    }
+  }
+  const rot = (longestIdx + 1) % pts.length;
+  if (rot !== 0) {
+    pts = [...pts.slice(rot), ...pts.slice(0, rot)];
+  }
+
+  const perim = polygonPerimeter(pts);
+  const maxBevelSegLen = Math.max(15, Math.min(36, perim * 0.07));
+  const maxBevelClusterLen = Math.max(28, perim * 0.115);
+  const minBevelVertexTurn = (10 * Math.PI) / 180;
+
+  const m = pts.length;
+  const signedTurns = pts.map((cur, i) =>
+    signedTurningAngleRad(pts[(i - 1 + m) % m], cur, pts[(i + 1) % m]),
+  );
+  const segLens = pts.map((cur, i) => {
+    const next = pts[(i + 1) % m];
+    return Math.hypot(next[0] - cur[0], next[1] - cur[1]);
+  });
+
+  const consumed = new Array<boolean>(m).fill(false);
+  const consolidated: Point[] = [];
+
+  for (let i = 0; i < m; i++) {
+    if (consumed[i]) continue;
+
+    const sign0 = Math.sign(signedTurns[i]);
+    if (Math.abs(signedTurns[i]) < minBevelVertexTurn || sign0 === 0) {
+      consolidated.push(pts[i]);
+      continue;
+    }
+
+    // Try growing a contiguous bevel cluster starting at i (up to 4 vertices)
+    const cluster: number[] = [i];
+    let curIdx = i;
+    while (
+      cluster.length < 4 &&
+      cluster.length < m - 2 &&
+      curIdx < m - 1 &&
+      segLens[curIdx] <= maxBevelSegLen
+    ) {
+      const nextIdx = curIdx + 1;
+      if (consumed[nextIdx]) break;
+      if (
+        Math.sign(signedTurns[nextIdx]) !== sign0 ||
+        Math.abs(signedTurns[nextIdx]) < minBevelVertexTurn
+      ) {
+        break;
+      }
+      cluster.push(nextIdx);
+      curIdx = nextIdx;
+    }
+
+    if (cluster.length < 2) {
+      consolidated.push(pts[i]);
+      continue;
+    }
+
+    const firstIdx = cluster[0];
+    const lastIdx = cluster[cluster.length - 1];
+    const beforeIdx = (firstIdx - 1 + m) % m;
+    const afterIdx = (lastIdx + 1) % m;
+
+    const pBefore = consolidated.length > 0 ? consolidated[consolidated.length - 1] : pts[beforeIdx];
+    const pFirst = pts[firstIdx];
+    const pLast = pts[lastIdx];
+    const pAfter = pts[afterIdx];
+
+    const inSegLen = Math.hypot(pFirst[0] - pBefore[0], pFirst[1] - pBefore[1]);
+    const outSegLen = segLens[lastIdx];
+    let bevelSumLen = 0;
+    for (let c = 0; c < cluster.length - 1; c++) {
+      bevelSumLen += segLens[cluster[c]];
+    }
+    const avgBevelLen = bevelSumLen / (cluster.length - 1);
+
+    // Measure total directional turn between the incoming edge before the cluster
+    // and the outgoing edge after the cluster
+    const inVec: Point = [pFirst[0] - pBefore[0], pFirst[1] - pBefore[1]];
+    const outVec: Point = [pAfter[0] - pLast[0], pAfter[1] - pLast[1]];
+    const inLen = Math.hypot(inVec[0], inVec[1]);
+    const outLen = Math.hypot(outVec[0], outVec[1]);
+    const netTurn =
+      inLen > 1e-6 && outLen > 1e-6
+        ? Math.acos(Math.max(-1, Math.min(1, (inVec[0] * outVec[0] + inVec[1] * outVec[1]) / (inLen * outLen))))
+        : 0;
+
+    const flankedByLongerSides =
+      bevelSumLen <= maxBevelClusterLen &&
+      Math.max(inSegLen, outSegLen) >= avgBevelLen * 1.6 &&
+      Math.min(inSegLen, outSegLen) >= avgBevelLen * 1.15;
+
+    if (netTurn >= cornerAngleRad && flankedByLongerSides) {
+      const lockedInCluster = cluster.filter(idx => isLocked(pts[idx]));
+      if (lockedInCluster.length > 1) {
+        // Keep locked seam vertices untouched
+        consolidated.push(pts[i]);
+        continue;
+      }
+
+      let apex: Point | null = null;
+      if (lockedInCluster.length === 1) {
+        apex = pts[lockedInCluster[0]];
+      } else {
+        // Intersect the incoming edge ray (pBefore -> pFirst) with outgoing edge ray (pAfter -> pLast)
+        const hit = intersectLines(pBefore, pFirst, pLast, pAfter);
+        if (hit) {
+          const forwardIn = (hit[0] - pBefore[0]) * inVec[0] + (hit[1] - pBefore[1]) * inVec[1] > 0;
+          const backwardOut = (pAfter[0] - hit[0]) * outVec[0] + (pAfter[1] - hit[1]) * outVec[1] > 0;
+          const midCluster: Point = [(pFirst[0] + pLast[0]) / 2, (pFirst[1] + pLast[1]) / 2];
+          const hitDist = Math.hypot(hit[0] - midCluster[0], hit[1] - midCluster[1]);
+          if (forwardIn && backwardOut && hitDist <= Math.max(maxBevelSegLen * 1.6, bevelSumLen * 1.5)) {
+            apex = hit;
+          }
+        }
+        if (!apex) {
+          // Fallback: pick the cluster vertex farthest from the chord pBefore -> pAfter
+          let bestIdx = cluster[0];
+          let bestDist = -1;
+          for (const idx of cluster) {
+            const d = pointLineDistance(pts[idx], pBefore, pAfter);
+            if (d > bestDist) {
+              bestDist = d;
+              bestIdx = idx;
+            }
+          }
+          apex = pts[bestIdx];
+        }
+      }
+
+      for (const idx of cluster) consumed[idx] = true;
+      consolidated.push(apex);
+    } else {
+      consolidated.push(pts[i]);
+    }
+  }
+
+  return consolidated.length >= 3 ? consolidated : pts;
 }
 
 /**
@@ -578,21 +805,28 @@ function fitCubicBezierToChain(
 export function fitSmoothPieceCurves(
   rawPolygon: Point[],
   neighbors: Point[][] = [],
-  options: { cornerAngleDeg?: number; maxTurnPerSpanDeg?: number; seamTolerancePx?: number } = {},
+  options: { cornerAngleDeg?: number; maxTurnPerSpanDeg?: number; seamTolerancePx?: number; preserveBevels?: boolean } = {},
 ): {
   polygon: Point[];
   curvePoints: CurvePoint[];
   anchorTypes: ('corner' | 'smooth')[];
 } {
-  const pts = dedupeConsecutivePoints(rawPolygon, 0.75);
-  const n = pts.length;
-  if (n < 3) {
+  const deduped = dedupeConsecutivePoints(rawPolygon, 0.75);
+  if (deduped.length < 3) {
     return { polygon: rawPolygon, curvePoints: [], anchorTypes: rawPolygon.map(() => 'corner') };
   }
 
   const cornerAngleRad = ((options.cornerAngleDeg ?? 42) * Math.PI) / 180;
   const maxTurnPerSpanRad = ((options.maxTurnPerSpanDeg ?? 85) * Math.PI) / 180;
   const seamTol = options.seamTolerancePx ?? 2.5;
+
+  const pts = options.preserveBevels
+    ? deduped
+    : consolidateBeveledCornersAndJitter(deduped, neighbors, seamTol, cornerAngleRad);
+  const n = pts.length;
+  if (n < 3) {
+    return { polygon: deduped, curvePoints: [], anchorTypes: deduped.map(() => 'corner') };
+  }
 
   // 1. Identify vertices & edges that lie on a neighbor boundary
   const vertexLocked = pts.map(pt => neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol);
@@ -766,13 +1000,29 @@ export function fitSmoothPieceCurves(
     if (chordLen < 2) continue;
 
     if (ch.points.length >= 3) {
-      // Check max deviation from the straight chord
+      // Check max deviation from the straight chord (and interior sagitta so corner stubs don't bow straight sides)
       let maxDev = 0;
+      let maxMidDev = 0;
+      const cdx = pEnd[0] - pStart[0];
+      const cdy = pEnd[1] - pStart[1];
+      const cLen2 = cdx * cdx + cdy * cdy;
       for (let k = 1; k < ch.points.length - 1; k++) {
-        maxDev = Math.max(maxDev, pointLineDistance(ch.points[k], pStart, pEnd));
+        const pt = ch.points[k];
+        const dev = pointLineDistance(pt, pStart, pEnd);
+        maxDev = Math.max(maxDev, dev);
+        const projT = cLen2 > 0 ? ((pt[0] - pStart[0]) * cdx + (pt[1] - pStart[1]) * cdy) / cLen2 : 0.5;
+        if (projT >= 0.18 && projT <= 0.82) {
+          maxMidDev = Math.max(maxMidDev, dev);
+        }
       }
-      // Keep genuinely straight edges straight
-      if (maxDev <= Math.max(1.2, chordLen * 0.008)) continue;
+      const bothCorners = newAnchorTypes[i] === 'corner' && newAnchorTypes[(i + 1) % m] === 'corner';
+      if (bothCorners) {
+        if (maxDev <= Math.max(2.5, chordLen * 0.028) || maxMidDev <= Math.max(2.2, chordLen * 0.022)) {
+          continue;
+        }
+      } else if (maxDev <= Math.max(1.8, chordLen * 0.015)) {
+        continue;
+      }
 
       const prevChain = chains[(i - 1 + m) % m];
       const nextChain = chains[(i + 1) % m];
@@ -885,6 +1135,7 @@ export function smoothPieceGeometry(
   return fitSmoothPieceCurves(smoothedDense, neighbors, {
     cornerAngleDeg: 58,
     seamTolerancePx,
+    preserveBevels: true,
   });
 }
 

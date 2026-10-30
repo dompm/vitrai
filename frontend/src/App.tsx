@@ -1042,6 +1042,25 @@ export function App() {
     });
   }
 
+  function handleStraightenPiece(pieceId: string) {
+    handleStraightenPieces([pieceId]);
+  }
+
+  function handleStraightenPieces(pieceIds: string[]) {
+    pieceIds.forEach((id, idx) => {
+      const latest = projectRef.current;
+      const piece = latest.pieces.find(p => p.id === id);
+      if (!piece) return;
+      updatePiecePolygonAndCurves(
+        id,
+        piece.polygon,
+        [],
+        idx < pieceIds.length - 1,
+        piece.polygon.map(() => 'corner' as const),
+      );
+    });
+  }
+
   function constrainEditedPieceGeometry(
     pieceId: string,
     polygon: [number, number][],
@@ -2060,6 +2079,8 @@ export function App() {
             onDeletePieces={deletePieces}
             onSmoothPiece={handleSmoothPiece}
             onSmoothPieces={handleSmoothPieces}
+            onStraightenPiece={handleStraightenPiece}
+            onStraightenPieces={handleStraightenPieces}
             onUpdatePieceCurves={handleUpdatePieceCurves}
             onUpdatePiecePolygonAndCurves={handleUpdatePieceGeometry}
             onUpdatePrompt={handleUpdatePrompt}
