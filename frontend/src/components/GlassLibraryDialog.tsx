@@ -64,10 +64,11 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
   const [sortBy, setSortBy] = useState<'recommended' | 'sku' | 'name'>('recommended');
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
-  // Fetch the registry database
+  // Ship classification with the app; only image bytes come from the CDN.
+  // Otherwise regenerating the committed catalog would still load stale CDN metadata.
   useEffect(() => {
     const cdnUrl = import.meta.env.VITE_SWATCH_CDN_URL || '';
-    fetch(swatchAssetUrl('/assets/glass_swatch_registry.json', cdnUrl))
+    fetch(`${import.meta.env.BASE_URL}assets/glass_swatch_registry.json`)
       .then(res => {
         if (!res.ok) throw new Error('Failed to load swatch library JSON');
         return res.json();

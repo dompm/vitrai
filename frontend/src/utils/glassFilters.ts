@@ -1,5 +1,5 @@
-// Update facets with scripts/classify_glass_filters.py; reviewed trade-name overrides
-// keep reflections from being mistaken for additional material colors.
+// Facets in the committed catalog describe the glass material; photograph
+// backgrounds and reflections are deliberately excluded from its color tags.
 export interface GlassFacets {
   version: number;
   colors: string[];
