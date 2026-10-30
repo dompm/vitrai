@@ -9,7 +9,7 @@ import { AddSheetMenu } from './components/AddSheetMenu';
 
 import { Lamp3DPreview } from './components/Lamp3DPreview';
 import { LampProfileDialog } from './components/LampProfileDialog';
-import { useProject } from './hooks/useProject';
+import { useProject, type BatchPieceInput } from './hooks/useProject';
 import {
   subtractPolygons,
   computeCentroid,
@@ -21,8 +21,10 @@ import {
   insetPolygon,
   pieceToSvgPath,
   translateCurvesWithAnchor,
+  computePolygonArea,
 } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
+import { proposeStainedGlassCellsFromUrl, type ProposedGlassCell } from './utils/autoSegment';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint, Scale, Project } from './types';
 import {
@@ -892,11 +894,61 @@ export function App() {
   }, [project.patternImageUrl]);
 
   async function handleAutoSegment() {
-    if (!patternImageId) return;
+    if (!project.patternImageUrl && !patternImageId) return;
     setIsAutoSegmenting(true);
     try {
-      const polygons = await getSamBackend().autoSegment(patternImageId);
-      batchAddPieces(polygons, activeSheetId);
+      let detected: Array<ProposedGlassCell | [number, number][]> = [];
+      const backend = getSamBackend();
+      if (patternImageId && typeof backend.autoSegment === 'function') {
+        try {
+          detected = await backend.autoSegment(patternImageId, project.patternCrop);
+        } catch (workerErr) {
+          console.warn('[App] Worker autoSegment failed, falling back to image cell proposal:', workerErr);
+        }
+      }
+      if (detected.length === 0 && project.patternImageUrl) {
+        detected = await proposeStainedGlassCellsFromUrl(project.patternImageUrl, project.patternCrop);
+      }
+      const latest = projectRef.current;
+      const acceptedPolygons: [number, number][][] = latest.pieces.map(p =>
+        flattenCurves(p.polygon, p.curvePoints),
+      );
+      const snapRadius = Math.max(getSnapRadius(latest.patternWidth), latest.patternWidth * 0.01);
+      const batchItems: BatchPieceInput[] = [];
+
+      for (const raw of detected) {
+        const cell = Array.isArray(raw)
+          ? { polygon: raw, color: undefined, box: undefined, point: undefined }
+          : raw;
+        if (!cell.polygon || cell.polygon.length < 3) continue;
+
+        const snapped = snapPolygonToNeighbors(cell.polygon, acceptedPolygons, snapRadius);
+        const clipped = subtractPolygons(snapped, acceptedPolygons);
+        if (clipped.length < 3 || computePolygonArea(clipped) < 25) continue;
+
+        const fitted = fitSmoothPieceCurves(clipped, acceptedPolygons, {
+          cornerAngleDeg: 40,
+          seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+        });
+        acceptedPolygons.push(flattenCurves(fitted.polygon, fitted.curvePoints));
+
+        batchItems.push({
+          polygon: fitted.polygon,
+          curvePoints: fitted.curvePoints,
+          anchorTypes: fitted.anchorTypes,
+          color: cell.color,
+          promptBox: cell.box
+            ? { x1: cell.box[0], y1: cell.box[1], x2: cell.box[2], y2: cell.box[3] }
+            : undefined,
+          promptPoints: cell.point
+            ? [{ x: cell.point[0], y: cell.point[1], label: 1 }]
+            : undefined,
+        });
+      }
+
+      if (batchItems.length > 0) {
+        batchAddPieces(batchItems, activeSheetId);
+      }
     } catch (e) {
       console.error("Auto segment failed:", e);
     } finally {

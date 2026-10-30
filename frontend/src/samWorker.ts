@@ -1,5 +1,7 @@
 import * as ort from "onnxruntime-web/webgpu";
+import type { Crop } from './types';
 import { maskToPolygon as extractMaskPolygon, smoothMaskLogits } from './utils/maskContour';
+import { isValidRefinedPolygon, proposeStainedGlassCells, type ProposedGlassCell } from './utils/autoSegment';
 // Self-host the ORT wasm binary (the .mjs loader is embedded in the webgpu
 // bundle). Vite emits the file as a same-origin asset, so segmentation no
 // longer depends on a third-party CDN being reachable, and the JS/wasm
@@ -42,7 +44,7 @@ export type WorkerInMsg =
   | { type: 'segment';     id: string; sessionId: string;
       box?: [number, number, number, number];
       points?: [number, number, number][] }
-  | { type: 'autoSegment'; id: string; sessionId: string };
+  | { type: 'autoSegment'; id: string; sessionId: string; crop?: Crop };
 
 export type SamDevice = 'webgpu' | 'wasm';
 
@@ -64,7 +66,7 @@ export type WorkerOutMsg =
   | { type: 'segment:done';     id: string; polygon: [number, number][];
       debugMask?: { bitmap: ImageBitmap; width: number; height: number } }
   | { type: 'segment:error';    id: string; error: string }
-  | { type: 'autoSegment:done'; id: string; polygons: [number, number][][] }
+  | { type: 'autoSegment:done'; id: string; polygons: [number, number][][]; pieces: ProposedGlassCell[] }
   | { type: 'autoSegment:error';id: string; error: string };
 
 // ─── State ────────────────────────────────────────────────────────────────────
@@ -676,16 +678,7 @@ async function segment(
   }
 }
 
-function computeCentroid(pts: [number, number][]): { x: number; y: number } {
-  let xs = 0, ys = 0;
-  for (const [x, y] of pts) {
-    xs += x;
-    ys += y;
-  }
-  return { x: xs / pts.length, y: ys / pts.length };
-}
-
-async function autoSegment(id: string, sessionId: string) {
+async function autoSegment(id: string, sessionId: string, crop?: Crop) {
   const cached = cache.get(sessionId);
   if (!cached) {
     console.error("[SAM Worker] No cached session found for autoSegment:", sessionId);
@@ -694,72 +687,120 @@ async function autoSegment(id: string, sessionId: string) {
   }
 
   const { scale, padX, padY, encoderOut, origW, origH } = cached;
-  const newW = origW * scale;
-  const newH = origH * scale;
-
-  const polygons: [number, number][][] = [];
-  const gridCount = 8;
 
   try {
-    for (let i = 1; i <= gridCount; i++) {
-      for (let j = 1; j <= gridCount; j++) {
-        const px = (i / (gridCount + 1)) * newW;
-        const py = (j / (gridCount + 1)) * newH;
+    const blob = await fetch(sessionId).then(r => r.blob());
+    const bitmap = await createImageBitmap(blob);
 
-        const pointCoords = new ort.Tensor('float32', new Float32Array([px, py]), [1, 1, 1, 2]);
-        const pointLabels = new ort.Tensor('int64', new BigInt64Array([1n]), [1, 1, 1]);
-        const boxTensor = new ort.Tensor('float32', new Float32Array([0, 0, 0, 0]), [1, 1, 4]);
+    const cropLeft = Math.max(0, Math.min(origW - 1, Math.round(crop?.left ?? 0)));
+    const cropTop = Math.max(0, Math.min(origH - 1, Math.round(crop?.top ?? 0)));
+    const cropRight = Math.max(cropLeft + 1, Math.min(origW, Math.round(origW - (crop?.right ?? 0))));
+    const cropBottom = Math.max(cropTop + 1, Math.min(origH, Math.round(origH - (crop?.bottom ?? 0))));
+    const cropW = cropRight - cropLeft;
+    const cropH = cropBottom - cropTop;
 
-        const decoderInputs: Record<string, ort.Tensor> = {
-          ...encoderOut,
-          input_points:    pointCoords,
-          input_labels:    pointLabels,
-          input_boxes:     boxTensor,
-        };
+    const maxGridDim = 384;
+    const gridScale = Math.min(1, maxGridDim / Math.max(cropW, cropH));
+    const gridW = Math.max(16, Math.round(cropW * gridScale));
+    const gridH = Math.max(16, Math.round(cropH * gridScale));
 
-        const decoderOut = await decoderSession!.run(decoderInputs);
-        const masksTensor = decoderOut['pred_masks'];
-        const iouTensor = decoderOut['iou_scores'];
+    const gridCanvas = new OffscreenCanvas(gridW, gridH);
+    const gctx = gridCanvas.getContext('2d')!;
+    gctx.drawImage(bitmap, cropLeft, cropTop, cropW, cropH, 0, 0, gridW, gridH);
+    bitmap.close();
 
-        if (!masksTensor || !iouTensor) continue;
+    const { data } = gctx.getImageData(0, 0, gridW, gridH);
+    const cells = proposeStainedGlassCells(data, gridW, gridH, {
+      cropLeft,
+      cropTop,
+      cropW,
+      cropH,
+    });
 
-        const iou = Array.from(iouTensor.data as Float32Array);
-        const bestIdx = iou.indexOf(Math.max(...iou));
-        const score = iou[bestIdx];
+    const pieces: ProposedGlassCell[] = [];
+    for (const cell of cells) {
+      let chosenPolygon = cell.polygon;
 
-        if (score > 0.85) {
-          const dims = masksTensor.dims;
-          const H = dims[dims.length - 2];
-          const W = dims[dims.length - 1];
-          const planeSize = H * W;
-          const maskData = (masksTensor.data as Float32Array).slice(bestIdx * planeSize, (bestIdx + 1) * planeSize);
-          
-          const smoothingSigma = MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H) / INPUT_SIZE;
-          const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
-          const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
-          const polygon = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
-            inputSize: INPUT_SIZE, scale, padX, padY, origW, origH,
-            threshold: MASK_THRESHOLD,
+      if (decoderSession) {
+        try {
+          const pointCoords = new ort.Tensor(
+            'float32',
+            new Float32Array([
+              cell.point[0] * scale + padX,
+              cell.point[1] * scale + padY,
+            ]),
+            [1, 1, 1, 2],
+          );
+          const pointLabels = new ort.Tensor('int64', new BigInt64Array([1n]), [1, 1, 1]);
+          const boxTensor = new ort.Tensor(
+            'float32',
+            new Float32Array([
+              cell.box[0] * scale + padX,
+              cell.box[1] * scale + padY,
+              cell.box[2] * scale + padX,
+              cell.box[3] * scale + padY,
+            ]),
+            [1, 1, 4],
+          );
+
+          const decoderOut = await decoderSession.run({
+            ...encoderOut,
+            input_points: pointCoords,
+            input_labels: pointLabels,
+            input_boxes: boxTensor,
           });
+          const masksTensor = decoderOut['pred_masks'];
+          const iouTensor = decoderOut['iou_scores'];
 
-          if (polygon.length >= 3) {
-            const centroid = computeCentroid(polygon);
-            let isDuplicate = false;
-            for (const poly of polygons) {
-              const c = computeCentroid(poly);
-              if (Math.hypot(c.x - centroid.x, c.y - centroid.y) < 25) {
-                isDuplicate = true;
-                break;
+          if (masksTensor && iouTensor) {
+            const iou = Array.from(iouTensor.data as Float32Array);
+            const bestIdx = iou.indexOf(Math.max(...iou));
+            const score = iou[bestIdx];
+
+            if (score > 0.72) {
+              const dims = masksTensor.dims;
+              const H = dims[dims.length - 2];
+              const W = dims[dims.length - 1];
+              const planeSize = H * W;
+              const maskData = (masksTensor.data as Float32Array).slice(
+                bestIdx * planeSize,
+                (bestIdx + 1) * planeSize,
+              );
+              const smoothingSigma = (MASK_SMOOTHING_SIGMA_INPUT_PX * Math.max(W, H)) / INPUT_SIZE;
+              const regularizedMask = smoothMaskLogits(maskData, W, H, smoothingSigma);
+              const upsampled = bilinearUpsample(regularizedMask, W, H, INPUT_SIZE, INPUT_SIZE);
+              // Use a slightly negative logit threshold (-0.6) so SAM2's mask extends halfway into the dark solder line
+              const samPoly = extractMaskPolygon(upsampled, INPUT_SIZE, INPUT_SIZE, {
+                inputSize: INPUT_SIZE,
+                scale,
+                padX,
+                padY,
+                origW,
+                origH,
+                threshold: -0.6,
+              });
+              if (isValidRefinedPolygon(samPoly, cell)) {
+                chosenPolygon = samPoly;
               }
             }
-            if (!isDuplicate) {
-              polygons.push(polygon);
-            }
           }
+        } catch (decErr) {
+          console.warn('[SAM Worker] Cell refinement fallback to watershed contour:', decErr);
         }
       }
+
+      pieces.push({
+        ...cell,
+        polygon: chosenPolygon,
+      });
     }
-    post({ type: 'autoSegment:done', id, polygons });
+
+    post({
+      type: 'autoSegment:done',
+      id,
+      polygons: pieces.map(p => p.polygon),
+      pieces,
+    });
   } catch (err) {
     console.error("[SAM Worker] autoSegment failed:", err);
     post({ type: 'autoSegment:error', id, error: String(err) });
@@ -809,7 +850,7 @@ if (!isPthread) {
     try {
       if (msg.type === 'encode')            await encode(msg.id, msg.imageUrl);
       else if (msg.type === 'segment')      await segment(msg.id, msg.sessionId, msg.box, msg.points);
-      else if (msg.type === 'autoSegment')  await autoSegment(msg.id, msg.sessionId);
+      else if (msg.type === 'autoSegment')  await autoSegment(msg.id, msg.sessionId, msg.crop);
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
       if (msg.type === 'encode')            post({ type: 'encode:error', id: msg.id, error });

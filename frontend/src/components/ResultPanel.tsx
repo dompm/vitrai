@@ -2002,7 +2002,7 @@ export function ResultPanel({
     .map(tool => {
     const sectionedTool = tool.id === 'box' ? { ...tool, sectionStart: true } : tool;
     if (tool.id === 'box') return { ...sectionedTool, disabled: !!isEncoding, loading: isEncoding ? (downloadProgress ?? true) : false };
-    if (tool.id === 'detect-all') return { ...sectionedTool, disabled: !!isAutoSegmenting || !onAutoSegment || !!isEncoding, loading: isAutoSegmenting ? true : (isEncoding ? (downloadProgress ?? true) : false) };
+    if (tool.id === 'detect-all') return { ...sectionedTool, disabled: !!isAutoSegmenting || !onAutoSegment || !project.patternImageUrl, loading: !!isAutoSegmenting };
     return sectionedTool;
   });
 

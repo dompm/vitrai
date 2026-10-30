@@ -525,30 +525,29 @@ function consolidateBeveledCornersAndJitter(
   const isLocked = (pt: Point) =>
     neighbors.length > 0 && pointToNeighborsDistance(pt, neighbors) <= seamTol;
 
-  // Pass 1: Prune near-collinear wobble vertices along straight sides
-  for (let pass = 0; pass < 3 && pts.length > 3; pass++) {
-    let changed = false;
+  // Pass 1: Remove only strictly collinear micro-jitter (dev <= 0.8px) without
+  // daisy-chaining across gentle curves, preserving contour samples for Bezier fitting.
+  if (pts.length > 4) {
     const nextPts: Point[] = [];
     const m = pts.length;
     for (let i = 0; i < m; i++) {
       const cur = pts[i];
-      if (m - (pts.length - nextPts.length) <= 3 || isLocked(cur)) {
+      if (isLocked(cur)) {
         nextPts.push(cur);
         continue;
       }
-      const prev = nextPts.length > 0 ? nextPts[nextPts.length - 1] : pts[(i - 1 + m) % m];
+      const prev = pts[(i - 1 + m) % m];
       const next = pts[(i + 1) % m];
       const turn = turningAngleRad(prev, cur, next);
-      const chord = Math.hypot(next[0] - prev[0], next[1] - prev[1]);
       const dev = pointLineDistance(cur, prev, next);
-      if (turn < (9 * Math.PI) / 180 && dev <= Math.max(2.0, chord * 0.025)) {
-        changed = true;
+      if (turn < (3 * Math.PI) / 180 && dev <= 0.8) {
         continue;
       }
       nextPts.push(cur);
     }
-    pts = nextPts;
-    if (!changed) break;
+    if (nextPts.length >= 4) {
+      pts = nextPts;
+    }
   }
 
   if (pts.length <= 4) return pts;
@@ -572,9 +571,9 @@ function consolidateBeveledCornersAndJitter(
   }
 
   const perim = polygonPerimeter(pts);
-  const maxBevelSegLen = Math.max(15, Math.min(36, perim * 0.07));
-  const maxBevelClusterLen = Math.max(28, perim * 0.115);
-  const minBevelVertexTurn = (10 * Math.PI) / 180;
+  const maxBevelSegLen = Math.max(12, Math.min(28, perim * 0.045));
+  const maxBevelClusterLen = Math.max(24, Math.min(48, perim * 0.08));
+  const minBevelVertexTurn = (12 * Math.PI) / 180;
 
   const m = pts.length;
   const signedTurns = pts.map((cur, i) =>
