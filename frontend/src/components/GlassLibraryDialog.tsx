@@ -147,7 +147,8 @@ export function GlassLibraryDialog({ onPick, onClose }: Props) {
     };
 
     const label = `[${item.manufacturer}] ${item.base_sku} ${item.name}`;
-    onPick(item.local_image, label, scale);
+    // Saved/exported projects may be reopened on a different app origin.
+    onPick(new URL(item.local_image, window.location.href).href, label, scale);
     onClose();
   };
 
