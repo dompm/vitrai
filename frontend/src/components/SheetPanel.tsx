@@ -28,12 +28,12 @@ import { ViewportGroup, ViewportSubscriber, useViewportEffectiveScale, type View
 
 
 // Display-pixel constants — independent of zoom or image resolution
-const STROKE_IDLE = 2.5;
-const STROKE_SELECTED = 3;
-const HANDLE_RADIUS = 10;
-const HANDLE_STEM = 1.5;
-const HANDLE_BORDER = 2;
-const HANDLE_GAP = 18; // extra gap beyond the bounding radius, in display px
+const STROKE_IDLE = 1.4;
+const STROKE_SELECTED = 2;
+const HANDLE_RADIUS = 4;   // 8x8px diameter
+const HANDLE_STEM = 1.5;   // 1.5px stalk
+const HANDLE_BORDER = 1.5; // 1.5px ring
+const HANDLE_GAP = 14;
 const MOVE_SNAP_TOLERANCE_PX = 8;
 const ROTATION_SNAP_RADIANS = Math.PI / 12; // 15°, matching common design tools
 
@@ -169,6 +169,27 @@ const PieceOutline = memo(function PieceOutline({
     () => geometry.displayPolygon.flatMap(([px, py]) => [px - centroid.x, py - centroid.y]),
     [geometry, centroid],
   );
+  const structuralCornerPts = useMemo(() => {
+    const poly = piece.polygon;
+    const len = poly.length;
+    if (len === 0) return [];
+    const pts: Array<[number, number]> = [];
+    for (let i = 0; i < len; i++) {
+      const [x, y] = poly[i];
+      if (len <= 12) {
+        pts.push([x - centroid.x, y - centroid.y]);
+        continue;
+      }
+      const prev = poly[(i - 1 + len) % len];
+      const next = poly[(i + 1) % len];
+      const dPrev = Math.hypot(x - prev[0], y - prev[1]);
+      const dNext = Math.hypot(next[0] - x, next[1] - y);
+      if (dPrev >= 12 || dNext >= 12) {
+        pts.push([x - centroid.x, y - centroid.y]);
+      }
+    }
+    return pts;
+  }, [piece.polygon, centroid]);
 
   // Combined divisor so sizes stay fixed in display pixels
   const es = effectiveScale * scale;
@@ -261,26 +282,84 @@ const PieceOutline = memo(function PieceOutline({
       listening={listening}
     >
       {!handleOnly && (
-        <Line
-          points={relPts}
-          stroke={fillOnly ? 'transparent' : (isSelected ? CANVAS.amber : CANVAS.amberIdleStroke)}
-          strokeWidth={isSelected ? STROKE_SELECTED / es : STROKE_IDLE / es}
-          fill={strokeOnly ? 'transparent' : (isSelected ? CANVAS.amberSelectedFill : CANVAS.amberIdleFill)}
-          closed
-          hitStrokeWidth={strokeOnly ? 10 / es : 0}
-        />
-      )}
-      {(handleOnly || (isSelected && strokeOnly && !fillOnly)) && (
         <>
+          {/* Dual-stroke casing for universal contrast on light, dark, and amber glass */}
+          {!fillOnly && (
+            <Line
+              points={relPts}
+              stroke={isSelected ? CANVAS.selectionHalo : CANVAS.idleHalo}
+              strokeWidth={((isSelected ? STROKE_SELECTED + 3 : STROKE_IDLE + 2.2)) / es}
+              lineJoin="miter"
+              miterLimit={2}
+              closed
+              perfectDrawEnabled={false}
+              listening={false}
+            />
+          )}
+          <Line
+            points={relPts}
+            stroke={fillOnly ? 'transparent' : (isSelected ? CANVAS.selection : CANVAS.idleStroke)}
+            strokeWidth={(isSelected ? STROKE_SELECTED : STROKE_IDLE) / es}
+            fill={strokeOnly ? 'transparent' : (isSelected ? CANVAS.sheetSelectionFill : CANVAS.idleFill)}
+            lineJoin="miter"
+            miterLimit={2}
+            closed
+            perfectDrawEnabled={false}
+            hitStrokeWidth={strokeOnly ? 10 / es : 0}
+          />
+          {/* Precision vertex nodes on structural corners only (never on flattened curve sample points) */}
+          {isSelected && strokeOnly && !handleOnly && (
+            <Group listening={false}>
+              {structuralCornerPts.map(([vx, vy], i) => {
+                const s = 6 / es;
+                return (
+                  <Rect
+                    key={`node-${i}`}
+                    x={vx - s / 2}
+                    y={vy - s / 2}
+                    width={s}
+                    height={s}
+                    fill={CANVAS.nodeFill}
+                    stroke={CANVAS.nodeBorder}
+                    strokeWidth={CANVAS.nodeBorderWidth / es}
+                    perfectDrawEnabled={false}
+                  />
+                );
+              })}
+            </Group>
+          )}
+        </>
+      )}
+      {handleOnly && (
+        <>
+          {/* 1.5px stalk with dark casing */}
           <Line
             points={[0, 0, 0, -handleOffset]}
-            stroke={CANVAS.amberHandleStem} strokeWidth={HANDLE_STEM / es}
+            stroke={CANVAS.selectionHandleStemHalo}
+            strokeWidth={(HANDLE_STEM + 2.5) / es}
+            listening={false}
+          />
+          <Line
+            points={[0, 0, 0, -handleOffset]}
+            stroke={CANVAS.selectionHandleStem}
+            strokeWidth={HANDLE_STEM / es}
+            listening={false}
+          />
+          {/* Compact 8x8px white circle with dark casing */}
+          <Circle
+            x={0}
+            y={-handleOffset}
+            radius={(HANDLE_RADIUS + 1) / es}
+            fill={CANVAS.selectionHalo}
             listening={false}
           />
           <Circle
-            x={0} y={-handleOffset}
+            x={0}
+            y={-handleOffset}
             radius={HANDLE_RADIUS / es}
-            fill={CANVAS.amberHandle} stroke={CANVAS.paper} strokeWidth={HANDLE_BORDER / es}
+            fill={CANVAS.selectionHandle}
+            stroke={CANVAS.selectionHandleBorder}
+            strokeWidth={HANDLE_BORDER / es}
             onPointerDown={handleRotateDown}
           />
         </>
@@ -307,7 +386,7 @@ interface SheetPanelProps {
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onTransformChange: (pieceId: string, t: Partial<TextureTransform>, skipHistory?: boolean) => void;
   onCommitTransforms: (updates: Array<{ pieceId: string; transform: TextureTransform }>) => void;
-  onCropChange: (c: Partial<Crop>) => void;
+  onCropChange: (c: Partial<Crop>, skipHistory?: boolean) => void;
   onScaleChange: (s: Scale | null) => void;
   onImageLoad?: (w: number, h: number) => void;
   activeTool: ToolId;
@@ -370,6 +449,7 @@ export function SheetPanel({
       else if (!hasToolModifier && key === 'h') handleToolChange('pan');
       else if (!hasToolModifier && key === 'c') handleToolChange('crop');
       else if (!hasToolModifier && key === 'm') handleToolChange('measure');
+      else if (e.key === 'Enter' && activeTool === 'crop') handleToolChange('select');
       else if (e.key === 'Escape') handleToolChange('select');
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -870,7 +950,7 @@ export function SheetPanel({
                     checked={allowRotations} 
                     onChange={e => setAllowRotations(e.target.checked)} 
                     disabled={isPacking}
-                    style={{ accentColor: CANVAS.amber, width: '16px', height: '16px' }}
+                    style={{ accentColor: '#292524', width: '16px', height: '16px' }}
                   />
                   {t('allowRotations', 'Allow Rotations')}
                 </label>
@@ -881,8 +961,8 @@ export function SheetPanel({
                   style={{
                     width: '100%',
                     padding: '8px 12px',
-                    background: CANVAS.amber,
-                    color: CANVAS.paper,
+                    background: '#292524',
+                    color: '#ffffff',
                     border: 'none',
                     borderRadius: '6px',
                     fontWeight: 600,
@@ -912,6 +992,28 @@ export function SheetPanel({
         >
           <Layer listening={false}>
             <ViewportGroup store={vp.store}>
+              {sheetImg && (() => {
+                const cL = sheet.crop.left;
+                const cT = sheet.crop.top;
+                const cW = Math.max(1, sheetW - sheet.crop.left - sheet.crop.right);
+                const cH = Math.max(1, sheetH - sheet.crop.top - sheet.crop.bottom);
+                return (
+                  <Rect
+                    x={cL}
+                    y={cT}
+                    width={cW}
+                    height={cH}
+                    fill="#ffffff"
+                    stroke="rgba(0, 0, 0, 0.10)"
+                    strokeWidth={1}
+                    shadowColor="rgba(0, 0, 0, 0.08)"
+                    shadowBlur={16}
+                    shadowOffset={{ x: 0, y: 4 }}
+                    shadowOpacity={1}
+                    listening={false}
+                  />
+                );
+              })()}
               <Group
                 {...(activeTool === 'crop' ? {} : {
                   clipX: sheet.crop.left,
@@ -951,7 +1053,7 @@ export function SheetPanel({
               {moveSnapGuides.x != null && (
                 <Line
                   points={[moveSnapGuides.x, sheetSnapBounds.top, moveSnapGuides.x, sheetSnapBounds.bottom]}
-                  stroke={CANVAS.amber}
+                  stroke={CANVAS.selection}
                   strokeWidth={1 / es}
                   dash={[5 / es, 4 / es]}
                   listening={false}
@@ -960,7 +1062,7 @@ export function SheetPanel({
               {moveSnapGuides.y != null && (
                 <Line
                   points={[sheetSnapBounds.left, moveSnapGuides.y, sheetSnapBounds.right, moveSnapGuides.y]}
-                  stroke={CANVAS.amber}
+                  stroke={CANVAS.selection}
                   strokeWidth={1 / es}
                   dash={[5 / es, 4 / es]}
                   listening={false}
@@ -972,6 +1074,7 @@ export function SheetPanel({
                   crop={sheet.crop}
                   effectiveScale={es}
                   onCropChange={onCropChange}
+                  scale={sheet.scale}
                 />
               )}
               {activeTool === 'measure' && measure.line && (
@@ -993,8 +1096,8 @@ export function SheetPanel({
                 y={Math.min(marqueeBox.y1, marqueeBox.y2) * es + viewport.pan.y}
                 width={Math.abs(marqueeBox.x2 - marqueeBox.x1) * es}
                 height={Math.abs(marqueeBox.y2 - marqueeBox.y1) * es}
-                fill={CANVAS.amberSelectionFill}
-                stroke={CANVAS.amber}
+                fill={CANVAS.marqueeFill}
+                stroke={CANVAS.marqueeStroke}
                 strokeWidth={1}
                 listening={false}
               />

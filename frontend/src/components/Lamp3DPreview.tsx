@@ -518,7 +518,7 @@ export function Lamp3DPreview({ project, pieceTransformPreviewStore: providedPre
         </div>
       </div>
       <div
-        className="canvas-well"
+        className="canvas-well canvas-well-3d"
         ref={containerRef}
         style={{ flex: 1, minHeight: 0, position: 'relative', touchAction: 'none', overscrollBehavior: 'none' }}
         onPointerDown={onPointerDown}

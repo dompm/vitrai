@@ -65,6 +65,13 @@ export const IconCrop = (p: IconProps) => (
   </Svg>
 );
 
+export const IconCanvas = (p: IconProps) => (
+  <Svg {...p} strokeWidth={1.7}>
+    <rect x="5" y="5" width="14" height="14" rx="1.5" />
+    <path d="M5 2v3M19 2v3M5 19v3M19 19v3M2 5h3M2 19h3M19 5h3M19 19h3" />
+  </Svg>
+);
+
 export const IconRuler = (p: IconProps) => (
   <Svg {...p}>
     <rect x="2" y="8" width="20" height="8" rx="1.2" />

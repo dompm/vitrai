@@ -1,41 +1,43 @@
 :root {
-  /* Chrome — warm cream surfaces, parchment / workbench feel */
-  --chrome-900:   #ebe4d2;
-  --chrome-800:   #f1ebda;
-  --chrome-700:   #e4dcc8;
+  /* Outer Chrome — Gallery Stone / Soft Limestone */
+  --chrome-900:   #e6e3dc;  /* surrounding workbench frame */
+  --chrome-800:   #f1efea;  /* headers, toolbars, panel chrome */
+  --chrome-700:   #e5e2da;  /* button hover, ghost hover, active tab pills */
 
-  /* Canvas wells */
-  --cream:        #f7f1e3;
-  --cream-soft:   #f0e9d5;
-  --paper:        #fffefa;
+  /* Canvas Backing — low-saturation warm gallery paper so glass colors read true */
+  --canvas-bg:       #f8f7f4;
+  --canvas-dot:      rgba(28, 25, 23, 0.08);
+  --canvas-dot-grid: radial-gradient(circle, var(--canvas-dot) 1px, transparent 1px);
+  --paper:           #ffffff;  /* pure white template pieces / artboard card */
 
-  /* Text */
-  --text-bright:  #23201a;
-  --text-soft:    #5a5142;
-  --text-dim:     #8a8270;
+  /* Backward compatibility aliases */
+  --cream:           var(--canvas-bg);
+  --cream-soft:      var(--chrome-700);
 
-  /* Hairlines (dark-on-light) */
-  --hairline:     rgba(40, 30, 15, 0.08);
-  --hairline-2:   rgba(40, 30, 15, 0.14);
+  /* 3D Viewport Backdrop — warm dark studio charcoal with soft backlit vignette */
+  --canvas-3d-center: #2c2926;
+  --canvas-3d-edge:   #181614;
 
-  /* Accents */
-  --amber:        #c08a1f;
-  --amber-bright: #d4a13a;
-  --amber-soft:   rgba(192, 138, 31, 0.16);
-  --amber-ink:    #7a5512;
+  /* Text — warm espresso charcoal & stone for crisp legibility */
+  --text-bright:  #1c1917;
+  --text-soft:    #57534e;
+  --text-dim:     #78716c;
+
+  /* Crisp 1px Borders / Hairlines */
+  --hairline:     rgba(28, 25, 23, 0.10);
+  --hairline-2:   rgba(28, 25, 23, 0.18);
+
+  /* Accents — Burnished Brass & studio jewel tones */
+  --amber:        #c48820;
+  --amber-bright: #d99b26;
+  --amber-soft:   rgba(196, 136, 32, 0.15);
+  --amber-ink:    #8a5a10;
 
   --cobalt:       #2c5e98;
   --ruby:         #a13f30;
 
   /* Solder lines on canvas — nearly black for max contrast */
   --lead:         #1a1a1a;
-
-  /* Canvas backdrop */
-  --canvas-bg:
-    radial-gradient(ellipse at center, var(--cream) 0%, var(--cream-soft) 80%);
-  --canvas-grain:
-    radial-gradient(circle at 20% 30%, rgba(150, 120, 60, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 80% 70%, rgba(150, 120, 60, 0.04) 0%, transparent 40%);
 }
 
 *, *::before, *::after {
@@ -189,10 +191,10 @@ html, body, #root {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--amber);
-  border: 1px solid transparent;
+  background: #292524;
+  border: 1px solid rgba(28, 25, 23, 0.25);
   border-radius: 5px;
-  color: #1a1408;
+  color: #ffffff;
   cursor: pointer;
   font-family: inherit;
   font-weight: 600;
@@ -204,20 +206,32 @@ html, body, #root {
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--amber-bright);
+  background: #1c1917;
+  color: #ffffff;
 }
 
 .btn-primary:active:not(:disabled) {
   transform: translateY(1px);
 }
 
+.btn-primary:disabled {
+  background: #e5e2da;
+  color: #8a847c;
+  border-color: transparent;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .btn-primary.is-muted {
-  opacity: 0.4;
+  background: #e5e2da;
+  color: #8a847c;
+  border-color: transparent;
+  opacity: 0.8;
   cursor: help;
 }
 
 .btn-primary.is-muted:hover {
-  background: var(--amber);
+  background: #dad6cc;
 }
 
 /* Sheet tabs */
@@ -256,8 +270,8 @@ html, body, #root {
 }
 
 .sheet-tab.active {
-  background: var(--amber-soft);
-  color: var(--amber-ink);
+  background: var(--chrome-700);
+  color: var(--text-bright);
   font-weight: 600;
 }
 
@@ -627,8 +641,8 @@ html, body, #root {
 }
 
 .tool-btn.active {
-  background: var(--amber-soft);
-  color: var(--amber-ink);
+  background: #292524;
+  color: #ffffff;
 }
 
 .tool-btn:disabled {
@@ -686,7 +700,9 @@ html, body, #root {
   transform: translateY(-50%) scale(1);
 }
 .tool-tooltip-preview {
-  background: var(--cream-soft);
+  background: var(--canvas-bg);
+  background-image: var(--canvas-dot-grid);
+  background-size: 16px 16px;
   height: 110px;
   overflow: hidden;
   line-height: 0;
@@ -810,8 +826,8 @@ html, body, #root {
   color: var(--text-bright);
 }
 .project-dropdown-item.active {
-  background: var(--amber-soft);
-  color: var(--amber-ink);
+  background: var(--chrome-700);
+  color: var(--text-bright);
   font-weight: 600;
 }
 .project-dropdown-check {
@@ -1125,9 +1141,21 @@ html, body, #root {
   line-height: 14px;
 }
 
-/* Canvas wells get the warm lightbox treatment */
+/* Canvas wells get the clean, neutral drafting table treatment */
 .canvas-well {
-  background-image: var(--canvas-grain), var(--canvas-bg);
+  background-color: var(--canvas-bg);
+  background-image: var(--canvas-dot-grid);
+  background-size: 20px 20px;
+}
+
+/* 3D Viewport — dedicated darker neutral backdrop with soft vignette for backlit 3D glass */
+.canvas-well-3d,
+.viewport-3d,
+.lamp-3d-viewport,
+.lamp-preview-container .canvas-well,
+[data-viewport="3d"] {
+  background: radial-gradient(ellipse at 50% 45%, var(--canvas-3d-center) 0%, var(--canvas-3d-edge) 85%) !important;
+  box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.55) !important;
 }
 
 .viewport-controls {
@@ -1187,13 +1215,11 @@ html, body, #root {
   background: var(--hairline-2);
 }
 
-/* The pattern image rectangle sits on a clean paper rectangle with shadow. */
+/* The pattern image rectangle sits on a clean paper rectangle with subtle card elevation. */
 .canvas-paper {
   background: var(--paper);
-  box-shadow:
-    0 1px 2px rgba(40, 30, 15, 0.08),
-    0 8px 24px rgba(40, 30, 15, 0.12),
-    0 0 0 1px rgba(40, 30, 15, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
 }
 
 /* ── Mobile-only elements (hidden on desktop) ───────── */

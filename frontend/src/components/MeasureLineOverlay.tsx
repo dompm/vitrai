@@ -75,12 +75,12 @@ export function MeasureLineOverlay({
       />
       <Line
         points={[x1, y1, x2, y2]}
-        stroke="#f59e0b" strokeWidth={2 / es}
+        stroke="#C48820" strokeWidth={2 / es}
         dash={[6 / es, 3 / es]} listening={false}
       />
       <Circle
         x={x1} y={y1} radius={7 / es}
-        fill="#f59e0b" stroke="white" strokeWidth={1.5 / es}
+        fill="#C48820" stroke="white" strokeWidth={1.5 / es}
         draggable
         onMouseEnter={() => onCursorChange('move')}
         onMouseLeave={() => onCursorChange('default')}
@@ -97,7 +97,7 @@ export function MeasureLineOverlay({
       />
       <Circle
         x={x2} y={y2} radius={7 / es}
-        fill="#f59e0b" stroke="white" strokeWidth={1.5 / es}
+        fill="#C48820" stroke="white" strokeWidth={1.5 / es}
         draggable
         onMouseEnter={() => onCursorChange('move')}
         onMouseLeave={() => onCursorChange('default')}

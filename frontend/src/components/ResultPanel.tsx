@@ -10,10 +10,10 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
 import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PolygonAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, CanvasAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PolygonAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
 import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
@@ -83,9 +83,10 @@ interface PieceOverlayProps {
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   selectionDisabled: boolean;
   previewStore: PieceTransformPreviewStore;
+  effectiveScale?: number;
 }
 
-const PieceOverlay = memo(function PieceOverlay({ piece, imageCache, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore }: PieceOverlayProps) {
+const PieceOverlay = memo(function PieceOverlay({ piece, imageCache, geometry, glassImageUrl, isSelected, isPending, opacity = 1, solderWidth, solderColor, onSelectPiece, selectionDisabled, previewStore, effectiveScale = 1 }: PieceOverlayProps) {
   const glassImg = useSyncExternalStore(
     useCallback(listener => imageCache.subscribe(glassImageUrl, listener), [imageCache, glassImageUrl]),
     useCallback(() => imageCache.get(glassImageUrl), [imageCache, glassImageUrl]),
@@ -136,24 +137,61 @@ const PieceOverlay = memo(function PieceOverlay({ piece, imageCache, geometry, g
         >
           {glassImg && <KonvaImage image={glassImg} x={-tx} y={-ty} />}
         </Group>
+        {isSelected && (
+          <Rect
+            x={bounds.minX} y={bounds.minY}
+            width={bounds.maxX - bounds.minX}
+            height={bounds.maxY - bounds.minY}
+            fill={CANVAS.selectionFill}
+            listening={false}
+          />
+        )}
         {isPending && (
           <Rect
             x={bounds.minX} y={bounds.minY}
             width={bounds.maxX - bounds.minX}
             height={bounds.maxY - bounds.minY}
-            fill={`rgba(245,158,11,${pulseHi ? 0.28 : 0.10})`}
+            fill={`rgba(196, 136, 32, ${pulseHi ? 0.28 : 0.10})`}
             listening={false}
           />
         )}
       </Group>
+
+      {/* Underlying solder line — preserved so black solder/foil width remains visible underneath */}
       <Line
         points={flatPts}
-        stroke={isPending ? CANVAS.patternPending : isSelected ? CANVAS.amber : solderColor}
-        strokeWidth={isSelected ? solderWidth * 1.25 : solderWidth}
+        stroke={isPending ? CANVAS.patternPending : solderColor}
+        strokeWidth={solderWidth}
         lineJoin="round"
         lineCap="round"
         closed listening={false}
       />
+
+      {/* Active selection: 2px high-luminance gold centerline with miter joins, backed by 4.5px dark casing */}
+      {isSelected && (
+        <>
+          <Line
+            points={flatPts}
+            stroke={CANVAS.selectionHalo}
+            strokeWidth={4.5 / effectiveScale}
+            lineJoin="miter"
+            miterLimit={2}
+            closed
+            perfectDrawEnabled={false}
+            listening={false}
+          />
+          <Line
+            points={flatPts}
+            stroke={CANVAS.selection}
+            strokeWidth={1.8 / effectiveScale}
+            lineJoin="miter"
+            miterLimit={2}
+            closed
+            perfectDrawEnabled={false}
+            listening={false}
+          />
+        </>
+      )}
     </Group>
   );
 });
@@ -165,7 +203,7 @@ interface ResultPanelProps {
   pendingPieceIds: ReadonlySet<string>;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
   onSelectPieces: (ids: string[]) => void;
-  onPatternCropChange: (c: Partial<Crop>) => void;
+  onPatternCropChange: (c: Partial<Crop>, skipHistory?: boolean) => void;
   onPatternScaleChange: (s: Scale | null) => void;
   onAddPiece: (box: BoundingBox) => void;
   onAddManualPiece: (polygon: [number, number][], curvePoints?: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) => void;
@@ -1413,6 +1451,7 @@ export function ResultPanel({
     else if (e.key === 'Enter') {
       if (activeTool === 'polygon' && activePolygonPointsRef.current.length >= 3) commitActivePolygon();
       else if (activeTool === 'pen' && activePenAnchorsRef.current.length >= 3) commitActivePen();
+      else if (activeTool === 'crop') handleToolChange('select');
     } else if (e.key === 'Escape') {
       if (isSolderPopoverOpenRef.current) setIsSolderPopoverOpen(false);
       else if (refineModeRef.current) onRefineModeChange(null);
@@ -1906,13 +1945,13 @@ export function ResultPanel({
     },
     {
       id: 'crop' as ToolId,
-      label: t('toolCropPattern'),
-      icon: <CropIcon />,
+      label: project.patternImageUrl ? t('toolCropPattern') : t('toolCanvas'),
+      icon: project.patternImageUrl ? <CropIcon /> : <CanvasIcon />,
       tooltip: {
-        name: t('tooltipCropPatternName'),
+        name: project.patternImageUrl ? t('tooltipCropPatternName') : t('tooltipCanvasName'),
         shortcut: 'C',
-        description: t('tooltipCropPatternDesc'),
-        animation: <CropAnimation />,
+        description: project.patternImageUrl ? t('tooltipCropPatternDesc') : t('tooltipCanvasDesc'),
+        animation: project.patternImageUrl ? <CropAnimation /> : <CanvasAnimation />,
       },
     },
     {
@@ -1937,7 +1976,7 @@ export function ResultPanel({
         animation: <InspectAnimation />,
       },
     },
-  ], [t]);
+  ], [t, project.patternImageUrl]);
 
   const TOOLS = [...BASE_TOOLS]
     .filter(tool => (!IS_TOUCH || tool.id !== 'pan') && (isTraceMode || !TRACE_ONLY_TOOL_IDS.has(tool.id)))
@@ -2196,83 +2235,95 @@ export function ResultPanel({
               onContextMenu={e => e.evt.preventDefault()}
             >
               <Layer listening={false}>
-                <ViewportGroup store={vp.store}
-                  {...(activeTool === 'crop' ? {} : {
-                    clipX: project.patternCrop.left,
-                    clipY: project.patternCrop.top,
-                    clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
-                    clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
-                  })}
-                >
-                  {isLamp && unrolledLamp && unrolledLamp.mode === 'faceted' && unrolledLamp.strips.length > 0 ? (
+                <ViewportSubscriber store={vp.store}>{(viewport) => {
+                  const es = viewport.effectiveScale;
+                  const cL = project.patternCrop.left;
+                  const cT = project.patternCrop.top;
+                  const cW = Math.max(1, pw - project.patternCrop.left - project.patternCrop.right);
+                  const cH = Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom);
+                  return (
                     <>
-                      {unrolledLamp.strips.map((strip, si) => (
-                        <Line
-                          key={`strip-poly-${si}`}
-                          points={strip.outline.flat()}
-                          closed
-                          fill="#fffefa"
-                          stroke="rgba(40, 30, 15, 0.32)"
-                          strokeWidth={1.5}
-                          strokeScaleEnabled={false}
-                          listening={false}
-                        />
-                      ))}
-                      {unrolledLamp.strips.map((strip, si) =>
-                        strip.tierSeams.map((s, i) => (
-                          <Line
-                            key={`tierseam-${si}-${i}`}
-                            points={[s.x1, s.y1, s.x2, s.y2]}
-                            stroke="rgba(40, 30, 15, 0.18)"
-                            strokeWidth={0.8}
-                            strokeScaleEnabled={false}
+                      {/* Artboard Elevation Card backing matching active pattern bounds */}
+                      <ViewportGroup store={vp.store}>
+                        {!isLamp && (!debugMask || activeTool !== 'box') && (
+                          <Rect
+                            x={cL} y={cT}
+                            width={cW} height={cH}
+                            fill="#ffffff"
+                            stroke="rgba(0, 0, 0, 0.10)"
+                            strokeWidth={1 / es}
+                            shadowColor="rgba(0, 0, 0, 0.08)"
+                            shadowBlur={16 / es}
+                            shadowOffset={{ x: 0, y: 4 / es }}
+                            shadowOpacity={1}
                             listening={false}
                           />
-                        ))
-                      )}
+                        )}
+                      </ViewportGroup>
+                      {/* Clipped artboard content */}
+                      <ViewportGroup store={vp.store}
+                        {...(activeTool === 'crop' ? {} : {
+                          clipX: project.patternCrop.left,
+                          clipY: project.patternCrop.top,
+                          clipWidth: Math.max(1, pw - project.patternCrop.left - project.patternCrop.right),
+                          clipHeight: Math.max(1, ph - project.patternCrop.top - project.patternCrop.bottom),
+                        })}
+                      >
+                        {isLamp && unrolledLamp && unrolledLamp.mode === 'faceted' && unrolledLamp.strips.length > 0 ? (
+                          <>
+                            {unrolledLamp.strips.map((strip, si) => (
+                              <Line
+                                key={`strip-poly-${si}`}
+                                points={strip.outline.flat()}
+                                closed
+                                fill={CANVAS.paper}
+                                stroke="rgba(30, 26, 20, 0.32)"
+                                strokeWidth={1.5}
+                                strokeScaleEnabled={false}
+                                listening={false}
+                              />
+                            ))}
+                            {unrolledLamp.strips.map((strip, si) =>
+                              strip.tierSeams.map((s, i) => (
+                                <Line
+                                  key={`tierseam-${si}-${i}`}
+                                  points={[s.x1, s.y1, s.x2, s.y2]}
+                                  stroke="rgba(30, 26, 20, 0.18)"
+                                  strokeWidth={0.8}
+                                  strokeScaleEnabled={false}
+                                  listening={false}
+                                />
+                              ))
+                            )}
+                          </>
+                        ) : isLamp && unrolledLamp && unrolledLamp.mode === 'smooth' && unrolledLamp.tiers.length > 0 ? (
+                          <>
+                            {unrolledLamp.tiers.map((tier, ti) => (
+                              <Line
+                                key={`smooth-tier-${ti}`}
+                                points={tier.outline.flat()}
+                                closed
+                                fill={CANVAS.paper}
+                                stroke="rgba(30, 26, 20, 0.32)"
+                                strokeWidth={1.5}
+                                strokeScaleEnabled={false}
+                                listening={false}
+                              />
+                            ))}
+                          </>
+                        ) : null}
+                        {!isLamp && (!debugMask || activeTool !== 'box') && patternImg && (
+                          <KonvaImage
+                            id="bg"
+                            image={patternImg}
+                            width={pw} height={ph}
+                            opacity={activeTool === 'box' ? 0.5 : 1}
+                          />
+                        )}
+                      </ViewportGroup>
                     </>
-                  ) : isLamp && unrolledLamp && unrolledLamp.mode === 'smooth' && unrolledLamp.tiers.length > 0 ? (
-                    <>
-                      {unrolledLamp.tiers.map((tier, ti) => (
-                        <Line
-                          key={`smooth-tier-${ti}`}
-                          points={tier.outline.flat()}
-                          closed
-                          fill="#fffefa"
-                          stroke="rgba(40, 30, 15, 0.32)"
-                          strokeWidth={1.5}
-                          strokeScaleEnabled={false}
-                          listening={false}
-                        />
-                      ))}
-                    </>
-                  ) : (!debugMask || activeTool !== 'box') && (() => {
-                    const cL = project.patternCrop.left;
-                    const cT = project.patternCrop.top;
-                    const cR = project.patternCrop.right;
-                    const cB = project.patternCrop.bottom;
-                    const ux = Math.min(0, cL);
-                    const uy = Math.min(0, cT);
-                    const uw = Math.max(pw, pw - cR) - ux;
-                    const uh = Math.max(ph, ph - cB) - uy;
-                    return (
-                      <Rect
-                        x={ux} y={uy}
-                        width={uw} height={uh}
-                        fill="#fffefa"
-                        listening={false}
-                      />
-                    );
-                  })()}
-                  {!isLamp && (!debugMask || activeTool !== 'box') && patternImg && (
-                    <KonvaImage
-                      id="bg"
-                      image={patternImg}
-                      width={pw} height={ph}
-                      opacity={activeTool === 'box' ? 0.5 : 1}
-                    />
-                  )}
-                </ViewportGroup>
+                  );
+                }}</ViewportSubscriber>
               </Layer>
               <PieceViewportLayers store={vp.store} activeId={selectedPieceIds.length === 1 ? selectedPieceIds[0] : undefined} disabled={Boolean(debugMask && activeTool === 'box')}
                   {...(activeTool === 'crop' ? {} : {
@@ -2294,7 +2345,7 @@ export function ResultPanel({
                         x={ux} y={uy}
                         width={Math.max(pw, pw - cR) - ux}
                         height={Math.max(ph, ph - cB) - uy}
-                        fill="#fffefa"
+                        fill={CANVAS.paper}
                         listening={false}
                       />
                     );
@@ -2329,6 +2380,7 @@ export function ResultPanel({
                         onSelectPiece={onSelectPiece}
                         selectionDisabled={Boolean(refineMode)}
                         previewStore={pieceTransformPreviewStore}
+                        effectiveScale={vp.store.getSnapshot().effectiveScale}
                       />
                     );
                   })}
@@ -2372,7 +2424,7 @@ export function ResultPanel({
                         <Group key={`align-guide-${idx}`} listening={false}>
                           <Line
                             points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
-                            stroke="rgba(192, 138, 31, 0.4)"
+                            stroke="rgba(196, 136, 32, 0.45)"
                             strokeWidth={1 / es}
                             dash={[4 / es, 4 / es]}
                           />
@@ -2394,7 +2446,7 @@ export function ResultPanel({
                             x={activeLengthGuide.center[0]}
                             y={activeLengthGuide.center[1]}
                             radius={activeLengthGuide.matchLength}
-                            stroke="rgba(192, 138, 31, 0.25)"
+                            stroke="rgba(196, 136, 32, 0.30)"
                             strokeWidth={1.5 / es}
                             dash={[6 / es, 6 / es]}
                           />
@@ -2485,14 +2537,14 @@ export function ResultPanel({
                                   y={-rectH / 2}
                                   width={rectW}
                                   height={rectH}
-                                  fill="rgba(40, 30, 15, 0.85)"
+                                  fill="rgba(20, 24, 32, 0.85)"
                                   cornerRadius={4 / es}
                                 />
                                 <KonvaText
                                   text={text}
                                   fontSize={fontSize}
                                   fontFamily='"Inter Tight", system-ui, -apple-system, sans-serif'
-                                  fill="#fffefa"
+                                  fill="#ffffff"
                                   align="center"
                                   verticalAlign="middle"
                                   x={-rectW / 2}
@@ -2513,7 +2565,7 @@ export function ResultPanel({
                         <Line
                           key={`pen-guide-${idx}`}
                           points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
-                          stroke="rgba(192, 138, 31, 0.45)"
+                          stroke="rgba(196, 136, 32, 0.45)"
                           strokeWidth={1 / es}
                           dash={[4 / es, 4 / es]}
                           listening={false}
@@ -2604,6 +2656,8 @@ export function ResultPanel({
                       crop={project.patternCrop}
                       effectiveScale={es}
                       onCropChange={onPatternCropChange}
+                      hasImage={Boolean(project.patternImageUrl)}
+                      scale={project.patternScale}
                     />
                   )}
                   {activeTool === 'box' && drawingBox && (
@@ -2625,11 +2679,11 @@ export function ResultPanel({
                       y={1487.1442620225096}
                       width={2505.188986758742 - 924.124254866509}
                       height={2998.9258239124047 - 1487.1442620225096}
-                      stroke="#fbbf24"
+                      stroke={CANVAS.selection}
                       strokeWidth={3 / es}
                       dash={[10 / es, 6 / es]}
                       dashOffset={dashOffset}
-                      fill="rgba(251, 191, 36, 0.05)"
+                      fill="rgba(196, 136, 32, 0.06)"
                       listening={false}
                     />
                   )}
@@ -2639,11 +2693,11 @@ export function ResultPanel({
                       y={1249.5130966562972}
                       width={1264.3137687154938 - 364.7371555449281}
                       height={2725.2637575643917 - 1249.5130966562972}
-                      stroke="#fbbf24"
+                      stroke={CANVAS.selection}
                       strokeWidth={3 / es}
                       dash={[10 / es, 6 / es]}
                       dashOffset={dashOffset}
-                      fill="rgba(251, 191, 36, 0.05)"
+                      fill="rgba(196, 136, 32, 0.06)"
                       listening={false}
                     />
                   )}
@@ -2678,6 +2732,31 @@ export function ResultPanel({
                       />
                     ));
                   })}
+                  {(selectedPieceIds.length > 1 || (activeTool !== 'select' && selectedPieceIds.length === 1)) && (
+                    <Group listening={false}>
+                      {selectedPieceIds.map(pid => {
+                        const piece = project.pieces.find(p => p.id === pid);
+                        if (!piece) return null;
+                        const s = CANVAS.nodeSize / es;
+                        return piece.polygon.map(([vx, vy], idx) => {
+                          if (!isStructuralCorner(piece.polygon, idx, es, 14)) return null;
+                          return (
+                            <Rect
+                              key={`multi-node-${pid}-${idx}`}
+                              x={vx - s / 2}
+                              y={vy - s / 2}
+                              width={s}
+                              height={s}
+                              fill={CANVAS.nodeFill}
+                              stroke={CANVAS.nodeBorder}
+                              strokeWidth={CANVAS.nodeBorderWidth / es}
+                              perfectDrawEnabled={false}
+                            />
+                          );
+                        });
+                      })}
+                    </Group>
+                  )}
                   {activeTool === 'select' && selectedPieceIds.length === 1 && (() => {
                     const selectedId = selectedPieceIds[0];
                     const piece = project.pieces.find(p => p.id === selectedId);
@@ -2687,10 +2766,11 @@ export function ResultPanel({
                     const len = referencePolygon.length;
                     // Min screen-space edge length to show a handle (avoids clutter on dense polygons)
                     const MIN_HANDLE_PX = 14;
+                    const nodeSize = 6 / es;
 
                     return (
                       <Group>
-                        {/* Corner handles — only on edges long enough to be worth dragging */}
+                        {/* Precision square CAD vertex anchor handles — only on edges long enough to be worth dragging */}
                         {referencePolygon.map(([x, y], idx) => {
                           // Show corner if either adjacent edge is long enough
                           if (!isStructuralCorner(referencePolygon, idx, es, MIN_HANDLE_PX) && draggedCorner?.idx !== idx) return null;
@@ -2701,14 +2781,18 @@ export function ResultPanel({
                             ? activeDragPolygon[idx][1] : y;
 
                           return (
-                            <Circle
+                            <Rect
                               key={`corner-${idx}`}
                               x={currentX}
                               y={currentY}
-                              radius={6 / es}
-                              fill={CANVAS.paper}
-                              stroke={CANVAS.amber}
-                              strokeWidth={2 / es}
+                              offsetX={nodeSize / 2}
+                              offsetY={nodeSize / 2}
+                              width={nodeSize}
+                              height={nodeSize}
+                              fill={CANVAS.nodeFill}
+                              stroke={CANVAS.nodeBorder}
+                              strokeWidth={1.5 / es}
+                              hitStrokeWidth={10 / es}
                               draggable
                               onDragStart={() => {
                                 setDraggedCorner({ pieceId: selectedId, idx });
@@ -2791,10 +2875,11 @@ export function ResultPanel({
                               key={`mid-${idx}`}
                               x={hx}
                               y={hy}
-                              radius={5 / es}
+                              radius={3.5 / es}
                               fill={CANVAS.amber}
                               stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
+                              hitStrokeWidth={10 / es}
                               draggable
                               onDragStart={() => {
                                 setDraggedMidpoint({ pieceId: selectedId, edgeIdx: idx });
