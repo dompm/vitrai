@@ -398,9 +398,12 @@ export function selectBestSamMask(
   interface CandidateStats {
     idx: number;
     iou: number;
+    insideCount: number;
     fill: number;
     outFrac: number;
     minSpan: number;
+    perim: number;
+    iso: number;
   }
 
   const candidates: CandidateStats[] = [];
@@ -413,6 +416,13 @@ export function selectBestSamMask(
     let maxX = -Infinity;
     let minY = Infinity;
     let maxY = -Infinity;
+    let orthoEdges = 0;
+
+    const isFg = (x: number, y: number): boolean => {
+      if (x < 0 || x >= width || y < 0 || y >= height) return false;
+      if (x < bx1 - 1.5 || x > bx2 + 1.5 || y < by1 - 1.5 || y > by2 + 1.5) return false;
+      return mask[y * width + x] > threshold;
+    };
 
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
@@ -424,6 +434,10 @@ export function selectBestSamMask(
             if (x > maxX) maxX = x;
             if (y < minY) minY = y;
             if (y > maxY) maxY = y;
+            if (!isFg(x + 1, y)) orthoEdges++;
+            if (!isFg(x - 1, y)) orthoEdges++;
+            if (!isFg(x, y + 1)) orthoEdges++;
+            if (!isFg(x, y - 1)) orthoEdges++;
           }
         }
       }
@@ -435,7 +449,10 @@ export function selectBestSamMask(
     const spanY = (maxY - minY + 1) / bh;
     const minSpan = Math.min(spanX, spanY);
     const fill = insideCount / (bw * bh);
-    candidates.push({ idx, iou, fill, outFrac, minSpan });
+    // Cauchy-Crofton perimeter estimator on 4-neighborhood boundary edges
+    const perim = Math.max(1, (Math.PI / 4) * orthoEdges);
+    const iso = (4 * Math.PI * insideCount) / (perim * perim);
+    candidates.push({ idx, iou, insideCount, fill, outFrac, minSpan, perim, iso });
   }
 
   const viable = candidates.filter(
@@ -449,7 +466,24 @@ export function selectBestSamMask(
 
   if (viable.length > 0) {
     viable.sort((a, b) => a.fill + 2.5 * a.outFrac - (b.fill + 2.5 * b.outFrac));
-    return viable[0].idx;
+    let chosen = viable[0];
+
+    // Upgrade from the tightest mask (M1) to the fuller mask (M2) ONLY if M2 has a higher
+    // predicted IoU score AND repairs an internal glass-mottle tear (M2 has >= 22% shorter
+    // boundary perimeter than M1 despite covering up to 50% more area, e.g. mottled rippled glass).
+    for (let i = 1; i < viable.length; i++) {
+      const cand = viable[i];
+      if (cand.iou < chosen.iou) continue;
+      const repairsMottleTear =
+        cand.insideCount <= chosen.insideCount * 1.5 &&
+        cand.perim <= chosen.perim * 0.78 &&
+        cand.iso >= chosen.iso * 1.8;
+      if (repairsMottleTear) {
+        chosen = cand;
+      }
+    }
+
+    return chosen.idx;
   }
 
   if (candidates.length > 0) {

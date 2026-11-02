@@ -315,6 +315,8 @@ describe('seam snapping and curve fitting for fabrication', () => {
     const fitted = fitSmoothPieceCurves(pts, [], { cornerAngleDeg: 40 });
     const cornerCount = fitted.anchorTypes.filter(t => t === 'corner').length;
     expect(cornerCount).toBe(2);
+    // Newton-Raphson reparameterization should fit each leaf arc with at most 1 interior smooth anchor (<= 4 total anchors)
+    expect(fitted.polygon.length).toBeLessThanOrEqual(4);
     expect(fitted.curvePoints.length).toBeGreaterThanOrEqual(2);
   });
 });

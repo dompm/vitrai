@@ -854,20 +854,25 @@ function sampleChainAtU(chain: Point[], u: number[], targetU: number): Point {
 
 /**
  * Fit a cubic Bézier to an ordered chain of points [p_0, ..., p_m] (m >= 2)
- * using chord-length parameterization and regularized 2×2 linear least squares
- * anchored around the midpoint-interpolating quadratic control points. This
- * avoids noisy 1-segment corner-bevel tangents that can flip handles onto the
- * wrong side of the chord.
+ * using chord-length initialization followed by iterative Newton-Raphson
+ * parameter refinement (Schneider's algorithm) and regularized 2×2 linear
+ * least squares. This allows a single cubic Bézier span to represent wide
+ * (up to ~130°) smooth arcs accurately while avoiding noisy 1-segment endpoint
+ * tangent projections.
  */
-function fitCubicBezierToChain(chain: Point[]): [Point, Point] {
+function solveCubicBezierChain(chain: Point[]): {
+  c1: Point;
+  c2: Point;
+  maxErr: number;
+  worstIdx: number;
+} {
   const p0 = chain[0];
   const p3 = chain[chain.length - 1];
   const chord = Math.hypot(p3[0] - p0[0], p3[1] - p0[1]);
-  if (chord < 1e-6 || chain.length < 2) {
-    return [
-      [p0[0] + (p3[0] - p0[0]) / 3, p0[1] + (p3[1] - p0[1]) / 3],
-      [p0[0] + (2 * (p3[0] - p0[0])) / 3, p0[1] + (2 * (p3[1] - p0[1])) / 3],
-    ];
+  const fallbackC1: Point = [p0[0] + (p3[0] - p0[0]) / 3, p0[1] + (p3[1] - p0[1]) / 3];
+  const fallbackC2: Point = [p0[0] + (2 * (p3[0] - p0[0])) / 3, p0[1] + (2 * (p3[1] - p0[1])) / 3];
+  if (chord < 1e-6 || chain.length <= 2) {
+    return { c1: fallbackC1, c2: fallbackC2, maxErr: 0, worstIdx: 0 };
   }
 
   const u: number[] = [0];
@@ -876,10 +881,7 @@ function fitCubicBezierToChain(chain: Point[]): [Point, Point] {
   }
   const totalLen = u[u.length - 1];
   if (totalLen < 1e-6) {
-    return [
-      [p0[0] + (p3[0] - p0[0]) / 3, p0[1] + (p3[1] - p0[1]) / 3],
-      [p0[0] + (2 * (p3[0] - p0[0])) / 3, p0[1] + (2 * (p3[1] - p0[1])) / 3],
-    ];
+    return { c1: fallbackC1, c2: fallbackC2, maxErr: 0, worstIdx: 1 };
   }
   for (let i = 1; i < u.length; i++) u[i] /= totalLen;
 
@@ -892,62 +894,85 @@ function fitCubicBezierToChain(chain: Point[]): [Point, Point] {
   const [q1, q2] = quadraticToCubicControls(p0, qCtrl, p3);
 
   if (chain.length <= 3) {
-    return [q1, q2];
+    const fitPt = evaluateCubicBezier(p0, q1, q2, p3, u[1] ?? 0.5);
+    const err = chain.length === 3 ? Math.hypot(chain[1][0] - fitPt[0], chain[1][1] - fitPt[1]) : 0;
+    return { c1: q1, c2: q2, maxErr: err, worstIdx: 1 };
   }
 
-  // Regularized 2×2 least-squares solve for (ctrl1, ctrl2) over all interior points
-  const lambda = 0.15;
-  let s11 = lambda;
-  let s12 = 0;
-  let s22 = lambda;
-  let r1x = lambda * q1[0];
-  let r1y = lambda * q1[1];
-  let r2x = lambda * q2[0];
-  let r2y = lambda * q2[1];
+  const lambda = 0.04;
+  let c1: Point = q1;
+  let c2: Point = q2;
 
-  for (let i = 1; i < chain.length - 1; i++) {
-    const ti = u[i];
-    const mt = 1 - ti;
-    const b0 = mt * mt * mt;
-    const b1 = 3 * mt * mt * ti;
-    const b2 = 3 * mt * ti * ti;
-    const b3 = ti * ti * ti;
+  for (let iter = 0; iter < 3; iter++) {
+    let s11 = lambda;
+    let s12 = 0;
+    let s22 = lambda;
+    let r1x = lambda * q1[0];
+    let r1y = lambda * q1[1];
+    let r2x = lambda * q2[0];
+    let r2y = lambda * q2[1];
 
-    s11 += b1 * b1;
-    s12 += b1 * b2;
-    s22 += b2 * b2;
+    for (let i = 1; i < chain.length - 1; i++) {
+      const ti = u[i];
+      const mt = 1 - ti;
+      const b0 = mt * mt * mt;
+      const b1 = 3 * mt * mt * ti;
+      const b2 = 3 * mt * ti * ti;
+      const b3 = ti * ti * ti;
 
-    const rhsX = chain[i][0] - b0 * p0[0] - b3 * p3[0];
-    const rhsY = chain[i][1] - b0 * p0[1] - b3 * p3[1];
-    r1x += b1 * rhsX;
-    r1y += b1 * rhsY;
-    r2x += b2 * rhsX;
-    r2y += b2 * rhsY;
+      s11 += b1 * b1;
+      s12 += b1 * b2;
+      s22 += b2 * b2;
+
+      const rhsX = chain[i][0] - b0 * p0[0] - b3 * p3[0];
+      const rhsY = chain[i][1] - b0 * p0[1] - b3 * p3[1];
+      r1x += b1 * rhsX;
+      r1y += b1 * rhsY;
+      r2x += b2 * rhsX;
+      r2y += b2 * rhsY;
+    }
+
+    const det = s11 * s22 - s12 * s12;
+    if (Math.abs(det) < 1e-9) break;
+
+    c1 = [(s22 * r1x - s12 * r2x) / det, (s22 * r1y - s12 * r2y) / det];
+    c2 = [(s11 * r2x - s12 * r1x) / det, (s11 * r2y - s12 * r1y) / det];
+
+    // Prevent extreme handle overshoot (> 1.25 * chord) on degenerate chains
+    const maxHandleLen = chord * 1.25;
+    const l1 = Math.hypot(c1[0] - p0[0], c1[1] - p0[1]);
+    if (l1 > maxHandleLen) {
+      c1 = [p0[0] + ((c1[0] - p0[0]) * maxHandleLen) / l1, p0[1] + ((c1[1] - p0[1]) * maxHandleLen) / l1];
+    }
+    const l2 = Math.hypot(c2[0] - p3[0], c2[1] - p3[1]);
+    if (l2 > maxHandleLen) {
+      c2 = [p3[0] + ((c2[0] - p3[0]) * maxHandleLen) / l2, p3[1] + ((c2[1] - p3[1]) * maxHandleLen) / l2];
+    }
+
+    if (iter < 2) {
+      // Newton-Raphson parameter refinement: u_i <- u_i - ((B(u_i) - p_i) . B'(u_i)) / (|B'|^2 + (B - p) . B'')
+      for (let i = 1; i < chain.length - 1; i++) {
+        const ti = u[i];
+        const mt = 1 - ti;
+        const bx = mt * mt * mt * p0[0] + 3 * mt * mt * ti * c1[0] + 3 * mt * ti * ti * c2[0] + ti * ti * ti * p3[0];
+        const by = mt * mt * mt * p0[1] + 3 * mt * mt * ti * c1[1] + 3 * mt * ti * ti * c2[1] + ti * ti * ti * p3[1];
+        const d1x = 3 * mt * mt * (c1[0] - p0[0]) + 6 * mt * ti * (c2[0] - c1[0]) + 3 * ti * ti * (p3[0] - c2[0]);
+        const d1y = 3 * mt * mt * (c1[1] - p0[1]) + 6 * mt * ti * (c2[1] - c1[1]) + 3 * ti * ti * (p3[1] - c2[1]);
+        const d2x = 6 * mt * (c2[0] - 2 * c1[0] + p0[0]) + 6 * ti * (p3[0] - 2 * c2[0] + c1[0]);
+        const d2y = 6 * mt * (c2[1] - 2 * c1[1] + p0[1]) + 6 * ti * (p3[1] - 2 * c2[1] + c1[1]);
+        const rx = bx - chain[i][0];
+        const ry = by - chain[i][1];
+        const num = rx * d1x + ry * d1y;
+        const den = d1x * d1x + d1y * d1y + rx * d2x + ry * d2y;
+        if (Math.abs(den) > 1e-6) {
+          const nextU = ti - Math.max(-0.08, Math.min(0.08, num / den));
+          const minU = u[i - 1] + 1e-4;
+          const maxU = i + 1 < chain.length - 1 ? Math.min(0.999, u[i + 1] + 0.04) : 0.999;
+          u[i] = Math.max(minU, Math.min(maxU, nextU));
+        }
+      }
+    }
   }
-
-  const det = s11 * s22 - s12 * s12;
-  if (Math.abs(det) < 1e-9) {
-    return [q1, q2];
-  }
-
-  const c1: Point = [(s22 * r1x - s12 * r2x) / det, (s22 * r1y - s12 * r2y) / det];
-  const c2: Point = [(s11 * r2x - s12 * r1x) / det, (s11 * r2y - s12 * r1y) / det];
-  return [c1, c2];
-}
-
-function computeChainCubicFitError(chain: Point[]): { maxErr: number; worstIdx: number } {
-  if (chain.length <= 2) return { maxErr: 0, worstIdx: 0 };
-  const p0 = chain[0];
-  const p3 = chain[chain.length - 1];
-  const [c1, c2] = fitCubicBezierToChain(chain);
-
-  const u: number[] = [0];
-  for (let i = 1; i < chain.length; i++) {
-    u.push(u[i - 1] + Math.hypot(chain[i][0] - chain[i - 1][0], chain[i][1] - chain[i - 1][1]));
-  }
-  const totalLen = u[u.length - 1];
-  if (totalLen < 1e-6) return { maxErr: 0, worstIdx: 1 };
-  for (let i = 1; i < u.length; i++) u[i] /= totalLen;
 
   let maxErr = 0;
   let worstIdx = Math.floor(chain.length / 2);
@@ -959,6 +984,17 @@ function computeChainCubicFitError(chain: Point[]): { maxErr: number; worstIdx: 
       worstIdx = i;
     }
   }
+
+  return { c1, c2, maxErr, worstIdx };
+}
+
+function fitCubicBezierToChain(chain: Point[]): [Point, Point] {
+  const { c1, c2 } = solveCubicBezierChain(chain);
+  return [c1, c2];
+}
+
+function computeChainCubicFitError(chain: Point[]): { maxErr: number; worstIdx: number } {
+  const { maxErr, worstIdx } = solveCubicBezierChain(chain);
   return { maxErr, worstIdx };
 }
 
@@ -1109,7 +1145,7 @@ export function fitSmoothPieceCurves(
   }
 
   const cornerAngleRad = ((options.cornerAngleDeg ?? 42) * Math.PI) / 180;
-  const maxTurnPerSpanRad = ((options.maxTurnPerSpanDeg ?? 85) * Math.PI) / 180;
+  const maxTurnPerSpanRad = ((options.maxTurnPerSpanDeg ?? 130) * Math.PI) / 180;
   const seamTol = options.seamTolerancePx ?? 2.5;
 
   const deblistered = options.preserveBevels
@@ -1229,11 +1265,12 @@ export function fitSmoothPieceCurves(
       anchorKind[i] = 'corner';
       // If SAM2's Gaussian kernel slightly rounded a sharp corner on a free edge,
       // restore the true geometric corner apex by intersecting its flanking arm rays.
-      if (!options.preserveBevels && n > 12 && !vertexLocked[i] && armTurns[i] >= cornerAngleRad && armTurns[i] <= (135 * Math.PI) / 180) {
+      if (!options.preserveBevels && n > 12 && !vertexLocked[i] && armTurns[i] >= cornerAngleRad && armTurns[i] <= (145 * Math.PI) / 180) {
         const si = sTable[i];
+        const wApexInner = Math.max(7, wNear * 0.72);
         const pInOuter = sampleClosedLoopAtS(pts, sTable, si - wOuter);
-        const pInInner = sampleClosedLoopAtS(pts, sTable, si - wInner);
-        const pOutInner = sampleClosedLoopAtS(pts, sTable, si + wInner);
+        const pInInner = sampleClosedLoopAtS(pts, sTable, si - wApexInner);
+        const pOutInner = sampleClosedLoopAtS(pts, sTable, si + wApexInner);
         const pOutOuter = sampleClosedLoopAtS(pts, sTable, si + wOuter);
         const hit = intersectLines(pInOuter, pInInner, pOutInner, pOutOuter);
         if (hit) {
@@ -1247,7 +1284,7 @@ export function fitSmoothPieceCurves(
           if (
             forwardIn &&
             backwardOut &&
-            hitDist <= Math.min(8.5, wNear * 0.65) &&
+            hitDist <= Math.min(13, wOuter * 0.35) &&
             (neighbors.length === 0 || pointToNeighborsDistance(hit, neighbors) > seamTol)
           ) {
             pts[i] = hit;
