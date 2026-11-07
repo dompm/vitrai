@@ -9,6 +9,7 @@ import useImage from 'use-image';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
+import { TRACE_PEN_GUIDE } from './Tutorial/types';
 import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
@@ -2736,23 +2737,21 @@ export function ResultPanel({
                   {tutorialStep === 'trace-hand-pen' && (
                     <Group listening={false}>
                       <Line
-                        points={[2000, 1320, 2750, 1750, 2460, 2180, 1800, 1820, 2000, 1320]}
+                        points={[...TRACE_PEN_GUIDE, TRACE_PEN_GUIDE[0]].flat()}
                         stroke="#fbbf24"
                         strokeWidth={4 / es}
                         dash={[12 / es, 8 / es]}
                         listening={false}
                       />
-                      <Circle x={2000} y={1320} radius={18 / es} fill="#10b981" stroke="#fff" strokeWidth={3 / es} />
-                      <KonvaText x={2000 - 8 / es} y={1320 - 11 / es} text="1" fontSize={22 / es} fill="#fff" fontStyle="bold" />
-
-                      <Circle x={2750} y={1750} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
-                      <KonvaText x={2750 - 8 / es} y={1750 - 11 / es} text="2" fontSize={22 / es} fill="#fff" fontStyle="bold" />
-
-                      <Circle x={2460} y={2180} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
-                      <KonvaText x={2460 - 8 / es} y={2180 - 11 / es} text="3" fontSize={22 / es} fill="#fff" fontStyle="bold" />
-
-                      <Circle x={1800} y={1820} radius={18 / es} fill="#fbbf24" stroke="#fff" strokeWidth={3 / es} />
-                      <KonvaText x={1800 - 8 / es} y={1820 - 11 / es} text="4" fontSize={22 / es} fill="#fff" fontStyle="bold" />
+                      {TRACE_PEN_GUIDE.map(([x, y], i) => (
+                        <Group key={i}>
+                          <Circle x={x} y={y} radius={18 / es} fill={i === 0 ? '#10b981' : '#fbbf24'} stroke="#fff" strokeWidth={3 / es} />
+                          <KonvaText
+                            x={x - 18 / es} y={y - 11 / es} width={36 / es} align="center"
+                            text={String(i + 1)} fontSize={22 / es} fill="#fff" fontStyle="bold"
+                          />
+                        </Group>
+                      ))}
                     </Group>
                   )}
                   {tutorialStep === 'cut-first-piece' && project.pieces.length === 0 && (

@@ -35,9 +35,11 @@ export const TRACK_STEPS: Record<TrackId, StepId[]> = {
     'calibrate-pattern',
     'cut-first-piece',
     'refine-first-piece',
-    'trace-hand-pen',
     'assign-first-glass',
     'position-first-texture',
+    // The pen leaf is a separate coda: the AI-traced orange stays the tracked
+    // piece through glass assignment, so it must finish before a second piece appears.
+    'trace-hand-pen',
     'done',
   ],
   'vector-drawing': [
@@ -215,6 +217,16 @@ export const STEPS: Record<AnchoredStepId, StepConfig> = {
     panel: 'pattern',
   },
 };
+
+/**
+ * Pen guide clicks along the lead lines of the top-right leaf in
+ * /assets/orange-pattern.jpg (3072×4080, uncropped image pixels).
+ * Re-trace if the tutorial pattern image or its crop changes.
+ */
+export const TRACE_PEN_GUIDE: readonly (readonly [number, number])[] = [
+  [1514, 1375], [1940, 1311], [2400, 1410], [2705, 1713],
+  [2912, 2115], [2463, 2175], [2110, 1995], [1830, 1815],
+];
 
 export const STORAGE_KEY = 'vitrai-tutorial-state';
 

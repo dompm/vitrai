@@ -1917,6 +1917,7 @@ export function App() {
         onSetStep={setTutorialStep}
         onSetTrackedPiece={handleSetTrackedPiece}
         onSelectPiece={selectPiece}
+        onSetActiveSheet={setActiveSheetId}
         onStartTour={startTutorialTour}
         onSkip={skipTutorial}
         onComplete={completeTutorial}
