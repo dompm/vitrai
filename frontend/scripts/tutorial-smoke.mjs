@@ -172,14 +172,28 @@ try {
   await tracing.evaluate(() => window.__finishTutorialSegmentation());
   await step(tracing, 'refine-first-piece');
   await tracing.getByRole('button', { name: 'Looks good — continue', exact: true }).click();
-  await step(tracing, 'trace-hand-pen');
-  await tool(tracing, 'pen');
-  await draw(tracing, [[2000, 1320], [2750, 1750], [2460, 2180], [1800, 1820]], 3072, 4080);
   await step(tracing, 'assign-first-glass');
   await tracing.locator('[data-tutorial-target="piece-glass-select"]').selectOption('sheet-2');
   await step(tracing, 'position-first-texture');
   await tracing.getByRole('button', { name: 'Texture placed', exact: true }).click();
-  console.log('PASS tracing: pending inference gate, user accepts outline, complete one-piece workflow');
+  await step(tracing, 'trace-hand-pen');
+  await tool(tracing, 'pen');
+  const guide = await tracing.evaluate(async () => (await import('/src/components/Tutorial/types.ts')).TRACE_PEN_GUIDE);
+  await draw(tracing, guide, 3072, 4080);
+  await tracing.getByRole('button', { name: 'Try Another Guide', exact: true }).waitFor();
+  const leaf = await tracing.evaluate(async () => {
+    const { loadProjectFromOPFS } = await import('/src/storage/opfs.ts');
+    const deadline = Date.now() + 10000;
+    while (Date.now() < deadline) {
+      const saved = await loadProjectFromOPFS('Tutorial');
+      if (saved?.pieces.length === 2) return saved.pieces[1];
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    return null;
+  });
+  assert.ok(leaf, 'Pen leaf should be saved as a second piece');
+  assert.equal(leaf.glassSheetId, 'sheet-1', 'Pen leaf should land on the Green sheet, not the Orange one');
+  console.log('PASS tracing: pending inference gate, user accepts outline, one-piece workflow, pen coda on guide');
 
   assert.deepEqual(errors, [], 'No browser runtime errors');
 } catch (error) {
