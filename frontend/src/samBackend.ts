@@ -1,5 +1,6 @@
-import type { BoundingBox } from "./types";
+import type { BoundingBox, Crop } from "./types";
 import type { WorkerInMsg, WorkerOutMsg } from "./samWorker";
+import type { ProposedGlassCell } from "./utils/autoSegment";
 import i18n from "./i18n";
 
 export type SegmentResult = {
@@ -46,7 +47,7 @@ export class SamWorkerBackend {
           if (msg.debugMask) this.onDebugMask(msg.debugMask);
           p.resolve({ polygon: msg.polygon, debugMask: msg.debugMask });
         } else if (msg.type === "autoSegment:done") {
-          p.resolve(msg.polygons);
+          p.resolve(msg.pieces ?? msg.polygons);
         } else {
           p.reject(new Error(msg.error));
         }
@@ -99,11 +100,12 @@ export class SamWorkerBackend {
     });
   }
 
-  autoSegment(imageId: string): Promise<[number, number][][]> {
-    return this.send<[number, number][][]>({
+  autoSegment(imageId: string, crop?: Crop): Promise<ProposedGlassCell[]> {
+    return this.send<ProposedGlassCell[]>({
       type: "autoSegment",
       id: crypto.randomUUID(),
       sessionId: imageId,
+      crop,
     });
   }
 }

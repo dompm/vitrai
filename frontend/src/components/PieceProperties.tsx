@@ -10,6 +10,7 @@ interface Props {
   onAddSheet: () => void;
   onDelete: () => void;
   onSmooth?: () => void;
+  onStraighten?: () => void;
   refineMode?: 'add' | 'remove' | null;
   onRefineModeChange?: (mode: 'add' | 'remove' | null) => void;
   isPending?: boolean;
@@ -26,6 +27,7 @@ export function PieceProperties({
   onAddSheet,
   onDelete,
   onSmooth,
+  onStraighten,
   refineMode,
   onRefineModeChange,
   isPending,
@@ -38,6 +40,7 @@ export function PieceProperties({
   const [draft, setDraft] = useState(piece.label);
   const [deleteHover, setDeleteHover] = useState(false);
   const [smoothHover, setSmoothHover] = useState(false);
+  const [straightenHover, setStraightenHover] = useState(false);
   const [selectHover, setSelectHover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -300,6 +303,32 @@ export function PieceProperties({
             }}
           >
             {t('smooth')}
+          </button>
+        )}
+
+        {onStraighten && (
+          <button
+            onClick={onStraighten}
+            title={t('straightenPieceTooltip', 'Reset curved edges to crisp straight lines')}
+            disabled={isPending || isEncoding}
+            onMouseEnter={() => setStraightenHover(true)}
+            onMouseLeave={() => setStraightenHover(false)}
+            style={{
+              background: straightenHover ? '#E5E2DA' : '#F4F2ED',
+              border: 'none',
+              borderRadius: 6,
+              color: 'var(--text-soft)',
+              cursor: (isPending || isEncoding) ? 'not-allowed' : 'pointer',
+              fontSize: 11.5,
+              fontWeight: 500,
+              padding: '4px 9px',
+              flexShrink: 0,
+              opacity: (isPending || isEncoding) ? 0.4 : 1,
+              fontFamily: 'inherit',
+              transition: 'background-color 0.15s ease',
+            }}
+          >
+            {t('straighten', 'Straighten')}
           </button>
         )}
       </div>
