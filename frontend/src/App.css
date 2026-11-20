@@ -321,6 +321,7 @@ html, body, #root {
   position: fixed;
   z-index: 600;
   min-width: 140px;
+  max-width: min(280px, calc(100vw - 24px));
   background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
@@ -428,12 +429,22 @@ html, body, #root {
   left: 100%;
   margin-left: 2px;
   min-width: 220px;
+  max-width: min(260px, calc(100vw - 24px));
+  max-height: 60vh;
+  overflow-y: auto;
   background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
   box-shadow: 0 12px 32px rgba(40, 30, 15, 0.18);
   padding: 4px;
   z-index: 601;
+}
+
+.sheet-tab-submenu.align-left {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 2px;
 }
 
 /* Add-sheet popover */
