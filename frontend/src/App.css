@@ -106,6 +106,7 @@ html, body, #root {
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -1979,4 +1980,62 @@ html, body, #root {
   .tutorial-bar-center { flex-basis: calc(100% - 150px); margin: 0; }
   .tutorial-bar-right { margin-left: auto; }
   .tutorial-track-grid { gap: 8px; }
+}
+
+/* ── SVG Import Feedback Pill ───────────────────────── */
+
+.svg-import-pill {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 14px;
+  border-radius: 999px;
+  background: var(--chrome-800);
+  border: 1px solid var(--hairline-2);
+  box-shadow: 0 6px 20px rgba(20, 24, 32, 0.14);
+  font-size: 0.78rem;
+  color: var(--text-bright);
+  max-width: calc(100% - 28px);
+  white-space: nowrap;
+}
+
+.svg-import-pill-text {
+  color: var(--text-soft);
+}
+
+.svg-import-pill-action {
+  background: transparent;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.svg-import-pill-action:hover {
+  background: var(--amber);
+  color: var(--chrome-800);
+}
+
+.svg-import-pill-close {
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.svg-import-pill-close:hover {
+  color: var(--text-bright);
 }

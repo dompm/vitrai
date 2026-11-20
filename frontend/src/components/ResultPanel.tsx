@@ -2206,7 +2206,7 @@ export function ResultPanel({
                   </div>
                   <h3>Trace an Image</h3>
                   <p>Upload a 2D pattern image to trace stained glass pieces over.</p>
-                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={onUploadPattern} />
+                  <input type="file" accept="image/*,.svg,image/svg+xml" style={{ display: 'none' }} onChange={onUploadPattern} />
                 </label>
 
                 <button className="onboarding-card" onClick={onStartBlankCanvas}>

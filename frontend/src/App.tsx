@@ -12,6 +12,8 @@ import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject } from './hooks/useProject';
 import { subtractPolygons, computeCentroid, snapPolygonToNeighbors, smoothPolygon, flattenCurves, arePolygonsEqual } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
+import { importSvg } from './utils/svgRasterize';
+import type { SvgCanvasTarget, SvgImportMode } from './utils/svgImport';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint, Scale, Project } from './types';
 import {
@@ -441,6 +443,7 @@ export function App() {
     updatePatternImage,
     updatePatternDimensions,
     startBlankCanvas,
+    importSvgPieces,
     startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
@@ -1143,13 +1146,115 @@ export function App() {
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
+  const [svgImportFeedback, setSvgImportFeedback] = useState<{
+    svgText: string;
+    mode: SvgImportMode;
+    count: number;
+    importedPieceIds: string[];
+    initializedCanvas: boolean;
+    target?: SvgCanvasTarget;
+  } | null>(null);
+
+  const isSvgFile = (file: File) =>
+    file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+
+  const handleSvgFile = async (file: File) => {
+    try {
+      const svgText = await file.text();
+      const isEmptyCanvas = !project.patternImageUrl && project.pieces.length === 0;
+      const target: SvgCanvasTarget | undefined = isEmptyCanvas
+        ? undefined
+        : {
+            width: project.patternWidth || 1200,
+            height: project.patternHeight || 1200,
+            fitBox: {
+              x: (project.patternWidth || 1200) * 0.08,
+              y: (project.patternHeight || 1200) * 0.08,
+              width: (project.patternWidth || 1200) * 0.84,
+              height: (project.patternHeight || 1200) * 0.84,
+            },
+          };
+
+      const result = await importSvg(svgText, { mode: 'auto', target });
+      const createdIds = result.pieces.length > 0
+        ? importSvgPieces({
+            pieces: result.pieces,
+            sheetId: activeSheetId,
+            initializeCanvas: isEmptyCanvas
+              ? { width: result.canvasWidth, height: result.canvasHeight, scale: result.scale }
+              : undefined,
+          })
+        : [];
+
+      setSvgImportFeedback({
+        svgText,
+        mode: result.mode,
+        count: result.pieces.length,
+        importedPieceIds: createdIds,
+        initializedCanvas: isEmptyCanvas,
+        target,
+      });
+    } catch (err) {
+      console.error('[App] SVG import failed:', err);
+    }
+  };
+
+  const handleSwitchSvgImportMode = async () => {
+    if (!svgImportFeedback) return;
+    const altMode: SvgImportMode = svgImportFeedback.mode === 'shapes' ? 'lines' : 'shapes';
+    try {
+      const result = await importSvg(svgImportFeedback.svgText, {
+        mode: altMode,
+        target: svgImportFeedback.target,
+      });
+      const createdIds = importSvgPieces({
+        pieces: result.pieces,
+        sheetId: activeSheetId,
+        initializeCanvas: svgImportFeedback.initializedCanvas
+          ? { width: result.canvasWidth, height: result.canvasHeight, scale: result.scale }
+          : undefined,
+        replacePieceIds: svgImportFeedback.importedPieceIds,
+        skipHistory: true,
+      });
+      setSvgImportFeedback({
+        ...svgImportFeedback,
+        mode: result.mode,
+        count: result.pieces.length,
+        importedPieceIds: createdIds,
+      });
+    } catch (err) {
+      console.error('[App] SVG mode switch failed:', err);
+    }
+  };
+
+  const handleUseSvgAsBackground = () => {
+    if (!svgImportFeedback) return;
+    const blob = new Blob([svgImportFeedback.svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.naturalWidth || 1200, img.naturalHeight || 1200);
+        setSvgImportFeedback(null);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(blob);
+  };
+
   const loadPatternImageFile = (file: File) => {
+    if (isSvgFile(file)) {
+      void handleSvgFile(file);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       const img = new Image();
       img.onload = () => {
         updatePatternImage(dataUrl, img.width, img.height);
+        setSvgImportFeedback(null);
       };
       img.src = dataUrl;
     };
@@ -1162,6 +1267,7 @@ export function App() {
       loadPatternImageFile(file);
       setPatternTool('select');
     }
+    e.target.value = '';
   };
 
   const handleStartLampMode = () => {
@@ -1408,7 +1514,7 @@ export function App() {
         }
       };
       reader.readAsText(file);
-    } else if (file.type.startsWith('image/')) {
+    } else if (isSvgFile(file) || file.type.startsWith('image/')) {
       loadPatternImageFile(file);
     }
   };
@@ -1578,12 +1684,20 @@ export function App() {
                 onUpdateDimensions={updatePatternDimensions}
               />
             </div>
-            {project.patternImageUrl && (
-              <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
-                {t('replacePattern')}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
-              </label>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {(project.patternImageUrl || project.patternScale) && (
+                <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('importSvgTooltip')}>
+                  {t('importSvgButton')}
+                  <input type="file" accept=".svg,image/svg+xml" style={{ display: 'none' }} onChange={handleUploadPattern} />
+                </label>
+              )}
+              {project.patternImageUrl && (
+                <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
+                  {t('replacePattern')}
+                  <input type="file" accept="image/*,.svg,image/svg+xml" style={{ display: 'none' }} onChange={handleUploadPattern} />
+                </label>
+              )}
+            </div>
           </div>
           <ResultPanel
             key={tutorialActiveTrackId ?? 'project'}
@@ -1629,6 +1743,33 @@ export function App() {
             isSymmetryEnabled={isSymmetryEnabled}
             onToggleSymmetry={setIsSymmetryEnabled}
           />
+          {svgImportFeedback && (
+            <div className="svg-import-pill" role="status" aria-live="polite">
+              <span className="svg-import-pill-text">
+                {svgImportFeedback.count === 0
+                  ? t('svgImportEmpty')
+                  : svgImportFeedback.mode === 'shapes'
+                    ? t('svgImportSummaryShapes', { count: svgImportFeedback.count })
+                    : t('svgImportSummaryLines', { count: svgImportFeedback.count })}
+              </span>
+              {svgImportFeedback.count === 0 ? (
+                <button className="svg-import-pill-action" onClick={handleUseSvgAsBackground}>
+                  {t('svgUseAsBackground')}
+                </button>
+              ) : (
+                <button className="svg-import-pill-action" onClick={() => void handleSwitchSvgImportMode()}>
+                  {svgImportFeedback.mode === 'shapes' ? t('svgSwitchToLines') : t('svgSwitchToShapes')}
+                </button>
+              )}
+              <button
+                className="svg-import-pill-close"
+                onClick={() => setSvgImportFeedback(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
 
       {/* ── Right: glass sheet workspace ── */}
