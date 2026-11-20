@@ -1158,6 +1158,31 @@ export function useProject() {
     });
   }, [updateProject]);
 
+  const replaceSheetGlass = useCallback((sheetId: string, url: string, label: string, scale: Scale | null = null) => {
+    const cleanLabel = stripExtension(label);
+    updateProject(prev => {
+      if (!prev.sheets.some(s => s.id === sheetId)) return prev;
+      const next: Project = {
+        ...prev,
+        sheets: prev.sheets.map(s =>
+          s.id === sheetId
+            ? {
+                ...s,
+                label: cleanLabel,
+                imageUrl: url,
+                crop: { top: 0, left: 0, bottom: 0, right: 0 },
+                scale,
+                naturalWidth: undefined,
+                naturalHeight: undefined,
+                swatch: undefined,
+              }
+            : s,
+        ),
+      };
+      return applyScales(next, sheetId);
+    });
+  }, [updateProject]);
+
   const moveAllPiecesBetweenSheets = useCallback((srcSheetId: string, destSheetId: string) => {
     if (srcSheetId === destSheetId) return;
     updateProject(prev => {
@@ -1334,6 +1359,7 @@ export function useProject() {
     startBlankCanvas,
     startLampMode,
     addSheetFromImage,
+    replaceSheetGlass,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
     updateLampConfig,
