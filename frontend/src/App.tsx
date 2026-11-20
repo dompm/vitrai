@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
@@ -53,13 +53,45 @@ function SheetTab({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [clampedMenu, setClampedMenu] = useState<{ left: number; top: number; flipSubmenu: boolean } | null>(null);
   const [submenu, setSubmenu] = useState<'moveTo' | 'moveFrom' | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
   useEffect(() => { setDraft(sheet.label); }, [sheet.label]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  useLayoutEffect(() => {
+    if (!menuPos || !menuRef.current) {
+      setClampedMenu(null);
+      return;
+    }
+    const el = menuRef.current;
+    const clamp = () => {
+      const rect = el.getBoundingClientRect();
+      const pad = 12;
+      const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+      const left = Math.min(Math.max(pad, menuPos.x), maxLeft);
+      const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+      const top = Math.min(Math.max(pad, menuPos.y), maxTop);
+      const flipSubmenu = left + rect.width + 260 > window.innerWidth - pad;
+      setClampedMenu(prev =>
+        prev && prev.left === left && prev.top === top && prev.flipSubmenu === flipSubmenu
+          ? prev
+          : { left, top, flipSubmenu },
+      );
+    };
+    clamp();
+    const ro = new ResizeObserver(clamp);
+    ro.observe(el);
+    window.addEventListener('resize', clamp);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', clamp);
+    };
+  }, [menuPos]);
 
   useEffect(() => {
     if (!menuPos) return;
@@ -165,8 +197,9 @@ function SheetTab({
       </button>
       {menuPos && (
         <div
+          ref={menuRef}
           className="sheet-tab-menu"
-          style={{ left: menuPos.x, top: menuPos.y }}
+          style={{ left: clampedMenu?.left ?? menuPos.x, top: clampedMenu?.top ?? menuPos.y }}
           onMouseDown={e => e.stopPropagation()}
         >
           <button
@@ -199,7 +232,7 @@ function SheetTab({
                   </span>
                   <span className="sheet-tab-menu-caret">▸</span>
                   {!moveToDisabled && submenu === 'moveTo' && (
-                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                    <div className={`sheet-tab-submenu${clampedMenu?.flipSubmenu ? ' align-left' : ''}`} onMouseDown={e => e.stopPropagation()}>
                       {otherSheets.length === 0 ? (
                         <div className="sheet-tab-menu-item is-disabled">
                           {t('contextNoOtherSheets')}
@@ -240,7 +273,7 @@ function SheetTab({
                   <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
                   <span className="sheet-tab-menu-caret">▸</span>
                   {!moveFromDisabled && submenu === 'moveFrom' && (
-                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                    <div className={`sheet-tab-submenu${clampedMenu?.flipSubmenu ? ' align-left' : ''}`} onMouseDown={e => e.stopPropagation()}>
                       {sheetsWithPieces.map(s => (
                         <button
                           key={s.id}
