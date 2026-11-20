@@ -1035,13 +1035,14 @@ export function parseSvgVectors(
   };
 }
 
-// ── Pure Mask Flood-Fill & Contour Tracer (for Case 2 Linework SVGs) ────────
+// ── Pure Mask Watershed & Topology-Preserving Crack-Edge Tracer (Case 2) ────
 
-function rdpSimplify(pts: Pt[], epsilon: number): Pt[] {
-  if (pts.length <= 3) return pts;
+function rdpSimplifyOpen(pts: Pt[], epsilon: number): Pt[] {
+  if (pts.length <= 2) return pts;
   const eps2 = epsilon * epsilon;
+  const out: Pt[] = [pts[0]];
 
-  function recurse(start: number, end: number, out: Pt[]) {
+  function recurse(start: number, end: number) {
     let maxD2 = -1;
     let maxIdx = start;
     const [ax, ay] = pts[start];
@@ -1068,13 +1069,19 @@ function rdpSimplify(pts: Pt[], epsilon: number): Pt[] {
     }
 
     if (maxD2 > eps2 && maxIdx !== start && maxIdx !== end) {
-      recurse(start, maxIdx, out);
+      recurse(start, maxIdx);
       out.push(pts[maxIdx]);
-      recurse(maxIdx, end, out);
+      recurse(maxIdx, end);
     }
   }
 
-  // Closed loop RDP: split at farthest pair of points
+  recurse(0, pts.length - 1);
+  out.push(pts[pts.length - 1]);
+  return out;
+}
+
+function rdpSimplifyClosed(pts: Pt[], epsilon: number): Pt[] {
+  if (pts.length <= 3) return pts;
   let farIdx = 1;
   let farD2 = -1;
   for (let i = 1; i < pts.length; i++) {
@@ -1084,25 +1091,87 @@ function rdpSimplify(pts: Pt[], epsilon: number): Pt[] {
       farIdx = i;
     }
   }
-
-  const out: Pt[] = [pts[0]];
-  recurse(0, farIdx, out);
-  out.push(pts[farIdx]);
-  // Wrap second half back to pts[0]
-  const secondHalf = [...pts.slice(farIdx), pts[0]];
-  const tmpPts = pts;
-  pts = secondHalf;
-  recurse(0, pts.length - 1, out);
-  pts = tmpPts;
-
-  return out;
+  const first = rdpSimplifyOpen(pts.slice(0, farIdx + 1), epsilon);
+  const second = rdpSimplifyOpen([...pts.slice(farIdx), pts[0]], epsilon);
+  return [...first.slice(0, -1), ...second.slice(0, -1)];
 }
 
 /**
- * Trace the outer boundary of a single labeled component using Moore-Neighbor tracing.
- * Starts at the topmost-leftmost pixel of `label` in `labels`.
+ * Expand all labeled regions (`labels >= 1`) into wall pixels (`labels === -1`)
+ * using a Chamfer 10/14 (Euclidean-approximated) multi-source Dijkstra watershed.
+ * Adjacent pieces meet along the exact stroke centerline regardless of SVG stroke width.
  */
-function traceComponentBoundary(
+function expandRegionsToCenterline(labels: Int32Array, w: number, h: number): void {
+  const total = w * h;
+  const dist = new Int32Array(total);
+  dist.fill(0x3fffffff);
+
+  // 16-slot ring buffer of buckets suffices since max step cost is 14
+  const buckets: number[][] = Array.from({ length: 16 }, () => []);
+  let queued = 0;
+
+  // Seed non-wall pixels that touch at least one wall pixel
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const idx = row + x;
+      if (labels[idx] < 1) continue;
+      const touchesWall =
+        (x > 0 && labels[idx - 1] === -1) ||
+        (x + 1 < w && labels[idx + 1] === -1) ||
+        (y > 0 && labels[idx - w] === -1) ||
+        (y + 1 < h && labels[idx + w] === -1);
+      if (touchesWall) {
+        dist[idx] = 0;
+        buckets[0].push(idx);
+        queued++;
+      }
+    }
+  }
+
+  const nxOff = [-1, 1, 0, 0, -1, 1, -1, 1];
+  const nyOff = [0, 0, -1, 1, -1, -1, 1, 1];
+  const stepCost = [10, 10, 10, 10, 14, 14, 14, 14];
+
+  let curDist = 0;
+  while (queued > 0) {
+    const bucket = buckets[curDist & 15];
+    if (bucket.length === 0) {
+      curDist++;
+      continue;
+    }
+    const idx = bucket.pop()!;
+    queued--;
+    if (dist[idx] !== curDist) continue;
+
+    const lab = labels[idx];
+    const x = idx % w;
+    const y = (idx - x) / w;
+
+    for (let k = 0; k < 8; k++) {
+      const nx = x + nxOff[k];
+      const ny = y + nyOff[k];
+      if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+      const nIdx = ny * w + nx;
+      // Only expand into pixels that were originally walls (dist > 0)
+      if (dist[nIdx] === 0) continue;
+      const nd = curDist + stepCost[k];
+      if (nd < dist[nIdx]) {
+        dist[nIdx] = nd;
+        labels[nIdx] = lab;
+        buckets[nd & 15].push(nIdx);
+        queued++;
+      }
+    }
+  }
+}
+
+/**
+ * Trace the clockwise outer inter-pixel crack boundary of `targetLabel` on the `(w+1) x (h+1)`
+ * grid, starting from the top edge of its topmost-leftmost pixel `(startX, startY)`.
+ * Returns grid-integer vertices so adjacent regions share exact coordinates.
+ */
+function traceCrackBoundary(
   labels: Int32Array,
   w: number,
   h: number,
@@ -1110,49 +1179,74 @@ function traceComponentBoundary(
   startX: number,
   startY: number,
 ): Pt[] {
-  // 8-connected clockwise neighbors starting from West (index 0)
-  const dx = [-1, -1, 0, 1, 1, 1, 0, -1];
-  const dy = [0, -1, -1, -1, 0, 1, 1, 1];
-
-  const isInside = (x: number, y: number) =>
+  const isIn = (x: number, y: number) =>
     x >= 0 && x < w && y >= 0 && y < h && labels[y * w + x] === targetLabel;
 
-  const boundary: Pt[] = [[startX + 0.5, startY + 0.5]];
-  let cx = startX;
-  let cy = startY;
-  // Since (startX, startY) is topmost-leftmost, West (startX-1, startY) is guaranteed outside
-  let backDir = 0;
-  const maxSteps = w * h * 2;
+  // Directions: 0=East(+1,0), 1=South(0,+1), 2=West(-1,0), 3=North(0,-1)
+  const dx = [1, 0, -1, 0];
+  const dy = [0, 1, 0, -1];
+  // Pixel to the RIGHT (inside) and LEFT (outside) of a directed edge starting at (vx, vy)
+  const rightPx = (vx: number, vy: number, dir: number): [number, number] => {
+    if (dir === 0) return [vx, vy];         // East: pixel below-right
+    if (dir === 1) return [vx - 1, vy];     // South: pixel below-left
+    if (dir === 2) return [vx - 1, vy - 1]; // West: pixel above-left
+    return [vx, vy - 1];                    // North: pixel above-right
+  };
+  const leftPx = (vx: number, vy: number, dir: number): [number, number] => {
+    if (dir === 0) return [vx, vy - 1];
+    if (dir === 1) return [vx, vy];
+    if (dir === 2) return [vx - 1, vy];
+    return [vx - 1, vy - 1];
+  };
+
+  const boundary: Pt[] = [];
+  let vx = startX;
+  let vy = startY;
+  let dir = 0; // top edge of (startX, startY) goes East
+  const maxSteps = (w + 1) * (h + 1) * 4;
 
   for (let step = 0; step < maxSteps; step++) {
-    let found = false;
-    for (let k = 1; k <= 8; k++) {
-      const dir = (backDir + k) & 7;
-      const nx = cx + dx[dir];
-      const ny = cy + dy[dir];
-      if (isInside(nx, ny)) {
-        // Entry backtrack direction is opposite of dir, i.e. (dir + 4) & 7
-        backDir = (dir + 4) & 7;
-        cx = nx;
-        cy = ny;
-        found = true;
+    boundary.push([vx, vy]);
+    vx += dx[dir];
+    vy += dy[dir];
+    if (vx === startX && vy === startY) break;
+
+    // Prefer turning left (keeping outer perimeter tight), then straight, then right
+    const candidates = [(dir + 3) & 3, dir, (dir + 1) & 3];
+    let nextDir = dir;
+    for (const c of candidates) {
+      const [rx, ry] = rightPx(vx, vy, c);
+      const [lx, ly] = leftPx(vx, vy, c);
+      if (isIn(rx, ry) && !isIn(lx, ly)) {
+        nextDir = c;
         break;
       }
     }
-    if (!found) break;
-    if (cx === startX && cy === startY && step > 0) break;
-    boundary.push([cx + 0.5, cy + 0.5]);
+    dir = nextDir;
   }
 
   return boundary;
 }
 
+function isJunctionVertex(labels: Int32Array, w: number, h: number, gx: number, gy: number): boolean {
+  const get = (x: number, y: number) => (x < 0 || x >= w || y < 0 || y >= h ? 1 : labels[y * w + x]);
+  const a = get(gx - 1, gy - 1);
+  const b = get(gx, gy - 1);
+  const c = get(gx - 1, gy);
+  const d = get(gx, gy);
+  // Count distinct labels among the 4 pixels meeting at (gx, gy)
+  let distinct = 1;
+  if (b !== a) distinct++;
+  if (c !== a && c !== b) distinct++;
+  if (d !== a && d !== b && d !== c) distinct++;
+  return distinct >= 3;
+}
+
 /**
  * Given a binary wall mask (`1` = dark line/wall, `0` = open region),
- * flood-fills the exterior from the image border, finds all enclosed interior
- * regions, traces their outer contours, and simplifies them into Vitrai pieces.
- *
- * Optionally maps mask coordinates `(0..w, 0..h)` into `(targetWidth, targetHeight)`.
+ * flood-fills the exterior and interior regions, expands them to the exact stroke
+ * centerline via Chamfer watershed, traces inter-pixel crack boundaries, and
+ * simplifies shared edges canonically so adjacent pieces share bit-for-bit identical vertices.
  */
 export function extractRegionsFromMask(
   wallMask: Uint8Array,
@@ -1208,7 +1302,7 @@ export function extractRegionsFromMask(
     if (labels[right] === 0) floodFill(right, 1);
   }
 
-  // 2. Flood-fill each remaining interior connected component
+  // 2. Flood-fill interior regions; absorb tiny noise specks back into walls
   const minAreaPx = options?.minAreaPx ?? Math.max(36, Math.round(total * 0.0003));
   const epsilon = options?.simplifyEpsilon ?? 1.8;
   const sx = (options?.targetWidth ?? w) / w;
@@ -1217,7 +1311,7 @@ export function extractRegionsFromMask(
   const oy = options?.offsetY ?? 0;
 
   let nextLabel = 2;
-  const pieces: SvgImportedPiece[] = [];
+  const validLabels = new Set<number>();
 
   for (let y = 1; y < h - 1; y++) {
     for (let x = 1; x < w - 1; x++) {
@@ -1225,19 +1319,96 @@ export function extractRegionsFromMask(
       if (labels[idx] !== 0) continue;
       const labelId = nextLabel++;
       const area = floodFill(idx, labelId);
-      if (area < minAreaPx) continue;
-
-      const boundary = traceComponentBoundary(labels, w, h, labelId, x, y);
-      if (boundary.length < 6) continue;
-
-      const simplified = rdpSimplify(boundary, epsilon);
-      if (simplified.length < 3) continue;
-
-      const scaled: Pt[] = simplified.map(([bx, by]) => [bx * sx + ox, by * sy + oy]);
-      if (Math.abs(polygonSignedArea(scaled)) < 9) continue;
-
-      pieces.push({ polygon: scaled });
+      if (area < minAreaPx) {
+        // Re-mark tiny noise as wall so watershed absorbs it cleanly
+        for (let k = 0; k < area; k++) {
+          labels[queue[k]] = -1;
+        }
+      } else {
+        validLabels.add(labelId);
+      }
     }
+  }
+
+  if (validLabels.size === 0) return [];
+
+  // 3. Expand all valid regions + exterior into walls until they meet at the exact centerline
+  expandRegionsToCenterline(labels, w, h);
+
+  // Find topmost-leftmost pixel for each valid label after expansion
+  const firstPixel = new Map<number, [number, number]>();
+  for (let y = 0; y < h; y++) {
+    const row = y * w;
+    for (let x = 0; x < w; x++) {
+      const lab = labels[row + x];
+      if (lab >= 2 && validLabels.has(lab) && !firstPixel.has(lab)) {
+        firstPixel.set(lab, [x, y]);
+      }
+    }
+  }
+
+  // 4. Trace crack boundaries & simplify shared chains canonically between junction vertices
+  const chainCache = new Map<string, Pt[]>();
+  const simplifySharedChain = (chain: Pt[]): Pt[] => {
+    if (chain.length <= 2) return chain;
+    const a = chain[0];
+    const b = chain[chain.length - 1];
+    const mid = chain[Math.floor(chain.length / 2)];
+    const forward = a[0] < b[0] || (a[0] === b[0] && a[1] <= b[1]);
+    const ordered = forward ? chain : [...chain].reverse();
+    const s = ordered[0];
+    const e = ordered[ordered.length - 1];
+    // Include chain length + midpoint in key to disambiguate parallel chains sharing endpoints
+    const key = `${s[0]},${s[1]}->${e[0]},${e[1]}:${ordered.length}:${mid[0]},${mid[1]}`;
+    let simplified = chainCache.get(key);
+    if (!simplified) {
+      simplified = rdpSimplifyOpen(ordered, epsilon);
+      chainCache.set(key, simplified);
+    }
+    return forward ? simplified : [...simplified].reverse();
+  };
+
+  const pieces: SvgImportedPiece[] = [];
+  for (const [labelId, [startX, startY]] of firstPixel.entries()) {
+    const boundary = traceCrackBoundary(labels, w, h, labelId, startX, startY);
+    if (boundary.length < 4) continue;
+
+    const junctionIndices: number[] = [];
+    for (let i = 0; i < boundary.length; i++) {
+      if (isJunctionVertex(labels, w, h, boundary[i][0], boundary[i][1])) {
+        junctionIndices.push(i);
+      }
+    }
+
+    let simplified: Pt[];
+    if (junctionIndices.length >= 2) {
+      simplified = [];
+      for (let j = 0; j < junctionIndices.length; j++) {
+        const i0 = junctionIndices[j];
+        const i1 = junctionIndices[(j + 1) % junctionIndices.length];
+        const chain: Pt[] = [];
+        let k = i0;
+        while (true) {
+          chain.push(boundary[k]);
+          if (k === i1) break;
+          k = (k + 1) % boundary.length;
+        }
+        const simpChain = simplifySharedChain(chain);
+        // Append all except the last vertex (which is the start of the next chain)
+        for (let m = 0; m < simpChain.length - 1; m++) {
+          simplified.push(simpChain[m]);
+        }
+      }
+    } else {
+      simplified = rdpSimplifyClosed(boundary, epsilon);
+    }
+
+    if (simplified.length < 3) continue;
+
+    const scaled: Pt[] = simplified.map(([bx, by]) => [bx * sx + ox, by * sy + oy]);
+    if (Math.abs(polygonSignedArea(scaled)) < 9) continue;
+
+    pieces.push({ polygon: scaled });
   }
 
   return pieces;

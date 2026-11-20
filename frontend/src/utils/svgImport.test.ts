@@ -112,12 +112,13 @@ describe('svgImport', () => {
         }
       }
     };
-    drawWall(20, 20, 180, 23);
-    drawWall(20, 177, 180, 180);
-    drawWall(20, 20, 23, 180);
-    drawWall(177, 20, 180, 180);
-    drawWall(98, 20, 102, 180);
-    drawWall(20, 98, 180, 102);
+    drawWall(20, 20, 180, 30);
+    drawWall(20, 170, 180, 180);
+    drawWall(20, 20, 30, 180);
+    drawWall(170, 20, 180, 180);
+    // Thick 12px center cross lead lines
+    drawWall(94, 20, 105, 180);
+    drawWall(20, 94, 180, 105);
 
     const pieces = extractRegionsFromMask(mask, W, H, {
       targetWidth: 1000,
@@ -130,5 +131,24 @@ describe('svgImport', () => {
       expect(p.polygon.length).toBeGreaterThanOrEqual(4);
       expect(p.polygon.length).toBeLessThanOrEqual(8);
     }
+
+    // Verify zero gap and zero overlap: left panes' right edge === right panes' left edge
+    const bounds = pieces.map(p => ({
+      minX: Math.min(...p.polygon.map(v => v[0])),
+      maxX: Math.max(...p.polygon.map(v => v[0])),
+      minY: Math.min(...p.polygon.map(v => v[1])),
+      maxY: Math.max(...p.polygon.map(v => v[1])),
+    }));
+    const leftPanes = bounds.filter(b => b.minX < 300);
+    const rightPanes = bounds.filter(b => b.minX > 300);
+    expect(leftPanes).toHaveLength(2);
+    expect(rightPanes).toHaveLength(2);
+    expect(leftPanes[0].maxX).toBe(rightPanes[0].minX);
+    expect(leftPanes[1].maxX).toBe(rightPanes[1].minX);
+
+    const topPanes = bounds.filter(b => b.minY < 300);
+    const botPanes = bounds.filter(b => b.minY > 300);
+    expect(topPanes[0].maxY).toBe(botPanes[0].minY);
+    expect(topPanes[1].maxY).toBe(botPanes[1].minY);
   });
 });
