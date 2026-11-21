@@ -352,3 +352,182 @@ function simplifyOpenPolyline(points: Point[], epsilon: number): Point[] {
 
   return points.filter((_, index) => keep[index] === 1);
 }
+
+/**
+ * Select the best single-piece mask among SAM2's multi-mask outputs when a bounding
+ * box prompt is provided. SAM2's outer/union mask (typically index 2) often scores
+ * 0.003–0.015 higher IoU than the tight inner-piece mask (index 1) because the user's
+ * box is drawn slightly outside the dark solder line or overlaps adjacent pieces in
+ * the corners of the box. Preferring the tightest mask that still spans the box and
+ * stays within the box prevents bleeding across solder lines into neighbors.
+ */
+export function selectBestSamMask(
+  allMasks: Float32Array[],
+  iouScores: number[],
+  width: number,
+  height: number,
+  options?: {
+    box?: [number, number, number, number];
+    inputSize?: number;
+    scale?: number;
+    padX?: number;
+    padY?: number;
+    threshold?: number;
+  },
+): number {
+  if (allMasks.length <= 1) return 0;
+  const maxIou = iouScores.length > 0 ? Math.max(...iouScores) : 1;
+  const bestByIou = iouScores.length > 0 ? iouScores.indexOf(maxIou) : 0;
+
+  const box = options?.box;
+  if (!box) return bestByIou;
+
+  const inputSize = options?.inputSize ?? 1024;
+  const scale = options?.scale ?? 1;
+  const padX = options?.padX ?? 0;
+  const padY = options?.padY ?? 0;
+  const threshold = options?.threshold ?? 0;
+
+  const bx1 = ((box[0] * scale + padX) * width) / inputSize;
+  const by1 = ((box[1] * scale + padY) * height) / inputSize;
+  const bx2 = ((box[2] * scale + padX) * width) / inputSize;
+  const by2 = ((box[3] * scale + padY) * height) / inputSize;
+  const bw = Math.max(1, bx2 - bx1);
+  const bh = Math.max(1, by2 - by1);
+
+  interface CandidateStats {
+    idx: number;
+    iou: number;
+    insideCount: number;
+    fill: number;
+    outFrac: number;
+    minSpan: number;
+    perim: number;
+    iso: number;
+  }
+
+  const candidates: CandidateStats[] = [];
+  for (let idx = 0; idx < allMasks.length; idx++) {
+    const mask = allMasks[idx];
+    const iou = iouScores[idx] ?? 0;
+    let totalCount = 0;
+    let insideCount = 0;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let orthoEdges = 0;
+
+    const isFg = (x: number, y: number): boolean => {
+      if (x < 0 || x >= width || y < 0 || y >= height) return false;
+      if (x < bx1 - 1.5 || x > bx2 + 1.5 || y < by1 - 1.5 || y > by2 + 1.5) return false;
+      return mask[y * width + x] > threshold;
+    };
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (mask[y * width + x] > threshold) {
+          totalCount++;
+          if (x >= bx1 - 1.5 && x <= bx2 + 1.5 && y >= by1 - 1.5 && y <= by2 + 1.5) {
+            insideCount++;
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+            if (!isFg(x + 1, y)) orthoEdges++;
+            if (!isFg(x - 1, y)) orthoEdges++;
+            if (!isFg(x, y + 1)) orthoEdges++;
+            if (!isFg(x, y - 1)) orthoEdges++;
+          }
+        }
+      }
+    }
+
+    if (totalCount === 0 || insideCount === 0) continue;
+    const outFrac = 1 - insideCount / totalCount;
+    const spanX = (maxX - minX + 1) / bw;
+    const spanY = (maxY - minY + 1) / bh;
+    const minSpan = Math.min(spanX, spanY);
+    const fill = insideCount / (bw * bh);
+    // Cauchy-Crofton perimeter estimator on 4-neighborhood boundary edges
+    const perim = Math.max(1, (Math.PI / 4) * orthoEdges);
+    const iso = (4 * Math.PI * insideCount) / (perim * perim);
+    candidates.push({ idx, iou, insideCount, fill, outFrac, minSpan, perim, iso });
+  }
+
+  const viable = candidates.filter(
+    c =>
+      c.iou >= maxIou - 0.065 &&
+      c.iou >= 0.6 &&
+      c.fill >= 0.18 &&
+      c.minSpan >= 0.88 &&
+      c.outFrac <= 0.05,
+  );
+
+  if (viable.length > 0) {
+    viable.sort((a, b) => a.fill + 2.5 * a.outFrac - (b.fill + 2.5 * b.outFrac));
+    let chosen = viable[0];
+
+    // Upgrade from the tightest mask (M1) to the fuller mask (M2) ONLY if M2 has a higher
+    // predicted IoU score AND repairs an internal glass-mottle tear (M2 has >= 22% shorter
+    // boundary perimeter than M1 despite covering up to 50% more area, e.g. mottled rippled glass).
+    for (let i = 1; i < viable.length; i++) {
+      const cand = viable[i];
+      if (cand.iou < chosen.iou) continue;
+      const repairsMottleTear =
+        cand.insideCount <= chosen.insideCount * 1.5 &&
+        cand.perim <= chosen.perim * 0.78 &&
+        cand.iso >= chosen.iso * 1.8;
+      if (repairsMottleTear) {
+        chosen = cand;
+      }
+    }
+
+    return chosen.idx;
+  }
+
+  if (candidates.length > 0) {
+    candidates.sort((a, b) => b.iou - 1.5 * b.outFrac - (a.iou - 1.5 * a.outFrac));
+    return candidates[0].idx;
+  }
+
+  return bestByIou;
+}
+
+/**
+ * Suppress positive mask logits outside the user's bounding box (plus a small margin)
+ * so a box-prompted piece cannot bleed across a solder line outside the drawn box.
+ */
+export function clampMaskLogitsToBox(
+  data: Float32Array,
+  width: number,
+  height: number,
+  box: [number, number, number, number],
+  options: {
+    inputSize: number;
+    scale: number;
+    padX: number;
+    padY: number;
+    marginOrigPx?: number;
+    threshold?: number;
+  },
+): Float32Array {
+  const { inputSize, scale, padX, padY, marginOrigPx = 3, threshold = 0 } = options;
+  const out = data.slice();
+  const minX = (((box[0] - marginOrigPx) * scale + padX) * width) / inputSize;
+  const minY = (((box[1] - marginOrigPx) * scale + padY) * height) / inputSize;
+  const maxX = (((box[2] + marginOrigPx) * scale + padX) * width) / inputSize;
+  const maxY = (((box[3] + marginOrigPx) * scale + padY) * height) / inputSize;
+  const outsideVal = threshold - 8;
+
+  for (let y = 0; y < height; y++) {
+    const yOut = y < minY || y > maxY;
+    for (let x = 0; x < width; x++) {
+      if (yOut || x < minX || x > maxX) {
+        const idx = y * width + x;
+        if (out[idx] > outsideVal) out[idx] = outsideVal;
+      }
+    }
+  }
+  return out;
+}

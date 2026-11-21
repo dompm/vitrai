@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maskToPolygon, smoothMaskLogits } from './maskContour';
+import { clampMaskLogitsToBox, maskToPolygon, selectBestSamMask, smoothMaskLogits } from './maskContour';
 
 type Point = [number, number];
 
@@ -111,5 +111,65 @@ describe('SAM mask contour extraction', () => {
     const polygon = polygonFrom(twoIslands, size, size);
 
     expect(area(polygon)).toBeGreaterThan(4500);
+  });
+
+  it('prefers the tight single-piece mask when a larger candidate over-merges across the solder line', () => {
+    const size = 128;
+    const box: [number, number, number, number] = [16, 16, 112, 112];
+    const subPiece = logits(size, size, (x, y) => 14 - Math.hypot(x - 45, y - 45));
+    const singlePiece = logits(size, size, (x, y) =>
+      Math.min(x - 18, 108 - x, y - 18, 108 - y, 60 - (x - 18) * 0.45 - (y - 18) * 0.45),
+    );
+    const overMerged = logits(size, size, (x, y) =>
+      Math.min(x - 16, 111 - x, y - 16, 111 - y),
+    );
+
+    const bestIdx = selectBestSamMask([subPiece, singlePiece, overMerged], [0.72, 0.965, 0.978], size, size, {
+      box,
+      inputSize: size,
+      scale: 1,
+      padX: 0,
+      padY: 0,
+    });
+    expect(bestIdx).toBe(1);
+  });
+
+  it('upgrades to the fuller mask when a tighter candidate tore across internal glass mottle with a jagged perimeter', () => {
+    const size = 128;
+    const box: [number, number, number, number] = [16, 16, 112, 112];
+    const subPiece = logits(size, size, (x, y) => 14 - Math.hypot(x - 45, y - 45));
+    // M1 has internal mottle holes/tears that inflate its boundary perimeter
+    const tornMottleMask = logits(size, size, (x, y) => {
+      const base = Math.min(x - 20, 108 - x, y - 20, 108 - y);
+      const mottleTears = Math.sin(x * 0.55) * Math.cos(y * 0.55) > 0.35 ? -4 : 4;
+      return Math.min(base, mottleTears);
+    });
+    // M2 cleanly covers the whole piece with higher IoU and a much shorter, compact boundary
+    const cleanFullMask = logits(size, size, (x, y) =>
+      Math.min(x - 20, 108 - x, y - 20, 108 - y),
+    );
+
+    const bestIdx = selectBestSamMask([subPiece, tornMottleMask, cleanFullMask], [0.55, 0.915, 0.924], size, size, {
+      box,
+      inputSize: size,
+      scale: 1,
+      padX: 0,
+      padY: 0,
+    });
+    expect(bestIdx).toBe(2);
+  });
+
+  it('clamps mask logits that bleed outside the user prompt box', () => {
+    const size = 96;
+    const bleeding = logits(size, size, (x, y) => Math.min(x - 8, 88 - x, y - 8, 88 - y));
+    const clamped = clampMaskLogitsToBox(bleeding, size, size, [20, 20, 70, 70], {
+      inputSize: size,
+      scale: 1,
+      padX: 0,
+      padY: 0,
+      marginOrigPx: 2,
+    });
+    const polygon = polygonFrom(clamped, size, size);
+    expect(polygon.every(([x, y]) => x >= 17 && x <= 73 && y >= 17 && y <= 73)).toBe(true);
   });
 });
