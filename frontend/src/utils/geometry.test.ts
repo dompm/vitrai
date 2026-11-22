@@ -6,6 +6,7 @@ import {
   computePolygonArea,
   constrainEditedPiece,
   curveToCubicControls,
+  deletePieceVertex,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
   findInteriorPoint,
@@ -17,6 +18,7 @@ import {
   pieceToSvgPath,
   quadraticToCubicControls,
   resplitHoledSource,
+  retractPieceHandle,
   smoothPieceGeometry,
   snapPolygonToNeighbors,
   splitCubicBezier,
@@ -530,5 +532,71 @@ describe('computeLabelPoint (Pole of Inaccessibility)', () => {
     expect(distFromCenter).toBeLessThan(90);
     expect(pt.radius).toBeGreaterThan(15);
     expect(pt.radius).toBeLessThan(20);
+  });
+});
+
+describe('deletePieceVertex', () => {
+  it('refuses to delete a vertex from a triangle', () => {
+    const tri: [number, number][] = [[0, 0], [100, 0], [50, 100]];
+    expect(deletePieceVertex(tri, [], ['corner', 'corner', 'corner'], 1)).toBeNull();
+  });
+
+  it('merges adjacent cubic curves using outer handles instead of flattening to a straight line', () => {
+    const quad: [number, number][] = [[0, 0], [50, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [
+      makeCubicCurvePoint(0, [15, -25], [35, -25]),
+      makeCubicCurvePoint(1, [65, -25], [85, -25]),
+      makeCubicCurvePoint(3, [50, 125], [20, 125]),
+    ];
+    const anchorTypes: ('corner' | 'smooth')[] = ['corner', 'smooth', 'corner', 'corner', 'corner'];
+
+    const res = deletePieceVertex(quad, curves, anchorTypes, 1);
+    expect(res).not.toBeNull();
+    expect(res!.polygon).toEqual([[0, 0], [100, 0], [100, 100], [0, 100]]);
+    expect(res!.anchorTypes).toEqual(['corner', 'corner', 'corner', 'corner']);
+    // Edge 0 merged from old edge 0 (cp1=[15,-25]) and old edge 1 (cp2=[85,-25])
+    const merged = res!.curvePoints.find(c => c.edgeIdx === 0);
+    expect(merged).toBeDefined();
+    expect(isCubicCurvePoint(merged!)).toBe(true);
+    if (merged && isCubicCurvePoint(merged)) {
+      expect(merged.ctrl).toEqual([15, -25]);
+      expect(merged.ctrl2).toEqual([85, -25]);
+    }
+    // Old edge 3 re-indexed to edge 2
+    expect(res!.curvePoints.find(c => c.edgeIdx === 2)).toBeDefined();
+  });
+
+  it('handles deleting vertex 0 by merging wrap-around edge to new last edge index', () => {
+    const quad: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(3, [-20, 70], [-20, 30])];
+    const res = deletePieceVertex(quad, curves, undefined, 0);
+    expect(res).not.toBeNull();
+    expect(res!.polygon).toHaveLength(3);
+    expect(res!.curvePoints.find(c => c.edgeIdx === 2)).toBeDefined();
+  });
+});
+
+describe('retractPieceHandle', () => {
+  it('retracts only the selected handle and keeps the opposite handle intact', () => {
+    const poly: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(0, [25, -40], [75, -40])];
+    const types: ('corner' | 'smooth')[] = ['smooth', 'smooth', 'corner', 'corner'];
+
+    const res = retractPieceHandle(poly, curves, types, 0, 'ctrl');
+    expect(res.curvePoints).toHaveLength(1);
+    const updated = res.curvePoints[0];
+    expect(isCubicCurvePoint(updated)).toBe(true);
+    if (isCubicCurvePoint(updated)) {
+      expect(updated.ctrl).toEqual([0, 0]);
+      expect(updated.ctrl2).toEqual([75, -40]);
+    }
+    expect(res.anchorTypes).toEqual(['corner', 'smooth', 'corner', 'corner']);
+  });
+
+  it('removes the CurvePoint completely once both handles are retracted', () => {
+    const poly: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(0, [0, 0], [75, -40])];
+    const res = retractPieceHandle(poly, curves, undefined, 0, 'ctrl2');
+    expect(res.curvePoints).toHaveLength(0);
   });
 });

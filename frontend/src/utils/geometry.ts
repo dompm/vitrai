@@ -2318,3 +2318,105 @@ export function translateCurvesWithAnchor(
     return curve;
   });
 }
+
+export interface DeletePieceVertexResult {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+}
+
+/**
+ * Delete a vertex from a piece while preserving smooth curvature across the merged span.
+ * Refuses to collapse a piece below a triangle (returns null when polygon.length <= 3).
+ * When either adjacent edge is curved, combines the incoming start handle and outgoing
+ * end handle into a single cubic Bézier so deleting a redundant point on an arc simplifies
+ * the curve instead of snapping it flat.
+ */
+export function deletePieceVertex(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  vertexIdx: number,
+): DeletePieceVertexResult | null {
+  const n = polygon.length;
+  if (n <= 3 || vertexIdx < 0 || vertexIdx >= n) return null;
+
+  const prevIdx = (vertexIdx - 1 + n) % n;
+  const nextIdx = (vertexIdx + 1) % n;
+  const prevPt = polygon[prevIdx];
+  const delPt = polygon[vertexIdx];
+  const nextPt = polygon[nextIdx];
+
+  const prevCurve = curvePoints.find(c => c.edgeIdx === prevIdx);
+  const currCurve = curvePoints.find(c => c.edgeIdx === vertexIdx);
+
+  const nextPolygon = polygon.filter((_, i) => i !== vertexIdx);
+  const nextAnchorTypes = anchorTypes && anchorTypes.length === n
+    ? anchorTypes.filter((_, i) => i !== vertexIdx)
+    : undefined;
+
+  const nextCurves: CurvePoint[] = [];
+  for (const c of curvePoints) {
+    if (c.edgeIdx === prevIdx || c.edgeIdx === vertexIdx) continue;
+    nextCurves.push({
+      ...c,
+      edgeIdx: c.edgeIdx > vertexIdx ? c.edgeIdx - 1 : c.edgeIdx,
+    });
+  }
+
+  if (prevCurve || currCurve) {
+    const mergedEdgeIdx = vertexIdx === 0 ? nextPolygon.length - 1 : vertexIdx - 1;
+    const cp1: [number, number] = prevCurve
+      ? curveToCubicControls(prevPt, delPt, prevCurve)[0]
+      : [prevPt[0] + (delPt[0] - prevPt[0]) / 3, prevPt[1] + (delPt[1] - prevPt[1]) / 3];
+    const cp2: [number, number] = currCurve
+      ? curveToCubicControls(delPt, nextPt, currCurve)[1]
+      : [delPt[0] + ((nextPt[0] - delPt[0]) * 2) / 3, delPt[1] + ((nextPt[1] - delPt[1]) * 2) / 3];
+    nextCurves.push(makeCubicCurvePoint(mergedEdgeIdx, cp1, cp2));
+  }
+
+  return {
+    polygon: nextPolygon,
+    curvePoints: nextCurves,
+    anchorTypes: nextAnchorTypes,
+  };
+}
+
+/**
+ * Retract a single cubic Bézier handle ('ctrl' = outgoing from edgeIdx, 'ctrl2' = incoming to edgeIdx+1)
+ * back into its anchor point without destroying the opposite handle on the same edge.
+ * If both handles end up collapsed onto their anchors, removes the CurvePoint so the edge is straight.
+ */
+export function retractPieceHandle(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  edgeIdx: number,
+  side: 'ctrl' | 'ctrl2',
+): { curvePoints: CurvePoint[]; anchorTypes?: ('corner' | 'smooth')[] } {
+  const n = polygon.length;
+  const curve = curvePoints.find(c => c.edgeIdx === edgeIdx);
+  if (!curve || n < 2) return { curvePoints, anchorTypes };
+
+  const nextIdx = (edgeIdx + 1) % n;
+  const start = polygon[edgeIdx];
+  const end = polygon[nextIdx];
+  const [cp1, cp2] = curveToCubicControls(start, end, curve);
+
+  const nextCp1: [number, number] = side === 'ctrl' ? [start[0], start[1]] : cp1;
+  const nextCp2: [number, number] = side === 'ctrl2' ? [end[0], end[1]] : cp2;
+
+  const cp1Collapsed = Math.hypot(nextCp1[0] - start[0], nextCp1[1] - start[1]) < 1e-3;
+  const cp2Collapsed = Math.hypot(nextCp2[0] - end[0], nextCp2[1] - end[1]) < 1e-3;
+
+  const nextCurves = cp1Collapsed && cp2Collapsed
+    ? curvePoints.filter(c => c.edgeIdx !== edgeIdx)
+    : curvePoints.map(c => c.edgeIdx === edgeIdx ? makeCubicCurvePoint(edgeIdx, nextCp1, nextCp2) : c);
+
+  const anchorIdx = side === 'ctrl' ? edgeIdx : nextIdx;
+  const nextAnchorTypes = anchorTypes && anchorTypes.length === n
+    ? anchorTypes.map((t, i) => (i === anchorIdx ? 'corner' : t))
+    : undefined;
+
+  return { curvePoints: nextCurves, anchorTypes: nextAnchorTypes };
+}

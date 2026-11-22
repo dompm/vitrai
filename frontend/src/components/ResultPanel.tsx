@@ -10,7 +10,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
 import { TRACE_PEN_GUIDE } from './Tutorial/types';
-import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint } from '../utils/geometry';
+import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
@@ -1323,6 +1323,15 @@ export function ResultPanel({
   }
 
   const [draggedCorner, setDraggedCorner] = useState<{ pieceId: string; idx: number } | null>(null);
+  const [selectedVertexIdx, setSelectedVertexIdx] = useState<number | null>(null);
+  const selectedVertexIdxRef = useRef<number | null>(null);
+  selectedVertexIdxRef.current = selectedVertexIdx;
+  const [vertexContextMenu, setVertexContextMenu] = useState<{
+    pieceId: string;
+    vertexIdx: number;
+    x: number;
+    y: number;
+  } | null>(null);
   const [draggedMidpoint, setDraggedMidpoint] = useState<{ pieceId: string; edgeIdx: number } | null>(null);
   const [dragStartPolygon, setDragStartPolygon] = useState<[number, number][] | null>(null);
   const [activeDragPolygon, setActiveDragPolygon] = useState<[number, number][] | null>(null);
@@ -1396,9 +1405,53 @@ export function ResultPanel({
     clearActivePen();
   }
 
+  function deleteFocusedVertex(pieceId: string, vertexIdx: number) {
+    const targetPiece = project.pieces.find(p => p.id === pieceId);
+    if (!targetPiece) return;
+    const res = deletePieceVertex(
+      targetPiece.polygon,
+      targetPiece.curvePoints ?? [],
+      targetPiece.anchorTypes,
+      vertexIdx,
+    );
+    if (!res) return;
+    onUpdatePiecePolygonAndCurves(pieceId, res.polygon, res.curvePoints, res.anchorTypes);
+    setSelectedVertexIdx(null);
+    setVertexContextMenu(null);
+  }
+
+  function toggleVertexAnchorType(pieceId: string, vertexIdx: number) {
+    const targetPiece = project.pieces.find(p => p.id === pieceId);
+    if (!targetPiece) return;
+    const len = targetPiece.polygon.length;
+    const anchorTypes = targetPiece.anchorTypes?.length === len
+      ? [...targetPiece.anchorTypes]
+      : targetPiece.polygon.map(() => 'corner' as const);
+    const prevEdge = (vertexIdx - 1 + len) % len;
+    const curCurves = targetPiece.curvePoints ?? [];
+    const hasAdjacentCurve = curCurves.some(cp => cp.edgeIdx === vertexIdx || cp.edgeIdx === prevEdge);
+    if (anchorTypes[vertexIdx] === 'smooth') {
+      anchorTypes[vertexIdx] = 'corner';
+      onUpdatePieceCurves(pieceId, curCurves, anchorTypes);
+    } else if (hasAdjacentCurve) {
+      anchorTypes[vertexIdx] = 'corner';
+      onUpdatePieceCurves(
+        pieceId,
+        curCurves.filter(cp => cp.edgeIdx !== vertexIdx && cp.edgeIdx !== prevEdge),
+        anchorTypes,
+      );
+    } else {
+      anchorTypes[vertexIdx] = 'smooth';
+      onUpdatePieceCurves(pieceId, curCurves, anchorTypes);
+    }
+    setVertexContextMenu(null);
+  }
+
   useEffect(() => {
     onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
+    setSelectedVertexIdx(null);
+    setVertexContextMenu(null);
   }, [selectedPieceIds]);
 
   const lastPoint = activeTool === 'pen'
@@ -1410,6 +1463,12 @@ export function ResultPanel({
   // Escape and single-key commands before they reach the canvas.
   function handleKeyDownCapture(e: KeyboardEvent) {
     if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLSelectElement) return;
+    if ((e.key === 'Backspace' || e.key === 'Delete') && selectedVertexIdxRef.current !== null && selectedPieceIds.length === 1) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      deleteFocusedVertex(selectedPieceIds[0], selectedVertexIdxRef.current);
+      return;
+    }
     if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
     if (activeTool === 'polygon' && activePolygonPointsRef.current.length > 0) {
       e.preventDefault();
@@ -1463,7 +1522,9 @@ export function ResultPanel({
       else if (activeTool === 'pen' && activePenAnchorsRef.current.length >= 3) commitActivePen();
       else if (activeTool === 'crop') handleToolChange('select');
     } else if (e.key === 'Escape') {
-      if (isSolderPopoverOpenRef.current) setIsSolderPopoverOpen(false);
+      if (vertexContextMenu) setVertexContextMenu(null);
+      else if (selectedVertexIdxRef.current !== null) setSelectedVertexIdx(null);
+      else if (isSolderPopoverOpenRef.current) setIsSolderPopoverOpen(false);
       else if (refineModeRef.current) onRefineModeChange(null);
       else if (activePolygonPointsRef.current.length > 0) {
         setActivePolygonPoints([]);
@@ -1548,6 +1609,8 @@ export function ResultPanel({
   }
 
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
+    setVertexContextMenu(null);
+    setSelectedVertexIdx(null);
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
 
@@ -1803,6 +1866,8 @@ export function ResultPanel({
       setIsPencilDrawing(false);
     }
     setDraggedCorner(null);
+    setSelectedVertexIdx(null);
+    setVertexContextMenu(null);
     setDraggedMidpoint(null);
     setDragStartPolygon(null);
     setActiveDragPolygon(null);
@@ -2913,99 +2978,106 @@ export function ResultPanel({
                           const currentY = (draggedCorner?.idx === idx && activeDragPolygon)
                             ? activeDragPolygon[idx][1] : y;
 
+                          const isFocused = selectedVertexIdx === idx;
                           return (
-                            <Rect
-                              key={`corner-${idx}`}
-                              x={currentX}
-                              y={currentY}
-                              offsetX={nodeSize / 2}
-                              offsetY={nodeSize / 2}
-                              width={nodeSize}
-                              height={nodeSize}
-                              fill={CANVAS.nodeFill}
-                              stroke={CANVAS.nodeBorder}
-                              strokeWidth={1.5 / es}
-                              hitStrokeWidth={10 / es}
-                              draggable
-                              onPointerDown={(e) => { e.cancelBubble = true; }}
-                              onDragStart={() => {
-                                setDraggedCorner({ pieceId: selectedId, idx });
-                                setDragStartPolygon(piece.polygon);
-                                dragStartCurvePointsRef.current = piece.curvePoints ?? [];
-                                setActiveDragPolygon(piece.polygon);
-                              }}
-                              onDragMove={(e) => {
-                                if (!dragStartPolygon) return;
-                                const newPolygon = [...dragStartPolygon];
-                                const origin = dragStartPolygon[idx];
-                                const resolved = resolveEditedAnchor(
-                                  [e.target.x(), e.target.y()], origin, selectedId,
-                                  e.evt.shiftKey, e.evt.ctrlKey,
-                                );
-                                e.target.position({ x: resolved[0], y: resolved[1] });
-                                newPolygon[idx] = resolved;
-                                const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
-                                setActiveDragPolygon(newPolygon);
-                                setActiveDragCurvePoints(translateCurvesWithAnchor(
-                                  dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
-                                ));
-                              }}
-                              onDragEnd={(e) => {
-                                if (!dragStartPolygon) { setDraggedCorner(null); return; }
-                                const newPolygon = [...dragStartPolygon];
-                                const origin = dragStartPolygon[idx];
-                                const resolved = resolveEditedAnchor(
-                                  [e.target.x(), e.target.y()], origin, selectedId,
-                                  e.evt.shiftKey, e.evt.ctrlKey,
-                                );
-                                newPolygon[idx] = resolved;
-                                const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
-                                const newCurves = translateCurvesWithAnchor(
-                                  dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
-                                );
-                                onUpdatePiecePolygonAndCurves(
-                                  selectedId,
-                                  newPolygon,
-                                  newCurves,
-                                  undefined,
-                                  !e.evt.altKey ? { origin, target: resolved } : undefined,
-                                );
-                                setDraggedCorner(null);
-                                setDragStartPolygon(null);
-                                setActiveDragPolygon(null);
-                                setActiveDragCurvePoints(null);
-                              }}
-                              onMouseEnter={(e) => {
-                                const stage = e.target.getStage();
-                                if (stage) stage.container().style.cursor = 'move';
-                              }}
-                              onMouseLeave={(e) => {
-                                const stage = e.target.getStage();
-                                if (stage) stage.container().style.cursor = 'default';
-                              }}
-                              onDblClick={() => {
-                                const anchorTypes = piece.anchorTypes?.length === referencePolygon.length
-                                  ? [...piece.anchorTypes]
-                                  : referencePolygon.map(() => 'corner' as const);
-                                const prevEdge = (idx - 1 + len) % len;
-                                const curCurves = piece.curvePoints ?? [];
-                                const hasAdjacentCurve = curCurves.some(cp => cp.edgeIdx === idx || cp.edgeIdx === prevEdge);
-                                if (anchorTypes[idx] === 'smooth') {
-                                  anchorTypes[idx] = 'corner';
-                                  onUpdatePieceCurves(selectedId, curCurves, anchorTypes);
-                                } else if (hasAdjacentCurve) {
-                                  anchorTypes[idx] = 'corner';
-                                  onUpdatePieceCurves(
-                                    selectedId,
-                                    curCurves.filter(cp => cp.edgeIdx !== idx && cp.edgeIdx !== prevEdge),
-                                    anchorTypes,
+                            <Group key={`corner-${idx}`}>
+                              {isFocused && (
+                                <Circle
+                                  x={currentX}
+                                  y={currentY}
+                                  radius={(nodeSize * 0.95) + 2 / es}
+                                  fill="rgba(196, 136, 32, 0.22)"
+                                  stroke={CANVAS.amber}
+                                  strokeWidth={1.75 / es}
+                                  listening={false}
+                                />
+                              )}
+                              <Rect
+                                x={currentX}
+                                y={currentY}
+                                offsetX={nodeSize / 2}
+                                offsetY={nodeSize / 2}
+                                width={nodeSize}
+                                height={nodeSize}
+                                fill={isFocused ? CANVAS.amber : CANVAS.nodeFill}
+                                stroke={CANVAS.nodeBorder}
+                                strokeWidth={1.5 / es}
+                                hitStrokeWidth={10 / es}
+                                draggable
+                                onPointerDown={(e) => {
+                                  e.cancelBubble = true;
+                                  setSelectedVertexIdx(idx);
+                                  setVertexContextMenu(null);
+                                }}
+                                onContextMenu={(e) => {
+                                  e.evt.preventDefault();
+                                  e.cancelBubble = true;
+                                  setSelectedVertexIdx(idx);
+                                  setVertexContextMenu({
+                                    pieceId: selectedId,
+                                    vertexIdx: idx,
+                                    x: Math.max(8, Math.min(e.evt.clientX, window.innerWidth - 180)),
+                                    y: Math.max(8, Math.min(e.evt.clientY, window.innerHeight - 104)),
+                                  });
+                                }}
+                                onDragStart={() => {
+                                  setDraggedCorner({ pieceId: selectedId, idx });
+                                  setDragStartPolygon(piece.polygon);
+                                  dragStartCurvePointsRef.current = piece.curvePoints ?? [];
+                                  setActiveDragPolygon(piece.polygon);
+                                }}
+                                onDragMove={(e) => {
+                                  if (!dragStartPolygon) return;
+                                  const newPolygon = [...dragStartPolygon];
+                                  const origin = dragStartPolygon[idx];
+                                  const resolved = resolveEditedAnchor(
+                                    [e.target.x(), e.target.y()], origin, selectedId,
+                                    e.evt.shiftKey, e.evt.ctrlKey,
                                   );
-                                } else {
-                                  anchorTypes[idx] = 'smooth';
-                                  onUpdatePieceCurves(selectedId, curCurves, anchorTypes);
-                                }
-                              }}
-                            />
+                                  e.target.position({ x: resolved[0], y: resolved[1] });
+                                  newPolygon[idx] = resolved;
+                                  const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
+                                  setActiveDragPolygon(newPolygon);
+                                  setActiveDragCurvePoints(translateCurvesWithAnchor(
+                                    dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
+                                  ));
+                                }}
+                                onDragEnd={(e) => {
+                                  if (!dragStartPolygon) { setDraggedCorner(null); return; }
+                                  const newPolygon = [...dragStartPolygon];
+                                  const origin = dragStartPolygon[idx];
+                                  const resolved = resolveEditedAnchor(
+                                    [e.target.x(), e.target.y()], origin, selectedId,
+                                    e.evt.shiftKey, e.evt.ctrlKey,
+                                  );
+                                  newPolygon[idx] = resolved;
+                                  const delta: [number, number] = [resolved[0] - origin[0], resolved[1] - origin[1]];
+                                  const newCurves = translateCurvesWithAnchor(
+                                    dragStartCurvePointsRef.current, idx, dragStartPolygon.length, delta,
+                                  );
+                                  onUpdatePiecePolygonAndCurves(
+                                    selectedId,
+                                    newPolygon,
+                                    newCurves,
+                                    undefined,
+                                    !e.evt.altKey ? { origin, target: resolved } : undefined,
+                                  );
+                                  setDraggedCorner(null);
+                                  setDragStartPolygon(null);
+                                  setActiveDragPolygon(null);
+                                  setActiveDragCurvePoints(null);
+                                }}
+                                onMouseEnter={(e) => {
+                                  const stage = e.target.getStage();
+                                  if (stage) stage.container().style.cursor = 'move';
+                                }}
+                                onMouseLeave={(e) => {
+                                  const stage = e.target.getStage();
+                                  if (stage) stage.container().style.cursor = 'default';
+                                }}
+                                onDblClick={() => toggleVertexAnchorType(selectedId, idx)}
+                              />
+                            </Group>
                           );
                         })}
 
@@ -3109,10 +3181,28 @@ export function ResultPanel({
                                 stroke={CANVAS.amber}
                                 strokeWidth={1.5 / es}
                                 draggable
-                                onPointerDown={(e) => { e.cancelBubble = true; }}
+                                onPointerDown={(e) => {
+                                  e.cancelBubble = true;
+                                  if (e.evt.altKey) {
+                                    const retracted = retractPieceHandle(
+                                      referencePolygon,
+                                      piece.curvePoints ?? [],
+                                      piece.anchorTypes,
+                                      edgeIdx,
+                                      side,
+                                    );
+                                    onUpdatePieceCurves(selectedId, retracted.curvePoints, retracted.anchorTypes);
+                                  }
+                                }}
                                 onDblClick={() => {
-                                  const updated = (piece.curvePoints ?? []).filter(cp => cp.edgeIdx !== edgeIdx);
-                                  onUpdatePieceCurves(selectedId, updated, piece.anchorTypes);
+                                  const retracted = retractPieceHandle(
+                                    referencePolygon,
+                                    piece.curvePoints ?? [],
+                                    piece.anchorTypes,
+                                    edgeIdx,
+                                    side,
+                                  );
+                                  onUpdatePieceCurves(selectedId, retracted.curvePoints, retracted.anchorTypes);
                                 }}
                                 onDragStart={() => {
                                   dragStartCurvePointsRef.current = activeDragCurvePoints ?? piece.curvePoints ?? [];
@@ -3321,6 +3411,39 @@ export function ResultPanel({
               accept="image/*"
               onChange={handleAddSheetFileChange}
             />
+            {vertexContextMenu && (() => {
+              const targetPiece = project.pieces.find(p => p.id === vertexContextMenu.pieceId);
+              if (!targetPiece) return null;
+              const isSmooth = targetPiece.anchorTypes?.[vertexContextMenu.vertexIdx] === 'smooth';
+              const canDelete = targetPiece.polygon.length > 3;
+              return (
+                <div
+                  className="sheet-context-menu"
+                  role="menu"
+                  style={{ position: 'fixed', left: vertexContextMenu.x, top: vertexContextMenu.y, zIndex: 1000 }}
+                  onPointerDown={e => e.stopPropagation()}
+                  onContextMenu={e => e.preventDefault()}
+                >
+                  <button
+                    type="button"
+                    className="sheet-context-item"
+                    role="menuitem"
+                    onClick={() => toggleVertexAnchorType(vertexContextMenu.pieceId, vertexContextMenu.vertexIdx)}
+                  >
+                    {isSmooth ? t('vertexMakeCorner') : t('vertexMakeSmooth')}
+                  </button>
+                  <button
+                    type="button"
+                    className="sheet-context-item sheet-context-item--danger"
+                    role="menuitem"
+                    disabled={!canDelete}
+                    onClick={() => deleteFocusedVertex(vertexContextMenu.pieceId, vertexContextMenu.vertexIdx)}
+                  >
+                    {t('vertexDeletePoint')}
+                  </button>
+                </div>
+              );
+            })()}
           </>
         )}
       </div>
