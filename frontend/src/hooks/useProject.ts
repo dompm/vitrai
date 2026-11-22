@@ -1117,6 +1117,57 @@ export function useProject() {
     }));
   }, [updateProject]);
 
+  const importSvgPieces = useCallback((opts: {
+    pieces: import('../utils/svgImport').SvgImportedPiece[];
+    sheetId: string;
+    initializeCanvas?: { width: number; height: number; scale: Scale };
+    replacePieceIds?: string[];
+    skipHistory?: boolean;
+  }): string[] => {
+    const createdIds = opts.pieces.map(() => crypto.randomUUID());
+    updateProject(prev => {
+      const nextPatternScale = opts.initializeCanvas ? opts.initializeCanvas.scale : prev.patternScale;
+      const sheet = prev.sheets.find(s => s.id === opts.sheetId) ?? prev.sheets[0];
+      const effectiveSheetId = sheet?.id ?? opts.sheetId;
+      const s = calibratedScale(nextPatternScale, sheet?.scale ?? null) ?? 1;
+      const sw = sheet?.naturalWidth ?? 800;
+      const sh = sheet?.naturalHeight ?? 600;
+      const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+      const cx = (crop.left + sw - crop.right) / 2;
+      const cy = (crop.top + sh - crop.bottom) / 2;
+
+      const replaceSet = opts.replacePieceIds ? new Set(opts.replacePieceIds) : null;
+      const basePieces = replaceSet ? prev.pieces.filter(p => !replaceSet.has(p.id)) : prev.pieces;
+
+      const newPieces: Piece[] = opts.pieces.map((item, i) => ({
+        id: createdIds[i],
+        label: item.label || `${t('piece')} ${basePieces.length + i + 1}`,
+        polygon: item.polygon,
+        ...(item.curvePoints && item.curvePoints.length > 0 ? { curvePoints: item.curvePoints } : {}),
+        glassSheetId: effectiveSheetId,
+        transform: { x: cx, y: cy, rotation: 0, scale: s },
+      }));
+
+      return {
+        ...prev,
+        ...(opts.initializeCanvas ? {
+          projectType: 'flat' as const,
+          patternImageUrl: '',
+          patternWidth: opts.initializeCanvas.width,
+          patternHeight: opts.initializeCanvas.height,
+          patternCrop: { top: 0, left: 0, bottom: 0, right: 0 },
+          patternScale: opts.initializeCanvas.scale,
+        } : {}),
+        pieces: [...basePieces, ...newPieces],
+      };
+    }, opts.skipHistory ?? false);
+
+    if (createdIds.length > 0) {
+      setSelectedPieceIds(createdIds);
+    }
+    return createdIds;
+  }, [updateProject, t]);
+
   const startLampMode = useCallback(() => {
     const lampConfig = {
       facetCount: 6,
@@ -1332,6 +1383,7 @@ export function useProject() {
     updatePatternImage,
     updatePatternDimensions,
     startBlankCanvas,
+    importSvgPieces,
     startLampMode,
     addSheetFromImage,
     moveAllPiecesBetweenSheets,
