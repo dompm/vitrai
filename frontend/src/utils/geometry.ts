@@ -1702,6 +1702,74 @@ export function pieceToSvgPath(polygon: Point[], curvePoints?: CurvePoint[]): st
   return parts.join(' ');
 }
 
+export interface ConstrainEditedPieceResult {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+  clipped: boolean;
+}
+
+/**
+ * Constrain a vertex or curve edit against neighboring pieces without destroying
+ * editable Bézier curves:
+ * 1. If the edit introduces no new overlap beyond any pre-existing sliver on an
+ *    untouched shared seam, keep the proposed `polygon` and `curvePoints` intact.
+ * 2. If the edit genuinely crosses into a neighbor, clip and refit smooth cubic
+ *    Bézier curves (`fitSmoothPieceCurves`) rather than replacing the piece with
+ *    a dense flattened polyline.
+ */
+export function constrainEditedPiece(opts: {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+  previousDisplayPolygon?: [number, number][];
+  neighborPolygons: [number, number][][];
+  snapRadius: number;
+}): ConstrainEditedPieceResult | null {
+  const { polygon, curvePoints, anchorTypes, previousDisplayPolygon, neighborPolygons, snapRadius } = opts;
+  const displayPolygon = flattenCurves(polygon, curvePoints);
+  if (neighborPolygons.length === 0) {
+    return { polygon, curvePoints, anchorTypes, clipped: false };
+  }
+
+  const clipped = subtractPolygons(displayPolygon, neighborPolygons);
+  if (clipped.length < 3) return null;
+
+  if (arePolygonsEqual(displayPolygon, clipped, 0.1)) {
+    return { polygon, curvePoints, anchorTypes, clipped: false };
+  }
+
+  // Compare overlap area before vs after the edit so a pre-existing sliver on an
+  // untouched curved seam doesn't flatten the entire piece when dragging a free vertex.
+  const newArea = computePolygonArea(displayPolygon);
+  const clippedArea = computePolygonArea(clipped);
+  const newOverlap = Math.max(0, newArea - clippedArea);
+  if (previousDisplayPolygon && previousDisplayPolygon.length >= 3) {
+    const prevClipped = subtractPolygons(previousDisplayPolygon, neighborPolygons);
+    const prevOverlap = Math.max(
+      0,
+      computePolygonArea(previousDisplayPolygon) - computePolygonArea(prevClipped),
+    );
+    const tol = Math.max(1.0, newArea * 1e-3);
+    if (newOverlap <= prevOverlap + tol) {
+      return { polygon, curvePoints, anchorTypes, clipped: false };
+    }
+  }
+
+  // Genuine overlap: refit smooth cubic curves onto the clipped boundary so the
+  // piece stays editable instead of exploding into dense straight segments.
+  const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+    cornerAngleDeg: 40,
+    seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+  });
+  return {
+    polygon: fitted.polygon,
+    curvePoints: fitted.curvePoints,
+    anchorTypes: fitted.anchorTypes,
+    clipped: true,
+  };
+}
+
 export function subtractPolygons(subject: [number, number][], clipPolygons: [number, number][][]): [number, number][] {
   if (clipPolygons.length === 0) return subject;
   
