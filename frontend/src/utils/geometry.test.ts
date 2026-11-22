@@ -3,10 +3,12 @@ import {
   arePolygonsEqual,
   computeCentroid,
   computeLabelPoint,
+  computePolygonArea,
   constrainEditedPiece,
   curveToCubicControls,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
+  findInteriorPoint,
   fitSmoothPieceCurves,
   flattenCurves,
   insetPolygon,
@@ -14,10 +16,12 @@ import {
   makeCubicCurvePoint,
   pieceToSvgPath,
   quadraticToCubicControls,
+  resplitHoledSource,
   smoothPieceGeometry,
   snapPolygonToNeighbors,
   splitCubicBezier,
   subtractPolygons,
+  subtractPolygonsWithSplit,
 } from './geometry';
 
 describe('curve compatibility', () => {
@@ -324,6 +328,84 @@ describe('seam snapping and curve fitting for fabrication', () => {
   });
 });
 
+
+describe('subtractPolygonsWithSplit', () => {
+  const outerSquare: [number, number][] = [
+    [0, 0], [200, 0], [200, 200], [0, 200],
+  ];
+  const innerSquare: [number, number][] = [
+    [70, 70], [130, 70], [130, 130], [70, 130],
+  ];
+
+  it('auto-splits a ring enclosing an existing piece into 2 non-overlapping halves with exact area', () => {
+    const res = subtractPolygonsWithSplit(outerSquare, [innerSquare], 0);
+    expect(res.hadHoles).toBe(true);
+    expect(res.holedSource).not.toBeNull();
+    expect(res.polygons).toHaveLength(2);
+
+    const expectedArea = 200 * 200 - 60 * 60;
+    const totalArea = res.polygons.reduce((s, p) => s + computePolygonArea(p), 0);
+    expect(totalArea).toBeCloseTo(expectedArea, 1);
+
+    // Neither half should overlap the inner piece
+    for (const half of res.polygons) {
+      const clipped = subtractPolygons(half, [innerSquare]);
+      expect(computePolygonArea(clipped)).toBeCloseTo(computePolygonArea(half), 1);
+    }
+  });
+
+  it('re-splits the cached holed source cleanly at arbitrary angles (0, 45, 90, 135)', () => {
+    const res = subtractPolygonsWithSplit(outerSquare, [innerSquare], 0);
+    expect(res.holedSource).not.toBeNull();
+    const expectedArea = 200 * 200 - 60 * 60;
+
+    for (const angle of [0, 45, 90, 135, 162]) {
+      const halves = resplitHoledSource(res.holedSource!, angle);
+      expect(halves).toHaveLength(2);
+      const totalArea = halves.reduce((s, p) => s + computePolygonArea(p), 0);
+      expect(totalArea).toBeCloseTo(expectedArea, 1);
+    }
+  });
+
+  it('handles non-convex C-shaped enclosed pieces via scanline interior point', () => {
+    const cShape: [number, number][] = [
+      [60, 60], [140, 60], [140, 80], [80, 80],
+      [80, 120], [140, 120], [140, 140], [60, 140],
+    ];
+    const [ix, iy] = findInteriorPoint(cShape);
+    expect(ix).toBeGreaterThan(60);
+    expect(ix).toBeLessThan(140);
+    expect(iy).toBeGreaterThan(60);
+    expect(iy).toBeLessThan(140);
+
+    const res = subtractPolygonsWithSplit(outerSquare, [cShape], 90);
+    expect(res.hadHoles).toBe(true);
+    expect(res.polygons.length).toBeGreaterThanOrEqual(2);
+    const expectedArea = 200 * 200 - computePolygonArea(cShape);
+    const totalArea = res.polygons.reduce((s, p) => s + computePolygonArea(p), 0);
+    expect(totalArea).toBeCloseTo(expectedArea, 1);
+  });
+
+  it('recursively splits a polygon enclosing two separate pieces', () => {
+    const holeA: [number, number][] = [[40, 80], [80, 80], [80, 120], [40, 120]];
+    const holeB: [number, number][] = [[120, 80], [160, 80], [160, 120], [120, 120]];
+    const res = subtractPolygonsWithSplit(outerSquare, [holeA, holeB], 90);
+    expect(res.hadHoles).toBe(true);
+    expect(res.polygons.length).toBeGreaterThanOrEqual(3);
+    const expectedArea = 200 * 200 - 40 * 40 - 40 * 40;
+    const totalArea = res.polygons.reduce((s, p) => s + computePolygonArea(p), 0);
+    expect(totalArea).toBeCloseTo(expectedArea, 1);
+  });
+
+  it('returns hadHoles=false for normal partial overlap', () => {
+    const sideNeighbor: [number, number][] = [[150, -10], [250, -10], [250, 210], [150, 210]];
+    const res = subtractPolygonsWithSplit(outerSquare, [sideNeighbor], 0);
+    expect(res.hadHoles).toBe(false);
+    expect(res.holedSource).toBeNull();
+    expect(res.polygons).toHaveLength(1);
+    expect(computePolygonArea(res.polygons[0])).toBeCloseTo(150 * 200, 1);
+  });
+});
 
 describe('constrainEditedPiece', () => {
   it('preserves curves when dragging a free vertex despite a pre-existing tiny overlap on an untouched seam', () => {

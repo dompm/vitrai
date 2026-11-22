@@ -12,6 +12,8 @@ import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject, type BatchPieceInput } from './hooks/useProject';
 import {
   subtractPolygons,
+  subtractPolygonsWithSplit,
+  resplitHoledSource,
   constrainEditedPiece,
   computeLabelPoint,
   snapPolygonToNeighbors,
@@ -1068,14 +1070,34 @@ export function App() {
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
       const snapRadius = getSnapRadius(latest.patternWidth);
       const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, snapRadius);
-      const clipped = subtractPolygons(snapped, neighborPolygons);
+      const splitResult = subtractPolygonsWithSplit(snapped, neighborPolygons, 0);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
-      if (clipped.length >= 3) {
-        const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
-          cornerAngleDeg: 40,
-          seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+      if (splitResult.hadHoles && splitResult.holedSource && splitResult.polygons.length > 0) {
+        const createdIds = importSvgPieces({
+          pieces: splitResult.polygons.map(p => ({ polygon: p })),
+          sheetId: activeSheetId,
+          tierIndex,
+          replacePieceIds: [pieceId],
+          skipHistory: true,
         });
-        updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+        setSvgImportFeedback(null);
+        setRingSplitFeedback({
+          holedSource: splitResult.holedSource,
+          pieceIds: createdIds,
+          expectedPolygons: splitResult.polygons,
+          angleDeg: 0,
+          sheetId: activeSheetId,
+          tierIndex,
+        });
+      } else {
+        const clipped = splitResult.polygons[0] ?? [];
+        if (clipped.length >= 3) {
+          const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+            cornerAngleDeg: 40,
+            seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+          });
+          updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+        }
       }
     } catch (e) {
       console.error("SAM segment failed:", e);
@@ -1083,6 +1105,55 @@ export function App() {
       unmarkPiecePending(pieceId);
     }
   }
+
+  const [ringSplitFeedback, setRingSplitFeedback] = useState<{
+    holedSource: [number, number][][][];
+    pieceIds: string[];
+    expectedPolygons: [number, number][][];
+    angleDeg: number;
+    sheetId: string;
+    tierIndex?: number;
+  } | null>(null);
+
+  const handleChangeRingSplitAngle = (angleDeg: number) => {
+    if (!ringSplitFeedback) return;
+    const nextPolygons = resplitHoledSource(ringSplitFeedback.holedSource, angleDeg);
+    if (nextPolygons.length === 0) return;
+    const nextIds = importSvgPieces({
+      pieces: nextPolygons.map(polygon => ({ polygon })),
+      sheetId: ringSplitFeedback.sheetId,
+      tierIndex: ringSplitFeedback.tierIndex,
+      replacePieceIds: ringSplitFeedback.pieceIds,
+      skipHistory: true,
+    });
+    setRingSplitFeedback({
+      ...ringSplitFeedback,
+      pieceIds: nextIds,
+      expectedPolygons: nextPolygons,
+      angleDeg,
+    });
+  };
+
+  // Remember the ring split in memory only while the split halves remain pristine.
+  // Evict it as soon as either half is deleted, undone, re-styled, curved, or vertex-edited.
+  useEffect(() => {
+    if (!ringSplitFeedback) return;
+    const byId = new Map(project.pieces.map(p => [p.id, p]));
+    const stillPristine = ringSplitFeedback.pieceIds.every((id, i) => {
+      const piece = byId.get(id);
+      if (!piece) return false;
+      if (piece.glassSheetId !== ringSplitFeedback.sheetId) return false;
+      if (piece.curvePoints && piece.curvePoints.length > 0) return false;
+      return arePolygonsEqual(piece.polygon, ringSplitFeedback.expectedPolygons[i], 0.01);
+    });
+    if (!stillPristine) {
+      setRingSplitFeedback(null);
+    }
+  }, [project.pieces, ringSplitFeedback]);
+
+  const showRingSplitPill = !!ringSplitFeedback &&
+    selectedPieceIds.length > 0 &&
+    selectedPieceIds.every(id => ringSplitFeedback.pieceIds.includes(id));
 
   function handleAddManualPiece(
     polygon: [number, number][],
@@ -1098,7 +1169,27 @@ export function App() {
     const snapped = curvePoints.length > 0
       ? displayPolygon
       : snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
+    const splitResult = subtractPolygonsWithSplit(snapped, neighborPolygons, 0);
+    if (splitResult.hadHoles && splitResult.holedSource && splitResult.polygons.length > 0) {
+      const createdIds = importSvgPieces({
+        pieces: splitResult.polygons.map(p => ({ polygon: p })),
+        sheetId: activeSheetId,
+        tierIndex,
+      });
+      setSvgImportFeedback(null);
+      setRingSplitFeedback({
+        holedSource: splitResult.holedSource,
+        pieceIds: createdIds,
+        expectedPolygons: splitResult.polygons,
+        angleDeg: 0,
+        sheetId: activeSheetId,
+        tierIndex,
+      });
+      return;
+    }
+
+    setRingSplitFeedback(null);
+    const clipped = splitResult.polygons[0] ?? [];
     if (clipped.length >= 3) {
       const keptCurves = curvePoints.length > 0 && arePolygonsEqual(displayPolygon, clipped, 0.1);
       addManualPiece(
@@ -2385,6 +2476,49 @@ export function App() {
               <button
                 className="svg-import-pill-close"
                 onClick={() => setSvgImportFeedback(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {showRingSplitPill && ringSplitFeedback && (
+            <div className="svg-import-pill ring-split-pill" role="status" aria-live="polite">
+              <span className="svg-import-pill-text">
+                {t('ringSplitSummary', { count: ringSplitFeedback.pieceIds.length })}
+              </span>
+              <div className="ring-split-presets" role="group" aria-label={t('ringSplitAngleTooltip')}>
+                {([
+                  { deg: 0, label: '—' },
+                  { deg: 90, label: '|' },
+                  { deg: 45, label: '\\' },
+                  { deg: 135, label: '/' },
+                ] as const).map(p => (
+                  <button
+                    key={p.deg}
+                    type="button"
+                    className={`ring-split-preset${ringSplitFeedback.angleDeg === p.deg ? ' active' : ''}`}
+                    onClick={() => handleChangeRingSplitAngle(p.deg)}
+                    title={`${p.deg}°`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={180}
+                step={1}
+                value={ringSplitFeedback.angleDeg}
+                onChange={e => handleChangeRingSplitAngle(Number(e.target.value))}
+                className="ring-split-slider"
+                aria-label={t('ringSplitAngleTooltip')}
+              />
+              <span className="ring-split-deg">{ringSplitFeedback.angleDeg}°</span>
+              <button
+                className="svg-import-pill-close"
+                onClick={() => setRingSplitFeedback(null)}
                 aria-label="Dismiss"
               >
                 ×
