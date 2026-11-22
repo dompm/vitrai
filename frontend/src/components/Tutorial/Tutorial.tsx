@@ -30,6 +30,7 @@ interface Props {
   onSetStep: (step: StepId | null) => void;
   onSetTrackedPiece: (id: string) => void;
   onSelectPiece: (id: string | null, multi?: boolean) => void;
+  onSetActiveSheet: (id: string) => void;
   onStartTour: (trackId?: TrackId) => void;
   onSkip: () => void;
   onComplete: () => void;
@@ -55,6 +56,7 @@ export function Tutorial({
   onSetStep,
   onSetTrackedPiece,
   onSelectPiece,
+  onSetActiveSheet,
   onStartTour,
   onSkip,
   onComplete,
@@ -68,12 +70,22 @@ export function Tutorial({
   const previousStep = useRef<StepId | null>(null);
   const [solderStart, setSolderStart] = useState<number | null>(null);
   const profileStart = useRef(project.lampConfig);
+  const penStartPieceIds = useRef<ReadonlySet<string> | null>(null);
 
   useEffect(() => {
     if (previousStep.current !== step) {
       previousStep.current = step;
       if (step === 'fab-solder-thickness') setSolderStart(project.solderWidthMM ?? 4.5);
       else setSolderStart(null);
+      if (step === 'trace-hand-pen') {
+        penStartPieceIds.current = new Set(project.pieces.map(p => p.id));
+        // New pen pieces take the active sheet; the previous step left Orange active.
+        onSelectPiece(null);
+        const leafSheet = project.sheets[0]?.id;
+        if (leafSheet && activeSheetId !== leafSheet) onSetActiveSheet(leafSheet);
+      } else {
+        penStartPieceIds.current = null;
+      }
     }
     if (step === 'welcome') {
       setDismissedLoading(false);
@@ -97,12 +109,14 @@ export function Tutorial({
       case 'refine-first-piece':
         if (!piece) onSetStep('cut-first-piece');
         break;
-      case 'trace-hand-pen':
-        if (project.pieces.length >= 2) {
-          if (piece) onSelectPiece(piece.id);
+      case 'trace-hand-pen': {
+        const drawn = project.pieces.find(p => !penStartPieceIds.current?.has(p.id));
+        if (drawn) {
+          onSelectPiece(drawn.id);
           onAdvance();
         }
         break;
+      }
       case 'vector-blank-canvas':
       case 'lamp-choose-pen':
         if (patternTool === 'pen') onAdvance();
@@ -144,7 +158,7 @@ export function Tutorial({
     }
   }, [step, project, piece, patternTool, sheetTool, activeSheetId, selectedPieceIds,
     isLampProfileOpen, isSymmetryEnabled, pendingPieceIds, activeTrackId,
-    onAdvance, onSetStep, onSetTrackedPiece, onSelectPiece]);
+    onAdvance, onSetStep, onSetTrackedPiece, onSelectPiece, onSetActiveSheet]);
 
   if (step === null) return null;
   const config = ANCHORED_STEPS.includes(step) ? STEPS[step as AnchoredStepId] : null;
@@ -207,9 +221,6 @@ export function Tutorial({
       return;
     }
     onExitRefine();
-    if (step === 'trace-hand-pen' && piece) {
-      onSelectPiece(piece.id);
-    }
     onAdvance();
   };
   const loading = step === 'cut-first-piece' && !!isEncoding && !dismissedLoading;

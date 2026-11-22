@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ResultPanel } from './components/ResultPanel';
 import { SheetPanel } from './components/SheetPanel';
@@ -25,6 +25,8 @@ import {
 } from './utils/geometry';
 import { computeImageSwatch } from './utils/swatch';
 import { proposeStainedGlassCellsFromUrl, type ProposedGlassCell } from './utils/autoSegment';
+import { importSvg } from './utils/svgRasterize';
+import type { SvgCanvasTarget, SvgImportMode } from './utils/svgImport';
 import { getSamBackend } from './samBackend';
 import type { BoundingBox, GlassSheet, CurvePoint, Scale, Project } from './types';
 import {
@@ -54,6 +56,9 @@ interface SheetTabProps {
   onMoveAllTo: (destSheetId: string) => void;
   onMoveAllFromSrc: (srcSheetId: string) => void;
   onNewSheetFromImage: () => void;
+  onSelectAllPieces: () => void;
+  onSwapGlassLibrary: () => void;
+  onSwapGlassFile: () => void;
 }
 
 const getSnapRadius = (width: number) => Math.max(10, Math.round(width * 0.015));
@@ -61,18 +66,51 @@ const getSnapRadius = (width: number) => Math.max(10, Math.round(width * 0.015))
 function SheetTab({
   sheet, isActive, isEmpty, canDelete, pieceCount, pieceCountBySheet, allSheets,
   onSelect, onRename, onDelete, onMoveAllTo, onMoveAllFromSrc, onNewSheetFromImage,
+  onSelectAllPieces, onSwapGlassLibrary, onSwapGlassFile,
 }: SheetTabProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(sheet.label);
   const [menuPos, setMenuPos] = useState<{ x: number; y: number } | null>(null);
+  const [clampedMenu, setClampedMenu] = useState<{ left: number; top: number; flipSubmenu: boolean } | null>(null);
   const [submenu, setSubmenu] = useState<'moveTo' | 'moveFrom' | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressFired = useRef(false);
 
   useEffect(() => { setDraft(sheet.label); }, [sheet.label]);
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
+
+  useLayoutEffect(() => {
+    if (!menuPos || !menuRef.current) {
+      setClampedMenu(null);
+      return;
+    }
+    const el = menuRef.current;
+    const clamp = () => {
+      const rect = el.getBoundingClientRect();
+      const pad = 12;
+      const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+      const left = Math.min(Math.max(pad, menuPos.x), maxLeft);
+      const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+      const top = Math.min(Math.max(pad, menuPos.y), maxTop);
+      const flipSubmenu = left + rect.width + 260 > window.innerWidth - pad;
+      setClampedMenu(prev =>
+        prev && prev.left === left && prev.top === top && prev.flipSubmenu === flipSubmenu
+          ? prev
+          : { left, top, flipSubmenu },
+      );
+    };
+    clamp();
+    const ro = new ResizeObserver(clamp);
+    ro.observe(el);
+    window.addEventListener('resize', clamp);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', clamp);
+    };
+  }, [menuPos]);
 
   useEffect(() => {
     if (!menuPos) return;
@@ -165,6 +203,34 @@ function SheetTab({
           aria-hidden="true"
         />
         <span className="sheet-tab-label">{sheet.label}</span>
+        {pieceCount > 0 && (
+          <span
+            className="sheet-tab-count"
+            onClick={e => { e.stopPropagation(); onSelect(); onSelectAllPieces(); }}
+            role="button"
+            title={t('selectAllOnGlassTooltip', { count: pieceCount })}
+            aria-label={t('selectAllOnGlassTooltip', { count: pieceCount })}
+          >
+            {pieceCount}
+          </span>
+        )}
+        {isActive && (
+          <span
+            className="sheet-tab-more"
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => {
+              e.stopPropagation();
+              if (menuPos) { setMenuPos(null); setSubmenu(null); return; }
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setMenuPos({ x: rect.left, y: rect.bottom + 6 });
+            }}
+            role="button"
+            title={t('sheetTabActionsTooltip')}
+            aria-label={t('sheetTabActionsTooltip')}
+          >
+            ⋯
+          </span>
+        )}
         {canDelete && (
           <span
             className="sheet-tab-close"
@@ -178,10 +244,35 @@ function SheetTab({
       </button>
       {menuPos && (
         <div
+          ref={menuRef}
           className="sheet-tab-menu"
-          style={{ left: menuPos.x, top: menuPos.y }}
+          style={{ left: clampedMenu?.left ?? menuPos.x, top: clampedMenu?.top ?? menuPos.y }}
           onMouseDown={e => e.stopPropagation()}
         >
+          {pieceCount > 0 && (
+            <button
+              className="sheet-tab-menu-item"
+              onClick={() => { setMenuPos(null); onSelect(); onSelectAllPieces(); }}
+              onMouseEnter={() => setSubmenu(null)}
+            >
+              {t('contextSelectAllPieces', { count: pieceCount })}
+            </button>
+          )}
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); onSwapGlassLibrary(); }}
+            onMouseEnter={() => setSubmenu(null)}
+          >
+            {t('contextSwapGlassLibrary')}
+          </button>
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); onSwapGlassFile(); }}
+            onMouseEnter={() => setSubmenu(null)}
+          >
+            {t('contextSwapGlassFile')}
+          </button>
+          <div className="sheet-tab-menu-divider" />
           <button
             className="sheet-tab-menu-item"
             onClick={() => { setMenuPos(null); startEditing(); }}
@@ -212,7 +303,7 @@ function SheetTab({
                   </span>
                   <span className="sheet-tab-menu-caret">▸</span>
                   {!moveToDisabled && submenu === 'moveTo' && (
-                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                    <div className={`sheet-tab-submenu${clampedMenu?.flipSubmenu ? ' align-left' : ''}`} onMouseDown={e => e.stopPropagation()}>
                       {otherSheets.length === 0 ? (
                         <div className="sheet-tab-menu-item is-disabled">
                           {t('contextNoOtherSheets')}
@@ -253,7 +344,7 @@ function SheetTab({
                   <span className="sheet-tab-menu-label">{t('contextMoveHereFrom')}</span>
                   <span className="sheet-tab-menu-caret">▸</span>
                   {!moveFromDisabled && submenu === 'moveFrom' && (
-                    <div className="sheet-tab-submenu" onMouseDown={e => e.stopPropagation()}>
+                    <div className={`sheet-tab-submenu${clampedMenu?.flipSubmenu ? ' align-left' : ''}`} onMouseDown={e => e.stopPropagation()}>
                       {sheetsWithPieces.map(s => (
                         <button
                           key={s.id}
@@ -453,8 +544,10 @@ export function App() {
     updatePatternImage,
     updatePatternDimensions,
     startBlankCanvas,
+    importSvgPieces,
     startLampMode,
     addSheetFromImage,
+    replaceSheetGlass,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
     updateLampConfig,
@@ -809,7 +902,9 @@ export function App() {
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
+  const [glassLibraryTarget, setGlassLibraryTarget] = useState<'add' | string | null>(null);
+  const swapFileSheetIdRef = useRef<string | null>(null);
+  const swapGlassFileInputRef = useRef<HTMLInputElement>(null);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
   const [, setFocusedPanelIdx] = useState<number | null>(null);
@@ -1316,13 +1411,115 @@ export function App() {
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
   };
 
+  const [svgImportFeedback, setSvgImportFeedback] = useState<{
+    svgText: string;
+    mode: SvgImportMode;
+    count: number;
+    importedPieceIds: string[];
+    initializedCanvas: boolean;
+    target?: SvgCanvasTarget;
+  } | null>(null);
+
+  const isSvgFile = (file: File) =>
+    file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+
+  const handleSvgFile = async (file: File) => {
+    try {
+      const svgText = await file.text();
+      const isEmptyCanvas = !project.patternImageUrl && project.pieces.length === 0;
+      const target: SvgCanvasTarget | undefined = isEmptyCanvas
+        ? undefined
+        : {
+            width: project.patternWidth || 1200,
+            height: project.patternHeight || 1200,
+            fitBox: {
+              x: (project.patternWidth || 1200) * 0.08,
+              y: (project.patternHeight || 1200) * 0.08,
+              width: (project.patternWidth || 1200) * 0.84,
+              height: (project.patternHeight || 1200) * 0.84,
+            },
+          };
+
+      const result = await importSvg(svgText, { mode: 'auto', target });
+      const createdIds = result.pieces.length > 0
+        ? importSvgPieces({
+            pieces: result.pieces,
+            sheetId: activeSheetId,
+            initializeCanvas: isEmptyCanvas
+              ? { width: result.canvasWidth, height: result.canvasHeight, scale: result.scale }
+              : undefined,
+          })
+        : [];
+
+      setSvgImportFeedback({
+        svgText,
+        mode: result.mode,
+        count: result.pieces.length,
+        importedPieceIds: createdIds,
+        initializedCanvas: isEmptyCanvas,
+        target,
+      });
+    } catch (err) {
+      console.error('[App] SVG import failed:', err);
+    }
+  };
+
+  const handleSwitchSvgImportMode = async () => {
+    if (!svgImportFeedback) return;
+    const altMode: SvgImportMode = svgImportFeedback.mode === 'shapes' ? 'lines' : 'shapes';
+    try {
+      const result = await importSvg(svgImportFeedback.svgText, {
+        mode: altMode,
+        target: svgImportFeedback.target,
+      });
+      const createdIds = importSvgPieces({
+        pieces: result.pieces,
+        sheetId: activeSheetId,
+        initializeCanvas: svgImportFeedback.initializedCanvas
+          ? { width: result.canvasWidth, height: result.canvasHeight, scale: result.scale }
+          : undefined,
+        replacePieceIds: svgImportFeedback.importedPieceIds,
+        skipHistory: true,
+      });
+      setSvgImportFeedback({
+        ...svgImportFeedback,
+        mode: result.mode,
+        count: result.pieces.length,
+        importedPieceIds: createdIds,
+      });
+    } catch (err) {
+      console.error('[App] SVG mode switch failed:', err);
+    }
+  };
+
+  const handleUseSvgAsBackground = () => {
+    if (!svgImportFeedback) return;
+    const blob = new Blob([svgImportFeedback.svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const img = new Image();
+      img.onload = () => {
+        updatePatternImage(dataUrl, img.naturalWidth || 1200, img.naturalHeight || 1200);
+        setSvgImportFeedback(null);
+      };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(blob);
+  };
+
   const loadPatternImageFile = (file: File) => {
+    if (isSvgFile(file)) {
+      void handleSvgFile(file);
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const dataUrl = ev.target?.result as string;
       const img = new Image();
       img.onload = () => {
         updatePatternImage(dataUrl, img.width, img.height);
+        setSvgImportFeedback(null);
       };
       img.src = dataUrl;
     };
@@ -1335,6 +1532,7 @@ export function App() {
       loadPatternImageFile(file);
       setPatternTool('select');
     }
+    e.target.value = '';
   };
 
   const handleStartLampMode = () => {
@@ -1933,7 +2131,7 @@ export function App() {
         }
       };
       reader.readAsText(file);
-    } else if (file.type.startsWith('image/')) {
+    } else if (isSvgFile(file) || file.type.startsWith('image/')) {
       loadPatternImageFile(file);
     }
   };
@@ -2103,12 +2301,20 @@ export function App() {
                 onUpdateDimensions={updatePatternDimensions}
               />
             </div>
-            {project.patternImageUrl && (
-              <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
-                {t('replacePattern')}
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleUploadPattern} />
-              </label>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {(project.patternImageUrl || project.patternScale) && (
+                <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('importSvgTooltip')}>
+                  {t('importSvgButton')}
+                  <input type="file" accept=".svg,image/svg+xml" style={{ display: 'none' }} onChange={handleUploadPattern} />
+                </label>
+              )}
+              {project.patternImageUrl && (
+                <label className="btn-ghost" style={{ cursor: 'pointer' }} title={t('replacePatternTooltip')}>
+                  {t('replacePattern')}
+                  <input type="file" accept="image/*,.svg,image/svg+xml" style={{ display: 'none' }} onChange={handleUploadPattern} />
+                </label>
+              )}
+            </div>
           </div>
           <ResultPanel
             key={tutorialActiveTrackId ?? 'project'}
@@ -2156,6 +2362,33 @@ export function App() {
             isSymmetryEnabled={isSymmetryEnabled}
             onToggleSymmetry={setIsSymmetryEnabled}
           />
+          {svgImportFeedback && (
+            <div className="svg-import-pill" role="status" aria-live="polite">
+              <span className="svg-import-pill-text">
+                {svgImportFeedback.count === 0
+                  ? t('svgImportEmpty')
+                  : svgImportFeedback.mode === 'shapes'
+                    ? t('svgImportSummaryShapes', { count: svgImportFeedback.count })
+                    : t('svgImportSummaryLines', { count: svgImportFeedback.count })}
+              </span>
+              {svgImportFeedback.count === 0 ? (
+                <button className="svg-import-pill-action" onClick={handleUseSvgAsBackground}>
+                  {t('svgUseAsBackground')}
+                </button>
+              ) : (
+                <button className="svg-import-pill-action" onClick={() => void handleSwitchSvgImportMode()}>
+                  {svgImportFeedback.mode === 'shapes' ? t('svgSwitchToLines') : t('svgSwitchToShapes')}
+                </button>
+              )}
+              <button
+                className="svg-import-pill-close"
+                onClick={() => setSvgImportFeedback(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
         </div>
 
       {/* ── Right: glass sheet workspace ── */}
@@ -2214,6 +2447,18 @@ export function App() {
                 onMoveAllTo={destId => requestMove(sheet.id, destId)}
                 onMoveAllFromSrc={srcId => requestMove(srcId, sheet.id)}
                 onNewSheetFromImage={() => triggerNewSheetFromImage(sheet.id)}
+                onSelectAllPieces={() => {
+                  const ids = project.pieces.filter(p => p.glassSheetId === sheet.id).map(p => p.id);
+                  if (ids.length > 0) {
+                    selectPieces(ids);
+                    setPatternTool('select');
+                  }
+                }}
+                onSwapGlassLibrary={() => setGlassLibraryTarget(sheet.id)}
+                onSwapGlassFile={() => {
+                  swapFileSheetIdRef.current = sheet.id;
+                  swapGlassFileInputRef.current?.click();
+                }}
               />
             ))}
             <button
@@ -2234,6 +2479,25 @@ export function App() {
               accept="image/*"
               style={{ display: 'none' }}
               onChange={handleNewSheetFromImageWithMove}
+            />
+            <input
+              ref={swapGlassFileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files?.[0];
+                const sheetId = swapFileSheetIdRef.current;
+                e.target.value = '';
+                swapFileSheetIdRef.current = null;
+                if (!file || !sheetId) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                  const dataUrl = ev.target?.result as string;
+                  replaceSheetGlass(sheetId, dataUrl, file.name, null);
+                };
+                reader.readAsDataURL(file);
+              }}
             />
           </div>
         </div>
@@ -2403,15 +2667,18 @@ export function App() {
           currentProjectName={project.name}
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
-          onOpenLibrary={() => setShowGlassLibrary(true)}
+          onOpenLibrary={() => setGlassLibraryTarget('add')}
           onClose={() => setAddSheetMenu(null)}
         />
       )}
 
-      {showGlassLibrary && (
+      {glassLibraryTarget && (
         <GlassLibraryDialog
-          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
-          onClose={() => setShowGlassLibrary(false)}
+          onPick={(url, label, scale) => {
+            if (glassLibraryTarget === 'add') addSheetFromImage(url, label, scale);
+            else replaceSheetGlass(glassLibraryTarget, url, label, scale);
+          }}
+          onClose={() => setGlassLibraryTarget(null)}
         />
       )}
 
@@ -2444,6 +2711,7 @@ export function App() {
         onSetStep={setTutorialStep}
         onSetTrackedPiece={handleSetTrackedPiece}
         onSelectPiece={selectPiece}
+        onSetActiveSheet={setActiveSheetId}
         onStartTour={startTutorialTour}
         onSkip={skipTutorial}
         onComplete={completeTutorial}

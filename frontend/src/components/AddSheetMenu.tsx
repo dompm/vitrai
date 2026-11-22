@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DEFAULT_GLASS_ASSETS, TUTORIAL_GLASS_ASSETS } from '../assets';
 import { listAllSheetsAcrossProjects, type RecentSheet } from '../storage/opfs';
@@ -20,6 +20,31 @@ export function AddSheetMenu({
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [recent, setRecent] = useState<RecentSheet[]>([]);
+  const [pos, setPos] = useState({ left: anchor.left, top: anchor.top });
+
+  useLayoutEffect(() => {
+    const el = menuRef.current;
+    if (!el) return;
+    const clampToViewport = () => {
+      const rect = el.getBoundingClientRect();
+      const pad = 12;
+      const maxLeft = Math.max(pad, window.innerWidth - rect.width - pad);
+      const nextLeft = Math.min(Math.max(pad, anchor.left), maxLeft);
+      const maxTop = Math.max(pad, window.innerHeight - rect.height - pad);
+      const nextTop = Math.min(Math.max(pad, anchor.top), maxTop);
+      setPos(prev =>
+        prev.left === nextLeft && prev.top === nextTop ? prev : { left: nextLeft, top: nextTop },
+      );
+    };
+    clampToViewport();
+    const ro = new ResizeObserver(clampToViewport);
+    ro.observe(el);
+    window.addEventListener('resize', clampToViewport);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', clampToViewport);
+    };
+  }, [anchor.left, anchor.top, recent.length]);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +84,7 @@ export function AddSheetMenu({
     <div
       ref={menuRef}
       className="add-sheet-menu"
-      style={{ left: anchor.left, top: anchor.top }}
+      style={{ left: pos.left, top: pos.top }}
       onMouseDown={e => e.stopPropagation()}
     >
       <button className="add-sheet-menu-item" onClick={() => { onClose(); onOpenLibrary(); }}>

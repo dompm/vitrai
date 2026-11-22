@@ -106,6 +106,7 @@ html, body, #root {
 }
 
 .panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -285,6 +286,43 @@ html, body, #root {
   white-space: nowrap;
 }
 
+.sheet-tab-count {
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: rgba(40, 30, 15, 0.08);
+  color: var(--text-soft);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.sheet-tab-count:hover {
+  background: var(--amber);
+  color: var(--paper);
+}
+
+.sheet-tab-more {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--text-dim);
+  opacity: 0.65;
+  border-radius: 3px;
+  padding: 0 3px;
+  min-width: 16px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.1s, background 0.1s, color 0.1s;
+}
+
+.sheet-tab-more:hover {
+  opacity: 1;
+  color: var(--text-bright);
+  background: rgba(40, 30, 15, 0.1);
+}
+
 .sheet-tab-close {
   font-size: 13px;
   line-height: 1;
@@ -321,6 +359,7 @@ html, body, #root {
   position: fixed;
   z-index: 600;
   min-width: 140px;
+  max-width: min(280px, calc(100vw - 24px));
   background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
@@ -428,6 +467,9 @@ html, body, #root {
   left: 100%;
   margin-left: 2px;
   min-width: 220px;
+  max-width: min(260px, calc(100vw - 24px));
+  max-height: 60vh;
+  overflow-y: auto;
   background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
@@ -436,13 +478,22 @@ html, body, #root {
   z-index: 601;
 }
 
+.sheet-tab-submenu.align-left {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 2px;
+}
+
 /* Add-sheet popover */
 .add-sheet-menu {
   position: fixed;
   z-index: 600;
   min-width: 240px;
+  max-width: min(320px, calc(100vw - 24px));
   max-height: 70vh;
   overflow-y: auto;
+  overflow-x: hidden;
   background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 6px;
@@ -1979,4 +2030,62 @@ html, body, #root {
   .tutorial-bar-center { flex-basis: calc(100% - 150px); margin: 0; }
   .tutorial-bar-right { margin-left: auto; }
   .tutorial-track-grid { gap: 8px; }
+}
+
+/* ── SVG Import Feedback Pill ───────────────────────── */
+
+.svg-import-pill {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px 7px 14px;
+  border-radius: 999px;
+  background: var(--chrome-800);
+  border: 1px solid var(--hairline-2);
+  box-shadow: 0 6px 20px rgba(20, 24, 32, 0.14);
+  font-size: 0.78rem;
+  color: var(--text-bright);
+  max-width: calc(100% - 28px);
+  white-space: nowrap;
+}
+
+.svg-import-pill-text {
+  color: var(--text-soft);
+}
+
+.svg-import-pill-action {
+  background: transparent;
+  border: 1px solid var(--amber);
+  color: var(--amber);
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.svg-import-pill-action:hover {
+  background: var(--amber);
+  color: var(--chrome-800);
+}
+
+.svg-import-pill-close {
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.svg-import-pill-close:hover {
+  color: var(--text-bright);
 }

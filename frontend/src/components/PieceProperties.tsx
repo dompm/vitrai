@@ -17,6 +17,8 @@ interface Props {
   isEncoding?: boolean;
   pointerEvents?: 'auto' | 'none';
   multiple?: boolean;
+  sameSheetCount?: number;
+  onSelectSameSheet?: () => void;
 }
 
 export function PieceProperties({
@@ -34,6 +36,8 @@ export function PieceProperties({
   isEncoding,
   pointerEvents = 'auto',
   multiple,
+  sameSheetCount,
+  onSelectSameSheet,
 }: Props) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -42,6 +46,7 @@ export function PieceProperties({
   const [smoothHover, setSmoothHover] = useState(false);
   const [straightenHover, setStraightenHover] = useState(false);
   const [selectHover, setSelectHover] = useState(false);
+  const [groupHover, setGroupHover] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Sync draft when piece changes
@@ -210,6 +215,30 @@ export function PieceProperties({
             <option value="__new__">{t('addSheetOption')}</option>
           </select>
         </div>
+        {!multiple && sameSheetCount && sameSheetCount > 1 && onSelectSameSheet && (
+          <button
+            type="button"
+            onClick={onSelectSameSheet}
+            title={t('selectAllOnGlassTooltip', { count: sameSheetCount })}
+            onMouseEnter={() => setGroupHover(true)}
+            onMouseLeave={() => setGroupHover(false)}
+            style={{
+              background: groupHover ? '#E5E2DA' : '#F4F2ED',
+              border: 'none',
+              borderRadius: 6,
+              color: 'var(--text-soft)',
+              cursor: 'pointer',
+              fontSize: 11,
+              fontWeight: 500,
+              padding: '3px 7px',
+              flexShrink: 0,
+              fontFamily: 'inherit',
+              transition: 'background-color 0.15s ease',
+            }}
+          >
+            {t('selectAllOnGlassShort', { count: sameSheetCount })}
+          </button>
+        )}
       </div>
 
       {/* ── Divider 2 ── */}
