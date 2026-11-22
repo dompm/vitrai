@@ -1174,6 +1174,7 @@ export function useProject() {
   const importSvgPieces = useCallback((opts: {
     pieces: import('../utils/svgImport').SvgImportedPiece[];
     sheetId: string;
+    tierIndex?: number;
     initializeCanvas?: { width: number; height: number; scale: Scale };
     replacePieceIds?: string[];
     skipHistory?: boolean;
@@ -1200,6 +1201,7 @@ export function useProject() {
         ...(item.curvePoints && item.curvePoints.length > 0 ? { curvePoints: item.curvePoints } : {}),
         glassSheetId: effectiveSheetId,
         transform: { x: cx, y: cy, rotation: 0, scale: s },
+        ...(opts.tierIndex !== undefined ? { tierIndex: opts.tierIndex } : {}),
       }));
 
       return {

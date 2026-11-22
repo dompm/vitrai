@@ -1702,6 +1702,229 @@ export function pieceToSvgPath(polygon: Point[], curvePoints?: CurvePoint[]): st
   return parts.join(' ');
 }
 
+export interface SubtractWithSplitResult {
+  polygons: [number, number][][];
+  hadHoles: boolean;
+  /** Raw holed Polygon[] from polygon-clipping, cached so the user can live-rotate the split angle. */
+  holedSource: [number, number][][][] | null;
+}
+
+const MIN_REAL_HOLE_AREA = 10;
+
+function openRing(ring: [number, number][]): [number, number][] {
+  if (ring.length > 1) {
+    const first = ring[0];
+    const last = ring[ring.length - 1];
+    if (first[0] === last[0] && first[1] === last[1]) return ring.slice(0, -1);
+  }
+  return ring;
+}
+
+/**
+ * Find a guaranteed interior point of a simple polygon (even concave / C-shaped rings)
+ * by sampling horizontal scanlines and returning the midpoint of the widest interior chord.
+ */
+export function findInteriorPoint(ring: [number, number][]): [number, number] {
+  const pts = openRing(ring);
+  if (pts.length < 3) return pts[0] ?? [0, 0];
+
+  let minY = Infinity, maxY = -Infinity;
+  for (const [, y] of pts) {
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  let bestWidth = -1;
+  let bestPt: [number, number] | null = null;
+  const SAMPLES = 11;
+
+  for (let s = 1; s <= SAMPLES; s++) {
+    const y = minY + ((maxY - minY) * s) / (SAMPLES + 1);
+    const xs: number[] = [];
+    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+      const [x1, y1] = pts[j];
+      const [x2, y2] = pts[i];
+      if ((y1 <= y && y2 > y) || (y2 <= y && y1 > y)) {
+        const t = (y - y1) / (y2 - y1);
+        xs.push(x1 + t * (x2 - x1));
+      }
+    }
+    xs.sort((a, b) => a - b);
+    for (let k = 0; k + 1 < xs.length; k += 2) {
+      const w = xs[k + 1] - xs[k];
+      if (w > bestWidth) {
+        bestWidth = w;
+        bestPt = [(xs[k] + xs[k + 1]) / 2, y];
+      }
+    }
+  }
+
+  if (bestPt) return bestPt;
+  const c = computeCentroid(pts);
+  return [c.x, c.y];
+}
+
+/**
+ * Recursively split a polygon with one or more interior holes (`[outer, hole1, ...]`)
+ * into simple hole-free polygons along a line through the largest hole at `angleDeg`.
+ */
+export function splitPolygonWithHoles(
+  polyWithHoles: [number, number][][],
+  angleDeg: number,
+  depth = 0,
+): [number, number][][] {
+  if (polyWithHoles.length === 0) return [];
+  const outer = openRing(polyWithHoles[0]);
+  if (outer.length < 3) return [];
+
+  const realHoles = polyWithHoles
+    .slice(1)
+    .map(h => openRing(h))
+    .filter(h => h.length >= 3 && computePolygonArea(h) >= MIN_REAL_HOLE_AREA);
+
+  if (realHoles.length === 0 || depth >= 6) {
+    return [outer];
+  }
+
+  // Pick the largest hole so the cut opens it cleanly
+  let largestHole = realHoles[0];
+  let largestHoleArea = computePolygonArea(largestHole);
+  for (let i = 1; i < realHoles.length; i++) {
+    const a = computePolygonArea(realHoles[i]);
+    if (a > largestHoleArea) {
+      largestHoleArea = a;
+      largestHole = realHoles[i];
+    }
+  }
+
+  const [cx, cy] = findInteriorPoint(largestHole);
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of outer) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  const R = Math.hypot(maxX - minX, maxY - minY) * 2 + 200;
+  const rad = (angleDeg * Math.PI) / 180;
+  const dx = Math.cos(rad);
+  const dy = Math.sin(rad);
+  const nx = -dy;
+  const ny = dx;
+
+  const halfA: polygonClipping.Polygon = [[
+    [cx - dx * R, cy - dy * R],
+    [cx + dx * R, cy + dy * R],
+    [cx + dx * R + nx * R, cy + dy * R + ny * R],
+    [cx - dx * R + nx * R, cy - dy * R + ny * R],
+  ]];
+  const halfB: polygonClipping.Polygon = [[
+    [cx - dx * R, cy - dy * R],
+    [cx + dx * R, cy + dy * R],
+    [cx + dx * R - nx * R, cy + dy * R - ny * R],
+    [cx - dx * R - nx * R, cy - dy * R - ny * R],
+  ]];
+
+  const subject: polygonClipping.Polygon = [outer, ...realHoles];
+  const results: [number, number][][] = [];
+
+  for (const half of [halfA, halfB]) {
+    try {
+      const clipped = polygonClipping.intersection(subject, half);
+      for (const poly of clipped) {
+        const sub = splitPolygonWithHoles(poly as [number, number][][], angleDeg, depth + 1);
+        for (const ring of sub) {
+          if (ring.length >= 3 && computePolygonArea(ring) >= MIN_REAL_HOLE_AREA) {
+            results.push(ring);
+          }
+        }
+      }
+    } catch {
+      // Ignore degenerate half-plane intersection
+    }
+  }
+
+  return results.length > 0 ? results : [outer];
+}
+
+/** Re-slice a cached holed difference result at a new cut angle. */
+export function resplitHoledSource(
+  holedSource: [number, number][][][],
+  angleDeg: number,
+): [number, number][][] {
+  const out: [number, number][][] = [];
+  for (const poly of holedSource) {
+    out.push(...splitPolygonWithHoles(poly, angleDeg));
+  }
+  return out;
+}
+
+/**
+ * Like `subtractPolygons`, but detects when the clipped subject encloses one or
+ * more existing pieces as interior holes and automatically splits the ring into
+ * simple, non-overlapping cuttable pieces along `splitAngleDeg`.
+ */
+export function subtractPolygonsWithSplit(
+  subject: [number, number][],
+  clipPolygons: [number, number][][],
+  splitAngleDeg = 0,
+): SubtractWithSplitResult {
+  if (clipPolygons.length === 0) {
+    return { polygons: [subject], hadHoles: false, holedSource: null };
+  }
+
+  try {
+    const subjPoly: polygonClipping.Polygon = [subject];
+    const clipPolys: polygonClipping.Polygon[] = clipPolygons.map(p => [p]);
+    const diff = polygonClipping.difference(subjPoly, ...clipPolys);
+
+    if (diff.length === 0) {
+      return { polygons: [], hadHoles: false, holedSource: null };
+    }
+
+    const hasRealHoles = diff.some(poly =>
+      poly.length > 1 &&
+      poly.slice(1).some(h => computePolygonArea(openRing(h as [number, number][])) >= MIN_REAL_HOLE_AREA),
+    );
+
+    if (hasRealHoles) {
+      const holedSource = diff.map(poly => poly.map(r => openRing(r as [number, number][])));
+      const polygons = resplitHoledSource(holedSource, splitAngleDeg);
+      return { polygons, hadHoles: true, holedSource };
+    }
+
+    // No holes: preserve exact existing subtractPolygons behavior
+    let largestRing: [number, number][] = [];
+    let maxArea = -1;
+    for (const multi of diff) {
+      const ring = openRing(multi[0] as [number, number][]);
+      const area = computePolygonArea(ring);
+      if (area > maxArea) {
+        maxArea = area;
+        largestRing = ring;
+      }
+    }
+
+    const subjectArea = computePolygonArea(subject);
+    if (
+      diff.length === 1 && diff[0].length === 1 &&
+      Math.abs(maxArea - subjectArea) <= Math.max(0.5, subjectArea * 1e-4)
+    ) {
+      return { polygons: [subject], hadHoles: false, holedSource: null };
+    }
+
+    return {
+      polygons: largestRing.length >= 3 ? [largestRing] : [],
+      hadHoles: false,
+      holedSource: null,
+    };
+  } catch (e) {
+    console.warn("Clipping failed", e);
+    return { polygons: [subject], hadHoles: false, holedSource: null };
+  }
+}
+
 export function subtractPolygons(subject: [number, number][], clipPolygons: [number, number][][]): [number, number][] {
   if (clipPolygons.length === 0) return subject;
   

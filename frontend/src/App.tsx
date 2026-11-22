@@ -12,6 +12,8 @@ import { LampProfileDialog } from './components/LampProfileDialog';
 import { useProject, type BatchPieceInput } from './hooks/useProject';
 import {
   subtractPolygons,
+  subtractPolygonsWithSplit,
+  resplitHoledSource,
   computeCentroid,
   snapPolygonToNeighbors,
   flattenCurves,
@@ -1083,6 +1085,41 @@ export function App() {
     }
   }
 
+  const [ringSplitFeedback, setRingSplitFeedback] = useState<{
+    holedSource: [number, number][][][];
+    pieceIds: string[];
+    angleDeg: number;
+    sheetId: string;
+    tierIndex?: number;
+  } | null>(null);
+
+  const handleChangeRingSplitAngle = (angleDeg: number) => {
+    if (!ringSplitFeedback) return;
+    const nextPolygons = resplitHoledSource(ringSplitFeedback.holedSource, angleDeg);
+    if (nextPolygons.length === 0) return;
+    const nextIds = importSvgPieces({
+      pieces: nextPolygons.map(polygon => ({ polygon })),
+      sheetId: ringSplitFeedback.sheetId,
+      tierIndex: ringSplitFeedback.tierIndex,
+      replacePieceIds: ringSplitFeedback.pieceIds,
+      skipHistory: true,
+    });
+    setRingSplitFeedback({
+      ...ringSplitFeedback,
+      pieceIds: nextIds,
+      angleDeg,
+    });
+  };
+
+  // Dismiss the split-angle pill if the user undoes or deletes the split pieces
+  useEffect(() => {
+    if (!ringSplitFeedback) return;
+    const present = new Set(project.pieces.map(p => p.id));
+    if (!ringSplitFeedback.pieceIds.every(id => present.has(id))) {
+      setRingSplitFeedback(null);
+    }
+  }, [project.pieces, ringSplitFeedback]);
+
   function handleAddManualPiece(
     polygon: [number, number][],
     curvePoints: CurvePoint[] = [],
@@ -1097,7 +1134,26 @@ export function App() {
     const snapped = curvePoints.length > 0
       ? displayPolygon
       : snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const clipped = subtractPolygons(snapped, neighborPolygons);
+    const splitResult = subtractPolygonsWithSplit(snapped, neighborPolygons, 0);
+    if (splitResult.hadHoles && splitResult.holedSource && splitResult.polygons.length > 0) {
+      const createdIds = importSvgPieces({
+        pieces: splitResult.polygons.map(p => ({ polygon: p })),
+        sheetId: activeSheetId,
+        tierIndex,
+      });
+      setSvgImportFeedback(null);
+      setRingSplitFeedback({
+        holedSource: splitResult.holedSource,
+        pieceIds: createdIds,
+        angleDeg: 0,
+        sheetId: activeSheetId,
+        tierIndex,
+      });
+      return;
+    }
+
+    setRingSplitFeedback(null);
+    const clipped = splitResult.polygons[0] ?? [];
     if (clipped.length >= 3) {
       const keptCurves = curvePoints.length > 0 && arePolygonsEqual(displayPolygon, clipped, 0.1);
       addManualPiece(
@@ -2383,6 +2439,49 @@ export function App() {
               <button
                 className="svg-import-pill-close"
                 onClick={() => setSvgImportFeedback(null)}
+                aria-label="Dismiss"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {ringSplitFeedback && (
+            <div className="svg-import-pill ring-split-pill" role="status" aria-live="polite">
+              <span className="svg-import-pill-text">
+                {t('ringSplitSummary', { count: ringSplitFeedback.pieceIds.length })}
+              </span>
+              <div className="ring-split-presets" role="group" aria-label={t('ringSplitAngleTooltip')}>
+                {([
+                  { deg: 0, label: '—' },
+                  { deg: 90, label: '|' },
+                  { deg: 45, label: '\\' },
+                  { deg: 135, label: '/' },
+                ] as const).map(p => (
+                  <button
+                    key={p.deg}
+                    type="button"
+                    className={`ring-split-preset${ringSplitFeedback.angleDeg === p.deg ? ' active' : ''}`}
+                    onClick={() => handleChangeRingSplitAngle(p.deg)}
+                    title={`${p.deg}°`}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={180}
+                step={1}
+                value={ringSplitFeedback.angleDeg}
+                onChange={e => handleChangeRingSplitAngle(Number(e.target.value))}
+                className="ring-split-slider"
+                aria-label={t('ringSplitAngleTooltip')}
+              />
+              <span className="ring-split-deg">{ringSplitFeedback.angleDeg}°</span>
+              <button
+                className="svg-import-pill-close"
+                onClick={() => setRingSplitFeedback(null)}
                 aria-label="Dismiss"
               >
                 ×
