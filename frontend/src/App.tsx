@@ -1083,6 +1083,7 @@ export function App() {
         setRingSplitFeedback({
           holedSource: splitResult.holedSource,
           pieceIds: createdIds,
+          expectedPolygons: splitResult.polygons,
           angleDeg: 0,
           sheetId: activeSheetId,
           tierIndex,
@@ -1107,6 +1108,7 @@ export function App() {
   const [ringSplitFeedback, setRingSplitFeedback] = useState<{
     holedSource: [number, number][][][];
     pieceIds: string[];
+    expectedPolygons: [number, number][][];
     angleDeg: number;
     sheetId: string;
     tierIndex?: number;
@@ -1126,23 +1128,31 @@ export function App() {
     setRingSplitFeedback({
       ...ringSplitFeedback,
       pieceIds: nextIds,
+      expectedPolygons: nextPolygons,
       angleDeg,
     });
   };
 
-  // Dismiss the split-angle pill as soon as the user clicks away, changes selection,
-  // deletes/undoes one of the split pieces, or switches projects.
+  // Remember the ring split in memory only while the split halves remain pristine.
+  // Evict it as soon as either half is deleted, undone, re-styled, curved, or vertex-edited.
   useEffect(() => {
     if (!ringSplitFeedback) return;
-    const present = new Set(project.pieces.map(p => p.id));
-    const allPresent = ringSplitFeedback.pieceIds.every(id => present.has(id));
-    const sameSelection =
-      selectedPieceIds.length === ringSplitFeedback.pieceIds.length &&
-      ringSplitFeedback.pieceIds.every(id => selectedPieceIds.includes(id));
-    if (!allPresent || !sameSelection) {
+    const byId = new Map(project.pieces.map(p => [p.id, p]));
+    const stillPristine = ringSplitFeedback.pieceIds.every((id, i) => {
+      const piece = byId.get(id);
+      if (!piece) return false;
+      if (piece.glassSheetId !== ringSplitFeedback.sheetId) return false;
+      if (piece.curvePoints && piece.curvePoints.length > 0) return false;
+      return arePolygonsEqual(piece.polygon, ringSplitFeedback.expectedPolygons[i], 0.01);
+    });
+    if (!stillPristine) {
       setRingSplitFeedback(null);
     }
-  }, [project.pieces, selectedPieceIds, ringSplitFeedback]);
+  }, [project.pieces, ringSplitFeedback]);
+
+  const showRingSplitPill = !!ringSplitFeedback &&
+    selectedPieceIds.length > 0 &&
+    selectedPieceIds.every(id => ringSplitFeedback.pieceIds.includes(id));
 
   function handleAddManualPiece(
     polygon: [number, number][],
@@ -1169,6 +1179,7 @@ export function App() {
       setRingSplitFeedback({
         holedSource: splitResult.holedSource,
         pieceIds: createdIds,
+        expectedPolygons: splitResult.polygons,
         angleDeg: 0,
         sheetId: activeSheetId,
         tierIndex,
@@ -2469,7 +2480,7 @@ export function App() {
               </button>
             </div>
           )}
-          {ringSplitFeedback && (
+          {showRingSplitPill && ringSplitFeedback && (
             <div className="svg-import-pill ring-split-pill" role="status" aria-live="polite">
               <span className="svg-import-pill-text">
                 {t('ringSplitSummary', { count: ringSplitFeedback.pieceIds.length })}
