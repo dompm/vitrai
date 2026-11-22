@@ -1,10 +1,20 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { Project, TextureTransform, Crop, BoundingBox, Piece, Scale, GlassSheet, SolderColor, CurvePoint } from '../types';
+import type { Project, TextureTransform, Crop, BoundingBox, PromptPoint, Piece, Scale, GlassSheet, SolderColor, CurvePoint } from '../types';
 import { EMPTY_PROJECT } from '../defaultProject';
 import { DEFAULT_GLASS_ASSETS } from '../assets';
 import { listProjects, loadProjectFromOPFS, saveToOPFS, deleteFromOPFS } from '../storage/opfs';
 import { computeUnrolledLamp, reflowLampPoints, replicatePointToFacet, patternToSurfaceRobust } from '../utils/lampGeometry';
+import { resolveGlassSheetForColor } from '../utils/autoSegment';
+
+export interface BatchPieceInput {
+  polygon: [number, number][];
+  curvePoints?: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+  color?: string;
+  promptBox?: BoundingBox;
+  promptPoints?: PromptPoint[];
+}
 
 function toPxPerMm(s: Scale): number {
   if (s.unit === 'mm') return s.pxPerUnit;
@@ -957,31 +967,75 @@ export function useProject() {
     }, true); // skip history for metadata updates like dimensions
   }, [updateProject]);
 
-  const batchAddPieces = useCallback((polygons: [number, number][][], sheetId: string) => {
+  const batchAddPieces = useCallback((
+    items: Array<[number, number][] | BatchPieceInput>,
+    sheetId: string,
+  ) => {
+    if (items.length === 0) return;
     updateProject(prev => {
-      const sheet = prev.sheets.find(s => s.id === sheetId);
-      const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? 1;
-      const sw = sheet?.naturalWidth ?? 800;
-      const sh = sheet?.naturalHeight ?? 600;
-      const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
-      const cx = (crop.left + sw - crop.right) / 2;
-      const cy = (crop.top + sh - crop.bottom) / 2;
-      const newPieces: Piece[] = polygons.map((polygon, i) => {
+      const nextSheets = [...prev.sheets];
+      const patW = Math.max(1, prev.patternWidth);
+      const patH = Math.max(1, prev.patternHeight);
+
+      const newPieces: Piece[] = items.map((rawItem, i) => {
+        const item: BatchPieceInput = Array.isArray(rawItem) ? { polygon: rawItem } : rawItem;
+        const { polygon, curvePoints, anchorTypes, color, promptBox, promptPoints } = item;
+
+        let targetSheetId = sheetId;
+        if (color) {
+          const resolved = resolveGlassSheetForColor(color, nextSheets, sheetId);
+          targetSheetId = resolved.sheetId;
+          if (resolved.newSheet) {
+            nextSheets.push(resolved.newSheet);
+          }
+        }
+
+        const sheet = nextSheets.find(s => s.id === targetSheetId) ?? nextSheets[0];
+        const sw = sheet?.naturalWidth ?? 800;
+        const sh = sheet?.naturalHeight ?? 600;
+        const crop = sheet?.crop ?? { top: 0, left: 0, bottom: 0, right: 0 };
+        const usableLeft = crop.left;
+        const usableRight = Math.max(usableLeft + 1, sw - crop.right);
+        const usableTop = crop.top;
+        const usableBottom = Math.max(usableTop + 1, sh - crop.bottom);
+        const usableW = usableRight - usableLeft;
+        const usableH = usableBottom - usableTop;
+
         const xs = polygon.map(p => p[0]);
         const ys = polygon.map(p => p[1]);
-        const box: BoundingBox = {
+        const box: BoundingBox = promptBox ?? {
           x1: Math.min(...xs), y1: Math.min(...ys),
           x2: Math.max(...xs), y2: Math.max(...ys),
         };
+
+        const activePatW = Math.max(1, patW - prev.patternCrop.left - prev.patternCrop.right);
+        const activePatH = Math.max(1, patH - prev.patternCrop.top - prev.patternCrop.bottom);
+        const defaultScale = Math.min((usableW * 0.45) / activePatW, (usableH * 0.65) / activePatH);
+        const s = calibratedScale(prev.patternScale, sheet?.scale ?? null) ?? Math.max(0.15, Math.min(1, defaultScale));
+
+        const centerSheetX = (usableLeft + usableRight) * 0.5;
+        const centerSheetY = (usableTop + usableBottom) * 0.5;
+        const offsetX = (((box.x1 + box.x2) * 0.5) / patW - 0.5) * usableW * 0.08;
+        const offsetY = (((box.y1 + box.y2) * 0.5) / patH - 0.5) * usableH * 0.08;
+        const cx = Math.round(centerSheetX + offsetX);
+        const cy = Math.round(centerSheetY + offsetY);
+
         return {
           id: crypto.randomUUID(),
           label: `${t('piece')} ${prev.pieces.length + i + 1}`,
-          polygon, glassSheetId: sheetId,
+          polygon,
+          ...(curvePoints && curvePoints.length > 0 ? { curvePoints } : {}),
+          ...(anchorTypes && anchorTypes.length === polygon.length ? { anchorTypes } : {}),
+          glassSheetId: sheet?.id ?? targetSheetId,
           transform: { x: cx, y: cy, rotation: 0, scale: s },
-          promptBox: box, promptPoints: [],
+          promptBox: box,
+          promptPoints: promptPoints ?? [],
         };
       });
-      return { ...prev, pieces: [...prev.pieces, ...newPieces] };
+      if (newPieces.length > 0) {
+        setSelectedPieceIds([newPieces[0].id]);
+      }
+      return { ...prev, sheets: nextSheets, pieces: [...prev.pieces, ...newPieces] };
     });
   }, [updateProject, t]);
 
