@@ -2318,3 +2318,206 @@ export function translateCurvesWithAnchor(
     return curve;
   });
 }
+
+export interface DeletePieceVertexResult {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+}
+
+/**
+ * Delete a vertex from a piece while preserving smooth curvature across the merged span.
+ * Refuses to collapse a piece below a triangle (returns null when polygon.length <= 3).
+ * When either adjacent edge is curved, combines the incoming start handle and outgoing
+ * end handle into a single cubic Bézier so deleting a redundant point on an arc simplifies
+ * the curve instead of snapping it flat.
+ */
+export function deletePieceVertex(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  vertexIdx: number,
+): DeletePieceVertexResult | null {
+  const n = polygon.length;
+  if (n <= 3 || vertexIdx < 0 || vertexIdx >= n) return null;
+
+  const prevIdx = (vertexIdx - 1 + n) % n;
+  const nextIdx = (vertexIdx + 1) % n;
+  const prevPt = polygon[prevIdx];
+  const delPt = polygon[vertexIdx];
+  const nextPt = polygon[nextIdx];
+
+  const prevCurve = curvePoints.find(c => c.edgeIdx === prevIdx);
+  const currCurve = curvePoints.find(c => c.edgeIdx === vertexIdx);
+
+  const nextPolygon = polygon.filter((_, i) => i !== vertexIdx);
+  const nextAnchorTypes = anchorTypes && anchorTypes.length === n
+    ? anchorTypes.filter((_, i) => i !== vertexIdx)
+    : undefined;
+
+  const nextCurves: CurvePoint[] = [];
+  for (const c of curvePoints) {
+    if (c.edgeIdx === prevIdx || c.edgeIdx === vertexIdx) continue;
+    nextCurves.push({
+      ...c,
+      edgeIdx: c.edgeIdx > vertexIdx ? c.edgeIdx - 1 : c.edgeIdx,
+    });
+  }
+
+  if (prevCurve || currCurve) {
+    const mergedEdgeIdx = vertexIdx === 0 ? nextPolygon.length - 1 : vertexIdx - 1;
+    const cp1: [number, number] = prevCurve
+      ? curveToCubicControls(prevPt, delPt, prevCurve)[0]
+      : [prevPt[0] + (delPt[0] - prevPt[0]) / 3, prevPt[1] + (delPt[1] - prevPt[1]) / 3];
+    const cp2: [number, number] = currCurve
+      ? curveToCubicControls(delPt, nextPt, currCurve)[1]
+      : [delPt[0] + ((nextPt[0] - delPt[0]) * 2) / 3, delPt[1] + ((nextPt[1] - delPt[1]) * 2) / 3];
+    nextCurves.push(makeCubicCurvePoint(mergedEdgeIdx, cp1, cp2));
+  }
+
+  return {
+    polygon: nextPolygon,
+    curvePoints: nextCurves,
+    anchorTypes: nextAnchorTypes,
+  };
+}
+
+/**
+ * Retract a single cubic Bézier handle ('ctrl' = outgoing from edgeIdx, 'ctrl2' = incoming to edgeIdx+1)
+ * back into its anchor point without destroying the opposite handle on the same edge.
+ * If both handles end up collapsed onto their anchors, removes the CurvePoint so the edge is straight.
+ */
+export function retractPieceHandle(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  edgeIdx: number,
+  side: 'ctrl' | 'ctrl2',
+): { curvePoints: CurvePoint[]; anchorTypes?: ('corner' | 'smooth')[] } {
+  const n = polygon.length;
+  const curve = curvePoints.find(c => c.edgeIdx === edgeIdx);
+  if (!curve || n < 2) return { curvePoints, anchorTypes };
+
+  const nextIdx = (edgeIdx + 1) % n;
+  const start = polygon[edgeIdx];
+  const end = polygon[nextIdx];
+  const [cp1, cp2] = curveToCubicControls(start, end, curve);
+
+  const nextCp1: [number, number] = side === 'ctrl' ? [start[0], start[1]] : cp1;
+  const nextCp2: [number, number] = side === 'ctrl2' ? [end[0], end[1]] : cp2;
+
+  const cp1Collapsed = Math.hypot(nextCp1[0] - start[0], nextCp1[1] - start[1]) < 1e-3;
+  const cp2Collapsed = Math.hypot(nextCp2[0] - end[0], nextCp2[1] - end[1]) < 1e-3;
+
+  const nextCurves = cp1Collapsed && cp2Collapsed
+    ? curvePoints.filter(c => c.edgeIdx !== edgeIdx)
+    : curvePoints.map(c => c.edgeIdx === edgeIdx ? makeCubicCurvePoint(edgeIdx, nextCp1, nextCp2) : c);
+
+  const anchorIdx = side === 'ctrl' ? edgeIdx : nextIdx;
+  const nextAnchorTypes = anchorTypes && anchorTypes.length === n
+    ? anchorTypes.map((t, i) => (i === anchorIdx ? 'corner' : t))
+    : undefined;
+
+  return { curvePoints: nextCurves, anchorTypes: nextAnchorTypes };
+}
+
+/**
+ * Bend an edge (straight, legacy quadratic, or cubic) so its midpoint at t=0.5 passes
+ * through `targetMidpoint`, always returning a unified cubic CurvePoint.
+ * For existing cubic curves, shifts both handles by (4/3)*delta so existing handle
+ * asymmetry is preserved while moving the midpoint by the exact drag delta.
+ */
+export function bendEdgeMidpointToCubic(
+  edgeIdx: number,
+  start: [number, number],
+  end: [number, number],
+  existingCurve: CurvePoint | undefined,
+  targetMidpoint: [number, number],
+): CurvePoint {
+  if (existingCurve && isCubicCurvePoint(existingCurve)) {
+    const [cp1, cp2] = curveToCubicControls(start, end, existingCurve);
+    const curMid = evaluateCubicBezier(start, cp1, cp2, end, 0.5);
+    const dx = ((targetMidpoint[0] - curMid[0]) * 4) / 3;
+    const dy = ((targetMidpoint[1] - curMid[1]) * 4) / 3;
+    return makeCubicCurvePoint(
+      edgeIdx,
+      [cp1[0] + dx, cp1[1] + dy],
+      [cp2[0] + dx, cp2[1] + dy],
+    );
+  }
+  const qCtrl = handleToCtrl(start, end, targetMidpoint);
+  const [cp1, cp2] = quadraticToCubicControls(start, qCtrl, end);
+  return makeCubicCurvePoint(edgeIdx, cp1, cp2);
+}
+
+/**
+ * Convert a vertex to a smooth C1 anchor by synthesizing (or colinearly aligning)
+ * cubic Bézier handles on its incoming and outgoing edges parallel to the prev->next chord.
+ * Far-end handles of adjacent straight edges stay collapsed at their neighboring corners
+ * so only the selected vertex is rounded.
+ */
+export function smoothPieceVertex(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  vertexIdx: number,
+): { curvePoints: CurvePoint[]; anchorTypes: ('corner' | 'smooth')[] } {
+  const n = polygon.length;
+  const nextAnchorTypes: ('corner' | 'smooth')[] = anchorTypes && anchorTypes.length === n
+    ? [...anchorTypes]
+    : polygon.map(() => 'corner' as const);
+  if (n < 3 || vertexIdx < 0 || vertexIdx >= n) {
+    return { curvePoints, anchorTypes: nextAnchorTypes };
+  }
+
+  const prevIdx = (vertexIdx - 1 + n) % n;
+  const nextIdx = (vertexIdx + 1) % n;
+  const prev = polygon[prevIdx];
+  const curr = polygon[vertexIdx];
+  const next = polygon[nextIdx];
+
+  const tx = next[0] - prev[0];
+  const ty = next[1] - prev[1];
+  const tLen = Math.hypot(tx, ty);
+  const dIn = Math.hypot(curr[0] - prev[0], curr[1] - prev[1]);
+  const dOut = Math.hypot(next[0] - curr[0], next[1] - curr[1]);
+
+  if (tLen < 1e-6 || dIn < 1e-6 || dOut < 1e-6) {
+    nextAnchorTypes[vertexIdx] = 'smooth';
+    return { curvePoints, anchorTypes: nextAnchorTypes };
+  }
+
+  const ux = tx / tLen;
+  const uy = ty / tLen;
+
+  const existingPrev = curvePoints.find(c => c.edgeIdx === prevIdx);
+  const existingNext = curvePoints.find(c => c.edgeIdx === vertexIdx);
+
+  let prevCp1: [number, number] = [prev[0], prev[1]];
+  let lenIn = dIn * 0.28;
+  if (existingPrev) {
+    const [cp1, cp2] = curveToCubicControls(prev, curr, existingPrev);
+    prevCp1 = cp1;
+    const curLen = Math.hypot(cp2[0] - curr[0], cp2[1] - curr[1]);
+    if (curLen > 1) lenIn = Math.min(Math.max(curLen, dIn * 0.15), dIn * 0.45);
+  }
+
+  let nextCp2: [number, number] = [next[0], next[1]];
+  let lenOut = dOut * 0.28;
+  if (existingNext) {
+    const [cp1, cp2] = curveToCubicControls(curr, next, existingNext);
+    nextCp2 = cp2;
+    const curLen = Math.hypot(cp1[0] - curr[0], cp1[1] - curr[1]);
+    if (curLen > 1) lenOut = Math.min(Math.max(curLen, dOut * 0.15), dOut * 0.45);
+  }
+
+  const prevCp2: [number, number] = [curr[0] - ux * lenIn, curr[1] - uy * lenIn];
+  const nextCp1: [number, number] = [curr[0] + ux * lenOut, curr[1] + uy * lenOut];
+
+  const nextCurves = curvePoints.filter(c => c.edgeIdx !== prevIdx && c.edgeIdx !== vertexIdx);
+  nextCurves.push(makeCubicCurvePoint(prevIdx, prevCp1, prevCp2));
+  nextCurves.push(makeCubicCurvePoint(vertexIdx, nextCp1, nextCp2));
+  nextAnchorTypes[vertexIdx] = 'smooth';
+
+  return { curvePoints: nextCurves, anchorTypes: nextAnchorTypes };
+}

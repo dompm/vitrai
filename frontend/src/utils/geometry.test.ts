@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
   arePolygonsEqual,
+  bendEdgeMidpointToCubic,
   computeCentroid,
   computeLabelPoint,
   computePolygonArea,
   constrainEditedPiece,
   curveToCubicControls,
+  deletePieceVertex,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
   findInteriorPoint,
@@ -17,7 +19,9 @@ import {
   pieceToSvgPath,
   quadraticToCubicControls,
   resplitHoledSource,
+  retractPieceHandle,
   smoothPieceGeometry,
+  smoothPieceVertex,
   snapPolygonToNeighbors,
   splitCubicBezier,
   subtractPolygons,
@@ -530,5 +534,124 @@ describe('computeLabelPoint (Pole of Inaccessibility)', () => {
     expect(distFromCenter).toBeLessThan(90);
     expect(pt.radius).toBeGreaterThan(15);
     expect(pt.radius).toBeLessThan(20);
+  });
+});
+
+describe('deletePieceVertex', () => {
+  it('refuses to delete a vertex from a triangle', () => {
+    const tri: [number, number][] = [[0, 0], [100, 0], [50, 100]];
+    expect(deletePieceVertex(tri, [], ['corner', 'corner', 'corner'], 1)).toBeNull();
+  });
+
+  it('merges adjacent cubic curves using outer handles instead of flattening to a straight line', () => {
+    const quad: [number, number][] = [[0, 0], [50, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [
+      makeCubicCurvePoint(0, [15, -25], [35, -25]),
+      makeCubicCurvePoint(1, [65, -25], [85, -25]),
+      makeCubicCurvePoint(3, [50, 125], [20, 125]),
+    ];
+    const anchorTypes: ('corner' | 'smooth')[] = ['corner', 'smooth', 'corner', 'corner', 'corner'];
+
+    const res = deletePieceVertex(quad, curves, anchorTypes, 1);
+    expect(res).not.toBeNull();
+    expect(res!.polygon).toEqual([[0, 0], [100, 0], [100, 100], [0, 100]]);
+    expect(res!.anchorTypes).toEqual(['corner', 'corner', 'corner', 'corner']);
+    // Edge 0 merged from old edge 0 (cp1=[15,-25]) and old edge 1 (cp2=[85,-25])
+    const merged = res!.curvePoints.find(c => c.edgeIdx === 0);
+    expect(merged).toBeDefined();
+    expect(isCubicCurvePoint(merged!)).toBe(true);
+    if (merged && isCubicCurvePoint(merged)) {
+      expect(merged.ctrl).toEqual([15, -25]);
+      expect(merged.ctrl2).toEqual([85, -25]);
+    }
+    // Old edge 3 re-indexed to edge 2
+    expect(res!.curvePoints.find(c => c.edgeIdx === 2)).toBeDefined();
+  });
+
+  it('handles deleting vertex 0 by merging wrap-around edge to new last edge index', () => {
+    const quad: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(3, [-20, 70], [-20, 30])];
+    const res = deletePieceVertex(quad, curves, undefined, 0);
+    expect(res).not.toBeNull();
+    expect(res!.polygon).toHaveLength(3);
+    expect(res!.curvePoints.find(c => c.edgeIdx === 2)).toBeDefined();
+  });
+});
+
+describe('retractPieceHandle', () => {
+  it('retracts only the selected handle and keeps the opposite handle intact', () => {
+    const poly: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(0, [25, -40], [75, -40])];
+    const types: ('corner' | 'smooth')[] = ['smooth', 'smooth', 'corner', 'corner'];
+
+    const res = retractPieceHandle(poly, curves, types, 0, 'ctrl');
+    expect(res.curvePoints).toHaveLength(1);
+    const updated = res.curvePoints[0];
+    expect(isCubicCurvePoint(updated)).toBe(true);
+    if (isCubicCurvePoint(updated)) {
+      expect(updated.ctrl).toEqual([0, 0]);
+      expect(updated.ctrl2).toEqual([75, -40]);
+    }
+    expect(res.anchorTypes).toEqual(['corner', 'smooth', 'corner', 'corner']);
+  });
+
+  it('removes the CurvePoint completely once both handles are retracted', () => {
+    const poly: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const curves = [makeCubicCurvePoint(0, [0, 0], [75, -40])];
+    const res = retractPieceHandle(poly, curves, undefined, 0, 'ctrl2');
+    expect(res.curvePoints).toHaveLength(0);
+  });
+});
+
+describe('bendEdgeMidpointToCubic', () => {
+  it('promotes a straight edge midpoint drag to a cubic Bezier passing through targetMidpoint', () => {
+    const A: [number, number] = [0, 0];
+    const B: [number, number] = [100, 0];
+    const target: [number, number] = [50, -30];
+    const curve = bendEdgeMidpointToCubic(0, A, B, undefined, target);
+    expect(isCubicCurvePoint(curve)).toBe(true);
+    const [cp1, cp2] = curveToCubicControls(A, B, curve);
+    const mid = evaluateCubicBezier(A, cp1, cp2, B, 0.5);
+    expect(mid[0]).toBeCloseTo(50, 4);
+    expect(mid[1]).toBeCloseTo(-30, 4);
+  });
+
+  it('bends an existing asymmetric cubic curve so its midpoint lands exactly on targetMidpoint', () => {
+    const A: [number, number] = [0, 0];
+    const B: [number, number] = [100, 0];
+    const existing = makeCubicCurvePoint(0, [10, -20], [80, -40]);
+    const target: [number, number] = [55, -50];
+    const updated = bendEdgeMidpointToCubic(0, A, B, existing, target);
+    expect(isCubicCurvePoint(updated)).toBe(true);
+    const [cp1, cp2] = curveToCubicControls(A, B, updated);
+    const mid = evaluateCubicBezier(A, cp1, cp2, B, 0.5);
+    expect(mid[0]).toBeCloseTo(55, 4);
+    expect(mid[1]).toBeCloseTo(-50, 4);
+    // Relative vector between cp1 and cp2 is preserved (asymmetry intact)
+    expect(cp2[0] - cp1[0]).toBeCloseTo(70, 4);
+    expect(cp2[1] - cp1[1]).toBeCloseTo(-20, 4);
+  });
+});
+
+describe('smoothPieceVertex', () => {
+  it('synthesizes colinear cubic handles on a sharp corner without disturbing far corners', () => {
+    const sq: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const res = smoothPieceVertex(sq, [], ['corner', 'corner', 'corner', 'corner'], 1);
+    expect(res.anchorTypes[1]).toBe('smooth');
+    const inEdge = res.curvePoints.find(c => c.edgeIdx === 0);
+    const outEdge = res.curvePoints.find(c => c.edgeIdx === 1);
+    expect(inEdge && isCubicCurvePoint(inEdge)).toBe(true);
+    expect(outEdge && isCubicCurvePoint(outEdge)).toBe(true);
+    if (inEdge && isCubicCurvePoint(inEdge) && outEdge && isCubicCurvePoint(outEdge)) {
+      // Far ends remain collapsed at neighboring corners [0,0] and [100,100]
+      expect(inEdge.ctrl).toEqual([0, 0]);
+      expect(outEdge.ctrl2).toEqual([100, 100]);
+      // Handles around [100,0] are strictly opposite along the (100,100)-(0,0) = (1,1) direction
+      const vIn = [inEdge.ctrl2[0] - 100, inEdge.ctrl2[1] - 0];
+      const vOut = [outEdge.ctrl[0] - 100, outEdge.ctrl[1] - 0];
+      expect(vIn[0]).toBeCloseTo(-vOut[0], 4);
+      expect(vIn[1]).toBeCloseTo(-vOut[1], 4);
+      expect(Math.hypot(vOut[0], vOut[1])).toBeGreaterThan(20);
+    }
   });
 });
