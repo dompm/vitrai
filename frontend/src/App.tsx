@@ -14,7 +14,8 @@ import {
   subtractPolygons,
   subtractPolygonsWithSplit,
   resplitHoledSource,
-  computeCentroid,
+  constrainEditedPiece,
+  computeLabelPoint,
   snapPolygonToNeighbors,
   flattenCurves,
   arePolygonsEqual,
@@ -1307,21 +1308,21 @@ export function App() {
     overrideNeighbors?: [number, number][][],
   ) {
     const latest = projectRef.current;
+    const prevPiece = latest.pieces.find(p => p.id === pieceId);
+    const previousDisplayPolygon = prevPiece
+      ? flattenCurves(prevPiece.polygon, prevPiece.curvePoints)
+      : undefined;
     const neighborPolygons = overrideNeighbors ?? latest.pieces
       .filter(piece => piece.id !== pieceId)
       .map(piece => flattenCurves(piece.polygon, piece.curvePoints));
-    const displayPolygon = flattenCurves(polygon, curvePoints);
-    const clipped = subtractPolygons(displayPolygon, neighborPolygons);
-    if (clipped.length < 3) return null;
-
-    // Preserve editable Bézier metadata when the proposed edit is valid. If
-    // it crosses another piece, fall back to the clipped outline: topology may
-    // change at the intersection, so the old control-point indices no longer
-    // describe the resulting boundary.
-    if (arePolygonsEqual(displayPolygon, clipped, 0.1)) {
-      return { polygon, curvePoints, anchorTypes, clipped: false };
-    }
-    return { polygon: clipped, curvePoints: [] as CurvePoint[], anchorTypes: undefined, clipped: true };
+    return constrainEditedPiece({
+      polygon,
+      curvePoints,
+      anchorTypes,
+      previousDisplayPolygon,
+      neighborPolygons,
+      snapRadius: getSnapRadius(latest.patternWidth),
+    });
   }
 
   function handleUpdatePieceCurves(pieceId: string, curvePoints: CurvePoint[], anchorTypes?: ('corner' | 'smooth')[]) {
@@ -1333,7 +1334,7 @@ export function App() {
       updatePieceCurves(pieceId, curvePoints, false, anchorTypes);
       return;
     }
-    updatePiecePolygonAndCurves(pieceId, constrained.polygon, constrained.curvePoints, false);
+    updatePiecePolygonAndCurves(pieceId, constrained.polygon, constrained.curvePoints, false, constrained.anchorTypes);
   }
 
   function handleUpdatePieceGeometry(
@@ -1729,7 +1730,7 @@ export function App() {
     const serializedPieces = pieces.map((rawPiece, idx) => {
       const fairPiece = workingPieces[idx];
       const fairDense = flattenCurves(fairPiece.polygon, fairPiece.curvePoints, 0.25);
-      const centroid = computeCentroid(fairDense);
+      const labelPt = computeLabelPoint(fairDense);
       let bMinX = Infinity, bMinY = Infinity, bMaxX = -Infinity, bMaxY = -Infinity;
       for (const [px, py] of fairDense) {
         if (px < bMinX) bMinX = px;
@@ -1737,15 +1738,16 @@ export function App() {
         if (px > bMaxX) bMaxX = px;
         if (py > bMaxY) bMaxY = py;
       }
-      const minSpan = Math.min(bMaxX - bMinX, bMaxY - bMinY);
+      const bboxMinSpan = Math.min(bMaxX - bMinX, bMaxY - bMinY);
+      const minSpan = labelPt.radius > 0 ? Math.min(bboxMinSpan, labelPt.radius * 2) : bboxMinSpan;
       const grainAngleDeg = Number(((-(rawPiece.transform?.rotation ?? 0) * 180) / Math.PI).toFixed(1));
       const sheetNum = sheetIndexMap.get(rawPiece.glassSheetId) ?? 1;
 
       return {
         num: idx + 1,
         sheetNum,
-        cx: Number(centroid.x.toFixed(2)),
-        cy: Number(centroid.y.toFixed(2)),
+        cx: Number(labelPt.x.toFixed(2)),
+        cy: Number(labelPt.y.toFixed(2)),
         minSpan: Number(minSpan.toFixed(1)),
         grainAngleDeg,
         fair: {

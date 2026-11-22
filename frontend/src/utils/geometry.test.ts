@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   arePolygonsEqual,
+  computeCentroid,
+  computeLabelPoint,
   computePolygonArea,
+  constrainEditedPiece,
   curveToCubicControls,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
@@ -401,5 +404,131 @@ describe('subtractPolygonsWithSplit', () => {
     expect(res.holedSource).toBeNull();
     expect(res.polygons).toHaveLength(1);
     expect(computePolygonArea(res.polygons[0])).toBeCloseTo(150 * 200, 1);
+  });
+});
+
+describe('constrainEditedPiece', () => {
+  it('preserves curves when dragging a free vertex despite a pre-existing tiny overlap on an untouched seam', () => {
+    // Smooth 4-anchor curved oval on the right, touching a neighbor on the left with a 2px pre-existing overlap
+    const basePoly: [number, number][] = [
+      [100, 50], [200, 50], [200, 150], [100, 150],
+    ];
+    const baseCurves = [
+      makeCubicCurvePoint(0, [130, 20], [170, 20]),
+      makeCubicCurvePoint(1, [230, 80], [230, 120]),
+      makeCubicCurvePoint(2, [170, 180], [130, 180]),
+      makeCubicCurvePoint(3, [85, 120], [85, 80]), // bulges slightly into x < 100
+    ];
+    const neighborOnLeft: [number, number][] = [
+      [0, 0], [95, 0], [95, 200], [0, 200], // overlaps the left bulge slightly
+    ];
+    const prevDisplay = flattenCurves(basePoly, baseCurves);
+
+    // Drag the far-right vertex [200, 50] outward to [230, 50] (away from the neighbor!)
+    const editedPoly: [number, number][] = [
+      [100, 50], [230, 50], [200, 150], [100, 150],
+    ];
+
+    const res = constrainEditedPiece({
+      polygon: editedPoly,
+      curvePoints: baseCurves,
+      previousDisplayPolygon: prevDisplay,
+      neighborPolygons: [neighborOnLeft],
+      snapRadius: 12,
+    });
+
+    expect(res).not.toBeNull();
+    expect(res!.clipped).toBe(false);
+    expect(res!.polygon).toEqual(editedPoly);
+    expect(res!.curvePoints).toEqual(baseCurves);
+  });
+
+  it('refits smooth cubic curves instead of dumping dense flattened vertices when clipping genuinely occurs', () => {
+    const basePoly: [number, number][] = [
+      [100, 50], [200, 50], [200, 150], [100, 150],
+    ];
+    const baseCurves = [
+      makeCubicCurvePoint(0, [130, 20], [170, 20]),
+      makeCubicCurvePoint(1, [230, 80], [230, 120]),
+      makeCubicCurvePoint(2, [170, 180], [130, 180]),
+      makeCubicCurvePoint(3, [70, 120], [70, 80]),
+    ];
+    const neighborOnRight: [number, number][] = [
+      [240, 0], [340, 0], [340, 200], [240, 200],
+    ];
+    const prevDisplay = flattenCurves(basePoly, baseCurves);
+
+    // Drag the right vertex deeply INTO the right neighbor (x = 290)
+    const editedPoly: [number, number][] = [
+      [100, 50], [290, 50], [200, 150], [100, 150],
+    ];
+    const res = constrainEditedPiece({
+      polygon: editedPoly,
+      curvePoints: baseCurves,
+      previousDisplayPolygon: prevDisplay,
+      neighborPolygons: [neighborOnRight],
+      snapRadius: 12,
+    });
+
+    expect(res).not.toBeNull();
+    expect(res!.clipped).toBe(true);
+    // Should be compact refitted anchors + curves, NOT a 40+ vertex raw flattened polyline
+    expect(res!.polygon.length).toBeLessThan(20);
+    expect(res!.curvePoints.length).toBeGreaterThan(0);
+  });
+});
+
+describe('computeLabelPoint (Pole of Inaccessibility)', () => {
+  it('places the label at the center of a convex square with exact inscribed radius', () => {
+    const sq: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const pt = computeLabelPoint(sq, 0.5);
+    expect(pt.x).toBeCloseTo(50, 0);
+    expect(pt.y).toBeCloseTo(50, 0);
+    expect(pt.radius).toBeCloseTo(50, 0);
+  });
+
+  it('places the label strictly inside a C-shaped piece where computeCentroid falls outside', () => {
+    // Deep C-shape opening to the right: spine x in [0, 24], top/bottom arms y in [0, 24] and [176, 200]
+    const cShape: [number, number][] = [
+      [0, 0], [160, 0], [160, 24], [24, 24],
+      [24, 176], [160, 176], [160, 200], [0, 200],
+    ];
+    const naive = computeCentroid(cShape);
+    // Naive centroid lands inside the empty bay (x > 24, 24 < y < 176)
+    expect(naive.x).toBeGreaterThan(24);
+    expect(naive.y).toBeGreaterThan(24);
+    expect(naive.y).toBeLessThan(176);
+
+    const pt = computeLabelPoint(cShape, 0.5);
+    expect(pt.radius).toBeGreaterThan(10);
+    // Must lie inside one of the solid arms/spine of width 24
+    const inSpine = pt.x >= 0 && pt.x <= 24 && pt.y >= 0 && pt.y <= 200;
+    const inTopArm = pt.x >= 0 && pt.x <= 160 && pt.y >= 0 && pt.y <= 24;
+    const inBotArm = pt.x >= 0 && pt.x <= 160 && pt.y >= 176 && pt.y <= 200;
+    expect(inSpine || inTopArm || inBotArm).toBe(true);
+  });
+
+  it('places the label inside the widest part of a semicircular half-ring', () => {
+    // Half-annulus: outer r=100, inner r=65 on the right (+x) side of center (100, 100)
+    const halfRing: [number, number][] = [];
+    for (let i = 0; i <= 20; i++) {
+      const a = -Math.PI / 2 + (Math.PI * i) / 20;
+      halfRing.push([100 + 100 * Math.cos(a), 100 + 100 * Math.sin(a)]);
+    }
+    for (let i = 20; i >= 0; i--) {
+      const a = -Math.PI / 2 + (Math.PI * i) / 20;
+      halfRing.push([100 + 65 * Math.cos(a), 100 + 65 * Math.sin(a)]);
+    }
+    const naive = computeCentroid(halfRing);
+    // Naive centroid lands inside the inner hole (distance from (100,100) < 65)
+    expect(Math.hypot(naive.x - 100, naive.y - 100)).toBeLessThan(65);
+
+    const pt = computeLabelPoint(halfRing, 0.5);
+    const distFromCenter = Math.hypot(pt.x - 100, pt.y - 100);
+    // Must land squarely inside the solid band r in [65, 100], near midpoint r ≈ 82.5
+    expect(distFromCenter).toBeGreaterThan(75);
+    expect(distFromCenter).toBeLessThan(90);
+    expect(pt.radius).toBeGreaterThan(15);
+    expect(pt.radius).toBeLessThan(20);
   });
 });

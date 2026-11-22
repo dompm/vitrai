@@ -190,6 +190,113 @@ export function computeCentroid(polygon: [number, number][]): { x: number; y: nu
   return { x, y };
 }
 
+/**
+ * Signed distance from (px, py) to polygon outline (positive inside, negative outside).
+ */
+function pointToPolygonDist(px: number, py: number, polygon: [number, number][]): number {
+  let inside = false;
+  let minDistSq = Infinity;
+  const n = polygon.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const [ax, ay] = polygon[j];
+    const [bx, by] = polygon[i];
+    if ((ay > py) !== (by > py) && px < ((bx - ax) * (py - ay)) / (by - ay) + ax) {
+      inside = !inside;
+    }
+    const dx = bx - ax;
+    const dy = by - ay;
+    const lenSq = dx * dx + dy * dy;
+    let t = 0;
+    if (lenSq > 0) {
+      t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+    }
+    const ex = px - (ax + t * dx);
+    const ey = py - (ay + t * dy);
+    const dSq = ex * ex + ey * ey;
+    if (dSq < minDistSq) minDistSq = dSq;
+  }
+  return (inside ? 1 : -1) * Math.sqrt(minDistSq);
+}
+
+/**
+ * Compute the Pole of Inaccessibility (visual center of the largest inscribed circle)
+ * using Mapbox's quadtree polylabel search. Unlike `computeCentroid`, this is guaranteed
+ * to land strictly inside concave pieces such as C-shapes, crescents, and L-shapes.
+ */
+export function computeLabelPoint(
+  polygon: [number, number][],
+  precision = 1.0,
+): { x: number; y: number; radius: number } {
+  if (polygon.length < 3) {
+    const c = computeCentroid(polygon);
+    return { x: c.x, y: c.y, radius: 0 };
+  }
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of polygon) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const cellSize = Math.min(width, height);
+  if (cellSize <= 0) {
+    return { x: minX, y: minY, radius: 0 };
+  }
+
+  const SQRT2 = Math.SQRT2;
+  interface Cell { x: number; y: number; h: number; d: number; max: number; }
+  const makeCell = (x: number, y: number, h: number): Cell => {
+    const d = pointToPolygonDist(x, y, polygon);
+    return { x, y, h, d, max: d + h * SQRT2 };
+  };
+
+  // Seed with bounding-box center & area centroid so convex shapes converge immediately
+  const c = computeCentroid(polygon);
+  let best = makeCell(c.x, c.y, 0);
+  const bboxCell = makeCell(minX + width / 2, minY + height / 2, 0);
+  if (bboxCell.d > best.d) best = bboxCell;
+
+  const h0 = cellSize / 2;
+  const queue: Cell[] = [];
+  for (let x = minX; x < maxX; x += cellSize) {
+    for (let y = minY; y < maxY; y += cellSize) {
+      queue.push(makeCell(x + h0, y + h0, h0));
+    }
+  }
+
+  // Max-heap pop helper (polylabel typically visits only ~30-150 cells)
+  const popBest = (): Cell => {
+    let bestIdx = 0;
+    for (let i = 1; i < queue.length; i++) {
+      if (queue[i].max > queue[bestIdx].max) bestIdx = i;
+    }
+    const item = queue[bestIdx];
+    queue[bestIdx] = queue[queue.length - 1];
+    queue.pop();
+    return item;
+  };
+
+  const eps = Math.max(0.25, precision);
+  let iterations = 0;
+  while (queue.length > 0 && iterations++ < 2000) {
+    const cell = popBest();
+    if (cell.d > best.d) best = cell;
+    if (cell.max - best.d <= eps) continue;
+    const h = cell.h / 2;
+    queue.push(
+      makeCell(cell.x - h, cell.y - h, h),
+      makeCell(cell.x + h, cell.y - h, h),
+      makeCell(cell.x - h, cell.y + h, h),
+      makeCell(cell.x + h, cell.y + h, h),
+    );
+  }
+
+  return { x: best.x, y: best.y, radius: Math.max(0, best.d) };
+}
+
 // Each pass doubles the vertex count; cap it so repeated Smooth clicks can't
 // inflate a piece into tens of thousands of vertices and blow up clipping,
 // snapping, and packing downstream.
@@ -1923,6 +2030,74 @@ export function subtractPolygonsWithSplit(
     console.warn("Clipping failed", e);
     return { polygons: [subject], hadHoles: false, holedSource: null };
   }
+}
+
+export interface ConstrainEditedPieceResult {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+  clipped: boolean;
+}
+
+/**
+ * Constrain a vertex or curve edit against neighboring pieces without destroying
+ * editable Bézier curves:
+ * 1. If the edit introduces no new overlap beyond any pre-existing sliver on an
+ *    untouched shared seam, keep the proposed `polygon` and `curvePoints` intact.
+ * 2. If the edit genuinely crosses into a neighbor, clip and refit smooth cubic
+ *    Bézier curves (`fitSmoothPieceCurves`) rather than replacing the piece with
+ *    a dense flattened polyline.
+ */
+export function constrainEditedPiece(opts: {
+  polygon: [number, number][];
+  curvePoints: CurvePoint[];
+  anchorTypes?: ('corner' | 'smooth')[];
+  previousDisplayPolygon?: [number, number][];
+  neighborPolygons: [number, number][][];
+  snapRadius: number;
+}): ConstrainEditedPieceResult | null {
+  const { polygon, curvePoints, anchorTypes, previousDisplayPolygon, neighborPolygons, snapRadius } = opts;
+  const displayPolygon = flattenCurves(polygon, curvePoints);
+  if (neighborPolygons.length === 0) {
+    return { polygon, curvePoints, anchorTypes, clipped: false };
+  }
+
+  const clipped = subtractPolygons(displayPolygon, neighborPolygons);
+  if (clipped.length < 3) return null;
+
+  if (arePolygonsEqual(displayPolygon, clipped, 0.1)) {
+    return { polygon, curvePoints, anchorTypes, clipped: false };
+  }
+
+  // Compare overlap area before vs after the edit so a pre-existing sliver on an
+  // untouched curved seam doesn't flatten the entire piece when dragging a free vertex.
+  const newArea = computePolygonArea(displayPolygon);
+  const clippedArea = computePolygonArea(clipped);
+  const newOverlap = Math.max(0, newArea - clippedArea);
+  if (previousDisplayPolygon && previousDisplayPolygon.length >= 3) {
+    const prevClipped = subtractPolygons(previousDisplayPolygon, neighborPolygons);
+    const prevOverlap = Math.max(
+      0,
+      computePolygonArea(previousDisplayPolygon) - computePolygonArea(prevClipped),
+    );
+    const tol = Math.max(1.0, newArea * 1e-3);
+    if (newOverlap <= prevOverlap + tol) {
+      return { polygon, curvePoints, anchorTypes, clipped: false };
+    }
+  }
+
+  // Genuine overlap: refit smooth cubic curves onto the clipped boundary so the
+  // piece stays editable instead of exploding into dense straight segments.
+  const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+    cornerAngleDeg: 40,
+    seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+  });
+  return {
+    polygon: fitted.polygon,
+    curvePoints: fitted.curvePoints,
+    anchorTypes: fitted.anchorTypes,
+    clipped: true,
+  };
 }
 
 export function subtractPolygons(subject: [number, number][], clipPolygons: [number, number][][]): [number, number][] {
