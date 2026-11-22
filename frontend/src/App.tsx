@@ -1069,14 +1069,33 @@ export function App() {
       const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
       const snapRadius = getSnapRadius(latest.patternWidth);
       const snapped = snapPolygonToNeighbors(polygon, neighborPolygons, snapRadius);
-      const clipped = subtractPolygons(snapped, neighborPolygons);
+      const splitResult = subtractPolygonsWithSplit(snapped, neighborPolygons, 0);
       // skipHistory: collapse with the parent addPieceFromBox action so one Cmd+Z reverts both
-      if (clipped.length >= 3) {
-        const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
-          cornerAngleDeg: 40,
-          seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+      if (splitResult.hadHoles && splitResult.holedSource && splitResult.polygons.length > 0) {
+        const createdIds = importSvgPieces({
+          pieces: splitResult.polygons.map(p => ({ polygon: p })),
+          sheetId: activeSheetId,
+          tierIndex,
+          replacePieceIds: [pieceId],
+          skipHistory: true,
         });
-        updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+        setSvgImportFeedback(null);
+        setRingSplitFeedback({
+          holedSource: splitResult.holedSource,
+          pieceIds: createdIds,
+          angleDeg: 0,
+          sheetId: activeSheetId,
+          tierIndex,
+        });
+      } else {
+        const clipped = splitResult.polygons[0] ?? [];
+        if (clipped.length >= 3) {
+          const fitted = fitSmoothPieceCurves(clipped, neighborPolygons, {
+            cornerAngleDeg: 40,
+            seamTolerancePx: Math.max(2.5, snapRadius * 0.25),
+          });
+          updatePiecePolygonAndCurves(pieceId, fitted.polygon, fitted.curvePoints, true, fitted.anchorTypes);
+        }
       }
     } catch (e) {
       console.error("SAM segment failed:", e);
@@ -1111,14 +1130,19 @@ export function App() {
     });
   };
 
-  // Dismiss the split-angle pill if the user undoes or deletes the split pieces
+  // Dismiss the split-angle pill as soon as the user clicks away, changes selection,
+  // deletes/undoes one of the split pieces, or switches projects.
   useEffect(() => {
     if (!ringSplitFeedback) return;
     const present = new Set(project.pieces.map(p => p.id));
-    if (!ringSplitFeedback.pieceIds.every(id => present.has(id))) {
+    const allPresent = ringSplitFeedback.pieceIds.every(id => present.has(id));
+    const sameSelection =
+      selectedPieceIds.length === ringSplitFeedback.pieceIds.length &&
+      ringSplitFeedback.pieceIds.every(id => selectedPieceIds.includes(id));
+    if (!allPresent || !sameSelection) {
       setRingSplitFeedback(null);
     }
-  }, [project.pieces, ringSplitFeedback]);
+  }, [project.pieces, selectedPieceIds, ringSplitFeedback]);
 
   function handleAddManualPiece(
     polygon: [number, number][],
