@@ -13,7 +13,7 @@ import { useProject, type BatchPieceInput } from './hooks/useProject';
 import {
   subtractPolygons,
   constrainEditedPiece,
-  computeCentroid,
+  computeLabelPoint,
   snapPolygonToNeighbors,
   flattenCurves,
   arePolygonsEqual,
@@ -1639,7 +1639,7 @@ export function App() {
     const serializedPieces = pieces.map((rawPiece, idx) => {
       const fairPiece = workingPieces[idx];
       const fairDense = flattenCurves(fairPiece.polygon, fairPiece.curvePoints, 0.25);
-      const centroid = computeCentroid(fairDense);
+      const labelPt = computeLabelPoint(fairDense);
       let bMinX = Infinity, bMinY = Infinity, bMaxX = -Infinity, bMaxY = -Infinity;
       for (const [px, py] of fairDense) {
         if (px < bMinX) bMinX = px;
@@ -1647,15 +1647,16 @@ export function App() {
         if (px > bMaxX) bMaxX = px;
         if (py > bMaxY) bMaxY = py;
       }
-      const minSpan = Math.min(bMaxX - bMinX, bMaxY - bMinY);
+      const bboxMinSpan = Math.min(bMaxX - bMinX, bMaxY - bMinY);
+      const minSpan = labelPt.radius > 0 ? Math.min(bboxMinSpan, labelPt.radius * 2) : bboxMinSpan;
       const grainAngleDeg = Number(((-(rawPiece.transform?.rotation ?? 0) * 180) / Math.PI).toFixed(1));
       const sheetNum = sheetIndexMap.get(rawPiece.glassSheetId) ?? 1;
 
       return {
         num: idx + 1,
         sheetNum,
-        cx: Number(centroid.x.toFixed(2)),
-        cy: Number(centroid.y.toFixed(2)),
+        cx: Number(labelPt.x.toFixed(2)),
+        cy: Number(labelPt.y.toFixed(2)),
         minSpan: Number(minSpan.toFixed(1)),
         grainAngleDeg,
         fair: {
