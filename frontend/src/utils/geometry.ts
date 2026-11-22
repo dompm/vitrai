@@ -2449,3 +2449,75 @@ export function bendEdgeMidpointToCubic(
   const [cp1, cp2] = quadraticToCubicControls(start, qCtrl, end);
   return makeCubicCurvePoint(edgeIdx, cp1, cp2);
 }
+
+/**
+ * Convert a vertex to a smooth C1 anchor by synthesizing (or colinearly aligning)
+ * cubic Bézier handles on its incoming and outgoing edges parallel to the prev->next chord.
+ * Far-end handles of adjacent straight edges stay collapsed at their neighboring corners
+ * so only the selected vertex is rounded.
+ */
+export function smoothPieceVertex(
+  polygon: [number, number][],
+  curvePoints: CurvePoint[],
+  anchorTypes: ('corner' | 'smooth')[] | undefined,
+  vertexIdx: number,
+): { curvePoints: CurvePoint[]; anchorTypes: ('corner' | 'smooth')[] } {
+  const n = polygon.length;
+  const nextAnchorTypes: ('corner' | 'smooth')[] = anchorTypes && anchorTypes.length === n
+    ? [...anchorTypes]
+    : polygon.map(() => 'corner' as const);
+  if (n < 3 || vertexIdx < 0 || vertexIdx >= n) {
+    return { curvePoints, anchorTypes: nextAnchorTypes };
+  }
+
+  const prevIdx = (vertexIdx - 1 + n) % n;
+  const nextIdx = (vertexIdx + 1) % n;
+  const prev = polygon[prevIdx];
+  const curr = polygon[vertexIdx];
+  const next = polygon[nextIdx];
+
+  const tx = next[0] - prev[0];
+  const ty = next[1] - prev[1];
+  const tLen = Math.hypot(tx, ty);
+  const dIn = Math.hypot(curr[0] - prev[0], curr[1] - prev[1]);
+  const dOut = Math.hypot(next[0] - curr[0], next[1] - curr[1]);
+
+  if (tLen < 1e-6 || dIn < 1e-6 || dOut < 1e-6) {
+    nextAnchorTypes[vertexIdx] = 'smooth';
+    return { curvePoints, anchorTypes: nextAnchorTypes };
+  }
+
+  const ux = tx / tLen;
+  const uy = ty / tLen;
+
+  const existingPrev = curvePoints.find(c => c.edgeIdx === prevIdx);
+  const existingNext = curvePoints.find(c => c.edgeIdx === vertexIdx);
+
+  let prevCp1: [number, number] = [prev[0], prev[1]];
+  let lenIn = dIn * 0.28;
+  if (existingPrev) {
+    const [cp1, cp2] = curveToCubicControls(prev, curr, existingPrev);
+    prevCp1 = cp1;
+    const curLen = Math.hypot(cp2[0] - curr[0], cp2[1] - curr[1]);
+    if (curLen > 1) lenIn = Math.min(Math.max(curLen, dIn * 0.15), dIn * 0.45);
+  }
+
+  let nextCp2: [number, number] = [next[0], next[1]];
+  let lenOut = dOut * 0.28;
+  if (existingNext) {
+    const [cp1, cp2] = curveToCubicControls(curr, next, existingNext);
+    nextCp2 = cp2;
+    const curLen = Math.hypot(cp1[0] - curr[0], cp1[1] - curr[1]);
+    if (curLen > 1) lenOut = Math.min(Math.max(curLen, dOut * 0.15), dOut * 0.45);
+  }
+
+  const prevCp2: [number, number] = [curr[0] - ux * lenIn, curr[1] - uy * lenIn];
+  const nextCp1: [number, number] = [curr[0] + ux * lenOut, curr[1] + uy * lenOut];
+
+  const nextCurves = curvePoints.filter(c => c.edgeIdx !== prevIdx && c.edgeIdx !== vertexIdx);
+  nextCurves.push(makeCubicCurvePoint(prevIdx, prevCp1, prevCp2));
+  nextCurves.push(makeCubicCurvePoint(vertexIdx, nextCp1, nextCp2));
+  nextAnchorTypes[vertexIdx] = 'smooth';
+
+  return { curvePoints: nextCurves, anchorTypes: nextAnchorTypes };
+}

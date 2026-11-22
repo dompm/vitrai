@@ -10,7 +10,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
 import { TRACE_PEN_GUIDE } from './Tutorial/types';
-import { flattenCurves, ctrlToHandle, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle, bendEdgeMidpointToCubic } from '../utils/geometry';
+import { flattenCurves, ctrlToHandle, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle, bendEdgeMidpointToCubic, smoothPieceVertex } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
@@ -1431,20 +1431,15 @@ export function ResultPanel({
       : targetPiece.polygon.map(() => 'corner' as const);
     const prevEdge = (vertexIdx - 1 + len) % len;
     const curCurves = targetPiece.curvePoints ?? [];
-    const hasAdjacentCurve = curCurves.some(cp => cp.edgeIdx === vertexIdx || cp.edgeIdx === prevEdge);
     if (anchorTypes[vertexIdx] === 'smooth') {
-      anchorTypes[vertexIdx] = 'corner';
-      onUpdatePieceCurves(pieceId, curCurves, anchorTypes);
-    } else if (hasAdjacentCurve) {
-      anchorTypes[vertexIdx] = 'corner';
-      onUpdatePieceCurves(
-        pieceId,
-        curCurves.filter(cp => cp.edgeIdx !== vertexIdx && cp.edgeIdx !== prevEdge),
-        anchorTypes,
-      );
+      const afterIn = retractPieceHandle(targetPiece.polygon, curCurves, anchorTypes, prevEdge, 'ctrl2');
+      const afterOut = retractPieceHandle(targetPiece.polygon, afterIn.curvePoints, afterIn.anchorTypes ?? anchorTypes, vertexIdx, 'ctrl');
+      const nextTypes = afterOut.anchorTypes ?? anchorTypes;
+      nextTypes[vertexIdx] = 'corner';
+      onUpdatePieceCurves(pieceId, afterOut.curvePoints, nextTypes);
     } else {
-      anchorTypes[vertexIdx] = 'smooth';
-      onUpdatePieceCurves(pieceId, curCurves, anchorTypes);
+      const smoothed = smoothPieceVertex(targetPiece.polygon, curCurves, anchorTypes, vertexIdx);
+      onUpdatePieceCurves(pieceId, smoothed.curvePoints, smoothed.anchorTypes);
     }
     setVertexContextMenu(null);
   }

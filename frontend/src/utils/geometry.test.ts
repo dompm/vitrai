@@ -21,6 +21,7 @@ import {
   resplitHoledSource,
   retractPieceHandle,
   smoothPieceGeometry,
+  smoothPieceVertex,
   snapPolygonToNeighbors,
   splitCubicBezier,
   subtractPolygons,
@@ -629,5 +630,28 @@ describe('bendEdgeMidpointToCubic', () => {
     // Relative vector between cp1 and cp2 is preserved (asymmetry intact)
     expect(cp2[0] - cp1[0]).toBeCloseTo(70, 4);
     expect(cp2[1] - cp1[1]).toBeCloseTo(-20, 4);
+  });
+});
+
+describe('smoothPieceVertex', () => {
+  it('synthesizes colinear cubic handles on a sharp corner without disturbing far corners', () => {
+    const sq: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const res = smoothPieceVertex(sq, [], ['corner', 'corner', 'corner', 'corner'], 1);
+    expect(res.anchorTypes[1]).toBe('smooth');
+    const inEdge = res.curvePoints.find(c => c.edgeIdx === 0);
+    const outEdge = res.curvePoints.find(c => c.edgeIdx === 1);
+    expect(inEdge && isCubicCurvePoint(inEdge)).toBe(true);
+    expect(outEdge && isCubicCurvePoint(outEdge)).toBe(true);
+    if (inEdge && isCubicCurvePoint(inEdge) && outEdge && isCubicCurvePoint(outEdge)) {
+      // Far ends remain collapsed at neighboring corners [0,0] and [100,100]
+      expect(inEdge.ctrl).toEqual([0, 0]);
+      expect(outEdge.ctrl2).toEqual([100, 100]);
+      // Handles around [100,0] are strictly opposite along the (100,100)-(0,0) = (1,1) direction
+      const vIn = [inEdge.ctrl2[0] - 100, inEdge.ctrl2[1] - 0];
+      const vOut = [outEdge.ctrl[0] - 100, outEdge.ctrl[1] - 0];
+      expect(vIn[0]).toBeCloseTo(-vOut[0], 4);
+      expect(vIn[1]).toBeCloseTo(-vOut[1], 4);
+      expect(Math.hypot(vOut[0], vOut[1])).toBeGreaterThan(20);
+    }
   });
 });
