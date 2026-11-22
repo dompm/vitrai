@@ -3418,28 +3418,32 @@ export function ResultPanel({
               const canDelete = targetPiece.polygon.length > 3;
               return (
                 <div
-                  className="sheet-context-menu"
+                  className="sheet-tab-menu"
                   role="menu"
-                  style={{ position: 'fixed', left: vertexContextMenu.x, top: vertexContextMenu.y, zIndex: 1000 }}
+                  style={{ left: vertexContextMenu.x + 6, top: vertexContextMenu.y + 6, zIndex: 1000 }}
                   onPointerDown={e => e.stopPropagation()}
                   onContextMenu={e => e.preventDefault()}
                 >
                   <button
                     type="button"
-                    className="sheet-context-item"
+                    className="sheet-tab-menu-item"
                     role="menuitem"
                     onClick={() => toggleVertexAnchorType(vertexContextMenu.pieceId, vertexContextMenu.vertexIdx)}
                   >
-                    {isSmooth ? t('vertexMakeCorner') : t('vertexMakeSmooth')}
+                    <span className="sheet-tab-menu-label">
+                      {isSmooth ? t('vertexMakeCorner') : t('vertexMakeSmooth')}
+                    </span>
                   </button>
+                  <div className="sheet-tab-menu-divider" />
                   <button
                     type="button"
-                    className="sheet-context-item sheet-context-item--danger"
+                    className={`sheet-tab-menu-item ${canDelete ? 'sheet-tab-menu-item-danger' : 'is-disabled'}`}
                     role="menuitem"
                     disabled={!canDelete}
                     onClick={() => deleteFocusedVertex(vertexContextMenu.pieceId, vertexContextMenu.vertexIdx)}
                   >
-                    {t('vertexDeletePoint')}
+                    <span className="sheet-tab-menu-label">{t('vertexDeletePoint')}</span>
+                    <span className="sheet-tab-menu-count" aria-hidden="true">⌫</span>
                   </button>
                 </div>
               );
