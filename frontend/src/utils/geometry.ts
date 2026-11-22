@@ -190,6 +190,113 @@ export function computeCentroid(polygon: [number, number][]): { x: number; y: nu
   return { x, y };
 }
 
+/**
+ * Signed distance from (px, py) to polygon outline (positive inside, negative outside).
+ */
+function pointToPolygonDist(px: number, py: number, polygon: [number, number][]): number {
+  let inside = false;
+  let minDistSq = Infinity;
+  const n = polygon.length;
+  for (let i = 0, j = n - 1; i < n; j = i++) {
+    const [ax, ay] = polygon[j];
+    const [bx, by] = polygon[i];
+    if ((ay > py) !== (by > py) && px < ((bx - ax) * (py - ay)) / (by - ay) + ax) {
+      inside = !inside;
+    }
+    const dx = bx - ax;
+    const dy = by - ay;
+    const lenSq = dx * dx + dy * dy;
+    let t = 0;
+    if (lenSq > 0) {
+      t = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / lenSq));
+    }
+    const ex = px - (ax + t * dx);
+    const ey = py - (ay + t * dy);
+    const dSq = ex * ex + ey * ey;
+    if (dSq < minDistSq) minDistSq = dSq;
+  }
+  return (inside ? 1 : -1) * Math.sqrt(minDistSq);
+}
+
+/**
+ * Compute the Pole of Inaccessibility (visual center of the largest inscribed circle)
+ * using Mapbox's quadtree polylabel search. Unlike `computeCentroid`, this is guaranteed
+ * to land strictly inside concave pieces such as C-shapes, crescents, and L-shapes.
+ */
+export function computeLabelPoint(
+  polygon: [number, number][],
+  precision = 1.0,
+): { x: number; y: number; radius: number } {
+  if (polygon.length < 3) {
+    const c = computeCentroid(polygon);
+    return { x: c.x, y: c.y, radius: 0 };
+  }
+
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [x, y] of polygon) {
+    if (x < minX) minX = x;
+    if (y < minY) minY = y;
+    if (x > maxX) maxX = x;
+    if (y > maxY) maxY = y;
+  }
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const cellSize = Math.min(width, height);
+  if (cellSize <= 0) {
+    return { x: minX, y: minY, radius: 0 };
+  }
+
+  const SQRT2 = Math.SQRT2;
+  interface Cell { x: number; y: number; h: number; d: number; max: number; }
+  const makeCell = (x: number, y: number, h: number): Cell => {
+    const d = pointToPolygonDist(x, y, polygon);
+    return { x, y, h, d, max: d + h * SQRT2 };
+  };
+
+  // Seed with bounding-box center & area centroid so convex shapes converge immediately
+  const c = computeCentroid(polygon);
+  let best = makeCell(c.x, c.y, 0);
+  const bboxCell = makeCell(minX + width / 2, minY + height / 2, 0);
+  if (bboxCell.d > best.d) best = bboxCell;
+
+  const h0 = cellSize / 2;
+  const queue: Cell[] = [];
+  for (let x = minX; x < maxX; x += cellSize) {
+    for (let y = minY; y < maxY; y += cellSize) {
+      queue.push(makeCell(x + h0, y + h0, h0));
+    }
+  }
+
+  // Max-heap pop helper (polylabel typically visits only ~30-150 cells)
+  const popBest = (): Cell => {
+    let bestIdx = 0;
+    for (let i = 1; i < queue.length; i++) {
+      if (queue[i].max > queue[bestIdx].max) bestIdx = i;
+    }
+    const item = queue[bestIdx];
+    queue[bestIdx] = queue[queue.length - 1];
+    queue.pop();
+    return item;
+  };
+
+  const eps = Math.max(0.25, precision);
+  let iterations = 0;
+  while (queue.length > 0 && iterations++ < 2000) {
+    const cell = popBest();
+    if (cell.d > best.d) best = cell;
+    if (cell.max - best.d <= eps) continue;
+    const h = cell.h / 2;
+    queue.push(
+      makeCell(cell.x - h, cell.y - h, h),
+      makeCell(cell.x + h, cell.y - h, h),
+      makeCell(cell.x - h, cell.y + h, h),
+      makeCell(cell.x + h, cell.y + h, h),
+    );
+  }
+
+  return { x: best.x, y: best.y, radius: Math.max(0, best.d) };
+}
+
 // Each pass doubles the vertex count; cap it so repeated Smooth clicks can't
 // inflate a piece into tens of thousands of vertices and blow up clipping,
 // snapping, and packing downstream.

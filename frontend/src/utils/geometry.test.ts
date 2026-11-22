@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   arePolygonsEqual,
+  computeCentroid,
+  computeLabelPoint,
   curveToCubicControls,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
@@ -318,5 +320,61 @@ describe('seam snapping and curve fitting for fabrication', () => {
     // Newton-Raphson reparameterization should fit each leaf arc with at most 1 interior smooth anchor (<= 4 total anchors)
     expect(fitted.polygon.length).toBeLessThanOrEqual(4);
     expect(fitted.curvePoints.length).toBeGreaterThanOrEqual(2);
+  });
+});
+
+
+describe('computeLabelPoint (Pole of Inaccessibility)', () => {
+  it('places the label at the center of a convex square with exact inscribed radius', () => {
+    const sq: [number, number][] = [[0, 0], [100, 0], [100, 100], [0, 100]];
+    const pt = computeLabelPoint(sq, 0.5);
+    expect(pt.x).toBeCloseTo(50, 0);
+    expect(pt.y).toBeCloseTo(50, 0);
+    expect(pt.radius).toBeCloseTo(50, 0);
+  });
+
+  it('places the label strictly inside a C-shaped piece where computeCentroid falls outside', () => {
+    // Deep C-shape opening to the right: spine x in [0, 24], top/bottom arms y in [0, 24] and [176, 200]
+    const cShape: [number, number][] = [
+      [0, 0], [160, 0], [160, 24], [24, 24],
+      [24, 176], [160, 176], [160, 200], [0, 200],
+    ];
+    const naive = computeCentroid(cShape);
+    // Naive centroid lands inside the empty bay (x > 24, 24 < y < 176)
+    expect(naive.x).toBeGreaterThan(24);
+    expect(naive.y).toBeGreaterThan(24);
+    expect(naive.y).toBeLessThan(176);
+
+    const pt = computeLabelPoint(cShape, 0.5);
+    expect(pt.radius).toBeGreaterThan(10);
+    // Must lie inside one of the solid arms/spine of width 24
+    const inSpine = pt.x >= 0 && pt.x <= 24 && pt.y >= 0 && pt.y <= 200;
+    const inTopArm = pt.x >= 0 && pt.x <= 160 && pt.y >= 0 && pt.y <= 24;
+    const inBotArm = pt.x >= 0 && pt.x <= 160 && pt.y >= 176 && pt.y <= 200;
+    expect(inSpine || inTopArm || inBotArm).toBe(true);
+  });
+
+  it('places the label inside the widest part of a semicircular half-ring', () => {
+    // Half-annulus: outer r=100, inner r=65 on the right (+x) side of center (100, 100)
+    const halfRing: [number, number][] = [];
+    for (let i = 0; i <= 20; i++) {
+      const a = -Math.PI / 2 + (Math.PI * i) / 20;
+      halfRing.push([100 + 100 * Math.cos(a), 100 + 100 * Math.sin(a)]);
+    }
+    for (let i = 20; i >= 0; i--) {
+      const a = -Math.PI / 2 + (Math.PI * i) / 20;
+      halfRing.push([100 + 65 * Math.cos(a), 100 + 65 * Math.sin(a)]);
+    }
+    const naive = computeCentroid(halfRing);
+    // Naive centroid lands inside the inner hole (distance from (100,100) < 65)
+    expect(Math.hypot(naive.x - 100, naive.y - 100)).toBeLessThan(65);
+
+    const pt = computeLabelPoint(halfRing, 0.5);
+    const distFromCenter = Math.hypot(pt.x - 100, pt.y - 100);
+    // Must land squarely inside the solid band r in [65, 100], near midpoint r ≈ 82.5
+    expect(distFromCenter).toBeGreaterThan(75);
+    expect(distFromCenter).toBeLessThan(90);
+    expect(pt.radius).toBeGreaterThan(15);
+    expect(pt.radius).toBeLessThan(20);
   });
 });
