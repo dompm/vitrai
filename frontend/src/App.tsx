@@ -1164,12 +1164,11 @@ export function App() {
     const others = project.pieces;
     const neighborPolygons = others.map(p => flattenCurves(p.polygon, p.curvePoints));
     const displayPolygon = flattenCurves(polygon, curvePoints);
-    // Curved paths are already snapped interactively at their true anchors.
-    // Snapping dense curve samples here would destroy their editable controls.
-    const snapped = curvePoints.length > 0
-      ? displayPolygon
-      : snapPolygonToNeighbors(polygon, neighborPolygons, getSnapRadius(project.patternWidth));
-    const splitResult = subtractPolygonsWithSplit(snapped, neighborPolygons, 0);
+    // Manual Pen/Pencil paths are already snapped interactively at their true anchors
+    // via penSnapIndex. Never run SAM2's post-hoc mask-gap snapPolygonToNeighbors here,
+    // because its 1.5%-width + 1.65x hysteresis vacuum pulls intentional outer vertices
+    // onto nearby neighbors and collapses pieces drawn around circular seams.
+    const splitResult = subtractPolygonsWithSplit(displayPolygon, neighborPolygons, 0);
     if (splitResult.hadHoles && splitResult.holedSource && splitResult.polygons.length > 0) {
       const createdIds = importSvgPieces({
         pieces: splitResult.polygons.map(p => ({ polygon: p })),
