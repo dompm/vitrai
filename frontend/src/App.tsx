@@ -2685,7 +2685,7 @@ export function App() {
           </span>
           <PenStatusDisplay
             store={penStatusStore}
-            active={patternTool === 'pen' || patternTool === 'polygon'}
+            active={patternTool === 'pen'}
             scale={project.patternScale}
           />
           {activeSheet && (
