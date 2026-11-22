@@ -2008,15 +2008,15 @@ html, body, #root {
 .tutorial-track-card-top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 11px;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .tutorial-track-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   background: #F4EFE6;
   border: 1px solid var(--hairline);
   display: inline-flex;
@@ -2034,6 +2034,7 @@ html, body, #root {
 .tutorial-track-radio {
   width: 16px;
   height: 16px;
+  margin-left: auto;
   border-radius: 50%;
   border: 1.5px solid var(--hairline-2);
   background: var(--paper);
@@ -2059,8 +2060,9 @@ html, body, #root {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--text-bright);
-  margin: 0 0 4px 0;
+  margin: 0;
   letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .tutorial-track-card-desc {

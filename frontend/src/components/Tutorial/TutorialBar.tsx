@@ -95,9 +95,9 @@ export function TutorialBar({ step, onStart, onSkip, onContinue, continueLabel, 
                     <div className="tutorial-track-icon">
                       <TrackArtwork track={track.id} />
                     </div>
+                    <h3 className="tutorial-track-card-title">{t(track.titleKey)}</h3>
                     <span className="tutorial-track-radio" aria-hidden="true" />
                   </div>
-                  <h3 className="tutorial-track-card-title">{t(track.titleKey)}</h3>
                   <p className="tutorial-track-card-desc">{t(track.descKey)}</p>
                 </button>
               );
