@@ -11,10 +11,10 @@ import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../ty
 import type { StepId } from './Tutorial/types';
 import { TRACE_PEN_GUIDE } from './Tutorial/types';
 import { flattenCurves, ctrlToHandle, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle, bendEdgeMidpointToCubic, smoothPieceVertex } from '../utils/geometry';
-import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
+import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
-import { SelectAnimation, BoxAnimation, CropAnimation, CanvasAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PolygonAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
+import { SelectAnimation, BoxAnimation, CropAnimation, CanvasAnimation, MeasureAnimation, DetectAllAnimation, InspectAnimation, PanAnimation, PenAnimation, PencilAnimation, SnappingAnimation, SolderAnimation, SymmetryAnimation, ProfileAnimation } from './ToolTooltipAnimations';
 import { ToolTooltip } from './ToolTooltip';
 import { CropOverlay } from './CropOverlay';
 import { MeasureInput } from './MeasureInput';
@@ -31,6 +31,7 @@ import { constrainToAngle, isPointWithinBounds, nearestCandidate } from '../util
 import { getPieceGeometry, type PieceGeometry } from '../editor/geometry/pieceGeometry';
 import { PieceTransformPreviewStore, usePieceTransformPreview } from '../editor/interaction/pieceTransformPreviewStore';
 import { PencilController } from '../editor/interaction/pencilController';
+import { computePenAnchorAfterDrag, shouldActivatePenDrag, type PenDragSession } from '../editor/interaction/penGestures';
 import { createRafScheduler } from '../editor/interaction/rafScheduler';
 import { PencilOverlay } from './canvas/PencilOverlay';
 import { PenStatusStore } from '../editor/interaction/penStatusStore';
@@ -1018,13 +1019,10 @@ export function ResultPanel({
     }
   }, [activeTool, isTraceMode, onChangeActiveTool]);
 
-  const [activePolygonPoints, setActivePolygonPoints] = useState<[number, number][]>([]);
   const [activePenAnchors, setActivePenAnchors] = useState<BezierAnchor[]>([]);
   const [penDragIndex, setPenDragIndex] = useState<number | null>(null);
-  const penDragIndexRef = useRef<number | null>(null);
+  const penDragSessionRef = useRef<PenDragSession | null>(null);
   const penPreviewRef = useRef<PenPreviewHandle>(null);
-  const activePolygonPointsRef = useRef(activePolygonPoints);
-  activePolygonPointsRef.current = activePolygonPoints;
   const activePenAnchorsRef = useRef(activePenAnchors);
   activePenAnchorsRef.current = activePenAnchors;
 
@@ -1090,12 +1088,10 @@ export function ResultPanel({
     shiftPressed: boolean,
     suppressSnap = false,
   ): PenResolution | null {
-    if (activeTool !== 'polygon' && activeTool !== 'pen') return null;
+    if (activeTool !== 'pen') return null;
     suppressSnap = suppressSnap || !snapEnabled;
 
-    const pathPoints = activeTool === 'polygon'
-      ? activePolygonPointsRef.current
-      : activePenAnchorsRef.current.map(anchor => anchor.point);
+    const pathPoints = activePenAnchorsRef.current.map(anchor => anchor.point);
     const lastPt = pathPoints[pathPoints.length - 1];
 
     if (suppressSnap) {
@@ -1373,18 +1369,10 @@ export function ResultPanel({
 
   const solderWidth = useMemo(() => getSolderWidth(project.patternScale, project.patternWidth, project.solderWidthMM), [project.patternScale, project.patternWidth, project.solderWidthMM]);
 
-  function commitActivePolygon() {
-    if (activePolygonPointsRef.current.length >= 3) {
-      onAddManualPiece(activePolygonPointsRef.current);
-    }
-    setActivePolygonPoints([]);
-    clearPenPreview();
-  }
-
   function clearActivePen() {
     setActivePenAnchors([]);
     setPenDragIndex(null);
-    penDragIndexRef.current = null;
+    penDragSessionRef.current = null;
     clearPenPreview();
   }
 
@@ -1455,7 +1443,7 @@ export function ResultPanel({
 
   const lastPoint = activeTool === 'pen'
     ? activePenAnchors[activePenAnchors.length - 1]?.point ?? null
-    : activePolygonPoints[activePolygonPoints.length - 1] ?? null;
+    : null;
 
   // Capture only draft undo so it wins over the app-level history handler.
   // All other shortcuts remain in bubble phase, allowing open modals to stop
@@ -1469,11 +1457,7 @@ export function ResultPanel({
       return;
     }
     if (!(e.metaKey || e.ctrlKey) || e.key.toLowerCase() !== 'z') return;
-    if (activeTool === 'polygon' && activePolygonPointsRef.current.length > 0) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      setActivePolygonPoints(prev => prev.slice(0, -1));
-    } else if (activeTool === 'pen' && activePenAnchorsRef.current.length > 0) {
+    if (activeTool === 'pen' && activePenAnchorsRef.current.length > 0) {
       e.preventDefault();
       e.stopImmediatePropagation();
       setActivePenAnchors(prev => prev.slice(0, -1));
@@ -1509,7 +1493,7 @@ export function ResultPanel({
     if (key === 'v') handleToolChange('select');
     else if (key === 'h') handleToolChange('pan');
     else if (key === 'b' && isTraceMode && !isEncoding) handleToolChange('box');
-    else if (key === 'p') handleToolChange(e.shiftKey ? 'polygon' : 'pen');
+    else if (key === 'p') handleToolChange('pen');
     else if (key === 'n') handleToolChange('pencil');
     else if (key === 'c') handleToolChange('crop');
     else if (key === 'm') handleToolChange('measure');
@@ -1517,18 +1501,14 @@ export function ResultPanel({
     else if (key === 'a') onRefineModeChange(refineModeRef.current === 'add' ? null : 'add');
     else if (key === 's') onRefineModeChange(refineModeRef.current === 'remove' ? null : 'remove');
     else if (e.key === 'Enter') {
-      if (activeTool === 'polygon' && activePolygonPointsRef.current.length >= 3) commitActivePolygon();
-      else if (activeTool === 'pen' && activePenAnchorsRef.current.length >= 3) commitActivePen();
+      if (activeTool === 'pen' && activePenAnchorsRef.current.length >= 3) commitActivePen();
       else if (activeTool === 'crop') handleToolChange('select');
     } else if (e.key === 'Escape') {
       if (vertexContextMenu) setVertexContextMenu(null);
       else if (selectedVertexIdxRef.current !== null) setSelectedVertexIdx(null);
       else if (isSolderPopoverOpenRef.current) setIsSolderPopoverOpen(false);
       else if (refineModeRef.current) onRefineModeChange(null);
-      else if (activePolygonPointsRef.current.length > 0) {
-        setActivePolygonPoints([]);
-        clearPenPreview();
-      } else if (activePenAnchorsRef.current.length > 0) clearActivePen();
+      else if (activePenAnchorsRef.current.length > 0) clearActivePen();
       else handleToolChange('select');
     }
   }
@@ -1628,34 +1608,35 @@ export function ResultPanel({
       return;
     }
 
-    if (activeTool === 'polygon') {
-      const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      if (activePolygonPointsRef.current.length >= 3) {
-        const [startX, startY] = activePolygonPointsRef.current[0];
-        const dist = Math.hypot(x - startX, y - startY) * vp.effectiveScale;
-        if (dist < 15) {
-          commitActivePolygon();
-          return;
-        }
-      }
-      const resolution = resolveHoverPoint(x, y, e.evt.shiftKey, e.evt.ctrlKey);
-      penPreviewRef.current?.publish(resolution);
-      const resolved = resolution?.point ?? [x, y];
-      if (!isInsideDrawableBounds(resolved)) {
-        clearDraftHoverFeedback();
-        return;
-      }
-      setActivePolygonPoints(prev => [...prev, resolved]);
-      return;
-    }
-
     if (activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       const anchors = activePenAnchorsRef.current;
+      // Clicking (or click-dragging) the first anchor closes the path, optionally curving the closing edge
       if (anchors.length >= 3) {
         const [startX, startY] = anchors[0].point;
         if (Math.hypot(x - startX, y - startY) * vp.effectiveScale < 15) {
-          commitActivePen();
+          capturePointer(e);
+          penDragSessionRef.current = {
+            index: 0,
+            downScreen: [ptr.x, ptr.y],
+            downTimeMs: performance.now(),
+            activated: false,
+            isClosing: true,
+            frozenOut: anchors[0].out,
+            altLocked: false,
+          };
+          setPenDragIndex(0);
+          return;
+        }
+      }
+      // Clicking the last anchor retracts its outgoing handle for a clean curve-to-corner transition
+      if (anchors.length >= 1) {
+        const lastIdx = anchors.length - 1;
+        const lastAnchor = anchors[lastIdx];
+        if (lastAnchor.out && Math.hypot(x - lastAnchor.point[0], y - lastAnchor.point[1]) * vp.effectiveScale < 15) {
+          setActivePenAnchors(prev => prev.map((item, idx) => idx === lastIdx
+            ? { point: item.point, in: item.in, smooth: false }
+            : item));
           return;
         }
       }
@@ -1668,7 +1649,14 @@ export function ResultPanel({
       }
       capturePointer(e);
       const index = anchors.length;
-      penDragIndexRef.current = index;
+      penDragSessionRef.current = {
+        index,
+        downScreen: [ptr.x, ptr.y],
+        downTimeMs: performance.now(),
+        activated: false,
+        isClosing: false,
+        altLocked: false,
+      };
       setPenDragIndex(index);
       setActivePenAnchors(prev => [...prev, { point: resolved, smooth: false }]);
       return;
@@ -1704,31 +1692,29 @@ export function ResultPanel({
   function handlePointerMove(e: KonvaEventObject<PointerEvent>) {
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
-    if (activeTool === 'pen' && penDragIndexRef.current !== null) {
-      const index = penDragIndexRef.current;
+    if (activeTool === 'pen' && penDragSessionRef.current !== null) {
+      const session = penDragSessionRef.current;
+      if (!session.activated) {
+        if (!shouldActivatePenDrag(session.downScreen, [ptr.x, ptr.y], performance.now() - session.downTimeMs)) {
+          return;
+        }
+        session.activated = true;
+      }
+      const index = session.index;
       const anchor = activePenAnchorsRef.current[index];
       if (!anchor) return;
       const handlePoint = toImageCoords(ptr, vp.pan, vp.effectiveScale);
-      const rawScreenDist = Math.hypot(handlePoint.x - anchor.point[0], handlePoint.y - anchor.point[1]) * vp.effectiveScale;
-      if (rawScreenDist < 6) {
-        if (anchor.in || anchor.out || anchor.smooth) {
-          setActivePenAnchors(prev => prev.map((item, itemIndex) => itemIndex === index ? {
-            point: item.point,
-            smooth: false,
-          } : item));
-        }
-        return;
-      }
       let handle: [number, number] = [handlePoint.x, handlePoint.y];
       if (e.evt.shiftKey) handle = constrainToAngle(handle, anchor.point);
-      const dx = handle[0] - anchor.point[0];
-      const dy = handle[1] - anchor.point[1];
-      setActivePenAnchors(prev => prev.map((item, itemIndex) => itemIndex === index ? {
-        ...item,
-        in: [item.point[0] - dx, item.point[1] - dy],
-        out: [item.point[0] + dx, item.point[1] + dy],
-        smooth: !e.evt.altKey,
-      } : item));
+      const result = computePenAnchorAfterDrag({
+        anchor,
+        handle,
+        effectiveScale: vp.effectiveScale,
+        altKey: e.evt.altKey,
+        session,
+      });
+      penDragSessionRef.current = result.session;
+      setActivePenAnchors(prev => prev.map((item, itemIndex) => itemIndex === index ? result.anchor : item));
       return;
     }
     if (drawingBox) {
@@ -1741,7 +1727,7 @@ export function ResultPanel({
       setMarqueeBox(b => b ? { ...b, x2: x, y2: y } : null);
       return;
     }
-    if (activeTool === 'polygon' || activeTool === 'pen') {
+    if (activeTool === 'pen') {
       const { x, y } = toImageCoords(ptr, vp.pan, vp.effectiveScale);
       const edgeSnapPadding = PEN_SNAP_PX / Math.max(vp.effectiveScale, Number.EPSILON);
       if (!isInsideDrawableBounds([x, y], edgeSnapPadding)) {
@@ -1764,9 +1750,11 @@ export function ResultPanel({
   }
 
   function handlePointerUp() {
-    if (penDragIndexRef.current !== null) {
-      penDragIndexRef.current = null;
+    if (penDragSessionRef.current !== null) {
+      const wasClosing = penDragSessionRef.current.isClosing;
+      penDragSessionRef.current = null;
       setPenDragIndex(null);
+      if (wasClosing) commitActivePen();
       return;
     }
     if (drawingBox) {
@@ -1826,10 +1814,16 @@ export function ResultPanel({
   // The browser cancelled the gesture (OS gesture, tab switch, capture lost):
   // abort in-progress drags without committing anything.
   function handlePointerCancel() {
-    if (penDragIndexRef.current !== null) {
-      const cancelledIndex = penDragIndexRef.current;
-      setActivePenAnchors(prev => prev.filter((_, index) => index !== cancelledIndex));
-      penDragIndexRef.current = null;
+    if (penDragSessionRef.current !== null) {
+      const { index: cancelledIndex, isClosing, frozenOut } = penDragSessionRef.current;
+      if (isClosing) {
+        setActivePenAnchors(prev => prev.map((item, idx) => idx === 0
+          ? { point: item.point, out: frozenOut, smooth: Boolean(frozenOut) }
+          : item));
+      } else {
+        setActivePenAnchors(prev => prev.filter((_, index) => index !== cancelledIndex));
+      }
+      penDragSessionRef.current = null;
       setPenDragIndex(null);
     }
     setDrawingBox(null);
@@ -1848,19 +1842,16 @@ export function ResultPanel({
   function handleToolChange(id: ToolId) {
     if (!isTraceMode && TRACE_ONLY_TOOL_IDS.has(id)) return;
     if (id === activeTool && id !== 'select') {
-      if (id === 'polygon') setActivePolygonPoints([]);
       if (id === 'pen') clearActivePen();
       onChangeActiveTool('select');
       if (id === 'measure') measure.reset();
       return;
     }
 
-    if (id !== 'polygon') {
-      setActivePolygonPoints([]);
-      clearPenPreview();
+    if (id !== 'pen') {
+      clearActivePen();
       lastMousePosRef.current = null;
     }
-    if (id !== 'pen') clearActivePen();
     if (id !== 'pencil') {
       pencilController.clear();
       setIsPencilDrawing(false);
@@ -1938,7 +1929,7 @@ export function ResultPanel({
         ? 'no-drop' 
         : activeTool === 'box' 
           ? 'crosshair' 
-          : activeTool === 'polygon' || activeTool === 'pen'
+          : activeTool === 'pen'
             ? 'crosshair'
             : 'default';
   const measurePxLength = measure.line
@@ -1981,17 +1972,6 @@ export function ResultPanel({
         shortcut: 'B',
         description: t('tooltipBoxDesc'),
         animation: <BoxAnimation />,
-      },
-    },
-    {
-      id: 'polygon' as ToolId,
-      label: t('toolDrawPolygon'),
-      icon: <PolygonIcon />,
-      tooltip: {
-        name: t('tooltipPolygonName'),
-        shortcut: 'Shift+P',
-        description: t('tooltipPolygonDesc'),
-        animation: <PolygonAnimation />,
       },
     },
     {
@@ -2322,7 +2302,7 @@ export function ResultPanel({
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerCancel}
               onPointerLeave={() => {
-                if (activeTool === 'polygon' || activeTool === 'pen') {
+                if (activeTool === 'pen') {
                   clearDraftHoverFeedback();
                 }
               }}
@@ -2499,7 +2479,7 @@ export function ResultPanel({
                 >
                   <PenPreviewHost
                     ref={penPreviewRef}
-                    active={activeTool === 'polygon' || activeTool === 'pen'}
+                    active={activeTool === 'pen'}
                     lastPoint={lastPoint}
                     statusStore={penStatusStore}
                   >
@@ -2511,11 +2491,11 @@ export function ResultPanel({
                     const activeSnapLabels = preview.labels;
                     return (
                     <>
-                  {activeTool === 'polygon' && (activePolygonPoints.length > 0 || preview.visible) && (
+                  {activeTool === 'pen' && (activePenAnchors.length > 0 || hoverPoint) && (
                     <Group>
                       {/* Alignment Guides */}
                       {activeAlignmentGuides.map((guide, idx) => (
-                        <Group key={`align-guide-${idx}`} listening={false}>
+                        <Group key={`pen-guide-${idx}`} listening={false}>
                           <Line
                             points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
                             stroke="rgba(196, 136, 32, 0.45)"
@@ -2532,7 +2512,6 @@ export function ResultPanel({
                           />
                         </Group>
                       ))}
-
                       {/* Equal Length Guide */}
                       {activeLengthGuide && (
                         <Group listening={false}>
@@ -2558,25 +2537,40 @@ export function ResultPanel({
                           />
                         </Group>
                       )}
-
-                      {activePolygonPoints.length > 1 && (
+                      {activePenAnchors.length > 1 && (
                         <Line
-                          points={activePolygonPoints.flat()}
+                          points={flattenOpenPenPath(activePenAnchors, es).flat()}
                           stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           lineJoin="round"
                           lineCap="round"
+                          listening={false}
                         />
                       )}
-                      {hoverPoint && activePolygonPoints.length > 0 && (
+                      {/* Live closing segment preview when click-dragging anchor 0 to close */}
+                      {penDragIndex === 0 && activePenAnchors.length >= 3 && (
                         <Line
-                          points={[activePolygonPoints[activePolygonPoints.length - 1], hoverPoint].flat()}
+                          points={flattenOpenPenPath(
+                            [activePenAnchors[activePenAnchors.length - 1], activePenAnchors[0]],
+                            es,
+                          ).flat()}
+                          stroke={CANVAS.amber}
+                          strokeWidth={2.5 / es}
+                          lineJoin="round"
+                          lineCap="round"
+                          listening={false}
+                        />
+                      )}
+                      {hoverPoint && activePenAnchors.length > 0 && penDragIndex === null && (
+                        <Line
+                          points={[activePenAnchors[activePenAnchors.length - 1].point, hoverPoint].flat()}
                           stroke={CANVAS.amber}
                           strokeWidth={2.5 / es}
                           dash={[4 / es, 4 / es]}
+                          listening={false}
                         />
                       )}
-                      {hoverPoint && hoverSnapped && (
+                      {hoverPoint && hoverSnapped && penDragIndex === null && (
                         <Circle
                           x={hoverPoint[0]}
                           y={hoverPoint[1]}
@@ -2584,37 +2578,10 @@ export function ResultPanel({
                           fill={CANVAS.amber}
                           stroke={CANVAS.paper}
                           strokeWidth={2 / es}
+                          listening={false}
                         />
                       )}
-                      {activePolygonPoints.map(([x, y], idx) => {
-                        const isStart = idx === 0;
-                        const isCloseEnough = isStart && hoverPoint && (Math.hypot(hoverPoint[0] - x, hoverPoint[1] - y) * es < 15);
-                        return (
-                          <Circle
-                            key={idx}
-                            x={x}
-                            y={y}
-                            radius={(isStart ? (isCloseEnough ? 8 : 6) : 4.5) / es}
-                            fill={isStart ? (isCloseEnough ? CANVAS.patternPending : CANVAS.amber) : CANVAS.paper}
-                            stroke={CANVAS.amber}
-                            strokeWidth={2 / es}
-                            shadowColor="#000"
-                            shadowBlur={3}
-                            shadowOpacity={0.2}
-                            onMouseEnter={(e) => {
-                              const stage = e.target.getStage();
-                              if (stage) stage.container().style.cursor = 'pointer';
-                            }}
-                            onMouseLeave={(e) => {
-                              const stage = e.target.getStage();
-                              if (stage) stage.container().style.cursor = containerCursor;
-                            }}
-                          />
-                        );
-                      })}
-
-                      {/* Snap Labels (Center, 1/3, etc.) */}
-                      {hoverPoint && activeSnapLabels.length > 0 && (
+                      {hoverPoint && activeSnapLabels.length > 0 && penDragIndex === null && (
                         <Group x={hoverPoint[0]} y={hoverPoint[1] - 18 / es} listening={false}>
                           {(() => {
                             const text = activeSnapLabels.join(' · ');
@@ -2650,39 +2617,6 @@ export function ResultPanel({
                             );
                           })()}
                         </Group>
-                      )}
-                    </Group>
-                  )}
-                  {activeTool === 'pen' && (activePenAnchors.length > 0 || hoverPoint) && (
-                    <Group>
-                      {activeAlignmentGuides.map((guide, idx) => (
-                        <Line
-                          key={`pen-guide-${idx}`}
-                          points={[guide.from[0], guide.from[1], guide.to[0], guide.to[1]]}
-                          stroke="rgba(196, 136, 32, 0.45)"
-                          strokeWidth={1 / es}
-                          dash={[4 / es, 4 / es]}
-                          listening={false}
-                        />
-                      ))}
-                      {activePenAnchors.length > 1 && (
-                        <Line
-                          points={flattenOpenPenPath(activePenAnchors, es).flat()}
-                          stroke={CANVAS.amber}
-                          strokeWidth={2.5 / es}
-                          lineJoin="round"
-                          lineCap="round"
-                          listening={false}
-                        />
-                      )}
-                      {hoverPoint && activePenAnchors.length > 0 && penDragIndex === null && (
-                        <Line
-                          points={[activePenAnchors[activePenAnchors.length - 1].point, hoverPoint].flat()}
-                          stroke={CANVAS.amber}
-                          strokeWidth={2.5 / es}
-                          dash={[4 / es, 4 / es]}
-                          listening={false}
-                        />
                       )}
                       {activePenAnchors.map((anchor, index) => {
                         const isStart = index === 0;
@@ -3341,7 +3275,6 @@ export function ResultPanel({
 
               const isDrawing = drawingBox !== null
                 || isPencilDrawing
-                || (activeTool === 'polygon' && activePolygonPoints.length > 0)
                 || (activeTool === 'pen' && activePenAnchors.length > 0)
                 || draggedCorner !== null
                 || draggedMidpoint !== null;

@@ -1,4 +1,4 @@
-export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'polygon' | 'pen' | 'pencil';
+export type ToolId = 'select' | 'pan' | 'crop' | 'measure' | 'box' | 'detect-all' | 'inspect' | 'pen' | 'pencil';
 
 import React, { type ReactNode } from 'react';
 import { ToolTooltip } from './ToolTooltip';
