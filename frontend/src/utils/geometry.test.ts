@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   arePolygonsEqual,
+  bendEdgeMidpointToCubic,
   computeCentroid,
   computeLabelPoint,
   computePolygonArea,
@@ -598,5 +599,35 @@ describe('retractPieceHandle', () => {
     const curves = [makeCubicCurvePoint(0, [0, 0], [75, -40])];
     const res = retractPieceHandle(poly, curves, undefined, 0, 'ctrl2');
     expect(res.curvePoints).toHaveLength(0);
+  });
+});
+
+describe('bendEdgeMidpointToCubic', () => {
+  it('promotes a straight edge midpoint drag to a cubic Bezier passing through targetMidpoint', () => {
+    const A: [number, number] = [0, 0];
+    const B: [number, number] = [100, 0];
+    const target: [number, number] = [50, -30];
+    const curve = bendEdgeMidpointToCubic(0, A, B, undefined, target);
+    expect(isCubicCurvePoint(curve)).toBe(true);
+    const [cp1, cp2] = curveToCubicControls(A, B, curve);
+    const mid = evaluateCubicBezier(A, cp1, cp2, B, 0.5);
+    expect(mid[0]).toBeCloseTo(50, 4);
+    expect(mid[1]).toBeCloseTo(-30, 4);
+  });
+
+  it('bends an existing asymmetric cubic curve so its midpoint lands exactly on targetMidpoint', () => {
+    const A: [number, number] = [0, 0];
+    const B: [number, number] = [100, 0];
+    const existing = makeCubicCurvePoint(0, [10, -20], [80, -40]);
+    const target: [number, number] = [55, -50];
+    const updated = bendEdgeMidpointToCubic(0, A, B, existing, target);
+    expect(isCubicCurvePoint(updated)).toBe(true);
+    const [cp1, cp2] = curveToCubicControls(A, B, updated);
+    const mid = evaluateCubicBezier(A, cp1, cp2, B, 0.5);
+    expect(mid[0]).toBeCloseTo(55, 4);
+    expect(mid[1]).toBeCloseTo(-50, 4);
+    // Relative vector between cp1 and cp2 is preserved (asymmetry intact)
+    expect(cp2[0] - cp1[0]).toBeCloseTo(70, 4);
+    expect(cp2[1] - cp1[1]).toBeCloseTo(-20, 4);
   });
 });

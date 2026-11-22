@@ -10,7 +10,7 @@ import type { KonvaEventObject } from 'konva/lib/Node';
 import type { Piece, Project, Crop, BoundingBox, Scale, CurvePoint } from '../types';
 import type { StepId } from './Tutorial/types';
 import { TRACE_PEN_GUIDE } from './Tutorial/types';
-import { flattenCurves, ctrlToHandle, handleToCtrl, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle } from '../utils/geometry';
+import { flattenCurves, ctrlToHandle, evaluateCubicBezier, isCubicCurvePoint, curveToCubicControls, alignHandle, splitCubicBezier, makeCubicCurvePoint, deletePieceVertex, retractPieceHandle, bendEdgeMidpointToCubic } from '../utils/geometry';
 import { Toolbar, SelectIcon, CropIcon, CanvasIcon, MeasureIcon, BoxIcon, DetectAllIcon, ViewIcon, HandIcon, PolygonIcon, PenIcon, PencilIcon } from './Toolbar';
 import { IconUpload, IconSquare, IconLamp } from './icons';
 import type { ToolId } from './Toolbar';
@@ -1326,6 +1326,8 @@ export function ResultPanel({
   const [selectedVertexIdx, setSelectedVertexIdx] = useState<number | null>(null);
   const selectedVertexIdxRef = useRef<number | null>(null);
   selectedVertexIdxRef.current = selectedVertexIdx;
+  const [hoveredMidpointEdgeIdx, setHoveredMidpointEdgeIdx] = useState<number | null>(null);
+  const [activeCurveEdgeIdx, setActiveCurveEdgeIdx] = useState<number | null>(null);
   const [vertexContextMenu, setVertexContextMenu] = useState<{
     pieceId: string;
     vertexIdx: number;
@@ -1451,6 +1453,8 @@ export function ResultPanel({
     onRefineModeChange(null);
     setTooltipDrag({x: 0, y: 0});
     setSelectedVertexIdx(null);
+    setHoveredMidpointEdgeIdx(null);
+    setActiveCurveEdgeIdx(null);
     setVertexContextMenu(null);
   }, [selectedPieceIds]);
 
@@ -1611,6 +1615,7 @@ export function ResultPanel({
   function handlePointerDown(e: KonvaEventObject<PointerEvent>) {
     setVertexContextMenu(null);
     setSelectedVertexIdx(null);
+    setActiveCurveEdgeIdx(null);
     const ptr = e.target.getStage()?.getPointerPosition();
     if (!ptr) return;
 
@@ -3081,60 +3086,82 @@ export function ResultPanel({
                           );
                         })}
 
-                        {/* Midpoint (curve) handles — hidden while dragging a corner */}
+                        {/* Unified edge midpoint bend handles (always promote to cubic Bézier) */}
                         {!draggedCorner && referencePolygon.map(([x, y], idx) => {
                           const idxNext = (idx + 1) % len;
+                          const A: [number, number] = [x, y];
                           const B = referencePolygon[idxNext];
                           const dist = Math.hypot(B[0] - x, B[1] - y) * es;
                           const isActive = draggedMidpoint?.edgeIdx === idx;
+                          const isHovered = hoveredMidpointEdgeIdx === idx;
                           if (dist < MIN_HANDLE_PX && !isActive) return null;
 
-                          // Position the handle at the bezier midpoint if a curve exists
                           const existingCurve = (activeDragCurvePoints ?? piece.curvePoints ?? []).find(cp => cp.edgeIdx === idx);
-                          if (existingCurve && isCubicCurvePoint(existingCurve)) return null;
-                          const existingCtrl = existingCurve?.ctrl;
-                          const [hx, hy] = existingCtrl
-                            ? ctrlToHandle([x, y], B, existingCtrl)
-                            : [(x + B[0]) / 2, (y + B[1]) / 2];
+                          let hx: number;
+                          let hy: number;
+                          if (existingCurve && isCubicCurvePoint(existingCurve)) {
+                            const [cp1, cp2] = curveToCubicControls(A, B, existingCurve);
+                            [hx, hy] = evaluateCubicBezier(A, cp1, cp2, B, 0.5);
+                          } else if (existingCurve?.ctrl) {
+                            [hx, hy] = ctrlToHandle(A, B, existingCurve.ctrl);
+                          } else {
+                            hx = (x + B[0]) / 2;
+                            hy = (y + B[1]) / 2;
+                          }
+
+                          const isTutorialCurve = tutorialStep === 'vector-curve-edge';
+                          const radius = (isTutorialCurve ? 7 : (isActive || isHovered ? 4.5 : 3)) / es;
+                          const opacity = isTutorialCurve || isActive || isHovered ? 1 : 0.42;
 
                           return (
                             <Circle
                               key={`mid-${idx}`}
                               x={hx}
                               y={hy}
-                              radius={(tutorialStep === 'vector-curve-edge' ? 7 : 3.5) / es}
+                              radius={radius}
                               fill={CANVAS.amber}
                               stroke={CANVAS.paper}
                               strokeWidth={1.5 / es}
-                              hitStrokeWidth={10 / es}
+                              opacity={opacity}
+                              hitStrokeWidth={12 / es}
                               draggable
-                              onPointerDown={(e) => { e.cancelBubble = true; }}
+                              onPointerDown={(e) => {
+                                e.cancelBubble = true;
+                                setActiveCurveEdgeIdx(idx);
+                              }}
                               onDragStart={() => {
                                 setDraggedMidpoint({ pieceId: selectedId, edgeIdx: idx });
+                                setActiveCurveEdgeIdx(idx);
                                 dragStartCurvePointsRef.current = piece.curvePoints ?? [];
                                 setActiveDragCurvePoints(piece.curvePoints ?? []);
                               }}
                               onDragMove={(e) => {
-                                const A: [number, number] = [x, y];
-                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const baseCurve = dragStartCurvePointsRef.current.find(cp => cp.edgeIdx === idx);
+                                const nextCurve = bendEdgeMidpointToCubic(
+                                  idx, A, B, baseCurve, [e.target.x(), e.target.y()],
+                                );
                                 const updated = dragStartCurvePointsRef.current.filter(cp => cp.edgeIdx !== idx);
-                                updated.push({ edgeIdx: idx, ctrl });
+                                updated.push(nextCurve);
                                 setActiveDragCurvePoints(updated);
                               }}
                               onDragEnd={(e) => {
-                                const A: [number, number] = [x, y];
-                                const ctrl = handleToCtrl(A, B, [e.target.x(), e.target.y()]);
+                                const baseCurve = dragStartCurvePointsRef.current.find(cp => cp.edgeIdx === idx);
+                                const nextCurve = bendEdgeMidpointToCubic(
+                                  idx, A, B, baseCurve, [e.target.x(), e.target.y()],
+                                );
                                 const updated = (piece.curvePoints ?? []).filter(cp => cp.edgeIdx !== idx);
-                                updated.push({ edgeIdx: idx, ctrl });
+                                updated.push(nextCurve);
                                 onUpdatePieceCurves(selectedId, updated);
                                 setDraggedMidpoint(null);
                                 setActiveDragCurvePoints(null);
                               }}
                               onMouseEnter={(e) => {
+                                setHoveredMidpointEdgeIdx(idx);
                                 const stage = e.target.getStage();
                                 if (stage) stage.container().style.cursor = 'pointer';
                               }}
                               onMouseLeave={(e) => {
+                                setHoveredMidpointEdgeIdx(prev => (prev === idx ? null : prev));
                                 const stage = e.target.getStage();
                                 if (stage) stage.container().style.cursor = 'default';
                               }}
@@ -3154,16 +3181,23 @@ export function ResultPanel({
                           );
                         })}
 
-                        {/* Conventional cubic direction handles. Shift constrains
-                            the handle angle; Alt/Option breaks the paired handle. */}
+                        {/* Cubic Bézier direction handles: shown on all edges for simple shapes (<= 6 vertices),
+                            and contextually for the focused vertex or active/hovered edge on dense shapes. */}
                         {!draggedCorner && (activeDragCurvePoints ?? piece.curvePoints ?? []).map(curve => {
                           if (!isCubicCurvePoint(curve)) return null;
                           const edgeIdx = curve.edgeIdx;
                           const nextIdx = (edgeIdx + 1) % len;
+                          const showHandles = len <= 6
+                            || selectedVertexIdx === edgeIdx
+                            || selectedVertexIdx === nextIdx
+                            || activeCurveEdgeIdx === edgeIdx
+                            || hoveredMidpointEdgeIdx === edgeIdx
+                            || draggedMidpoint?.edgeIdx === edgeIdx;
+                          if (!showHandles) return null;
+
                           const A = referencePolygon[edgeIdx];
                           const B = referencePolygon[nextIdx];
                           const [ctrl1, ctrl2] = curveToCubicControls(A, B, curve);
-                          const midpoint = evaluateCubicBezier(A, ctrl1, ctrl2, B, 0.5);
 
                           const renderHandle = (side: 'ctrl' | 'ctrl2', handle: [number, number], anchor: [number, number]) => (
                             <Group key={`cubic-${edgeIdx}-${side}`}>
@@ -3183,6 +3217,7 @@ export function ResultPanel({
                                 draggable
                                 onPointerDown={(e) => {
                                   e.cancelBubble = true;
+                                  setActiveCurveEdgeIdx(edgeIdx);
                                   if (e.evt.altKey) {
                                     const retracted = retractPieceHandle(
                                       referencePolygon,
@@ -3205,6 +3240,7 @@ export function ResultPanel({
                                   onUpdatePieceCurves(selectedId, retracted.curvePoints, retracted.anchorTypes);
                                 }}
                                 onDragStart={() => {
+                                  setActiveCurveEdgeIdx(edgeIdx);
                                   dragStartCurvePointsRef.current = activeDragCurvePoints ?? piece.curvePoints ?? [];
                                   setActiveDragCurvePoints(dragStartCurvePointsRef.current);
                                 }}
@@ -3242,26 +3278,6 @@ export function ResultPanel({
 
                           return (
                             <Group key={`cubic-edge-${edgeIdx}`}>
-                              <Circle
-                                x={midpoint[0]}
-                                y={midpoint[1]}
-                                radius={3 / es}
-                                fill={CANVAS.amber}
-                                opacity={0.55}
-                                onPointerDown={(e) => { e.cancelBubble = true; }}
-                                onDblClick={() => {
-                                  const inserted = insertAnchorOnEdge(
-                                    piece.polygon, piece.curvePoints ?? [], edgeIdx,
-                                  );
-                                  const anchorTypes = piece.anchorTypes?.length === piece.polygon.length
-                                    ? [...piece.anchorTypes]
-                                    : piece.polygon.map(() => 'corner' as const);
-                                  anchorTypes.splice(inserted.insertedAt, 0, 'smooth');
-                                  onUpdatePiecePolygonAndCurves(
-                                    selectedId, inserted.polygon, inserted.curves, anchorTypes,
-                                  );
-                                }}
-                              />
                               {renderHandle('ctrl', ctrl1, A)}
                               {renderHandle('ctrl2', ctrl2, B)}
                             </Group>

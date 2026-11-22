@@ -2420,3 +2420,32 @@ export function retractPieceHandle(
 
   return { curvePoints: nextCurves, anchorTypes: nextAnchorTypes };
 }
+
+/**
+ * Bend an edge (straight, legacy quadratic, or cubic) so its midpoint at t=0.5 passes
+ * through `targetMidpoint`, always returning a unified cubic CurvePoint.
+ * For existing cubic curves, shifts both handles by (4/3)*delta so existing handle
+ * asymmetry is preserved while moving the midpoint by the exact drag delta.
+ */
+export function bendEdgeMidpointToCubic(
+  edgeIdx: number,
+  start: [number, number],
+  end: [number, number],
+  existingCurve: CurvePoint | undefined,
+  targetMidpoint: [number, number],
+): CurvePoint {
+  if (existingCurve && isCubicCurvePoint(existingCurve)) {
+    const [cp1, cp2] = curveToCubicControls(start, end, existingCurve);
+    const curMid = evaluateCubicBezier(start, cp1, cp2, end, 0.5);
+    const dx = ((targetMidpoint[0] - curMid[0]) * 4) / 3;
+    const dy = ((targetMidpoint[1] - curMid[1]) * 4) / 3;
+    return makeCubicCurvePoint(
+      edgeIdx,
+      [cp1[0] + dx, cp1[1] + dy],
+      [cp2[0] + dx, cp2[1] + dy],
+    );
+  }
+  const qCtrl = handleToCtrl(start, end, targetMidpoint);
+  const [cp1, cp2] = quadraticToCubicControls(start, qCtrl, end);
+  return makeCubicCurvePoint(edgeIdx, cp1, cp2);
+}
