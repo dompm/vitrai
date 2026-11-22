@@ -409,6 +409,23 @@ describe('subtractPolygonsWithSplit', () => {
     expect(res.polygons).toHaveLength(1);
     expect(computePolygonArea(res.polygons[0])).toBeCloseTo(150 * 200, 1);
   });
+
+  it('preserves outer vertices when clipping a manual triangle overlapping a circular neighbor', () => {
+    // Center circle r=60 at (200, 200)
+    const circle: [number, number][] = Array.from({ length: 32 }, (_, i) => {
+      const a = (Math.PI * 2 * i) / 32;
+      return [200 + 60 * Math.cos(a), 200 + 60 * Math.sin(a)] as [number, number];
+    });
+    // Manual 3-vertex triangle: top & left outside the circle (95px away from center), corner inside center
+    const tri: [number, number][] = [[200, 105], [200, 200], [105, 200]];
+    const res = subtractPolygonsWithSplit(tri, [circle], 0);
+    expect(res.hadHoles).toBe(false);
+    expect(res.polygons).toHaveLength(1);
+    // Must retain the outer gold quarter-crescent (area = 95*95/2 - pi*60^2/4 ≈ 1685)
+    expect(computePolygonArea(res.polygons[0])).toBeGreaterThan(1500);
+    expect(res.polygons[0]).toContainEqual([200, 105]);
+    expect(res.polygons[0]).toContainEqual([105, 200]);
+  });
 });
 
 describe('constrainEditedPiece', () => {
