@@ -1958,16 +1958,18 @@ html, body, #root {
 
 /* Redesigned welcome grid card */
 .tutorial-modal-card--welcome-grid {
-  width: min(720px, 100%) !important;
+  width: min(660px, 100%) !important;
+  background: #F7F4EE;
+  padding: 34px 34px 28px;
 }
 
 /* Grid layout for tracks */
 .tutorial-track-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 12px;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 @media (max-width: 600px) {
@@ -1978,47 +1980,123 @@ html, body, #root {
 
 /* Individual track card */
 .tutorial-track-card {
-  background: var(--chrome-800);
+  background: var(--paper);
   border: 1px solid var(--hairline-2);
   border-radius: 12px;
-  padding: 16px;
+  padding: 16px 18px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  box-shadow: 0 1px 2px rgba(40, 30, 15, 0.04);
 }
 
 .tutorial-track-card:hover {
-  border-color: var(--amber);
-  background: var(--chrome-700);
-  transform: translateY(-2px);
+  border-color: rgba(183, 121, 31, 0.55);
+  box-shadow: 0 4px 12px rgba(40, 30, 15, 0.07);
+  transform: translateY(-1px);
 }
 
 .tutorial-track-card.active {
   border-color: var(--amber);
-  box-shadow: 0 0 12px rgba(217, 119, 6, 0.25);
-  background: rgba(217, 119, 6, 0.08);
+  box-shadow: 0 0 0 1px var(--amber), 0 4px 14px rgba(40, 30, 15, 0.06);
+  background: #FFFDF8;
+}
+
+.tutorial-track-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 12px;
 }
 
 .tutorial-track-icon {
-  font-size: 24px;
-  margin-bottom: 8px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #F4EFE6;
+  border: 1px solid var(--hairline);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.tutorial-track-card.active .tutorial-track-icon {
+  background: #FBF3E2;
+  border-color: rgba(183, 121, 31, 0.35);
+}
+
+.tutorial-track-radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hairline-2);
+  background: var(--paper);
+  position: relative;
+  flex-shrink: 0;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.tutorial-track-card.active .tutorial-track-radio {
+  border-color: var(--amber);
+  background: var(--amber);
+}
+
+.tutorial-track-card.active .tutorial-track-radio::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: #FFFDF8;
 }
 
 .tutorial-track-card-title {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 600;
   color: var(--text-bright);
-  margin: 0 0 6px 0;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.01em;
 }
 
 .tutorial-track-card-desc {
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 12.5px;
+  line-height: 1.45;
   color: var(--text-soft);
   margin: 0;
+}
+
+.tutorial-modal-actions--welcome {
+  margin-top: 24px;
+  align-items: center;
+  gap: 18px;
+}
+
+.tutorial-welcome-start {
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+
+.tutorial-welcome-skip {
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 4px;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.tutorial-welcome-skip:hover {
+  color: var(--text-bright);
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Keep instructions accessible while profile/print dialogs are open. */
