@@ -2031,31 +2031,6 @@ html, body, #root {
   border-color: rgba(183, 121, 31, 0.35);
 }
 
-.tutorial-track-radio {
-  width: 16px;
-  height: 16px;
-  margin-left: auto;
-  border-radius: 50%;
-  border: 1.5px solid var(--hairline-2);
-  background: var(--paper);
-  position: relative;
-  flex-shrink: 0;
-  transition: border-color 0.16s ease, background-color 0.16s ease;
-}
-
-.tutorial-track-card.active .tutorial-track-radio {
-  border-color: var(--amber);
-  background: var(--amber);
-}
-
-.tutorial-track-card.active .tutorial-track-radio::after {
-  content: '';
-  position: absolute;
-  inset: 4px;
-  border-radius: 50%;
-  background: #FFFDF8;
-}
-
 .tutorial-track-card-title {
   font-size: 14.5px;
   font-weight: 600;
