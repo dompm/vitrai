@@ -84,7 +84,15 @@ try {
   const saveDeadline = Date.now() + 10000;
   while (!await vector.evaluate(async () => {
     const { loadProjectFromOPFS } = await import('/src/storage/opfs.ts');
-    const saved = await loadProjectFromOPFS('Tutorial');
+    // Chromium's OPFS can throw a transient NotReadableError if file.text()
+    // races with autosave's createWritable().close() atomic swap; retry on next tick.
+    let saved;
+    try {
+      saved = await loadProjectFromOPFS('Tutorial');
+    } catch (err) {
+      if (err?.name === 'NotReadableError') return false;
+      throw err;
+    }
     const state = JSON.parse(localStorage.getItem('vitrai-tutorial-state'));
     return saved?.pieces.some(p => p.id === state.pieceId && p.glassSheetId === 'default-sheet-2');
   })) {
@@ -185,7 +193,12 @@ try {
     const { loadProjectFromOPFS } = await import('/src/storage/opfs.ts');
     const deadline = Date.now() + 10000;
     while (Date.now() < deadline) {
-      const saved = await loadProjectFromOPFS('Tutorial');
+      let saved;
+      try {
+        saved = await loadProjectFromOPFS('Tutorial');
+      } catch (err) {
+        if (err?.name !== 'NotReadableError') throw err;
+      }
       if (saved?.pieces.length === 2) return saved.pieces[1];
       await new Promise(resolve => setTimeout(resolve, 100));
     }
