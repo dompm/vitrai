@@ -3,6 +3,7 @@ import {
   arePolygonsEqual,
   computeCentroid,
   computeLabelPoint,
+  constrainEditedPiece,
   curveToCubicControls,
   evaluateCubicBezier,
   evaluateQuadraticBezier,
@@ -323,6 +324,77 @@ describe('seam snapping and curve fitting for fabrication', () => {
   });
 });
 
+
+describe('constrainEditedPiece', () => {
+  it('preserves curves when dragging a free vertex despite a pre-existing tiny overlap on an untouched seam', () => {
+    // Smooth 4-anchor curved oval on the right, touching a neighbor on the left with a 2px pre-existing overlap
+    const basePoly: [number, number][] = [
+      [100, 50], [200, 50], [200, 150], [100, 150],
+    ];
+    const baseCurves = [
+      makeCubicCurvePoint(0, [130, 20], [170, 20]),
+      makeCubicCurvePoint(1, [230, 80], [230, 120]),
+      makeCubicCurvePoint(2, [170, 180], [130, 180]),
+      makeCubicCurvePoint(3, [85, 120], [85, 80]), // bulges slightly into x < 100
+    ];
+    const neighborOnLeft: [number, number][] = [
+      [0, 0], [95, 0], [95, 200], [0, 200], // overlaps the left bulge slightly
+    ];
+    const prevDisplay = flattenCurves(basePoly, baseCurves);
+
+    // Drag the far-right vertex [200, 50] outward to [230, 50] (away from the neighbor!)
+    const editedPoly: [number, number][] = [
+      [100, 50], [230, 50], [200, 150], [100, 150],
+    ];
+
+    const res = constrainEditedPiece({
+      polygon: editedPoly,
+      curvePoints: baseCurves,
+      previousDisplayPolygon: prevDisplay,
+      neighborPolygons: [neighborOnLeft],
+      snapRadius: 12,
+    });
+
+    expect(res).not.toBeNull();
+    expect(res!.clipped).toBe(false);
+    expect(res!.polygon).toEqual(editedPoly);
+    expect(res!.curvePoints).toEqual(baseCurves);
+  });
+
+  it('refits smooth cubic curves instead of dumping dense flattened vertices when clipping genuinely occurs', () => {
+    const basePoly: [number, number][] = [
+      [100, 50], [200, 50], [200, 150], [100, 150],
+    ];
+    const baseCurves = [
+      makeCubicCurvePoint(0, [130, 20], [170, 20]),
+      makeCubicCurvePoint(1, [230, 80], [230, 120]),
+      makeCubicCurvePoint(2, [170, 180], [130, 180]),
+      makeCubicCurvePoint(3, [70, 120], [70, 80]),
+    ];
+    const neighborOnRight: [number, number][] = [
+      [240, 0], [340, 0], [340, 200], [240, 200],
+    ];
+    const prevDisplay = flattenCurves(basePoly, baseCurves);
+
+    // Drag the right vertex deeply INTO the right neighbor (x = 290)
+    const editedPoly: [number, number][] = [
+      [100, 50], [290, 50], [200, 150], [100, 150],
+    ];
+    const res = constrainEditedPiece({
+      polygon: editedPoly,
+      curvePoints: baseCurves,
+      previousDisplayPolygon: prevDisplay,
+      neighborPolygons: [neighborOnRight],
+      snapRadius: 12,
+    });
+
+    expect(res).not.toBeNull();
+    expect(res!.clipped).toBe(true);
+    // Should be compact refitted anchors + curves, NOT a 40+ vertex raw flattened polyline
+    expect(res!.polygon.length).toBeLessThan(20);
+    expect(res!.curvePoints.length).toBeGreaterThan(0);
+  });
+});
 
 describe('computeLabelPoint (Pole of Inaccessibility)', () => {
   it('places the label at the center of a convex square with exact inscribed radius', () => {
