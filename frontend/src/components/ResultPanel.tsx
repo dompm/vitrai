@@ -3237,6 +3237,20 @@ export function ResultPanel({
                       isEncoding={isEncoding}
                       pointerEvents={isInteracting ? 'none' : 'auto'}
                       multiple={isMultiple}
+                      sameSheetCount={
+                        isMultiple
+                          ? undefined
+                          : project.pieces.filter(p => p.glassSheetId === piece.glassSheetId).length
+                      }
+                      onSelectSameSheet={
+                        isMultiple
+                          ? undefined
+                          : () => onSelectPieces(
+                              project.pieces
+                                .filter(p => p.glassSheetId === piece.glassSheetId)
+                                .map(p => p.id),
+                            )
+                      }
                     />
                   </div>
                 </div>

@@ -43,6 +43,9 @@ interface SheetTabProps {
   onMoveAllTo: (destSheetId: string) => void;
   onMoveAllFromSrc: (srcSheetId: string) => void;
   onNewSheetFromImage: () => void;
+  onSelectAllPieces: () => void;
+  onSwapGlassLibrary: () => void;
+  onSwapGlassFile: () => void;
 }
 
 const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01));
@@ -50,6 +53,7 @@ const getSnapRadius = (width: number) => Math.max(8, Math.min(40, width * 0.01))
 function SheetTab({
   sheet, isActive, isEmpty, canDelete, pieceCount, pieceCountBySheet, allSheets,
   onSelect, onRename, onDelete, onMoveAllTo, onMoveAllFromSrc, onNewSheetFromImage,
+  onSelectAllPieces, onSwapGlassLibrary, onSwapGlassFile,
 }: SheetTabProps) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
@@ -186,6 +190,34 @@ function SheetTab({
           aria-hidden="true"
         />
         <span className="sheet-tab-label">{sheet.label}</span>
+        {pieceCount > 0 && (
+          <span
+            className="sheet-tab-count"
+            onClick={e => { e.stopPropagation(); onSelect(); onSelectAllPieces(); }}
+            role="button"
+            title={t('selectAllOnGlassTooltip', { count: pieceCount })}
+            aria-label={t('selectAllOnGlassTooltip', { count: pieceCount })}
+          >
+            {pieceCount}
+          </span>
+        )}
+        {isActive && (
+          <span
+            className="sheet-tab-more"
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => {
+              e.stopPropagation();
+              if (menuPos) { setMenuPos(null); setSubmenu(null); return; }
+              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+              setMenuPos({ x: rect.left, y: rect.bottom + 6 });
+            }}
+            role="button"
+            title={t('sheetTabActionsTooltip')}
+            aria-label={t('sheetTabActionsTooltip')}
+          >
+            ⋯
+          </span>
+        )}
         {canDelete && (
           <span
             className="sheet-tab-close"
@@ -204,6 +236,30 @@ function SheetTab({
           style={{ left: clampedMenu?.left ?? menuPos.x, top: clampedMenu?.top ?? menuPos.y }}
           onMouseDown={e => e.stopPropagation()}
         >
+          {pieceCount > 0 && (
+            <button
+              className="sheet-tab-menu-item"
+              onClick={() => { setMenuPos(null); onSelect(); onSelectAllPieces(); }}
+              onMouseEnter={() => setSubmenu(null)}
+            >
+              {t('contextSelectAllPieces', { count: pieceCount })}
+            </button>
+          )}
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); onSwapGlassLibrary(); }}
+            onMouseEnter={() => setSubmenu(null)}
+          >
+            {t('contextSwapGlassLibrary')}
+          </button>
+          <button
+            className="sheet-tab-menu-item"
+            onClick={() => { setMenuPos(null); onSwapGlassFile(); }}
+            onMouseEnter={() => setSubmenu(null)}
+          >
+            {t('contextSwapGlassFile')}
+          </button>
+          <div className="sheet-tab-menu-divider" />
           <button
             className="sheet-tab-menu-item"
             onClick={() => { setMenuPos(null); startEditing(); }}
@@ -479,6 +535,7 @@ export function App() {
     importSvgPieces,
     startLampMode,
     addSheetFromImage,
+    replaceSheetGlass,
     moveAllPiecesBetweenSheets,
     addSheetFromImageAndMovePieces,
     updateLampConfig,
@@ -833,7 +890,9 @@ export function App() {
   const [pendingMove, setPendingMove] = useState<{ srcId: string; destId: string } | null>(null);
   const [suppressMoveConfirm, setSuppressMoveConfirm] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
-  const [showGlassLibrary, setShowGlassLibrary] = useState(false);
+  const [glassLibraryTarget, setGlassLibraryTarget] = useState<'add' | string | null>(null);
+  const swapFileSheetIdRef = useRef<string | null>(null);
+  const swapGlassFileInputRef = useRef<HTMLInputElement>(null);
   const [addSheetMenu, setAddSheetMenu] = useState<{ left: number; top: number } | null>(null);
 
   const [, setFocusedPanelIdx] = useState<number | null>(null);
@@ -1861,6 +1920,18 @@ export function App() {
                 onMoveAllTo={destId => requestMove(sheet.id, destId)}
                 onMoveAllFromSrc={srcId => requestMove(srcId, sheet.id)}
                 onNewSheetFromImage={() => triggerNewSheetFromImage(sheet.id)}
+                onSelectAllPieces={() => {
+                  const ids = project.pieces.filter(p => p.glassSheetId === sheet.id).map(p => p.id);
+                  if (ids.length > 0) {
+                    selectPieces(ids);
+                    setPatternTool('select');
+                  }
+                }}
+                onSwapGlassLibrary={() => setGlassLibraryTarget(sheet.id)}
+                onSwapGlassFile={() => {
+                  swapFileSheetIdRef.current = sheet.id;
+                  swapGlassFileInputRef.current?.click();
+                }}
               />
             ))}
             <button
@@ -1881,6 +1952,25 @@ export function App() {
               accept="image/*"
               style={{ display: 'none' }}
               onChange={handleNewSheetFromImageWithMove}
+            />
+            <input
+              ref={swapGlassFileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={e => {
+                const file = e.target.files?.[0];
+                const sheetId = swapFileSheetIdRef.current;
+                e.target.value = '';
+                swapFileSheetIdRef.current = null;
+                if (!file || !sheetId) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                  const dataUrl = ev.target?.result as string;
+                  replaceSheetGlass(sheetId, dataUrl, file.name, null);
+                };
+                reader.readAsDataURL(file);
+              }}
             />
           </div>
         </div>
@@ -2050,15 +2140,18 @@ export function App() {
           currentProjectName={project.name}
           onPickUrl={(url, label, scale) => addSheetFromImage(url, label, scale ?? null)}
           onUpload={handleAddSheetFromFile}
-          onOpenLibrary={() => setShowGlassLibrary(true)}
+          onOpenLibrary={() => setGlassLibraryTarget('add')}
           onClose={() => setAddSheetMenu(null)}
         />
       )}
 
-      {showGlassLibrary && (
+      {glassLibraryTarget && (
         <GlassLibraryDialog
-          onPick={(url, label, scale) => addSheetFromImage(url, label, scale)}
-          onClose={() => setShowGlassLibrary(false)}
+          onPick={(url, label, scale) => {
+            if (glassLibraryTarget === 'add') addSheetFromImage(url, label, scale);
+            else replaceSheetGlass(glassLibraryTarget, url, label, scale);
+          }}
+          onClose={() => setGlassLibraryTarget(null)}
         />
       )}
 
